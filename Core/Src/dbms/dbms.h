@@ -8,29 +8,21 @@
 #include <stdint.h>
 #include <string.h>
 
-typedef struct _DbmsSettings {
+#include "common.h"
+#include "context.h"
 
-    // The maximum voltage of the pack or else a fault is thrown
-    uint16_t max_allowed_pack_voltage;
-
-} DbmsSettings;
-
-
-
-typedef struct _DbmsCtx {
-
-    DbmsSettings settings;
-
-} DbmsCtx;
-
+#include "current_meter.h"
+#include "led_controller.h"
+#include "stack_controller.h"
+#include "vehicle_interface.h"
 
 // Called before the main loop
-void DbmsInit(DbmsCtx* ctx);
+void DbmsInit(DbmsCtx* ctx, HwCtx* hw);
 
 // Called from the main loop
-void DbmsIter(DbmsCtx* ctx);
+void DbmsIter(DbmsCtx* ctx, HwCtx* hw);
 
 // Called to handle an err state
-void DbmsErr(DbmsCtx* ctx);
+void DbmsErr(DbmsCtx* ctx, HwCtx* hw);
 
 #endif

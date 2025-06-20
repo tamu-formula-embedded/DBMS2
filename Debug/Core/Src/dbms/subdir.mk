@@ -5,13 +5,28 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Core/Src/dbms/dbms.c 
+../Core/Src/dbms/current_meter.c \
+../Core/Src/dbms/dbms.c \
+../Core/Src/dbms/led_controller.c \
+../Core/Src/dbms/sim.c \
+../Core/Src/dbms/stack_controller.c \
+../Core/Src/dbms/vehicle_interface.c 
 
 OBJS += \
-./Core/Src/dbms/dbms.o 
+./Core/Src/dbms/current_meter.o \
+./Core/Src/dbms/dbms.o \
+./Core/Src/dbms/led_controller.o \
+./Core/Src/dbms/sim.o \
+./Core/Src/dbms/stack_controller.o \
+./Core/Src/dbms/vehicle_interface.o 
 
 C_DEPS += \
-./Core/Src/dbms/dbms.d 
+./Core/Src/dbms/current_meter.d \
+./Core/Src/dbms/dbms.d \
+./Core/Src/dbms/led_controller.d \
+./Core/Src/dbms/sim.d \
+./Core/Src/dbms/stack_controller.d \
+./Core/Src/dbms/vehicle_interface.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -21,7 +36,7 @@ Core/Src/dbms/%.o Core/Src/dbms/%.su Core/Src/dbms/%.cyclo: ../Core/Src/dbms/%.c
 clean: clean-Core-2f-Src-2f-dbms
 
 clean-Core-2f-Src-2f-dbms:
-	-$(RM) ./Core/Src/dbms/dbms.cyclo ./Core/Src/dbms/dbms.d ./Core/Src/dbms/dbms.o ./Core/Src/dbms/dbms.su
+	-$(RM) ./Core/Src/dbms/current_meter.cyclo ./Core/Src/dbms/current_meter.d ./Core/Src/dbms/current_meter.o ./Core/Src/dbms/current_meter.su ./Core/Src/dbms/dbms.cyclo ./Core/Src/dbms/dbms.d ./Core/Src/dbms/dbms.o ./Core/Src/dbms/dbms.su ./Core/Src/dbms/led_controller.cyclo ./Core/Src/dbms/led_controller.d ./Core/Src/dbms/led_controller.o ./Core/Src/dbms/led_controller.su ./Core/Src/dbms/sim.cyclo ./Core/Src/dbms/sim.d ./Core/Src/dbms/sim.o ./Core/Src/dbms/sim.su ./Core/Src/dbms/stack_controller.cyclo ./Core/Src/dbms/stack_controller.d ./Core/Src/dbms/stack_controller.o ./Core/Src/dbms/stack_controller.su ./Core/Src/dbms/vehicle_interface.cyclo ./Core/Src/dbms/vehicle_interface.d ./Core/Src/dbms/vehicle_interface.o ./Core/Src/dbms/vehicle_interface.su
 
 .PHONY: clean-Core-2f-Src-2f-dbms
 

@@ -8,9 +8,11 @@
                 "${workspaceFolder}/Debug/**",
                 "${workspaceFolder}/Drivers/**"
             ],
-            "defines": [],
+            "defines": [
+                "CAN1"
+            ],
             "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c11",
+            "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-gcc-x64"
         }
