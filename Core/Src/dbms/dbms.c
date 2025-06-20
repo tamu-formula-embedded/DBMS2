@@ -19,3 +19,10 @@ void DbmsErr(DbmsCtx* ctx, HwCtx* hw)
 {
 
 }
+
+void DbmsClose(DbmsCtx* ctx, HwCtx* hw)
+{
+#ifdef SIM
+    __SimCleanup(hw->can);
+#endif
+}

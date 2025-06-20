@@ -25,4 +25,7 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw);
 // Called to handle an err state
 void DbmsErr(DbmsCtx* ctx, HwCtx* hw);
 
+// Called on close
+void DbmsClose(DbmsCtx* ctx, HwCtx* hw);
+
 #endif

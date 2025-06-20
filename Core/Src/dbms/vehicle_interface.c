@@ -8,7 +8,7 @@
 bool ConfigCan(HwCtx* hw_ctx)
 {
     // Create a filter
-    CAN_FilterTypeDef s_filter_cfg;
+    CAN_FilterTypeDef s_filter_cfg = {0};
     s_filter_cfg.FilterBank = 0;
     s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;
     s_filter_cfg.FilterScale = CAN_FILTERSCALE_32BIT;
