@@ -1,6 +1,4 @@
-//
-//  Copyright (C) Texas A&M University
-//
-//  ledctl -- LED Controller
-//
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #include "led_controller.h"

@@ -1,46 +1,40 @@
-//
-//  Copyright (C) Texas A&M University
-//
-//  Simulated Hardware Abstraction Layer
-//
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #ifndef _SIM_H_
 #define _SIM_H_
 
 #ifdef SIM
 
-#include <arpa/inet.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/select.h>
-#include <sys/socket.h>
+#include <termios.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 // DO NOT INCLUDE CONTEXT OR COMMON HERE
 
-//---------------------------------------------------
-//            Simulation Networking
-//---------------------------------------------------
 
-#define NET_LOCALHOST   "127.0.0.1"
-#define NET_UART_PORT   1476
-#define NET_CAN_PORT    1477
+//---------------------------------------------------
+//            Simulation & IPC 
+//---------------------------------------------------
 
 typedef struct {
-    int sockfd;
-} NetCtx;
+    int ipc_fd_can;
+    int ipc_fd_uart;
+    bool can_started;
+} __SimCtx;
 
-int NetConnect(NetCtx *ctx, const char *ip, uint16_t port);
+void __SimEnter(char* ipc_path_can, char* ipc_path_uart);
+void __SimExit();
 
-int NetSend(NetCtx *ctx, const uint8_t *data, size_t size);
+int __SimIpcCreate(const char* port_path, int baud_rate);
 
-size_t NetRecv(NetCtx *ctx, uint8_t *data, size_t max_size, int timeout_ms);
-
-void NetClose(NetCtx *ctx);
+int __SimIpcSend(int fd, const unsigned char* data, int size);
 
 //---------------------------------------------------
 //            HAL Spoof
@@ -53,6 +47,15 @@ void NetClose(NetCtx *ctx);
 #define CAN_ID_STD 0
 #define CAN_RTR_DATA 0
 #define DISABLE 0
+#define USART_CR1_UE 0
+
+#define APBxCLK 84 * 1000000
+
+#undef CR1
+struct {
+    int CR1;
+    int BRR;
+}* UART4;
 
 typedef enum {
     HAL_OK = 0x00U,
@@ -68,11 +71,10 @@ typedef struct {
     int _;
 } TIM_HandleTypeDef;
 typedef struct {
-    NetCtx net;
+    int _;
 } UART_HandleTypeDef;
-
 typedef struct {
-    NetCtx net;
+    int _;
 } CAN_HandleTypeDef;
 
 typedef struct {
@@ -118,7 +120,11 @@ uint32_t HAL_ADC_GetValue(ADC_HandleTypeDef *hadc);
 
 HAL_StatusTypeDef HAL_ADC_Stop(ADC_HandleTypeDef *hadc);
 
-void __SimCleanup(CAN_HandleTypeDef *hcan);
+void HAL_Delay(uint32_t Delay);
+
+HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+
+void HAL_TIM_Base_Start(TIM_HandleTypeDef *huart);
 
 #endif
 #endif

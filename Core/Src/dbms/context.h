@@ -1,13 +1,22 @@
-
-//
-//  Copyright (C) Texas A&M University
-//
-//  ctx -- Context
-//
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #ifndef _H_CTX_
 #define _H_CTX_
 
 #include "common.h"
+
+
+// USER DEFINED UNIQUE TO EACH BATTERY
+#define N_SEGMENTS 1
+#define N_MONITORS_PER_SEG 2
+#define N_GROUPS 10
+#define N_TEMPS 8
+// DONT CHANGE AFTER THIS
+
+#define N_STACKDEVS (N_SEGMENTS * N_MONITORS_PER_SEG + 1)
+// #define STACKITER(I) for (int I = 0; I < N_STACKDEVS; I++)
+
 
 // Hardware context stores prts 
 // to peripheral interfaces

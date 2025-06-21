@@ -1,3 +1,6 @@
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #ifndef _QUEUE_H_
 #define _QUEUE_H_
 

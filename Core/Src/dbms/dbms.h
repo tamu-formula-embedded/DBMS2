@@ -1,6 +1,8 @@
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #ifndef _DBMS_H_
 #define _DBMS_H_
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +18,8 @@
 #include "stack_controller.h"
 #include "vehicle_interface.h"
 
+
+
 // Called before the main loop
 void DbmsInit(DbmsCtx* ctx, HwCtx* hw);
 
@@ -27,5 +31,6 @@ void DbmsErr(DbmsCtx* ctx, HwCtx* hw);
 
 // Called on close
 void DbmsClose(DbmsCtx* ctx, HwCtx* hw);
+
 
 #endif

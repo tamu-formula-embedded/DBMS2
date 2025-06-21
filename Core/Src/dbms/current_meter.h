@@ -1,8 +1,6 @@
-//
-//  Copyright (C) Texas A&M University
-//
-//  imeter -- Current (I) Meter
-//
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #ifndef _IMETER_H_ 
 #define _IMETER_H_
 

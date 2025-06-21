@@ -1,8 +1,6 @@
-//
-//  Copyright (C) Texas A&M University
-//
-//  vintf -- Vehicle Interface
-//
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #include "vehicle_interface.h"
 
 bool ConfigCan(HwCtx* hw_ctx)
@@ -41,4 +39,23 @@ bool CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8])
     int32_t result = HAL_CAN_AddTxMessage(hw_ctx->can, &hw_ctx->can_tx_header, data, &hw_ctx->can_tx_mailbox);
     if (result != HAL_OK) return true;
     return false;
+}
+
+void CanLog(HwCtx* hw_ctx, const char* fmt, ...) 
+{
+    char buffer[CAN_LOG_BUFFER_SIZE];
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
+    if (len < 0) return;
+
+    for (int i = 0; i < len; i += 8) 
+    {
+        uint8_t chunk[8] = {0}; // zero out to pad shorter chunks
+        int chunk_size = (len - i >= 8) ? 8 : (len - i);
+        memcpy(chunk, &buffer[i], chunk_size);
+        CanTransmit(hw_ctx, CAN_LOG_ID, chunk);
+    }
 }

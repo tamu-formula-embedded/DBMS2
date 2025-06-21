@@ -1,8 +1,6 @@
-//
-//  Copyright (C) Texas A&M University
-//
-//  imeter -- Current (I) Meter
-//
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #include "current_meter.h"
 
 double PollAdc(HwCtx* hw_ctx)

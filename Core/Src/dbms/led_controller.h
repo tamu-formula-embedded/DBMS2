@@ -1,8 +1,6 @@
-//
-//  Copyright (C) Texas A&M University
-//
-//  ledctl -- LED Controller
-//
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #ifndef _LEDCTL_H_
 #define _LEDCTL_H_
 

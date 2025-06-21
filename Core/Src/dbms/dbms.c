@@ -1,18 +1,26 @@
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #include "dbms.h"
+
+
 
 void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
 {
+    HAL_TIM_Base_Start(hw->timer);
     ConfigCan(hw);
 
-    static uint8_t msg_init[] = {'I', 'n', 'i', 't', 0, 0, 0, 0};
+    HAL_Delay(2000); 
 
-    CanTransmit(hw, 0x5F1, msg_init);
+    StackAutoAddr(hw);
 }
 
 void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
 {
-    static uint8_t msg_iter[] = {'I', 't', 'e', 'r', 0, 0, 0, 0};
-    CanTransmit(hw, 0x5F2, msg_iter);
+
+    CanLog(hw, "Sensor = %f\n", PollAdc(hw));
+
+    HAL_Delay(1);
 }
 
 void DbmsErr(DbmsCtx* ctx, HwCtx* hw)
@@ -22,7 +30,4 @@ void DbmsErr(DbmsCtx* ctx, HwCtx* hw)
 
 void DbmsClose(DbmsCtx* ctx, HwCtx* hw)
 {
-#ifdef SIM
-    __SimCleanup(hw->can);
-#endif
 }

@@ -1,3 +1,6 @@
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #ifdef SIM
 
 #include <stdlib.h>
@@ -15,48 +18,62 @@
 #include "sim.h"
 
 //---------------------------------------------------
-//            Simulation Networking                      
+//            Simulation & IPC                      
 //---------------------------------------------------
 
-int NetConnect(NetCtx* ctx, const char* ip, uint16_t port) {
-    ctx->sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (ctx->sockfd < 0) return -1;
+static __SimCtx __sim_ctx;
 
-    struct sockaddr_in addr = {0};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0) return -1;
-
-    if (connect(ctx->sockfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) return -1;
-    return 0;
+void __SimEnter(char* ipc_path_can, char* ipc_path_uart)
+{
+    __sim_ctx.ipc_fd_can = __SimIpcCreate(ipc_path_can, 1000000);
+    __sim_ctx.ipc_fd_uart = __SimIpcCreate(ipc_path_uart, 1000000);
+    __sim_ctx.can_started = false;
+}
+void __SimExit()
+{
+    close(__sim_ctx.ipc_fd_can);
+    close(__sim_ctx.ipc_fd_uart);
 }
 
-int NetSend(NetCtx* ctx, const uint8_t* data, size_t size) {
-    size_t sent = 0;
-    while (sent < size) {
-        ssize_t n = send(ctx->sockfd, data + sent, size - sent, 0);
-        if (n <= 0) return -1;
-        sent += n;
+int __SimIpcCreate(const char* port_path, int baud_rate) {
+    int fd = open(port_path, O_RDWR | O_NOCTTY);
+    if (fd == -1) {
+        fprintf(stderr, "IPC: error opening serial port %s.\n", port_path);
+        return -1;
     }
-    return 0;
+
+    struct termios options;
+    tcgetattr(fd, &options);
+
+    cfsetispeed(&options, baud_rate);
+    cfsetospeed(&options, baud_rate);
+
+    options.c_cflag &= ~PARENB;
+    options.c_cflag &= ~CSTOPB;
+    options.c_cflag &= ~CSIZE;
+    options.c_cflag |= CS8;
+
+    options.c_cflag &= ~CRTSCTS;
+
+    options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+    options.c_oflag &= ~OPOST;
+
+    tcsetattr(fd, TCSANOW, &options);
+
+    return fd;
 }
 
-size_t NetRecv(NetCtx* ctx, uint8_t* data, size_t max_size, int timeout_ms) {
-    fd_set fds;
-    struct timeval tv;
-    FD_ZERO(&fds);
-    FD_SET(ctx->sockfd, &fds);
-    tv.tv_sec = timeout_ms / 1000;
-    tv.tv_usec = (timeout_ms % 1000) * 1000;
-
-    int ret = select(ctx->sockfd + 1, &fds, NULL, NULL, &tv);
-    if (ret <= 0) return 0;
-
-    return recv(ctx->sockfd, data, max_size, 0);
-}
-
-void NetClose(NetCtx* ctx) {
-    close(ctx->sockfd);
+int __SimIpcSend(int fd, const unsigned char* data, int size) {
+    int total_written = 0;
+    while (total_written < size) {
+        int written = write(fd, data + total_written, size - total_written);
+        if (written < 0) {
+            perror("IPC: error writing to serial port");
+            return -1;
+        }
+        total_written += written;
+    }
+    return total_written;
 }
 
 //---------------------------------------------------
@@ -70,9 +87,7 @@ HAL_StatusTypeDef HAL_CAN_ConfigFilter(CAN_HandleTypeDef *hcan, const CAN_Filter
 
 HAL_StatusTypeDef HAL_CAN_Start(CAN_HandleTypeDef *hcan)
 {
-    if (!NetConnect(&hcan->net, NET_LOCALHOST, NET_CAN_PORT)) 
-        return HAL_ERROR;
-    return HAL_OK;  
+    __sim_ctx.can_started = true;       // this is evil!
 }
 
 uint32_t HAL_CAN_GetTxMailboxesFreeLevel(const CAN_HandleTypeDef *hcan)
@@ -84,15 +99,20 @@ HAL_StatusTypeDef HAL_CAN_AddTxMessage(CAN_HandleTypeDef *hcan, const CAN_TxHead
                                        const uint8_t aData[], uint32_t *pTxMailbox)
                                        
 {
+    if (__sim_ctx.can_started) return HAL_BUSY;
     // printf("CAN | %03x | %02x | %02x | %02x | %02x | %02x | %02x | %02x | %02x\n",
         // pHeader->StdId, aData[0], aData[1], aData[2], aData[3], aData[4], aData[5], aData[6], aData[7]);
 
     uint8_t framebuf[12] = {0};
-    memcpy(framebuf, &pHeader->StdId, 4);
+    uint32_t id = pHeader->StdId;
+    framebuf[0] = (id >> 24) & 0xFF;
+    framebuf[1] = (id >> 16) & 0xFF;
+    framebuf[2] = (id >> 8) & 0xFF;
+    framebuf[3] = id & 0xFF;
     memcpy(framebuf + 4, aData, 8);
 
-    if (!NetSend(&hcan->net, framebuf, 12))
-        return HAL_ERROR;
+    __SimIpcSend(__sim_ctx.ipc_fd_can, framebuf, 12);
+
     return HAL_OK;
 }
 
@@ -120,9 +140,20 @@ HAL_StatusTypeDef HAL_ADC_Stop(ADC_HandleTypeDef *hadc)
     return HAL_OK;  // explicit do nothing
 }
 
-void __SimCleanup(CAN_HandleTypeDef* hcan)
+void HAL_Delay(uint32_t Delay)
 {
-    NetClose(&hcan->net);
+    usleep(Delay * 1000);
+}
+
+HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout)
+{
+    // TODO: Wake logic if BRR is set
+    __SimIpcSend(__sim_ctx.ipc_fd_uart, pData, Size);
+}
+
+void HAL_TIM_Base_Start(TIM_HandleTypeDef *huart)
+{
+
 }
 
 #endif 

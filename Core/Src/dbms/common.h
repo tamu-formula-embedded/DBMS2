@@ -1,10 +1,6 @@
-//
-//  Copyright (C) Texas A&M University
-//
-//  Hardware Abstraction Layer Interface
-//  Switches between using the provided STM32 HAL
-//  and the simulated HAL
-//
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
@@ -13,6 +9,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <math.h>
 
 #ifdef __vscode__
