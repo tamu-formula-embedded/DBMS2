@@ -61,7 +61,7 @@ uint16_t CalcCrc16(uint8_t *buf, size_t len)
 
 void SendStackFrame(HwCtx* hw, uint8_t* buf, size_t len)
 {
-    HAL_UART_Transmit(hw->uart, buf, len, STACKCTL_SEND_TIMEOUT);
+    HAL_UART_Transmit(hw->uart, buf, len, STACK_SEND_TIMEOUT);
 }
 
 void SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len)
@@ -69,9 +69,17 @@ void SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len)
     uint16_t crc = CalcCrc16(buf, len - 2);
     buf[len - 2] = crc & 0xFF;
     buf[len - 1] = (crc >> 8) & 0xFF;
-    HAL_UART_Transmit(hw->uart, buf, len, STACKCTL_SEND_TIMEOUT);
+    HAL_UART_Transmit(hw->uart, buf, len, STACK_SEND_TIMEOUT);
     buf[len - 2] = 0;
     buf[len - 1] = 0;
+}
+
+void RecvStackFrame(HwCtx* hw, RxStackFrame* rx_frame)
+{
+    HAL_UART_Receive(hw->uart, rx_frame->data, rx_frame->size + 6, STACK_RECV_TIMEOUT);
+    rx_frame->init_field = rx_frame->data[0];
+    rx_frame->dev_addr = rx_frame->data[1];
+    rx_frame->reg_addr = (rx_frame->data[2] << 8) + rx_frame->data[3];
 }
 
 void SetBrr(uint64_t brr)
@@ -104,7 +112,7 @@ void SendStackShutdownBlip(HwCtx* hw)
 }
 
 
-void SendStackWake(HwCtx* hw)
+void StackWake(HwCtx* hw)
 {
     for (int i = 0; i < 2; i++) 
     {
@@ -114,7 +122,7 @@ void SendStackWake(HwCtx* hw)
     }
 }
 
-void SendStackShutdown(HwCtx* hw)
+void StackShutdown(HwCtx* hw)
 {
     for (int i = 0; i < 2; i++) 
     {
@@ -186,4 +194,51 @@ void StackAutoAddr(HwCtx* hw)
 
     static uint8_t FRAME_CONF1_READ[] = { 0x80, 0x00, 0x20, 0x01, 0x01, 0x00, 0x00 };
     // SendStackFrameSetCrc(hw, FRAME_CONF1_READ, sizeof(FRAME_CONF1_READ));
+}
+
+void StackSetNumActiveCells(HwCtx* hw, uint8_t n_active_cells)
+{
+    // possible sw guide error 0xB0 (stack write) --> 0xD0 (broadcast write)
+    uint8_t frame_set_active_cell[] =  { 0xD0, 0x00, N_STACKDEVS, n_active_cells, 0x00, 0x00 };
+
+    SendStackFrameSetCrc(hw, frame_set_active_cell, sizeof(frame_set_active_cell));
+}
+
+void StackSetupGpio(HwCtx* hw)
+{
+    // TODO: implement
+}
+
+void StackSetupTempReadings(HwCtx* hw)
+{
+
+}
+
+void StackSetupVoltReadings(HwCtx* hw)
+{
+    uint8_t FRAME_SET_ADC_CONT_RUN[] = {0xD0, 0x03, 0x0D, 0x06, 0x00, 0x00 };
+    SendStackFrameSetCrc(hw, FRAME_SET_ADC_CONT_RUN, sizeof(FRAME_SET_ADC_CONT_RUN));
+}
+
+
+void StackUpdateVoltReadings(HwCtx* hw, DbmsCtx* ctx)
+{
+    uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xC0, 0x05, 0x68 + 2*(16-N_GROUPS), N_GROUPS*2-1, 0x00, 0x00 };
+
+    SendStackFrameSetCrc(hw, FRAME_ADC_MEASUREMENTS, sizeof(FRAME_ADC_MEASUREMENTS));
+
+    uint8_t addr;
+    RxStackFrame rx_frame = STACK_RX_FRAME(N_GROUPS * sizeof(int16_t));
+    for (size_t i = 0; i < N_STACKDEVS; i++)
+    {
+        RecvStackFrame(hw, &rx_frame);                      // recv data into the frame
+        if ((addr = rx_frame.dev_addr - 1) <= 0) continue;  // skip myself
+
+        for (size_t j = 0; j < N_GROUPS; j++)
+        {
+            ctx->cell_states[addr / 2][addr % 2].voltages[j]
+                = (rx_frame.data[j * sizeof(int16_t)] << 8) 
+                + (rx_frame.data[j * sizeof(int16_t)] + 1); 
+        }
+    }
 }

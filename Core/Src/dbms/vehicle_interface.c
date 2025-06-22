@@ -59,3 +59,36 @@ void CanLog(HwCtx* hw_ctx, const char* fmt, ...)
         CanTransmit(hw_ctx, CAN_LOG_ID, chunk);
     }
 }
+
+#define CELL_STATUS_VOLTAGE     0x5F4
+#define CELL_STATUS_TEMP        0x5F5
+
+void DumpCellState(DbmsCtx* ctx, HwCtx* hw)
+{
+    uint8_t frame[8] = {0};
+
+    for (size_t i = 0; i < N_SEGMENTS; i++)
+    {
+        frame[0] = i;
+        for (size_t j = 0; j < N_MONITORS_PER_SEG; j++)
+        {
+            frame[1] = j;
+            for (size_t k = 0; k < N_GROUPS; k++)
+            {
+                frame[2] = k;
+                uint16_t v = ctx->cell_states[i][j].voltages[k];
+                frame[6] = (v & 0xff00) >> 8;
+                frame[7] = (v & 0x00ff);
+                CanTransmit(hw, CELL_STATUS_VOLTAGE, frame);
+            }
+            for (size_t k = 0; k < N_TEMPS; k++)
+            {
+                frame[2] = k;
+                uint16_t t = ctx->cell_states[i][j].temps[k];
+                frame[6] = (t & 0xff00) >> 8;
+                frame[7] = (t & 0x00ff);
+                CanTransmit(hw, CELL_STATUS_TEMP, frame);
+            }
+        }
+    }
+}

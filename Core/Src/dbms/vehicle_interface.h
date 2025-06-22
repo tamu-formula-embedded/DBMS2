@@ -17,4 +17,6 @@ bool CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8]);
 
 void CanLog(HwCtx* hw_ctx, const char* fmt, ...);
 
+void DumpCellState(DbmsCtx* ctx, HwCtx* hw);
+
 #endif

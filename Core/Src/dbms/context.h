@@ -30,6 +30,13 @@ typedef struct _HwCtx {
     uint32_t can_tx_mailbox;
 } HwCtx;
 
+
+typedef struct _CellMonitorState {
+    uint16_t voltages[N_GROUPS];
+    uint16_t temps[N_TEMPS];
+} CellMonitorState;
+
+
 typedef struct _DbmsSettings {
 
     // The maximum voltage of the pack or else a fault is thrown
@@ -40,6 +47,17 @@ typedef struct _DbmsSettings {
 typedef struct _DbmsCtx {
 
     DbmsSettings settings;
+
+    // 2D grid representing the battery
+    // example with 5 segments and 4 monitors each
+    // [
+    //   seg1 [ monitor1, monitor2, monitor3, monitor4 ]
+    //   seg2 [ monitor1, monitor2, monitor3, monitor4 ]
+    //   seg3 [ monitor1, monitor2, monitor3, monitor4 ]
+    //   seg4 [ monitor1, monitor2, monitor3, monitor4 ]
+    //   seg5 [ monitor1, monitor2, monitor3, monitor4 ]
+    // ]
+    CellMonitorState cell_states[N_SEGMENTS][N_MONITORS_PER_SEG];
 
 } DbmsCtx;
 

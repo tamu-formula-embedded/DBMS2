@@ -99,7 +99,7 @@ HAL_StatusTypeDef HAL_CAN_AddTxMessage(CAN_HandleTypeDef *hcan, const CAN_TxHead
                                        const uint8_t aData[], uint32_t *pTxMailbox)
                                        
 {
-    if (__sim_ctx.can_started) return HAL_BUSY;
+    if (!__sim_ctx.can_started) return HAL_BUSY;
     // printf("CAN | %03x | %02x | %02x | %02x | %02x | %02x | %02x | %02x | %02x\n",
         // pHeader->StdId, aData[0], aData[1], aData[2], aData[3], aData[4], aData[5], aData[6], aData[7]);
 
@@ -149,6 +149,12 @@ HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pD
 {
     // TODO: Wake logic if BRR is set
     __SimIpcSend(__sim_ctx.ipc_fd_uart, pData, Size);
+    usleep(100);
+}
+
+HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout)
+{
+    (void)read(__sim_ctx.ipc_fd_uart, pData, Size);
 }
 
 void HAL_TIM_Base_Start(TIM_HandleTypeDef *huart)
