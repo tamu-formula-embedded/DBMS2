@@ -20,15 +20,19 @@ FRAME_SHUTDOWN = [
     b'\x90\x00\x03\t \x13\x95'
 ]
 
+FRAME_POLL_VOLTS = [
+    b'\xc0\x05t\x13J\xe8'
+]
+
+FRAME_START_ADC = [
+    b'\xd0\x03\r\x06Lv'
+]
         
-class State(Enum):
-    SHUTDOWN = 1
-    AWAKE = 2
-    
 class StackSim:
    
     def __init__(self):
-        self.state = State.SHUTDOWN
+        self.alive = False
+        self.polling_volts = True
         self.recv_frames = []
 
     def check(self, n, val):
@@ -41,15 +45,23 @@ class StackSim:
 
     def handle_uart_frame(self, packet):
         self.recv_frames.append(packet)
-        print('RX ', packet)
+        print(time.time(), '', packet)
         
-        if self.state == State.SHUTDOWN and self.checkseq(FRAME_WAKE):
-            self.state = State.AWAKE
+        if not self.alive and self.checkseq(FRAME_WAKE):
+            self.alive = True
             
-        if self.state == State.AWAKE and self.checkseq(FRAME_SHUTDOWN):
-            self.state = State.SHUTDOWN
+        if self.alive and self.checkseq(FRAME_SHUTDOWN):
+            self.alive = False
+            self.polling_volts = False
             
-        print(self.state)
+        if self.alive:
+                
+            if not self.polling_volts and self.checkseq(FRAME_START_ADC):
+                self.polling_volts = True
+                
+            if self.polling_volts and self.checkseq(FRAME_POLL_VOLTS):
+                print("Should respond with voltage levels!")
+            
         
 stack = StackSim()
 

@@ -220,7 +220,6 @@ void StackSetupVoltReadings(HwCtx* hw)
     SendStackFrameSetCrc(hw, FRAME_SET_ADC_CONT_RUN, sizeof(FRAME_SET_ADC_CONT_RUN));
 }
 
-
 void StackUpdateVoltReadings(HwCtx* hw, DbmsCtx* ctx)
 {
     uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xC0, 0x05, 0x68 + 2*(16-N_GROUPS), N_GROUPS*2-1, 0x00, 0x00 };
@@ -231,14 +230,14 @@ void StackUpdateVoltReadings(HwCtx* hw, DbmsCtx* ctx)
     RxStackFrame rx_frame = STACK_RX_FRAME(N_GROUPS * sizeof(int16_t));
     for (size_t i = 0; i < N_STACKDEVS; i++)
     {
-        RecvStackFrame(hw, &rx_frame);                      // recv data into the frame
-        if ((addr = rx_frame.dev_addr - 1) <= 0) continue;  // skip myself
+        // RecvStackFrame(hw, &rx_frame);                      // recv data into the frame
+        // if ((addr = rx_frame.dev_addr - 1) <= 0) continue;  // skip myself
 
-        for (size_t j = 0; j < N_GROUPS; j++)
-        {
-            ctx->cell_states[addr / 2][addr % 2].voltages[j]
-                = (rx_frame.data[j * sizeof(int16_t)] << 8) 
-                + (rx_frame.data[j * sizeof(int16_t)] + 1); 
-        }
+        // for (size_t j = 0; j < N_GROUPS; j++)
+        // {
+        //     ctx->cell_states[addr / 2][addr % 2].voltages[j]
+        //         = (rx_frame.data[j * sizeof(int16_t)] << 8) 
+        //         + (rx_frame.data[j * sizeof(int16_t)] + 1); 
+        // }
     }
 }

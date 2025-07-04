@@ -14,13 +14,20 @@ socketio = SocketIO(app)
 
 def send_stack_update(update):
     socketio.emit('stackupdate', dict(update))
-    print(update)
+    # print(update)
 monitor_sim.packet_sender = send_stack_update
 
-# Web page
+@app.route('/segstate')
+def can():
+    return render_template('can.html', slave_path=can_ipc.get_slave_path())
+
+@app.route('/console')
+def console():
+    return render_template('console.html')
+
 @app.route('/')
 def index():
-    return render_template('can.html', slave_path=can_ipc.get_slave_path())
+    return render_template('index.html')
 
 if __name__ == '__main__':
     print(f'bin/sim {can_ipc.get_slave_path()} {uart_ipc.get_slave_path()}')

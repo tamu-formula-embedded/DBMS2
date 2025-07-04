@@ -17,6 +17,11 @@
 #define N_STACKDEVS (N_SEGMENTS * N_MONITORS_PER_SEG + 1)
 // #define STACKITER(I) for (int I = 0; I < N_STACKDEVS; I++)
 
+typedef enum _DbmsState {
+    DBMS_ACTIVE = 0,
+    DBMS_SHUTDOWN,
+} DbmsState;
+
 
 // Hardware context stores prts 
 // to peripheral interfaces
@@ -45,7 +50,7 @@ typedef struct _DbmsSettings {
 } DbmsSettings;
 
 typedef struct _DbmsCtx {
-
+    DbmsState state;
     DbmsSettings settings;
 
     // 2D grid representing the battery

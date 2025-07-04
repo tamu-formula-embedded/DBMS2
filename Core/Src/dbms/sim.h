@@ -49,7 +49,6 @@ int __SimIpcSend(int fd, const unsigned char* data, int size);
 #define DISABLE 0
 #define USART_CR1_UE 0
 
-#define APBxCLK 84 * 1000000
 
 #undef CR1
 struct {

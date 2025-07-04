@@ -23,6 +23,8 @@ typedef struct {
 
 void DelayUs(HwCtx* hw, uint16_t us);
 
+#define APBxCLK 84 * 1000000    // TODO: fix legacy name
+
 void SetBrr(uint64_t brr);
 
 uint16_t CalcCrc16(uint8_t *buf, size_t len);
@@ -40,5 +42,8 @@ void StackAutoAddr(HwCtx* hw);
 void StackSetNumActiveCells(HwCtx* hw, uint8_t n_active_cells);
 
 void StackSetupGpio(HwCtx* hw);
+
+void StackSetupVoltReadings(HwCtx* hw);
+void StackUpdateVoltReadings(HwCtx* hw, DbmsCtx* ctx);
 
 #endif
