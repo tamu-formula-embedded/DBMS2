@@ -20,7 +20,7 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
 //    {
         // TEST 1: Ensure that these things turn on the stack device.
     HAL_Delay(2000);
-    StackWake(hw);
+    status = StackWake(hw);
     StackAutoAddr(hw);
     StackSetNumActiveCells(hw, 0x0A);
 //        StackSetupGpio(hw);
