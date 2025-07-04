@@ -34,8 +34,13 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
         return;
     }
     // TEST 2: Try sending CAN messages
-    uint8_t can_frame[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x06, 0x08};
-    CanTransmit(hw, 0xf5, can_frame);
+    // uint8_t can_frame[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x06, 0x08};
+    // CanTransmit(hw, 0xf5, can_frame);
+
+    // TEST 3: Read voltages
+    // StackUpdateVoltReadings(hw, ctx);
+    // Log the 5th voltage from the 1st monitor in the 1st segment
+    // CanLog(hw, "v=%d", ctx->cell_states[0][0].voltages[4]);
 
     HAL_Delay(10);
 }
