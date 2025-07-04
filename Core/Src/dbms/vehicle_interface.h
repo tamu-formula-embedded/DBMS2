@@ -8,7 +8,7 @@
 #include "context.h"
 
 // Configure the CAN peripheral
-bool ConfigCan(HwCtx* hw_ctx);
+int ConfigCan(HwCtx* hw_ctx);
 
 int CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8]);
 
