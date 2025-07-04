@@ -33,12 +33,11 @@ bool ConfigCan(HwCtx* hw_ctx)
     return false;
 }
 
-bool CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8])
+int CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8])
 {
     hw_ctx->can_tx_header.StdId = id;
     int32_t result = HAL_CAN_AddTxMessage(hw_ctx->can, &hw_ctx->can_tx_header, data, &hw_ctx->can_tx_mailbox);
-    if (result != HAL_OK) return true;
-    return false;
+    return result;
 }
 
 void CanLog(HwCtx* hw_ctx, const char* fmt, ...) 
