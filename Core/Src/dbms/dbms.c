@@ -35,7 +35,7 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
     }
     // TEST 2: Try sending CAN messages
     uint8_t can_frame[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x06, 0x08};
-    CanTransmit(hw, 0xf5, can_frame);
+    int status = CanTransmit(hw, 0xf5, can_frame);
 
     HAL_Delay(10);
 }

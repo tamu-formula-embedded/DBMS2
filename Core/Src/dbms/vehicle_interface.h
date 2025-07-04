@@ -10,7 +10,7 @@
 // Configure the CAN peripheral
 bool ConfigCan(HwCtx* hw_ctx);
 
-bool CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8]);
+int CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8]);
 
 #define CAN_LOG_BUFFER_SIZE     256     // max formatted string length
 #define CAN_LOG_ID              0x5F2  
