@@ -29,11 +29,11 @@ void SetBrr(uint64_t brr);
 
 uint16_t CalcCrc16(uint8_t *buf, size_t len);
 
-void SendStackFrame(HwCtx* hw, uint8_t* buf, size_t len);
+int SendStackFrame(HwCtx* hw, uint8_t* buf, size_t len);
 
 void SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len);
 
-void StackWake(HwCtx* hw);
+int StackWake(HwCtx* hw);
 
 void StackShutdown(HwCtx* hw);
 

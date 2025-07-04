@@ -59,9 +59,9 @@ uint16_t CalcCrc16(uint8_t *buf, size_t len)
     return w_crc;
 }
 
-void SendStackFrame(HwCtx* hw, uint8_t* buf, size_t len)
+int SendStackFrame(HwCtx* hw, uint8_t* buf, size_t len)
 {
-    HAL_UART_Transmit(hw->uart, buf, len, STACK_SEND_TIMEOUT);
+    return HAL_UART_Transmit(hw->uart, buf, len, STACK_SEND_TIMEOUT);
 }
 
 void SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len)
@@ -91,14 +91,16 @@ void SetBrr(uint64_t brr)
 #endif
 }
 
-void SendStackWakeBlip(HwCtx* hw)
+int SendStackWakeBlip(HwCtx* hw)
 {
+    int status = 0;
     // uart_set_brr(APBxCLK / (1 / (2.75 / (1 * 1000))));
     SetBrr(25700/2); // ?
     uint8_t wake_frame[] = {0x00};
-    SendStackFrame(hw, wake_frame, sizeof(wake_frame));
+    if ((status = SendStackFrame(hw, wake_frame, sizeof(wake_frame))) != 0) return status;
     SetBrr(APBxCLK / 1000000); // 84
     DelayUs(hw, 3500);
+    return status;
 }
 
 void SendStackShutdownBlip(HwCtx* hw)
@@ -112,14 +114,18 @@ void SendStackShutdownBlip(HwCtx* hw)
 }
 
 
-void StackWake(HwCtx* hw)
+int StackWake(HwCtx* hw)
 {
+    int status = HAL_OK;
     for (int i = 0; i < 2; i++) 
     {
-        SendStackWakeBlip(hw);
-        SendStackFrame(hw, FRAME_WAKE_STACK, sizeof(FRAME_WAKE_STACK));
+        if ((status = SendStackWakeBlip(hw)) != HAL_OK)
+            return status;
+        if ((status = SendStackFrame(hw, FRAME_WAKE_STACK, sizeof(FRAME_WAKE_STACK))) != HAL_OK)
+            return status;
         HAL_Delay(15 + 12 * N_STACKDEVS);   // wtf
     }
+    return status;
 }
 
 void StackShutdown(HwCtx* hw)
