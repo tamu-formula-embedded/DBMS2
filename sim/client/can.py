@@ -17,7 +17,8 @@ class MonitorSim:
         
         
         if packet_id == 0x5F2:
-            pass
+            if self.packet_sender is not None:
+                self.packet_sender(data)
         
         if packet_id == 0x5F4 or packet_id == 0x5F5:
             if self.packet_sender is not None:

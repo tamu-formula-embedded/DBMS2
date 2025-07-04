@@ -1,48 +1,38 @@
 <!doctype html>
 <html>
 <head>
-  <title>Serial Monitor</title>
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <title>Battery State Management</title>
+
+  </script>
   <style>
-    body {
-      background: #000;
-      color: #0f0;
-      font-family: monospace;
-      margin: 0;
-      padding: 1rem;
-      padding-bottom: 4rem; /* 👈 Add room at the bottom */
-    }
-    #console {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      overflow-y: auto;
-      height: 95vh;
-      border: 1px solid #0f0;
-      padding: 1rem;
+    span {
+        font-family: monospace;
     }
   </style>
 </head>
 <body>
-  <h2>Live Serial Monitor</h2>
-  <div id="console"></div>
+    <em><a href='/'>home</a> | poc: justus </em>
+  <h1>DBMS Simulator Pages</h1>
 
-  <script>
-    const MAX_LENGTH = 4096;
-    const consoleDiv = document.getElementById('console');
-    let buffer = '';
+    <ul>
+        <li><a href="/segstate">Segment State Monitor</a></li>
+        <li><a href="/console">Log Monitor</a></li>
 
-    function updateConsole(newText) {
-      buffer += newText;
-      if (buffer.length > MAX_LENGTH) {
-        buffer = buffer.slice(buffer.length - MAX_LENGTH);
-      }
-      consoleDiv.textContent = buffer;
-      consoleDiv.scrollTop = consoleDiv.scrollHeight;
-    }
 
-    const socket = io();
-    socket.on('data', (data) => updateConsole(data.ascii));
-    socket.on('serial', (data) => updateConsole(data.ascii));
-  </script>
+    </ul>
+
+    <br>
+    <br>
+    <br>
+
+    <h3>About</h3>
+    <p>The DBMS simulation toolchain includes a number of tools that interface with the controller codebase when ran in simulation mode (over psuedo-terminal IPC). The frontend interfaces for these tools are implemented in a collection of webpages hosted from a Flask server. This main page points to these tools.</p>
+    <br>
+ 
+    <h3>I want to add a page</h3>
+    <p>Great! How you style is up to you, but please include the following heading at the top</p>
+    <span>&lt;em&gt;&lt;a href='/'&gt;home&lt;/a&gt; | poc: (your name here) &lt;/em&gt;</span>
+
+     
 </body>
 </html>
