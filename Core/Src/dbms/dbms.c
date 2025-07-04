@@ -5,6 +5,8 @@
 
 void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
 {
+    int status = 0;
+
     // Manually set state for now
     ctx->state = DBMS_ACTIVE;
 
@@ -12,7 +14,7 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
 //    memset(ctx->cell_states, 0, N_SEGMENTS * N_MONITORS_PER_SEG * (N_GROUPS * sizeof(int16_t)) * (N_TEMPS * sizeof(int16_t)));
 
     HAL_TIM_Base_Start(hw->timer);
-    ConfigCan(hw);
+    status = ConfigCan(hw);
 
 //    if (ctx->state == DBMS_ACTIVE)
 //    {
@@ -28,6 +30,7 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
 
 void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
 {
+    int status = 0;
 //    if (ctx->state == DBMS_SHUTDOWN) {
 //        StackShutdown(hw);
 //        HAL_Delay(200);
@@ -35,7 +38,7 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
 //    }
 //    // TEST 2: Try sending CAN messages
 //    uint8_t can_frame[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x06, 0x08};
-//    int status = CanTransmit(hw, 0xf5, can_frame);
+//    status = CanTransmit(hw, 0xf5, can_frame);
 //
 //    HAL_Delay(10);
 }

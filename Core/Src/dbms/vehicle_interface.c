@@ -3,8 +3,10 @@
 //  
 #include "vehicle_interface.h"
 
-bool ConfigCan(HwCtx* hw_ctx)
+int ConfigCan(HwCtx* hw_ctx)
 {
+    int status = HAL_OK;
+
     // Create a filter
     CAN_FilterTypeDef s_filter_cfg = {0};
     s_filter_cfg.FilterBank = 0;
@@ -19,9 +21,9 @@ bool ConfigCan(HwCtx* hw_ctx)
     s_filter_cfg.SlaveStartFilterBank = 14;
 
     // Add the filter to CAN peripheral
-    if (HAL_CAN_ConfigFilter(hw_ctx->can, &s_filter_cfg) != HAL_OK) return true;
+    if ((status = HAL_CAN_ConfigFilter(hw_ctx->can, &s_filter_cfg)) != HAL_OK) return status;
 
-    if (HAL_CAN_Start(hw_ctx->can) != HAL_OK) return true;
+    if ((status = HAL_CAN_Start(hw_ctx->can)) != HAL_OK) return status;
 
     // Config TX header
     hw_ctx->can_tx_header.StdId = 0xdead;
@@ -30,7 +32,7 @@ bool ConfigCan(HwCtx* hw_ctx)
     hw_ctx->can_tx_header.DLC = 8;
     hw_ctx->can_tx_header.TransmitGlobalTime = DISABLE;
 
-    return false;
+    return status;
 }
 
 int CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8])
