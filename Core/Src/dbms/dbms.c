@@ -8,7 +8,7 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
     int status = 0;
 
     // Manually set state for now
-    ctx->state = DBMS_ACTIVE;
+    ctx->state = DBMS_SHUTDOWN;
 
     // Initialize cell_states
 //    memset(ctx->cell_states, 0, N_SEGMENTS * N_MONITORS_PER_SEG * (N_GROUPS * sizeof(int16_t)) * (N_TEMPS * sizeof(int16_t)));
@@ -30,7 +30,8 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
 
 void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
 {
-    int status = 0;
+
+	int status = 0;
     if (ctx->state == DBMS_SHUTDOWN) {
         StackShutdown(hw);
         HAL_Delay(200);
