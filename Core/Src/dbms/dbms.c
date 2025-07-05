@@ -16,16 +16,15 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
     HAL_TIM_Base_Start(hw->timer);
     status = ConfigCan(hw);
 
-//    if (ctx->state == DBMS_ACTIVE)
-//    {
-        // TEST 1: Ensure that these things turn on the stack device.
-    HAL_Delay(2000);
-    status = StackWake(hw);
-    StackAutoAddr(hw);
-    StackSetNumActiveCells(hw, 0x0A);
-//        StackSetupGpio(hw);
-//        StackSetupVoltReadings(hw);     // todo: rn start
-//    }
+    if (ctx->state == DBMS_ACTIVE)
+    {
+        HAL_Delay(2000);
+        status = StackWake(hw);
+        StackAutoAddr(hw);
+        StackSetNumActiveCells(hw, 0x0A);
+        StackSetupGpio(hw);
+        StackSetupVoltReadings(hw);     // todo: rn start
+    }
 }
 
 void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
@@ -42,9 +41,9 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
     // CanTransmit(hw, 0xf5, can_frame);
 
     // TEST 3: Read voltages
-    // StackUpdateVoltReadings(hw, ctx);
+    StackUpdateVoltReadings(hw, ctx);
     // Log the 5th voltage from the 1st monitor in the 1st segment
-    // CanLog(hw, "v=%d", ctx->cell_states[0][0].voltages[4]);
+    CanLog(hw, "v=%d", ctx->cell_states[0][0].voltages[4]);
 
     HAL_Delay(10);
 }
