@@ -5,4 +5,6 @@
 ../Core/Src/main.c:273:13:MX_TIM1_Init	32	static
 ../Core/Src/main.c:319:13:MX_UART4_Init	8	static
 ../Core/Src/main.c:352:13:MX_GPIO_Init	40	static
-../Core/Src/main.c:407:6:Error_Handler	8	static,ignoring_inline_asm
+../Core/Src/main.c:401:6:HAL_CAN_RxFifo0MsgPendingCallback	96	static
+../Core/Src/main.c:413:6:HAL_CAN_RxFifo1MsgPendingCallback	96	static
+../Core/Src/main.c:431:6:Error_Handler	8	static,ignoring_inline_asm
