@@ -162,4 +162,9 @@ void HAL_TIM_Base_Start(TIM_HandleTypeDef *huart)
 
 }
 
+HAL_StatusTypeDef HAL_GPIO_WritePin(GPIO_TypeDef* x, int p, int a)
+{
+    return HAL_OK;
+}
+
 #endif 
