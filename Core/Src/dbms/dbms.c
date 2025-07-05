@@ -35,7 +35,7 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
 	int status = 0;
     ctx->iterct++;
     
-    LedSet(LED6, ((ctx->iterct / 200) % 2 == 0) ? LED_GREEN : LED_OFF);
+    LedSet(LED6, ((ctx->iterct / 20) % 2 == 0) ? LED_GREEN : LED_OFF);
 
     if (ctx->state == DBMS_SHUTDOWN) {
         LedSet(LED6, LED_RED);
@@ -55,6 +55,12 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
     // CanLog(hw, "v=%d", ctx->cell_states[0][0].voltages[4]);
 
     HAL_Delay(10);
+}
+
+void DbmsCanRx(DbmsCtx* ctx, HwCtx* hw, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
+{
+    CanLog(hw, "rx %d", channel);
+    CanTransmit(hw, 0x02, rx_data);
 }
 
 void DbmsErr(DbmsCtx* ctx, HwCtx* hw)

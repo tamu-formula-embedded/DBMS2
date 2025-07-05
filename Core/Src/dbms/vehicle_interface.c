@@ -24,6 +24,8 @@ int ConfigCan(HwCtx* hw_ctx)
     if ((status = HAL_CAN_ConfigFilter(hw_ctx->can, &s_filter_cfg)) != HAL_OK) return status;
 
     if ((status = HAL_CAN_Start(hw_ctx->can)) != HAL_OK) return status;
+    if ((status = HAL_CAN_ActivateNotification(hw_ctx->can, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK) 
+        return status;
 
     // Config TX header
     hw_ctx->can_tx_header.StdId = 0xdead;

@@ -18,8 +18,6 @@
 #include "stack_controller.h"
 #include "vehicle_interface.h"
 
-
-
 // Called before the main loop
 void DbmsInit(DbmsCtx* ctx, HwCtx* hw);
 
@@ -32,5 +30,7 @@ void DbmsErr(DbmsCtx* ctx, HwCtx* hw);
 // Called on close
 void DbmsClose(DbmsCtx* ctx, HwCtx* hw);
 
+// Called on CAN RX
+void DbmsCanRx(DbmsCtx* ctx, HwCtx* hw, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8]);
 
 #endif

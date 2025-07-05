@@ -398,6 +398,30 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+    CAN_RxHeaderTypeDef rxHeader;
+    uint8_t rxData[8];
+
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK)
+    {
+        // Process the received CAN message
+        DbmsCanRx(&dbms_ctx, &hw_ctx, CAN_RX_0, rxHeader, rxData);
+    }
+}
+
+void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+    CAN_RxHeaderTypeDef rxHeader;
+    uint8_t rxData[8];
+
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rxHeader, rxData) == HAL_OK)
+    {
+        // Process the received CAN message
+        DbmsCanRx(&dbms_ctx, &hw_ctx, CAN_RX_1, rxHeader, rxData);
+    }
+}
+
 /* USER CODE END 4 */
 
 /**

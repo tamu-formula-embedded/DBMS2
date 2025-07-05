@@ -7,6 +7,11 @@
 #include "common.h"
 #include "context.h"
 
+typedef enum _CanRxChannel {
+    CAN_RX_0,
+    CAN_RX_1
+} CanRxChannel;
+
 // Configure the CAN peripheral
 int ConfigCan(HwCtx* hw_ctx);
 
