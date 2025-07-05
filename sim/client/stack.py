@@ -7,26 +7,22 @@ from enum import Enum
 
 from ipc import SerialIpcReader
 
+N_SEGMENTS = 1
+N_MONITORS_PER_SEG = 2
+N_GROUPS = 10
+N_TEMPS = 8
+N_STACKDEVS = (N_SEGMENTS * N_MONITORS_PER_SEG + 1)
 
+FRAME_WAKE = [ b'\x00', b'\x90\x00\x03\t \x13\x95' ]
+FRAME_SHUTDOWN = [ b'\x01', b'\x90\x00\x03\t \x13\x95' ]
+FRAME_POLL_VOLTS = [ b'\xc0\x05t\x13J\xe8' ]
+FRAME_START_ADC = [ b'\xd0\x03\r\x06Lv' ]
 
-FRAME_WAKE = [
-    b'\x00',
-    b'\x90\x00\x03\t \x13\x95'
-]
-
-
-FRAME_SHUTDOWN = [
-    b'\x01',
-    b'\x90\x00\x03\t \x13\x95'
-]
-
-FRAME_POLL_VOLTS = [
-    b'\xc0\x05t\x13J\xe8'
-]
-
-FRAME_START_ADC = [
-    b'\xd0\x03\r\x06Lv'
-]
+def form_vresp(sdev):
+    vresp = b'\x01' + (sdev).to_bytes(1, byteorder='big') + b'\x00\x00'
+    for i in range(N_GROUPS):
+        vresp += (i+1).to_bytes(2, byteorder='big')
+    return vresp + b'\x00\x00'
         
 class StackSim:
    
@@ -43,9 +39,9 @@ class StackSim:
     def checkseq(self, seq):
         return all([self.check(len(seq) - i, v) for i, v in enumerate(seq)])
 
-    def handle_uart_frame(self, packet):
+    def handle_uart_frame(self, ipc, packet):
         self.recv_frames.append(packet)
-        print(time.time(), '', packet)
+        # print(time.time(), '', packet)
         
         if not self.alive and self.checkseq(FRAME_WAKE):
             self.alive = True
@@ -60,7 +56,10 @@ class StackSim:
                 self.polling_volts = True
                 
             if self.polling_volts and self.checkseq(FRAME_POLL_VOLTS):
-                print("Should respond with voltage levels!")
+                # print("Should respond with voltage levels!")
+                for sdev in range(N_STACKDEVS):
+                    vresp = form_vresp(sdev+1)
+                    ipc.send(vresp)
             
         
 stack = StackSim()
