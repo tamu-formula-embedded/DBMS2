@@ -35,7 +35,7 @@ void SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len);
 
 int StackWake(HwCtx* hw);
 
-void StackShutdown(HwCtx* hw);
+int StackShutdown(HwCtx* hw);
 
 void StackAutoAddr(HwCtx* hw);
 
