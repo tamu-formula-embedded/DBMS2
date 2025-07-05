@@ -31,7 +31,7 @@ uint16_t CalcCrc16(uint8_t *buf, size_t len);
 
 int SendStackFrame(HwCtx* hw, uint8_t* buf, size_t len);
 
-void SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len);
+int SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len);
 
 int StackWake(HwCtx* hw);
 
