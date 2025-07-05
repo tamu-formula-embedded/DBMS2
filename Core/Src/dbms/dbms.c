@@ -8,7 +8,7 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
     int status = 0;
 
     // Manually set state for now
-    ctx->state = DBMS_SHUTDOWN;
+    ctx->state = DBMS_ACTIVE;
 
     // Initialize cell_states
 //    memset(ctx->cell_states, 0, N_SEGMENTS * N_MONITORS_PER_SEG * (N_GROUPS * sizeof(int16_t)) * (N_TEMPS * sizeof(int16_t)));
