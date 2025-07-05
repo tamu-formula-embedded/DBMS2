@@ -23,7 +23,7 @@ typedef struct {
 
 void DelayUs(HwCtx* hw, uint16_t us);
 
-#define APBxCLK 84 * 1000000    // TODO: fix legacy name
+#define APBxCLK 42000000    // TODO: fix legacy name
 
 void SetBrr(uint64_t brr);
 
