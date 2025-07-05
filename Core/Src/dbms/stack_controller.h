@@ -15,11 +15,16 @@ typedef struct {
     uint8_t init_field;
     uint8_t dev_addr;
     uint16_t reg_addr;
-    uint8_t data[STACK_RX_BUFFER_SIZE];
+    uint8_t buffer[STACK_RX_BUFFER_SIZE];
+    uint8_t* data;
     size_t size;
 } RxStackFrame;
 
-#define STACK_RX_FRAME(S) ((RxStackFrame){.init_field = 0, .dev_addr = 0, .reg_addr = 0, .data = {0}, .size = S})
+#define STACK_DEFINE_RX_FRAME(NAME, S)\
+    RxStackFrame NAME = {.init_field = 0, .dev_addr = 0, .reg_addr = 0, .buffer = {0}, .data = NULL, .size = S};\
+    NAME.data = NAME.buffer + 4;
+
+void __PrintStackRxFrame(RxStackFrame* f);
 
 void DelayUs(HwCtx* hw, uint16_t us);
 

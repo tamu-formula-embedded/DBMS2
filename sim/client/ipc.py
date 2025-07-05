@@ -28,14 +28,17 @@ class SerialIpcReader:
                 if self.fixed_length != MESSAGE_LEN_NONE:
                     msg = os.read(self.master_fd, self.fixed_length)
                     if len(msg) == self.fixed_length and self.packet_callback:
-                        self.packet_callback(msg)
+                        self.packet_callback(self, msg)
                 else:
                     msg = os.read(self.master_fd, 1024)
                     if msg and self.packet_callback:
-                        self.packet_callback(msg)
+                        self.packet_callback(self, msg)
             except OSError as e:
                 print("Read error:", e)
                 time.sleep(1)
+    
+    def send(self, input):
+        os.write(self.master_fd, input)
 
     def stop(self):
         self._stop = True

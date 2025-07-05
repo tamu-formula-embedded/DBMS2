@@ -154,7 +154,7 @@ HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pD
 
 HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
-    (void)read(__sim_ctx.ipc_fd_uart, pData, Size);
+    ssize_t status = read(__sim_ctx.ipc_fd_uart, pData, Size);
 }
 
 void HAL_TIM_Base_Start(TIM_HandleTypeDef *huart)

@@ -48,6 +48,17 @@ void DelayUs(HwCtx* hw, uint16_t us)
 #endif
 }
 
+void __PrintStackRxFrame(RxStackFrame* f)
+{
+    printf("RxStackFrame:\n\tinit=%d dev_addr=%d reg_addr=%d size=%d\n\tdata=",
+        f->init_field, f->dev_addr, f->reg_addr, f->size);
+    for (size_t i = 0; i < f->size; i++)
+    {
+        printf("%02x ", f->data[i]);
+    }
+    printf("\n");
+}
+
 uint16_t CalcCrc16(uint8_t *buf, size_t len)
 {
     int w_crc = 0xFFFF, i;
@@ -78,10 +89,10 @@ int SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len)
 
 void RecvStackFrame(HwCtx* hw, RxStackFrame* rx_frame)
 {
-    HAL_UART_Receive(hw->uart, rx_frame->data, rx_frame->size + 6, STACK_RECV_TIMEOUT);
-    rx_frame->init_field = rx_frame->data[0];
-    rx_frame->dev_addr = rx_frame->data[1];
-    rx_frame->reg_addr = (rx_frame->data[2] << 8) + rx_frame->data[3];
+    HAL_UART_Receive(hw->uart, rx_frame->buffer, rx_frame->size + 6, STACK_RECV_TIMEOUT);
+    rx_frame->init_field = rx_frame->buffer[0];
+    rx_frame->dev_addr = rx_frame->buffer[1];
+    rx_frame->reg_addr = (rx_frame->buffer[2] << 8) + rx_frame->buffer[3];
 }
 
 void SetBrr(uint64_t brr)
@@ -241,17 +252,16 @@ void StackUpdateVoltReadings(HwCtx* hw, DbmsCtx* ctx)
     SendStackFrameSetCrc(hw, FRAME_ADC_MEASUREMENTS, sizeof(FRAME_ADC_MEASUREMENTS));
 
     uint8_t addr;
-    RxStackFrame rx_frame = STACK_RX_FRAME(N_GROUPS * sizeof(int16_t));
+    STACK_DEFINE_RX_FRAME(rx_frame, N_GROUPS * sizeof(int16_t))
     for (size_t i = 0; i < N_STACKDEVS; i++)
     {
-        // RecvStackFrame(hw, &rx_frame);                      // recv data into the frame
-        // if ((addr = rx_frame.dev_addr - 1) <= 0) continue;  // skip myself
-
-        // for (size_t j = 0; j < N_GROUPS; j++)
-        // {
-        //     ctx->cell_states[addr / 2][addr % 2].voltages[j]
-        //         = (rx_frame.data[j * sizeof(int16_t)] << 8) 
-        //         + (rx_frame.data[j * sizeof(int16_t)] + 1); 
-        // }
+        RecvStackFrame(hw, &rx_frame);                      // recv data into the frame
+        if ((addr = rx_frame.dev_addr - 1) <= 0) continue;  // skip myself
+        for (size_t j = 0; j < N_GROUPS; j++)
+        {
+            ctx->cell_states[addr / N_MONITORS_PER_SEG][addr % N_MONITORS_PER_SEG].voltages[j]
+                = (rx_frame.data[j * sizeof(int16_t)] << 8) 
+                + (rx_frame.data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
+        }
     }
 }
