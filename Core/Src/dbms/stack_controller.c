@@ -64,14 +64,16 @@ int SendStackFrame(HwCtx* hw, uint8_t* buf, size_t len)
     return HAL_UART_Transmit(hw->uart, buf, len, STACK_SEND_TIMEOUT);
 }
 
-void SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len)
+int SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len)
 {
-    uint16_t crc = CalcCrc16(buf, len - 2);
+    int status = 0;
+	uint16_t crc = CalcCrc16(buf, len - 2);
     buf[len - 2] = crc & 0xFF;
     buf[len - 1] = (crc >> 8) & 0xFF;
-    HAL_UART_Transmit(hw->uart, buf, len, STACK_SEND_TIMEOUT);
+    status = HAL_UART_Transmit(hw->uart, buf, len, STACK_SEND_TIMEOUT);
     buf[len - 2] = 0;
     buf[len - 1] = 0;
+    return status;
 }
 
 void RecvStackFrame(HwCtx* hw, RxStackFrame* rx_frame)
@@ -135,9 +137,9 @@ int StackShutdown(HwCtx* hw)
     int status = HAL_OK;
     for (int i = 0; i < 2; i++) 
     {
-        if ((status = SendStackShutdownBlip(hw)) != HAL_OK)
-            return status;
-        if ((status = SendStackFrame(hw, FRAME_SHUTDOWN_STACK, sizeof(FRAME_SHUTDOWN_STACK))) != HAL_OK)
+    	if ((status = SendStackFrameSetCrc(hw, FRAME_SHUTDOWN_STACK, sizeof(FRAME_SHUTDOWN_STACK))) != HAL_OK)
+    	    return status;
+    	if ((status = SendStackShutdownBlip(hw)) != HAL_OK)
             return status;
         HAL_Delay(100);
     }
