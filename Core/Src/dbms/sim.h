@@ -75,6 +75,18 @@ typedef struct {
 typedef struct {
     int _;
 } CAN_HandleTypeDef;
+typedef struct {
+    int _;
+} GPIO_TypeDef;
+
+#define GPIOC  NULL
+#define GPIOA  NULL
+#define GPIO_PIN_6 6
+#define GPIO_PIN_7 7
+#define GPIO_PIN_8 8
+#define GPIO_PIN_9 9
+
+HAL_StatusTypeDef HAL_GPIO_WritePin(GPIO_TypeDef* x, int p, int a);
 
 typedef struct {
     uint32_t StdId;

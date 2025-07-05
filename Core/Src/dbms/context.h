@@ -22,7 +22,6 @@ typedef enum _DbmsState {
     DBMS_SHUTDOWN,
 } DbmsState;
 
-
 // Hardware context stores prts 
 // to peripheral interfaces
 typedef struct _HwCtx {
@@ -63,6 +62,8 @@ typedef struct _DbmsCtx {
     //   seg5 [ monitor1, monitor2, monitor3, monitor4 ]
     // ]
     CellMonitorState cell_states[N_SEGMENTS][N_MONITORS_PER_SEG];
+
+    uint64_t iterct;
 
 } DbmsCtx;
 

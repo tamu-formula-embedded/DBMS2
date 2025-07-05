@@ -18,6 +18,9 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
 
     if (ctx->state == DBMS_ACTIVE)
     {
+        LedSet(LED6, LED_GREEN);
+        LedSet(LED7, LED_GREEN);
+        LedSet(LED8, LED_GREEN);
         HAL_Delay(2000);
         status = StackWake(hw);
         StackAutoAddr(hw);
@@ -29,9 +32,15 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
 
 void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
 {
-
 	int status = 0;
+    ctx->iterct++;
+    
+    LedSet(LED6, ((ctx->iterct / 200) % 2 == 0) ? LED_GREEN : LED_OFF);
+
     if (ctx->state == DBMS_SHUTDOWN) {
+        LedSet(LED6, LED_RED);
+        LedSet(LED7, LED_RED);
+        LedSet(LED8, LED_RED);
         status = StackShutdown(hw);
         HAL_Delay(200);
         return;
@@ -41,9 +50,9 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
     // CanTransmit(hw, 0xf5, can_frame);
 
     // TEST 3: Read voltages
-    StackUpdateVoltReadings(hw, ctx);
+    // StackUpdateVoltReadings(hw, ctx);
     // Log the 5th voltage from the 1st monitor in the 1st segment
-    CanLog(hw, "v=%d", ctx->cell_states[0][0].voltages[4]);
+    // CanLog(hw, "v=%d", ctx->cell_states[0][0].voltages[4]);
 
     HAL_Delay(10);
 }
