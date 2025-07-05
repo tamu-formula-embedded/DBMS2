@@ -54,7 +54,9 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
     // Log the 5th voltage from the 1st monitor in the 1st segment
     // CanLog(hw, "v=%d", ctx->cell_states[0][0].voltages[4]);
 
-    HAL_Delay(10);
+    CanLog(hw, "ct %ld", ctx->iterct);
+
+    HAL_Delay(100);
 }
 
 void DbmsCanRx(DbmsCtx* ctx, HwCtx* hw, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])

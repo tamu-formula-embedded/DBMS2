@@ -9,16 +9,29 @@ int ConfigCan(HwCtx* hw_ctx)
 
     // Create a filter
     CAN_FilterTypeDef s_filter_cfg = {0};
-    s_filter_cfg.FilterBank = 0;
+//    s_filter_cfg.FilterBank = 0;
+//    s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;
+//    s_filter_cfg.FilterScale = CAN_FILTERSCALE_32BIT;
+//    s_filter_cfg.FilterIdHigh = 0x0000;
+//    s_filter_cfg.FilterIdLow = 0x0000;
+//    s_filter_cfg.FilterMaskIdHigh = 0x0000;
+//    s_filter_cfg.FilterMaskIdLow = 0x0000;
+//    s_filter_cfg.FilterFIFOAssignment = CAN_RX_FIFO0;
+//    s_filter_cfg.FilterActivation = ENABLE;
+//    s_filter_cfg.SlaveStartFilterBank = 14;
+
+    s_filter_cfg.FilterBank = 14;  // For CAN2, banks 14–27 are available
     s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;
     s_filter_cfg.FilterScale = CAN_FILTERSCALE_32BIT;
-    s_filter_cfg.FilterIdHigh = 0x0000;
-    s_filter_cfg.FilterIdLow = 0x0000;
-    s_filter_cfg.FilterMaskIdHigh = 0x0000;
-    s_filter_cfg.FilterMaskIdLow = 0x0000;
-    s_filter_cfg.FilterFIFOAssignment = CAN_RX_FIFO0;
+    s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;
     s_filter_cfg.FilterActivation = ENABLE;
-    s_filter_cfg.SlaveStartFilterBank = 14;
+    s_filter_cfg.SlaveStartFilterBank = 14;  // Required when using CAN2
+
+    // Accept all 11-bit standard IDs (0x000–0x7FF), reject extended frames
+    s_filter_cfg.FilterIdHigh = 0x0000;              // ID[28:13]
+    s_filter_cfg.FilterIdLow  = 0x0000;              // ID[12:0], IDE=0, RTR=0
+    s_filter_cfg.FilterMaskIdHigh = 0x0000;          // Mask to allow all standard IDs
+    s_filter_cfg.FilterMaskIdLow  = 0x0004;          // Mask IDE bit to reject extended frames
 
     // Add the filter to CAN peripheral
     if ((status = HAL_CAN_ConfigFilter(hw_ctx->can, &s_filter_cfg)) != HAL_OK) return status;
