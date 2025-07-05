@@ -112,6 +112,7 @@ int SendStackShutdownBlip(HwCtx* hw)
     if ((status = SendStackFrame(hw, wake_frame, sizeof(wake_frame))) != 0) return status;
     SetBrr(APBxCLK / 1000000); // 84
     DelayUs(hw, 3500);
+    return status;
 }
 
 
