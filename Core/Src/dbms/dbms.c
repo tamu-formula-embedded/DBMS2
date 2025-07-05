@@ -8,7 +8,7 @@ void DbmsInit(DbmsCtx* ctx, HwCtx* hw)
     int status = 0;
 
     // Manually set state for now
-    ctx->state = DBMS_SHUTDOWN;
+    ctx->state = DBMS_ACTIVE;
 
     // Initialize cell_states
 //    memset(ctx->cell_states, 0, N_SEGMENTS * N_MONITORS_PER_SEG * (N_GROUPS * sizeof(int16_t)) * (N_TEMPS * sizeof(int16_t)));
@@ -43,7 +43,7 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
     // TEST 3: Read voltages
     StackUpdateVoltReadings(hw, ctx);
     // Log the 5th voltage from the 1st monitor in the 1st segment
-    CanLog(hw, "v=%d", ctx->cell_states[0][0].voltages[4]);
+    CanLog(hw, "v=%d", ctx->cell_states[0][0].voltages[0]);
 
     HAL_Delay(10);
 }
