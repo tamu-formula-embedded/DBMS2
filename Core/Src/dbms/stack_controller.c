@@ -256,7 +256,7 @@ void StackUpdateVoltReadings(HwCtx* hw, DbmsCtx* ctx)
     for (size_t i = 0; i < N_STACKDEVS; i++)
     {
         RecvStackFrame(hw, &rx_frame);                      // recv data into the frame
-        if ((addr = rx_frame.dev_addr - 1) <= 0) continue;  // skip myself
+        if ((addr = rx_frame.dev_addr - 1) < 0) continue;  // skip myself
         for (size_t j = 0; j < N_GROUPS; j++)
         {
             ctx->cell_states[addr / N_MONITORS_PER_SEG][addr % N_MONITORS_PER_SEG].voltages[j]
