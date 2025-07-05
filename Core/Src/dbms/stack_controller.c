@@ -103,12 +103,13 @@ int SendStackWakeBlip(HwCtx* hw)
     return status;
 }
 
-void SendStackShutdownBlip(HwCtx* hw)
+int SendStackShutdownBlip(HwCtx* hw)
 {
+    int status = 0;
     // uart_set_brr(APBxCLK / (1 / (2.75 / (1 * 1000))));
     SetBrr(128000);
     uint8_t wake_frame[] = {0x00};
-    SendStackFrame(hw, wake_frame, sizeof(wake_frame));
+    if ((status = SendStackFrame(hw, wake_frame, sizeof(wake_frame))) != 0) return status;
     SetBrr(APBxCLK / 1000000); // 84
     DelayUs(hw, 3500);
 }
@@ -128,14 +129,18 @@ int StackWake(HwCtx* hw)
     return status;
 }
 
-void StackShutdown(HwCtx* hw)
+int StackShutdown(HwCtx* hw)
 {
+    int status = HAL_OK;
     for (int i = 0; i < 2; i++) 
     {
-        SendStackShutdownBlip(hw);
-        SendStackFrame(hw, FRAME_SHUTDOWN_STACK, sizeof(FRAME_SHUTDOWN_STACK));
+        if ((status = SendStackShutdownBlip(hw)) != HAL_OK)
+            return status;
+        if ((status = SendStackFrame(hw, FRAME_SHUTDOWN_STACK, sizeof(FRAME_SHUTDOWN_STACK))) != HAL_OK)
+            return status;
         HAL_Delay(100);
     }
+    return status;
 }
 
 void SendOtpEccDatain(HwCtx* hw)  

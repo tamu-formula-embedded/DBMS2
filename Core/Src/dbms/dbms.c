@@ -33,7 +33,7 @@ void DbmsIter(DbmsCtx* ctx, HwCtx* hw)
 
 	int status = 0;
     if (ctx->state == DBMS_SHUTDOWN) {
-        StackShutdown(hw);
+        status = StackShutdown(hw);
         HAL_Delay(200);
         return;
     }
