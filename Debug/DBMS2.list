@@ -815,6 +815,12 @@ int SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len)
     rx_frame->dev_addr = rx_frame->buffer[1];
     rx_frame->reg_addr = (rx_frame->buffer[2] << 8) + rx_frame->buffer[3];
 }
+ 80007e8:	bf00      	nop
+ 80007ea:	3708      	adds	r7, #8
+ 80007ec:	46bd      	mov	sp, r7
+ 80007ee:	bd80      	pop	{r7, pc}
+
+080007f0 <SetBrr>:
 
 void SetBrr(uint64_t brr)
 {
@@ -5811,11 +5817,11 @@ __weak void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
             user file
    */
 }
- 8002266:	bf00      	nop
- 8002268:	370c      	adds	r7, #12
- 800226a:	46bd      	mov	sp, r7
- 800226c:	f85d 7b04 	ldr.w	r7, [sp], #4
- 8002270:	4770      	bx	lr
+ 8002636:	bf00      	nop
+ 8002638:	370c      	adds	r7, #12
+ 800263a:	46bd      	mov	sp, r7
+ 800263c:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8002640:	4770      	bx	lr
 
 08002272 <HAL_CAN_RxFifo1FullCallback>:
   * @param  hcan pointer to a CAN_HandleTypeDef structure that contains
@@ -5824,21 +5830,21 @@ __weak void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
   */
 __weak void HAL_CAN_RxFifo1FullCallback(CAN_HandleTypeDef *hcan)
 {
- 8002272:	b480      	push	{r7}
- 8002274:	b083      	sub	sp, #12
- 8002276:	af00      	add	r7, sp, #0
- 8002278:	6078      	str	r0, [r7, #4]
+ 8002642:	b480      	push	{r7}
+ 8002644:	b083      	sub	sp, #12
+ 8002646:	af00      	add	r7, sp, #0
+ 8002648:	6078      	str	r0, [r7, #4]
 
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_CAN_RxFifo1FullCallback could be implemented in the user
             file
    */
 }
- 800227a:	bf00      	nop
- 800227c:	370c      	adds	r7, #12
- 800227e:	46bd      	mov	sp, r7
- 8002280:	f85d 7b04 	ldr.w	r7, [sp], #4
- 8002284:	4770      	bx	lr
+ 800264a:	bf00      	nop
+ 800264c:	370c      	adds	r7, #12
+ 800264e:	46bd      	mov	sp, r7
+ 8002650:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8002654:	4770      	bx	lr
 
 08002286 <HAL_CAN_SleepCallback>:
   * @param  hcan pointer to a CAN_HandleTypeDef structure that contains
@@ -5857,11 +5863,11 @@ __weak void HAL_CAN_SleepCallback(CAN_HandleTypeDef *hcan)
             the HAL_CAN_SleepCallback could be implemented in the user file
    */
 }
- 800228e:	bf00      	nop
- 8002290:	370c      	adds	r7, #12
- 8002292:	46bd      	mov	sp, r7
- 8002294:	f85d 7b04 	ldr.w	r7, [sp], #4
- 8002298:	4770      	bx	lr
+ 800265e:	bf00      	nop
+ 8002660:	370c      	adds	r7, #12
+ 8002662:	46bd      	mov	sp, r7
+ 8002664:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8002668:	4770      	bx	lr
 
 0800229a <HAL_CAN_WakeUpFromRxMsgCallback>:
   * @param  hcan pointer to a CAN_HandleTypeDef structure that contains
@@ -5870,21 +5876,21 @@ __weak void HAL_CAN_SleepCallback(CAN_HandleTypeDef *hcan)
   */
 __weak void HAL_CAN_WakeUpFromRxMsgCallback(CAN_HandleTypeDef *hcan)
 {
- 800229a:	b480      	push	{r7}
- 800229c:	b083      	sub	sp, #12
- 800229e:	af00      	add	r7, sp, #0
- 80022a0:	6078      	str	r0, [r7, #4]
+ 800266a:	b480      	push	{r7}
+ 800266c:	b083      	sub	sp, #12
+ 800266e:	af00      	add	r7, sp, #0
+ 8002670:	6078      	str	r0, [r7, #4]
 
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_CAN_WakeUpFromRxMsgCallback could be implemented in the
             user file
    */
 }
- 80022a2:	bf00      	nop
- 80022a4:	370c      	adds	r7, #12
- 80022a6:	46bd      	mov	sp, r7
- 80022a8:	f85d 7b04 	ldr.w	r7, [sp], #4
- 80022ac:	4770      	bx	lr
+ 8002672:	bf00      	nop
+ 8002674:	370c      	adds	r7, #12
+ 8002676:	46bd      	mov	sp, r7
+ 8002678:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 800267c:	4770      	bx	lr
 
 080022ae <HAL_CAN_ErrorCallback>:
   * @param  hcan pointer to a CAN_HandleTypeDef structure that contains
