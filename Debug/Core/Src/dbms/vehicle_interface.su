@@ -1,4 +1,7 @@
 ../Core/Src/dbms/vehicle_interface.c:6:5:ConfigCan	64	static
 ../Core/Src/dbms/vehicle_interface.c:53:5:CanTransmit	32	static
 ../Core/Src/dbms/vehicle_interface.c:60:6:CanLog	300	static
-../Core/Src/dbms/vehicle_interface.c:82:6:DumpCellState	48	static
+../Core/Src/dbms/vehicle_interface.c:79:6:DumpCellState	48	static
+../Core/Src/dbms/vehicle_interface.c:109:5:CanReportFault	32	static
+../Core/Src/dbms/vehicle_interface.c:142:5:CanTxHeartbeat	16	static
+../Core/Src/dbms/vehicle_interface.c:155:5:HandleCanConfig	32	static

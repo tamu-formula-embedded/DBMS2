@@ -4,12 +4,14 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <math.h>
 
 #ifdef __vscode__
