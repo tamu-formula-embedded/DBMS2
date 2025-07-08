@@ -72,12 +72,9 @@ void CanLog(HwCtx* hw_ctx, const char* fmt, ...)
         uint8_t chunk[8] = {0}; // zero out to pad shorter chunks
         int chunk_size = (len - i >= 8) ? 8 : (len - i);
         memcpy(chunk, &buffer[i], chunk_size);
-        CanTransmit(hw_ctx, CAN_LOG_ID, chunk);
+        CanTransmit(hw_ctx, CANID_CONSOLE_C0, chunk);
     }
 }
-
-#define CELL_STATUS_VOLTAGE     0x5F4
-#define CELL_STATUS_TEMP        0x5F5
 
 void DumpCellState(DbmsCtx* ctx, HwCtx* hw)
 {
@@ -95,7 +92,7 @@ void DumpCellState(DbmsCtx* ctx, HwCtx* hw)
                 uint16_t v = ctx->cell_states[i][j].voltages[k];
                 frame[6] = (v & 0xff00) >> 8;
                 frame[7] = (v & 0x00ff);
-                CanTransmit(hw, CELL_STATUS_VOLTAGE, frame);
+                CanTransmit(hw, CANID_CELLSTATE_VOLTS, frame);
             }
             for (size_t k = 0; k < N_TEMPS; k++)
             {
@@ -103,8 +100,77 @@ void DumpCellState(DbmsCtx* ctx, HwCtx* hw)
                 uint16_t t = ctx->cell_states[i][j].temps[k];
                 frame[6] = (t & 0xff00) >> 8;
                 frame[7] = (t & 0x00ff);
-                CanTransmit(hw, CELL_STATUS_TEMP, frame);
+                CanTransmit(hw, CANID_CELLSTATE_TEMPS, frame);
             }
         }
     }
+}
+
+int CanReportFault(HwCtx* hw_ctx, char* fn, int line_num, int err_code)
+{
+    // TODO: add forward fn -> the last /
+
+    static uint8_t buf[8] = {0};                        // only taking the first 8 characters
+    static uint8_t frame[8] = {0};
+
+    // Compression algorithm to encode up to 8 characters of the filename
+    for (size_t i = 0; fn[i] != 0 && i <= 8; i++)       
+    {
+        if (isalpha(fn[i])) 
+            buf[i] = tolower(fn[i]) - 'a';      // 0-25 = a-z
+        if (fn[i] == '.') buf[i] = 26;          // 26 = 
+        else buf[i] = 27;                       // 27   = other
+        buf[i] &= 0b11111;                      // ensure 5 bits
+    }
+
+    // Pack the first 5 bytes (40 bits) with 8 x 5 bit character representations
+    frame[0] = (buf[0] << 3) | (buf[1] >> 2);
+    frame[1] = ((buf[1] & 0x03) << 6) | (buf[2] << 1) | (buf[3] >> 4);
+    frame[2] = (buf[4] << 3) | (buf[5] >> 2);
+    frame[3] = ((buf[5] & 0x03) << 6) | (buf[6] << 1) | (buf[7] >> 4);
+    frame[4] = (buf[7] & 0x0F) << 4;
+
+    frame[5] = (line_num >> 8) & 0xFF;
+    frame[6] = line_num & 0x00ff;
+    frame[7] = err_code & 0xff;
+    
+    CanTransmit(hw_ctx, CANID_FATAL_ERROR, frame);      // Ignore this error code
+
+    return err_code;
+}
+
+int CanTxHeartbeat(HwCtx* hw, uint16_t settings_crc)
+{
+    static uint8_t frame[] = { N_SEGMENTS, N_MONITORS_PER_SEG, N_GROUPS, N_TEMPS, 0, 0, 0, 0};
+    frame[6] = (settings_crc & 0xff00) >> 8;
+    frame[7] = (settings_crc & 0xff);
+    return CanTransmit(hw, CANID_TX_HEARTBEAT, frame);
+}
+
+#define UNPACK_UINT32(BUF)      (((BUF)[0] & 0xff000000) << 24)     \
+                                | (((BUF)[1] & 0x00ff0000) << 16)   \
+                                | (((BUF)[2] & 0x0000ff00) << 8)    \
+                                | (((BUF)[3] & 0x000000ff)); 
+
+int HandleCanConfig(HwCtx* hw, DbmsCtx* ctx, uint8_t* rx_data)
+{
+    // This is an inefficient frame format ):
+
+    uint8_t cfg_id  = rx_data[0];
+    int32_t cfg_val = UNPACK_UINT32(rx_data + 4);
+
+    switch (cfg_id)
+    {
+        case CFGID_MAX_ALLOWED_PACK_VOLTS:
+            ctx->settings.max_allowed_pack_voltage = cfg_val & 0xffff;
+            break;
+        case CFGID_QUIET_MS_BEFORE_SHUTDOWN:
+            ctx->settings.quiet_ms_before_shutdown = cfg_val;
+            break;
+
+        default:
+            break;
+    }
+
+    return 0;
 }

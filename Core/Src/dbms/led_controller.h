@@ -7,7 +7,6 @@
 #include "common.h"
 #include "context.h"
 
-
 typedef enum _LedColor {
     LED_OFF,
     LED_RED,
@@ -22,5 +21,7 @@ typedef enum _Led {
 } Led;
 
 void LedSet(Led led, LedColor color);
+
+#define LED_SHOW_ERROR() LedSet(LED6, LED_RED); LedSet(LED7, LED_RED); LedSet(LED8, LED_RED);
 
 #endif
