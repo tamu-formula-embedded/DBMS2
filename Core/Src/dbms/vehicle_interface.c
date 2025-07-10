@@ -3,7 +3,7 @@
 //  
 #include "vehicle_interface.h"
 
-int ConfigCan(HwCtx* hw_ctx)
+int ConfigCan(DbmsCtx* ctx)
 {
     int status = HAL_OK;
 
@@ -34,30 +34,30 @@ int ConfigCan(HwCtx* hw_ctx)
     s_filter_cfg.FilterMaskIdLow  = 0x0004;          // Mask IDE bit to reject extended frames
 
     // Add the filter to CAN peripheral
-    if ((status = HAL_CAN_ConfigFilter(hw_ctx->can, &s_filter_cfg)) != HAL_OK) return status;
+    if ((status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg)) != HAL_OK) return status;
 
-    if ((status = HAL_CAN_Start(hw_ctx->can)) != HAL_OK) return status;
-    if ((status = HAL_CAN_ActivateNotification(hw_ctx->can, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK) 
+    if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK) return status;
+    if ((status = HAL_CAN_ActivateNotification(ctx->hw.can, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK) 
         return status;
 
     // Config TX header
-    hw_ctx->can_tx_header.StdId = 0xdead;
-    hw_ctx->can_tx_header.IDE = CAN_ID_STD;
-    hw_ctx->can_tx_header.RTR = CAN_RTR_DATA;
-    hw_ctx->can_tx_header.DLC = 8;
-    hw_ctx->can_tx_header.TransmitGlobalTime = DISABLE;
+    ctx->hw.can_tx_header.StdId = 0xdead;
+    ctx->hw.can_tx_header.IDE = CAN_ID_STD;
+    ctx->hw.can_tx_header.RTR = CAN_RTR_DATA;
+    ctx->hw.can_tx_header.DLC = 8;
+    ctx->hw.can_tx_header.TransmitGlobalTime = DISABLE;
 
     return status;
 }
 
-int CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8])
+int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
-    hw_ctx->can_tx_header.StdId = id;
-    int32_t result = HAL_CAN_AddTxMessage(hw_ctx->can, &hw_ctx->can_tx_header, data, &hw_ctx->can_tx_mailbox);
+    ctx->hw.can_tx_header.StdId = id;
+    int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, &ctx->hw.can_tx_header, data, &ctx->hw.can_tx_mailbox);
     return result;
 }
 
-void CanLog(HwCtx* hw_ctx, const char* fmt, ...) 
+void CanLog(DbmsCtx* ctx, const char* fmt, ...) 
 {
     char buffer[CAN_LOG_BUFFER_SIZE];
     va_list args;
@@ -72,11 +72,11 @@ void CanLog(HwCtx* hw_ctx, const char* fmt, ...)
         uint8_t chunk[8] = {0}; // zero out to pad shorter chunks
         int chunk_size = (len - i >= 8) ? 8 : (len - i);
         memcpy(chunk, &buffer[i], chunk_size);
-        CanTransmit(hw_ctx, CANID_CONSOLE_C0, chunk);
+        CanTransmit(ctx, CANID_CONSOLE_C0, chunk);
     }
 }
 
-void DumpCellState(DbmsCtx* ctx, HwCtx* hw)
+void DumpCellState(DbmsCtx* ctx)
 {
     uint8_t frame[8] = {0};
 
@@ -92,7 +92,7 @@ void DumpCellState(DbmsCtx* ctx, HwCtx* hw)
                 uint16_t v = ctx->cell_states[i][j].voltages[k];
                 frame[6] = (v & 0xff00) >> 8;
                 frame[7] = (v & 0x00ff);
-                CanTransmit(hw, CANID_CELLSTATE_VOLTS, frame);
+                CanTransmit(ctx, CANID_CELLSTATE_VOLTS, frame);
             }
             for (size_t k = 0; k < N_TEMPS; k++)
             {
@@ -100,13 +100,13 @@ void DumpCellState(DbmsCtx* ctx, HwCtx* hw)
                 uint16_t t = ctx->cell_states[i][j].temps[k];
                 frame[6] = (t & 0xff00) >> 8;
                 frame[7] = (t & 0x00ff);
-                CanTransmit(hw, CANID_CELLSTATE_TEMPS, frame);
+                CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame);
             }
         }
     }
 }
 
-int CanReportFault(HwCtx* hw_ctx, char* fn, int line_num, int err_code)
+int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 {
     // TODO: add forward fn -> the last /
 
@@ -116,7 +116,7 @@ int CanReportFault(HwCtx* hw_ctx, char* fn, int line_num, int err_code)
     // Compression algorithm to encode up to 8 characters of the filename
     for (size_t i = 0; fn[i] != 0 && i <= 8; i++)       
     {
-        if (isalpha(fn[i])) 
+        if (isalpha((uint8_t)fn[i])) 
             buf[i] = tolower(fn[i]) - 'a';      // 0-25 = a-z
         if (fn[i] == '.') buf[i] = 26;          // 26 = 
         else buf[i] = 27;                       // 27   = other
@@ -134,17 +134,17 @@ int CanReportFault(HwCtx* hw_ctx, char* fn, int line_num, int err_code)
     frame[6] = line_num & 0x00ff;
     frame[7] = err_code & 0xff;
     
-    CanTransmit(hw_ctx, CANID_FATAL_ERROR, frame);      // Ignore this error code
+    CanTransmit(ctx, CANID_FATAL_ERROR, frame);      // Ignore this error code
 
     return err_code;
 }
 
-int CanTxHeartbeat(HwCtx* hw, uint16_t settings_crc)
+int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc)
 {
     static uint8_t frame[] = { N_SEGMENTS, N_MONITORS_PER_SEG, N_GROUPS, N_TEMPS, 0, 0, 0, 0};
     frame[6] = (settings_crc & 0xff00) >> 8;
     frame[7] = (settings_crc & 0xff);
-    return CanTransmit(hw, CANID_TX_HEARTBEAT, frame);
+    return CanTransmit(ctx, CANID_TX_HEARTBEAT, frame);
 }
 
 #define UNPACK_UINT32(BUF)      (((BUF)[0] & 0xff000000) << 24)     \
@@ -152,7 +152,7 @@ int CanTxHeartbeat(HwCtx* hw, uint16_t settings_crc)
                                 | (((BUF)[2] & 0x0000ff00) << 8)    \
                                 | (((BUF)[3] & 0x000000ff)); 
 
-int HandleCanConfig(HwCtx* hw, DbmsCtx* ctx, uint8_t* rx_data)
+int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data)
 {
     // This is an inefficient frame format ):
 

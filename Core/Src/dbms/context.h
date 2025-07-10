@@ -56,6 +56,8 @@ typedef struct _DbmsSettings {
 
 typedef struct _DbmsCtx {
 
+    HwCtx hw;                   // Holds points to hardware peripherals
+
     DbmsState req_state;        // the state we want
     DbmsState cur_state;        // the state we are in
 

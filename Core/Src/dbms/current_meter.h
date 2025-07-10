@@ -8,6 +8,6 @@
 #include "context.h"
 
 // Poll the value of the ADC 
-double PollAdc(HwCtx* hw_ctx);
+double PollAdc(DbmsCtx* ctx);
 
 #endif

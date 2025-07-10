@@ -26,7 +26,7 @@ typedef struct {
 
 void __PrintStackRxFrame(RxStackFrame* f);
 
-void DelayUs(HwCtx* hw, uint16_t us);
+void DelayUs(DbmsCtx* ctx, uint16_t us);
 
 #define APBxCLK 42000000    // TODO: fix legacy name
 
@@ -34,21 +34,21 @@ void SetBrr(uint64_t brr);
 
 uint16_t CalcCrc16(uint8_t *buf, size_t len);
 
-int SendStackFrame(HwCtx* hw, uint8_t* buf, size_t len);
+int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len);
 
-int SendStackFrameSetCrc(HwCtx* hw, uint8_t* buf, size_t len);
+int SendStackFrameSetCrc(DbmsCtx* ctx, uint8_t* buf, size_t len);
 
-int StackWake(HwCtx* hw);
+int StackWake(DbmsCtx* ctx);
 
-int StackShutdown(HwCtx* hw);
+int StackShutdown(DbmsCtx* ctx);
 
-void StackAutoAddr(HwCtx* hw);
+void StackAutoAddr(DbmsCtx* ctx);
 
-void StackSetNumActiveCells(HwCtx* hw, uint8_t n_active_cells);
+void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells);
 
-void StackSetupGpio(HwCtx* hw);
+void StackSetupGpio(DbmsCtx* ctx);
 
-void StackSetupVoltReadings(HwCtx* hw);
-void StackUpdateVoltReadings(HwCtx* hw, DbmsCtx* ctx);
+void StackSetupVoltReadings(DbmsCtx* ctx);
+void StackUpdateVoltReadings(DbmsCtx* ctx);
 
 #endif
