@@ -23,23 +23,23 @@ typedef enum _CanRxChannel {
 } CanRxChannel;
 
 // Configure the CAN peripheral
-int ConfigCan(HwCtx* hw_ctx);
+int ConfigCan(DbmsCtx* ctx);
 
-int CanTransmit(HwCtx* hw_ctx, uint32_t id, uint8_t data[8]);
+int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8]);
 
-int CanReportFault(HwCtx* hw_ctx, char* fn, int line_num, int err_code);
+int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code);
 
-#define CAN_REPORT_FAULT(HW, ERR) CanReportFault(HW, __FILE__, __LINE__, ERR);
+#define CAN_REPORT_FAULT(ctx, ERR) CanReportFault(ctx, __FILE__, __LINE__, ERR);
 // #define CHECK_ERROR_AND_RETURN(STATUS, CALL)     if ((STATUS = CALL) != 0) { CanReportFault(__FILE__, __LINE__, ) }
 
 #define CAN_LOG_BUFFER_SIZE     256     // max formatted string length
 
-void CanLog(HwCtx* hw_ctx, const char* fmt, ...);
+void CanLog(DbmsCtx* ctx, const char* fmt, ...);
 
-void DumpCellState(DbmsCtx* ctx, HwCtx* hw);
+void DumpCellState(DbmsCtx* ctx);
 
-int CanTxHeartbeat(HwCtx* hw, uint16_t settings_crc);
+int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc);
 
-int HandleCanConfig(HwCtx* hw, DbmsCtx* ctx, uint8_t* rx_data);
+int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data);
 
 #endif

@@ -19,18 +19,18 @@
 #include "vehicle_interface.h"
 
 // Called before the main loop
-void DbmsInit(DbmsCtx* ctx, HwCtx* hw);
+void DbmsInit(DbmsCtx* ctx);
 
 // Called from the main loop
-void DbmsIter(DbmsCtx* ctx, HwCtx* hw);
+void DbmsIter(DbmsCtx* ctx);
 
 // Called to handle an err state
-void DbmsErr(DbmsCtx* ctx, HwCtx* hw);
+void DbmsErr(DbmsCtx* ctx);
 
 // Called on close
-void DbmsClose(DbmsCtx* ctx, HwCtx* hw);
+void DbmsClose(DbmsCtx* ctx);
 
 // Called on CAN RX
-void DbmsCanRx(DbmsCtx* ctx, HwCtx* hw, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8]);
+void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8]);
 
 #endif

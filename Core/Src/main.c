@@ -53,7 +53,6 @@ UART_HandleTypeDef huart4;
 /* USER CODE BEGIN PV */
 
 static DbmsCtx dbms_ctx;
-static HwCtx hw_ctx;
 
 /* USER CODE END PV */
 
@@ -108,12 +107,11 @@ int main(void)
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
   
-  hw_ctx.adc = &hadc1;
-  hw_ctx.can = &hcan2;
-  hw_ctx.timer = &htim1;
-  hw_ctx.uart = &huart4;
-
-  DbmsInit(&dbms_ctx, &hw_ctx);
+  dbms_ctx.hw.adc = &hadc1;
+  dbms_ctx.hw.can = &hcan2;
+  dbms_ctx.hw.timer = &htim1;
+  dbms_ctx.hw.uart = &huart4;
+  DbmsInit(&dbms_ctx);
 
   /* USER CODE END 2 */
 
@@ -121,7 +119,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    DbmsIter(&dbms_ctx, &hw_ctx);
+    DbmsIter(&dbms_ctx);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -406,7 +404,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK)
     {
         // Process the received CAN message
-        DbmsCanRx(&dbms_ctx, &hw_ctx, CAN_RX_0, rxHeader, rxData);
+        DbmsCanRx(&dbms_ctx, CAN_RX_0, rxHeader, rxData);
     }
 }
 
@@ -418,7 +416,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rxHeader, rxData) == HAL_OK)
     {
         // Process the received CAN message
-        DbmsCanRx(&dbms_ctx, &hw_ctx, CAN_RX_1, rxHeader, rxData);
+        DbmsCanRx(&dbms_ctx, CAN_RX_1, rxHeader, rxData);
     }
 }
 
@@ -434,7 +432,7 @@ void Error_Handler(void)
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
 
-  DbmsErr(&dbms_ctx, &hw_ctx);
+  DbmsErr(&dbms_ctx);
 
   while (1)
   {
