@@ -111,7 +111,7 @@ int StackWake(DbmsCtx* ctx)
             CAN_REPORT_FAULT(ctx, status);
             return status;
         }
-        HAL_Delay(15 + 12 * N_STACKDEVS);   // wtf
+        HAL_Delay(15 + 12 * N_STACKDEVS);   // wtf  -- microseconds dumbass
     }
     return status;
 }
@@ -229,6 +229,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xC0, 0x05, 0x68 + 2*(16-N_GROUPS), N_GROUPS*2-1, 0x00, 0x00 };
 
     SendStackFrameSetCrc(ctx, FRAME_ADC_MEASUREMENTS, sizeof(FRAME_ADC_MEASUREMENTS));
+    DelayUs(ctx, 192 + 5 * N_STACKDEVS);
 
     uint8_t addr;
     STACK_DEFINE_RX_FRAME(rx_frame, N_GROUPS * sizeof(int16_t))
@@ -236,8 +237,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     {
         RecvStackFrame(ctx, &rx_frame);                      // recv data into the frame
 
-        uint8_t frame[] = { rx_frame.dev_addr, rx_frame.size, rx_frame.init_field, (rx_frame.reg_addr >> 8) & 0xff, rx_frame.reg_addr & 0xff, 0, 0, 0 };
-        CanTransmit(ctx, 0x581, frame);
+        CanTransmit(ctx, 0x581, rx_frame.buffer);
 
         if ((addr = rx_frame.dev_addr - 1) < 0) continue;  // skip myself
         // for (size_t j = 0; j < N_GROUPS; j++)
