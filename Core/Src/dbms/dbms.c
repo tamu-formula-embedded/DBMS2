@@ -25,6 +25,7 @@ void DbmsInit(DbmsCtx* ctx)
             // by loading fallback settings? Ideally these should
             // be updated enough to be ok
             LoadFallbackSettings(&ctx->settings);
+            ctx->need_to_sync_settings = true;          // queue up a write
         }  
         else    {}  // fatal error
 }
@@ -90,7 +91,7 @@ void DbmsIter(DbmsCtx* ctx)
         // even though the controller should be on
         if ((status = SaveSettings(ctx, &ctx->settings)) != HAL_OK)
         {
-             
+
         }
         ctx->need_to_sync_settings = false;
     }
@@ -116,10 +117,12 @@ void DbmsIter(DbmsCtx* ctx)
     //
     if (ctx->cur_state == DBMS_ACTIVE && ctx->req_state == DBMS_SHUTDOWN)
     {
+        // on these states -- probably need to write to disk too
         DbmsPerformShutdown(ctx);
     }
     else if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
+        // on these states -- probably need to write to disk too
         DbmsPerformWakeup(ctx);
     }
 
