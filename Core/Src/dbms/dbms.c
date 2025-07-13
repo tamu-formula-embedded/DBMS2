@@ -82,6 +82,9 @@ void DbmsIter(DbmsCtx* ctx)
 	int status = 0;
     ctx->iterct++;
 
+    //
+    //  Store the settings when required
+    //
     if (ctx->need_to_sync_settings)
     {
         // should we also check that we are awake?
@@ -130,6 +133,14 @@ void DbmsIter(DbmsCtx* ctx)
     {
         // on these states -- probably need to write to disk too
         DbmsPerformWakeup(ctx);
+    }
+
+    //
+    //  Read information from the stack
+    //
+    if (ctx->cur_state)
+    {
+        StackUpdateVoltReadings(ctx);
     }
 
     HAL_Delay(10);      // make adaptive
