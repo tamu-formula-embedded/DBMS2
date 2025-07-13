@@ -108,31 +108,35 @@ void DumpCellState(DbmsCtx* ctx)
 
 int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 {
-    LED_SHOW_ERROR();
+    ctx->led_show_error = true;
 
     // TODO: add forward fn -> the last /
 
-    static uint8_t buf[8] = {0};                        // only taking the first 8 characters
     static uint8_t frame[8] = {0};
 
+    // static uint8_t buf[8] = {0};                        // only taking the first 8 characters
     // Compression algorithm to encode up to 8 characters of the filename
-    for (size_t i = 0; fn[i] != 0 && i <= 8; i++)       
+    // for (size_t i = 0; fn[i] != 0 && i <= 8; i++)       
+    // {
+    //     if (isalpha((uint8_t)fn[i])) 
+    //         buf[i] = tolower(fn[i]) - 'a';      // 0-25 = a-z
+    //     if (fn[i] == '.') buf[i] = 26;          // 26 = 
+    //     else buf[i] = 27;                       // 27   = other
+    //     buf[i] &= 0b11111;                      // ensure 5 bits
+    // }
+    // Pack the first 5 bytes (40 bits) with 8 x 5 bit character representations
+    // frame[0] = (buf[0] << 3) | (buf[1] >> 2);
+    // frame[1] = ((buf[1] & 0x03) << 6) | (buf[2] << 1) | (buf[3] >> 4);
+    // frame[2] = (buf[4] << 3) | (buf[5] >> 2);
+    // frame[3] = ((buf[5] & 0x03) << 6) | (buf[6] << 1) | (buf[7] >> 4);
+    // frame[4] = (buf[7] & 0x0F) << 4;
+
+    for (size_t i = 0; fn[i] != 0 && i <= 4; i++)       
     {
-        if (isalpha((uint8_t)fn[i])) 
-            buf[i] = tolower(fn[i]) - 'a';      // 0-25 = a-z
-        if (fn[i] == '.') buf[i] = 26;          // 26 = 
-        else buf[i] = 27;                       // 27   = other
-        buf[i] &= 0b11111;                      // ensure 5 bits
+        frame[i] = fn[i];
     }
 
-    // Pack the first 5 bytes (40 bits) with 8 x 5 bit character representations
-    frame[0] = (buf[0] << 3) | (buf[1] >> 2);
-    frame[1] = ((buf[1] & 0x03) << 6) | (buf[2] << 1) | (buf[3] >> 4);
-    frame[2] = (buf[4] << 3) | (buf[5] >> 2);
-    frame[3] = ((buf[5] & 0x03) << 6) | (buf[6] << 1) | (buf[7] >> 4);
-    frame[4] = (buf[7] & 0x0F) << 4;
-
-    frame[5] = (line_num >> 8) & 0xFF;
+    frame[5] = (line_num >> 8) & 0xff;
     frame[6] = line_num & 0x00ff;
     frame[7] = err_code & 0xff;
     
