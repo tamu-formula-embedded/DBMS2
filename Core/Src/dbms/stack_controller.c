@@ -69,7 +69,11 @@ int SendStackWakeBlip(DbmsCtx* ctx)
     // uart_set_brr(APBxCLK / (1 / (2.75 / (1 * 1000))));
     SetBrr(25700/2); // ?
     uint8_t wake_frame[] = {0x00};
-    if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0) return status;
+    if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0) 
+    {
+        CAN_REPORT_FAULT(ctx, status);
+        return status;
+    }
     SetBrr(APBxCLK / 1000000); // 84
     DelayUs(ctx, 3500);
     return status;
@@ -81,7 +85,11 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
     // uart_set_brr(APBxCLK / (1 / (2.75 / (1 * 1000))));
     SetBrr(128000);
     uint8_t wake_frame[] = {0x00};
-    if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0) return status;
+    if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0)
+    {
+        CAN_REPORT_FAULT(ctx, status);
+        return status;
+    }
     SetBrr(APBxCLK / 1000000); // 84
     DelayUs(ctx, 3500);
     return status;
@@ -94,9 +102,15 @@ int StackWake(DbmsCtx* ctx)
     for (int i = 0; i < 2; i++) 
     {
         if ((status = SendStackWakeBlip(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
             return status;
+        }
         if ((status = SendStackFrame(ctx, FRAME_WAKE_STACK, sizeof(FRAME_WAKE_STACK))) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
             return status;
+        }
         HAL_Delay(15 + 12 * N_STACKDEVS);   // wtf
     }
     return status;
@@ -108,9 +122,15 @@ int StackShutdown(DbmsCtx* ctx)
     for (int i = 0; i < 2; i++) 
     {
     	if ((status = SendStackFrameSetCrc(ctx, FRAME_SHUTDOWN_STACK, sizeof(FRAME_SHUTDOWN_STACK))) != HAL_OK)
-    	    return status;
-    	if ((status = SendStackShutdownBlip(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
             return status;
+        }
+    	if ((status = SendStackShutdownBlip(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+            return status;
+        }
         HAL_Delay(100);
     }
     return status;

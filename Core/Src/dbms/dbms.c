@@ -19,6 +19,7 @@ void DbmsInit(DbmsCtx* ctx)
 
     if ((status = LoadSettings(ctx, &ctx->settings)) != HAL_OK)
     {
+        CAN_REPORT_FAULT(ctx, status);
         if (status == ERR_CRC_MISMATCH)
         {
             // This is a bad situation, but we can still proceed
@@ -43,7 +44,6 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     if ((status = StackWake(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
-        LED_SHOW_ERROR();
         return status;                  // we are cooked
     }
 
@@ -66,7 +66,6 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     if ((status = StackShutdown(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
-        LED_SHOW_ERROR();
         return status;
     }
 
@@ -91,7 +90,7 @@ void DbmsIter(DbmsCtx* ctx)
         // even though the controller should be on
         if ((status = SaveSettings(ctx, &ctx->settings)) != HAL_OK)
         {
-
+            CAN_REPORT_FAULT(ctx, status);
         }
         ctx->need_to_sync_settings = false;
     }
