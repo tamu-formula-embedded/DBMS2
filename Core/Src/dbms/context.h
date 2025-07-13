@@ -40,16 +40,6 @@ typedef struct _CellMonitorState {
     uint16_t temps[N_TEMPS];
 } CellMonitorState;
 
-typedef struct {        
-    // TODO: replace with real queue
-    // TODO: make forward definition
-    //       and put read definition
-    //       in correct file
-    int32_t     data;       
-    bool        requested;       
-    uint8_t     id;         
-} SettingQueryQueue;    
-
 typedef struct _DbmsSettings {
 
     // The maximum voltage of the pack or else a fault is thrown
@@ -88,8 +78,6 @@ typedef struct _DbmsCtx {
 
     bool        need_to_sync_settings;
     bool        led_show_error;
-
-    SettingQueryQueue   settings_query_queue;
 
 } DbmsCtx;
 

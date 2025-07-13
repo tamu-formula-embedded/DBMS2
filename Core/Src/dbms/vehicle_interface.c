@@ -153,24 +153,7 @@ int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc)
     return CanTransmit(ctx, CANID_TX_HEARTBEAT, frame);
 }
 
-int HandleConfigQueryResponses(DbmsCtx* ctx)
-{
-    // if (ctx->settings_query_queue.requested)
-    // {
-    //     uint8_t frame[] = { ctx->settings_query_queue.id, 0, 0, 0, 0, 0, 0, 0 };
-    //     memcpy(frame + 4, ctx->settings_query_queue.data, sizeof(int32_t));
-    //     CanTransmit(frame, CANID_TX_GET_CONFIG, frame);
-    //     ctx->settings_query_queue.requested = false;
-    // }
-    return 0;
-}
-
 #define HANDLE_CFG(ACTION, Y, SETTING, X) if (ACTION == CFG_SET) { SETTING = X; } else { Y = SETTING; }
-
-#define UNPACK_UINT32(BUF)      (((BUF)[0] & 0xff000000) << 24)     \
-                                | (((BUF)[1] & 0x00ff0000) << 16)   \
-                                | (((BUF)[2] & 0x0000ff00) << 8)    \
-                                | (((BUF)[3] & 0x000000ff)); 
 
 int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
 {
@@ -178,7 +161,6 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     uint8_t cfg_id  = rx_data[0];
     int32_t cfg_set = 0, cfg_get = 0;
     
-    //cfg_store = UNPACK_UINT32(rx_data + 4);
     memcpy(&cfg_set, rx_data + 4, sizeof(int32_t));
 
     uint8_t frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
@@ -201,7 +183,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
         ctx->need_to_sync_settings = true;
     else 
     {      
-        uint8_t frame[] = { ctx->settings_query_queue.id, 0, 0, 0, 0, 0, 0, 0 };
+        uint8_t frame[] = { cfg_id, 0, 0, 0, 0, 0, 0, 0 };
         memcpy(frame + 4, &cfg_get, sizeof(int32_t));
         CanTransmit(ctx, CANID_TX_GET_CONFIG, frame);
     }
