@@ -105,6 +105,7 @@ void DbmsIter(DbmsCtx* ctx)
         LedSet(LED6, ((ctx->iterct / 20) % 2 == 0) ? LED_GREEN : LED_OFF);
     }
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)&ctx->settings, sizeof(DbmsSettings)));
+    HandleConfigQueryResponses(ctx);
 
     //
     //  Its been too long since we have recived a frame, we need to force a shutdown
@@ -136,8 +137,7 @@ void DbmsIter(DbmsCtx* ctx)
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
-    // CanLog(ctx, "rx %d", channel);
-    // CanTransmit(ctx, 0x02, rx_data);
+    int status = 0;
 
     switch (rx_header.StdId)
     {
@@ -145,14 +145,17 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             ctx->last_rx_heartbeat = HAL_GetTick();
             break;
 
-        case CANID_RX_CONFIG:
-            int status = HandleCanConfig(ctx, rx_data);
-            if (status != ERR_CFGID_NOT_FOUND)
+        case CANID_RX_SET_CONFIG:
+            if ((status = HandleCanConfig(ctx, rx_data, CFG_SET)) != 0)
             {
-                ctx->need_to_sync_settings = true;
+                if (status == ERR_CFGID_NOT_FOUND) {}   
             }
             break;
-
+        case CANID_RX_GET_CONFIG:
+            if ((status = HandleCanConfig(ctx, rx_data, CFG_GET)) != 0)
+            {
+                if (status == ERR_CFGID_NOT_FOUND) {}   
+            }
         default:
             break;
     }
