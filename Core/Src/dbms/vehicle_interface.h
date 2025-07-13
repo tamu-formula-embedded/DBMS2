@@ -16,6 +16,7 @@
 #define CANID_CELLSTATE_TEMPS       0x508
 #define CANID_FATAL_ERROR           0x50B   // = SOB = Son Of a Bitch
 #define CANID_TX_GET_CONFIG         0x523
+#define CANID_TX_CFG_ACK            0x522
 
 #define CANID_RX_HEARTBEAT          0x541
 #define CANID_RX_SET_CONFIG         0x542
