@@ -169,7 +169,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data)
             break;
 
         default:
-            break;
+            return ERR_CFGID_NOT_FOUND;
     }
 
     return 0;

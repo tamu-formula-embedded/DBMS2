@@ -1,0 +1,89 @@
+//  
+//  Copyright (c) Texas A&M University.
+//  
+#include "storage.h"
+
+extern I2C_HandleTypeDef hi2c1;
+
+int WriteEEPROM(DbmsCtx* ctx, uint32_t addr, uint8_t* data, uint16_t len) 
+{
+    int status = 0;
+    uint16_t remaining = len, offset = 0;
+
+    while (remaining > 0) 
+    {
+        uint16_t page_offset = addr % EEPROM_PAGE_SIZE;
+        uint16_t write_size = EEPROM_PAGE_SIZE - page_offset;
+        if (write_size > remaining) write_size = remaining;
+
+        uint8_t buf[2 + EEPROM_PAGE_SIZE];
+        buf[0] = (addr >> 8) & 0xFF; // Address high byte (A15-A8)
+        buf[1] = addr & 0xFF;        // Address low byte (A7-A0)
+        memcpy(&buf[2], &data[offset], write_size);
+
+        uint8_t dev_addr = EEPROM_ADDR | ((addr >> 16) & 0x01); // A16 bit
+        if ((status = HAL_I2C_Master_Transmit(ctx->hw.i2c, dev_addr, buf, write_size + 2, EEPROM_WRITE_TIMEOUT)) != HAL_OK)
+        {
+            return status;
+        }
+
+        HAL_Delay(5); 
+        addr += write_size;
+        offset += write_size;
+        remaining -= write_size;
+    }
+
+    return HAL_OK;
+}
+
+int ReadEEPROM(DbmsCtx* ctx, uint32_t addr, uint8_t* data, uint16_t len) 
+{
+    int status = 0;
+
+    uint8_t addr_buf[2];
+    addr_buf[0] = (addr >> 8) & 0xFF; 
+    addr_buf[1] = addr & 0xFF;        
+    uint8_t dev_addr = EEPROM_ADDR | ((addr >> 16) & 0x01); 
+
+    if ((status = HAL_I2C_Master_Transmit(ctx->hw.i2c, dev_addr, addr_buf, 2, EEPROM_WRITE_TIMEOUT)) != HAL_OK)
+    {
+        return status;
+    }
+
+    return HAL_I2C_Master_Receive(ctx->hw.i2c, dev_addr, data, len, EEPROM_READ_TIMEOUT);
+}
+
+int SaveSettings(DbmsCtx* ctx, DbmsSettings* settings) 
+{
+    uint8_t buf[sizeof(DbmsSettings) + sizeof(uint16_t)];
+    memcpy(buf, settings, sizeof(DbmsSettings));
+    
+    uint16_t crc = CalcCrc16((uint8_t*)settings, sizeof(DbmsSettings));
+    memcpy(buf + sizeof(DbmsSettings), &crc, sizeof(crc));
+
+    return WriteEEPROM(ctx, EEPROM_SETTINGS_ADDR, buf, sizeof(buf));
+}
+
+
+int LoadSettings(DbmsCtx* ctx, DbmsSettings* settings)
+{
+    int status = 0;
+    uint8_t buf[sizeof(DbmsSettings) + sizeof(uint16_t)];
+
+    if ((status = ReadEEPROM(ctx, EEPROM_SETTINGS_ADDR, buf, sizeof(buf))) != HAL_OK)
+    {
+        return status;
+    }
+
+    uint16_t r_crc;
+    memcpy(settings, buf, sizeof(DbmsSettings));
+    memcpy(r_crc, buf + sizeof(DbmsSettings), sizeof(r_crc));
+
+    uint16_t c_crc = CalcCrc16((uint8_t*)settings, sizeof(DbmsSettings));
+    if (r_crc != c_crc)
+    {
+        status = ERR_CRC_MISMATCH;
+    }
+
+    return status;
+}
