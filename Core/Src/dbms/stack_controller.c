@@ -46,12 +46,18 @@ int SendStackFrameSetCrc(DbmsCtx* ctx, uint8_t* buf, size_t len)
     return status;
 }
 
-void RecvStackFrame(DbmsCtx* ctx, RxStackFrame* rx_frame)
+int RecvStackFrame(DbmsCtx* ctx, RxStackFrame* rx_frame)
 {
-    HAL_UART_Receive(ctx->hw.uart, rx_frame->buffer, rx_frame->size + 6, STACK_RECV_TIMEOUT);
+    int status = 0;
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame->buffer, rx_frame->size + 6, STACK_RECV_TIMEOUT)) != 0)
+    {
+        CAN_REPORT_FAULT(ctx, status);
+    }
     rx_frame->init_field = rx_frame->buffer[0];
     rx_frame->dev_addr = rx_frame->buffer[1];
     rx_frame->reg_addr = (rx_frame->buffer[2] << 8) + rx_frame->buffer[3];
+    rx_frame->data = rx_frame->buffer + 4;
+    return status;
 }
 
 void SetBrr(uint64_t brr)
@@ -237,6 +243,8 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     {
         RecvStackFrame(ctx, &rx_frame);                      // recv data into the frame
 
+        uint8_t frame[8] = {0};
+        memcpy(frame, rx_frame.buffer, 8);
         CanTransmit(ctx, 0x581, rx_frame.buffer);
 
         if ((addr = rx_frame.dev_addr - 1) < 0) continue;  // skip myself
