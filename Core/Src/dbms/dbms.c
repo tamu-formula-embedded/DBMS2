@@ -111,9 +111,9 @@ void DbmsIter(DbmsCtx* ctx)
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //  
-    // if (HAL_GetTick() - ctx->last_rx_heartbeat > ctx->settings.quiet_ms_before_shutdown)
-        // ctx->req_state = DBMS_SHUTDOWN;
-    // else 
+     if (HAL_GetTick() - ctx->last_rx_heartbeat > ctx->settings.quiet_ms_before_shutdown)
+         ctx->req_state = DBMS_SHUTDOWN;
+     else
         ctx->req_state = DBMS_ACTIVE;
 
     

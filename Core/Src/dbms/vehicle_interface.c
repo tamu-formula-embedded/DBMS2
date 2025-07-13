@@ -182,7 +182,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     memcpy(&cfg_set, rx_data + 4, sizeof(int32_t));
 
     uint8_t frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
-    CanTransmit(ctx, CANID_TX_CFG_ACK, frame);
+    //CanTransmit(ctx, CANID_TX_CFG_ACK, frame);
 
     switch (cfg_id)
     {
@@ -190,7 +190,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
             HANDLE_CFG(action, cfg_get, ctx->settings.max_allowed_pack_voltage, cfg_set & 0xffff);
             break;
         case CFGID_QUIET_MS_BEFORE_SHUTDOWN:
-            HANDLE_CFG(action, cfg_get, ctx->settings.quiet_ms_before_shutdown, cfg_set);
+            HANDLE_CFG(action, cfg_get, ctx->settings.quiet_ms_before_shutdown, cfg_set & 0xffff);
             break;
 
         default:
