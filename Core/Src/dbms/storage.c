@@ -75,9 +75,10 @@ int LoadSettings(DbmsCtx* ctx, DbmsSettings* settings)
         return status;
     }
 
-    uint16_t r_crc;
     memcpy(settings, buf, sizeof(DbmsSettings));
-    memcpy(r_crc, buf + sizeof(DbmsSettings), sizeof(r_crc));
+
+    uint16_t r_crc;
+    memcpy(&r_crc, buf + sizeof(DbmsSettings), sizeof(r_crc));
 
     uint16_t c_crc = CalcCrc16((uint8_t*)settings, sizeof(DbmsSettings));
     if (r_crc != c_crc)

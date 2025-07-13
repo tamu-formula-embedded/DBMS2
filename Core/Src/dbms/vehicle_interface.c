@@ -108,6 +108,8 @@ void DumpCellState(DbmsCtx* ctx)
 
 int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 {
+    LED_SHOW_ERROR();
+
     // TODO: add forward fn -> the last /
 
     static uint8_t buf[8] = {0};                        // only taking the first 8 characters

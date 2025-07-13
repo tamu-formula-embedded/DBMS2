@@ -7,6 +7,8 @@
 #include "common.h"
 #include "context.h"
 
+#include "vehicle_interface.h"
+
 #define STACK_SEND_TIMEOUT      100
 #define STACK_RECV_TIMEOUT      100
 #define STACK_RX_BUFFER_SIZE    256

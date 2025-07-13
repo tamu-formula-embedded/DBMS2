@@ -7,6 +7,8 @@
 #include "common.h"
 #include "context.h"
 
+#include "led_controller.h"
+
 #define CANID_TX_HEARTBEAT          0x501
 #define CANID_CONSOLE_C0            0x502   // No compression 
 #define CANID_CONSOLE_C3            0x505   // Aggressive compression -- Huffman encoding
@@ -31,7 +33,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8]);
 
 int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code);
 
-#define CAN_REPORT_FAULT(ctx, ERR) CanReportFault(ctx, __FILE__, __LINE__, ERR);
+#define CAN_REPORT_FAULT(CTX, ERR) CanReportFault(CTX, __FILE__, __LINE__, ERR);
 // #define CHECK_ERROR_AND_RETURN(STATUS, CALL)     if ((STATUS = CALL) != 0) { CanReportFault(__FILE__, __LINE__, ) }
 
 #define CAN_LOG_BUFFER_SIZE     256     // max formatted string length
