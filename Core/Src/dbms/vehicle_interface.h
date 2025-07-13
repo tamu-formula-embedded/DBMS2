@@ -17,6 +17,8 @@
 #define CANID_RX_HEARTBEAT          0x541
 #define CANID_RX_CONFIG             0x542
 
+#define ERR_CFGID_NOT_FOUND         54
+
 typedef enum _CanRxChannel {
     CAN_RX_0,
     CAN_RX_1

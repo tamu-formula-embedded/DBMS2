@@ -4,12 +4,11 @@
 #include "dbms.h"
 
 
-// TODO:    replace this with an implementation 
-//          that makes sense, either EEPROM or FLASH
-void LoadSettings(DbmsCtx* ctx)
+void LoadFallbackSettings(DbmsSettings* settings)
 {
-    ctx->settings.max_allowed_pack_voltage = 64000; // 64V -> mV
-    ctx->settings.quiet_ms_before_shutdown = 5000;  // 5s -> ms
+    // if this fails we are in deep trouble lol
+    settings->max_allowed_pack_voltage = 64000; // 64V -> mV
+    settings->quiet_ms_before_shutdown = 5000;  // 5s -> ms
 }
 
 
@@ -18,8 +17,17 @@ void DbmsInit(DbmsCtx* ctx)
     int status = 0;
     ctx->cur_state = DBMS_SHUTDOWN;
 
-    LoadSettings(ctx);
-
+    if ((status = LoadSettings(ctx, &ctx->settings)) != HAL_OK)
+    {
+        if (status == ERR_CRC_MISMATCH)
+        {
+            // This is a bad situation, but we can still proceed
+            // by loading fallback settings? Ideally these should
+            // be updated enough to be ok
+            LoadFallbackSettings(&ctx->settings);
+        }  
+        else    {}  // fatal error
+}
     //memset(ctx->cell_states, 0, N_SEGMENTS * N_MONITORS_PER_SEG * (N_GROUPS * sizeof(int16_t)) * (N_TEMPS * sizeof(int16_t)));
 
     HAL_TIM_Base_Start(ctx->hw.timer);
@@ -73,6 +81,19 @@ void DbmsIter(DbmsCtx* ctx)
 {
 	int status = 0;
     ctx->iterct++;
+
+    if (ctx->need_to_sync_settings)
+    {
+        // should we also check that we are awake?
+        // should we allow the user to configure
+        // settings while we are "shutdown"
+        // even though the controller should be on
+        if ((status = SaveSettings(ctx, &ctx->settings)) != HAL_OK)
+        {
+             
+        }
+        ctx->need_to_sync_settings = false;
+    }
     
     //
     //  Let everybody know that we are alive
@@ -84,9 +105,9 @@ void DbmsIter(DbmsCtx* ctx)
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //  
-    if (HAL_GetTick() - ctx->last_rx_heartbeat > ctx->settings.quiet_ms_before_shutdown)
-        ctx->req_state = DBMS_SHUTDOWN;
-    else 
+    // if (HAL_GetTick() - ctx->last_rx_heartbeat > ctx->settings.quiet_ms_before_shutdown)
+        // ctx->req_state = DBMS_SHUTDOWN;
+    // else 
         ctx->req_state = DBMS_ACTIVE;
 
     
@@ -118,7 +139,11 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             break;
 
         case CANID_RX_CONFIG:
-            HandleCanConfig(ctx, rx_data);
+            int status = HandleCanConfig(ctx, rx_data);
+            if (status != ERR_CFGID_NOT_FOUND)
+            {
+                ctx->need_to_sync_settings = true;
+            }
             break;
 
         default:

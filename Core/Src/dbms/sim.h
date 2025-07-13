@@ -78,6 +78,9 @@ typedef struct {
 typedef struct {
     int _;
 } GPIO_TypeDef;
+typedef struct {
+    int _;
+} I2C_HandleTypeDef;
 
 #define GPIOC  NULL
 #define GPIOA  NULL
@@ -137,6 +140,32 @@ HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pD
 HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
 
 void HAL_TIM_Base_Start(TIM_HandleTypeDef *huart);
+
+typedef struct
+{
+  uint32_t StdId;    /*!< Specifies the standard identifier.
+                          This parameter must be a number between Min_Data = 0 and Max_Data = 0x7FF. */
+
+  uint32_t ExtId;    /*!< Specifies the extended identifier.
+                          This parameter must be a number between Min_Data = 0 and Max_Data = 0x1FFFFFFF. */
+
+  uint32_t IDE;      /*!< Specifies the type of identifier for the message that will be transmitted.
+                          This parameter can be a value of @ref CAN_identifier_type */
+
+  uint32_t RTR;      /*!< Specifies the type of frame for the message that will be transmitted.
+                          This parameter can be a value of @ref CAN_remote_transmission_request */
+
+  uint32_t DLC;      /*!< Specifies the length of the frame that will be transmitted.
+                          This parameter must be a number between Min_Data = 0 and Max_Data = 8. */
+
+  uint32_t Timestamp; /*!< Specifies the timestamp counter value captured on start of frame reception.
+                          @note: Time Triggered Communication Mode must be enabled.
+                          This parameter must be a number between Min_Data = 0 and Max_Data = 0xFFFF. */
+
+  uint32_t FilterMatchIndex; /*!< Specifies the index of matching acceptance filter element.
+                          This parameter must be a number between Min_Data = 0 and Max_Data = 0xFF. */
+
+} CAN_RxHeaderTypeDef;
 
 #endif
 #endif
