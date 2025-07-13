@@ -15,9 +15,11 @@
 #define CANID_CELLSTATE_VOLTS       0x507
 #define CANID_CELLSTATE_TEMPS       0x508
 #define CANID_FATAL_ERROR           0x50B   // = SOB = Son Of a Bitch
+#define CANID_TX_GET_CONFIG         0x523
 
 #define CANID_RX_HEARTBEAT          0x541
-#define CANID_RX_CONFIG             0x542
+#define CANID_RX_SET_CONFIG         0x542
+#define CANID_RX_GET_CONFIG         0x543
 
 #define ERR_CFGID_NOT_FOUND         54
 
@@ -25,6 +27,12 @@ typedef enum _CanRxChannel {
     CAN_RX_0,
     CAN_RX_1
 } CanRxChannel;
+
+typedef enum _CanConfigAction {
+    CFG_SET, CFG_GET
+} CanConfigAction;
+
+
 
 // Configure the CAN peripheral
 int ConfigCan(DbmsCtx* ctx);
@@ -44,6 +52,8 @@ void DumpCellState(DbmsCtx* ctx);
 
 int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc);
 
-int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data);
+int HandleConfigQueryResponses(DbmsCtx* ctx);
+
+int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action);
 
 #endif
