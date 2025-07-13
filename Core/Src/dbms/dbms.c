@@ -98,7 +98,12 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Let everybody know that we are alive
     //
-    LedSet(LED6, ((ctx->iterct / 20) % 2 == 0) ? LED_GREEN : LED_OFF);
+    if (ctx->led_show_error) 
+    {
+        LED_SHOW_ERROR();
+    } else {
+        LedSet(LED6, ((ctx->iterct / 20) % 2 == 0) ? LED_GREEN : LED_OFF);
+    }
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)&ctx->settings, sizeof(DbmsSettings)));
 
     //

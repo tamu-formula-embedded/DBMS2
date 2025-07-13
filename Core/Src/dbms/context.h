@@ -77,6 +77,7 @@ typedef struct _DbmsCtx {
     uint64_t    iterct;
     uint64_t    last_rx_heartbeat;
     bool        need_to_sync_settings;
+    bool        led_show_error;
 
 } DbmsCtx;
 
