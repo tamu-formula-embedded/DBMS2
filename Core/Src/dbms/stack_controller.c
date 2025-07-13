@@ -235,12 +235,16 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     for (size_t i = 0; i < N_STACKDEVS; i++)
     {
         RecvStackFrame(ctx, &rx_frame);                      // recv data into the frame
+
+        uint8_t frame[] = { rx_frame.dev_addr, rx_frame.size, rx_frame.init_field, (rx_frame.reg_addr >> 8) & 0xff, rx_frame.reg_addr & 0xff, 0, 0, 0 };
+        CanTransmit(ctx, 0x581, frame);
+
         if ((addr = rx_frame.dev_addr - 1) < 0) continue;  // skip myself
-        for (size_t j = 0; j < N_GROUPS; j++)
-        {
-            ctx->cell_states[addr / N_MONITORS_PER_SEG][addr % N_MONITORS_PER_SEG].voltages[j]
-                = (rx_frame.data[j * sizeof(int16_t)] << 8) 
-                + (rx_frame.data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
-        }
+        // for (size_t j = 0; j < N_GROUPS; j++)
+        // {
+        //     ctx->cell_states[addr / N_MONITORS_PER_SEG][addr % N_MONITORS_PER_SEG].voltages[j]
+        //         = (rx_frame.data[j * sizeof(int16_t)] << 8) 
+        //         + (rx_frame.data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
+        // }
     }
 }
