@@ -46,6 +46,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
         CAN_REPORT_FAULT(ctx, status);
         return status;                  // we are cooked
     }
+    ctx->cur_state = DBMS_ACTIVE;
 
     LedSet(LED6, LED_GREEN);
     LedSet(LED7, LED_GREEN);
@@ -68,6 +69,7 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
         CAN_REPORT_FAULT(ctx, status);
         return status;
     }
+    ctx->cur_state = DBMS_SHUTDOWN;
 
     LedSet(LED6, LED_OFF);
     LedSet(LED7, LED_OFF);
@@ -138,9 +140,10 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Read information from the stack
     //
-    if (ctx->cur_state)
+    if (ctx->cur_state == DBMS_ACTIVE)
     {
-        StackUpdateVoltReadings(ctx);
+        // Need to look into this
+        // StackUpdateVoltReadings(ctx);
     }
 
     HAL_Delay(10);      // make adaptive
