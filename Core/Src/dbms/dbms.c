@@ -102,10 +102,12 @@ void DbmsIter(DbmsCtx* ctx)
     {
         LED_SHOW_ERROR();
     } else {
-        LedSet(LED6, ((ctx->iterct / 20) % 2 == 0) ? LED_GREEN : LED_OFF);
+        if (ctx->cur_state == DBMS_ACTIVE)
+            LedSet(LED6, ((ctx->iterct / 20) % 2 == 0) ? LED_GREEN : LED_OFF);
+        else 
+            LedSet(LED6, ((ctx->iterct / 20) % 2 == 0) ? LED_YELLOW : LED_OFF);
     }
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)&ctx->settings, sizeof(DbmsSettings)));
-    HandleConfigQueryResponses(ctx);
 
     //
     //  Its been too long since we have recived a frame, we need to force a shutdown
@@ -115,7 +117,6 @@ void DbmsIter(DbmsCtx* ctx)
          ctx->req_state = DBMS_SHUTDOWN;
      else
         ctx->req_state = DBMS_ACTIVE;
-
     
     // 
     //  Gracefully handle state transition
@@ -131,8 +132,7 @@ void DbmsIter(DbmsCtx* ctx)
         DbmsPerformWakeup(ctx);
     }
 
-
-    HAL_Delay(10);
+    HAL_Delay(10);      // make adaptive
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])

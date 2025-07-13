@@ -33,8 +33,6 @@ typedef enum _CanConfigAction {
     CFG_SET, CFG_GET
 } CanConfigAction;
 
-
-
 // Configure the CAN peripheral
 int ConfigCan(DbmsCtx* ctx);
 
@@ -52,8 +50,6 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...);
 void DumpCellState(DbmsCtx* ctx);
 
 int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc);
-
-int HandleConfigQueryResponses(DbmsCtx* ctx);
 
 int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action);
 
