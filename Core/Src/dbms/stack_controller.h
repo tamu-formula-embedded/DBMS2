@@ -13,15 +13,22 @@
 #define STACK_RECV_TIMEOUT      100
 #define STACK_RX_BUFFER_SIZE    256
 
+/**
+ * Structure to hold and parse a frame that is received from bridge chip
+ */
 typedef struct {
-    uint8_t init_field;
-    uint8_t dev_addr;
-    uint16_t reg_addr;
-    uint8_t buffer[STACK_RX_BUFFER_SIZE];
-    uint8_t* data;
-    size_t size;
+    uint8_t init_field;                     // status field from the chip
+    uint8_t dev_addr;                       // address of the specific chip that sent the message
+    uint16_t reg_addr;                      // register address the data is coming from
+    uint8_t buffer[STACK_RX_BUFFER_SIZE];   // raw bytes from the UART
+    uint8_t* data;                          // pointer to the start of the actual data within the buffer
+    size_t size;                            // expected size of the data payload
 } RxStackFrame;
 
+/**
+ * Macro to set initalize an RxStackFrame.
+ * Sets the payload data pointer to 4 bytes after the buffer to account for header fields
+ */
 #define STACK_DEFINE_RX_FRAME(NAME, S)\
     RxStackFrame NAME = {.init_field = 0, .dev_addr = 0, .reg_addr = 0, .buffer = {0}, .data = NULL, .size = S};\
     NAME.data = NAME.buffer + 4;
