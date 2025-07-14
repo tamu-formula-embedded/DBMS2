@@ -22,6 +22,8 @@ typedef enum _Led {
 
 void LedSet(Led led, LedColor color);
 
-#define LED_SHOW_ERROR() LedSet(LED6, LED_RED); LedSet(LED7, LED_RED); LedSet(LED8, LED_RED);
+#define LED_SHOW_ERROR() { LedSet(LED6, LED_RED); LedSet(LED7, LED_RED); LedSet(LED8, LED_RED); }
+
+
 
 #endif

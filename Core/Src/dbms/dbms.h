@@ -13,10 +13,11 @@
 #include "common.h"
 #include "context.h"
 
+#include "vehicle_interface.h"  // should go first?
 #include "current_meter.h"
 #include "led_controller.h"
 #include "stack_controller.h"
-#include "vehicle_interface.h"
+#include "storage.h"
 
 // Called before the main loop
 void DbmsInit(DbmsCtx* ctx);

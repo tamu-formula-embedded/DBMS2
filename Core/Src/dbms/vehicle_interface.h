@@ -7,6 +7,8 @@
 #include "common.h"
 #include "context.h"
 
+#include "led_controller.h"
+
 #define CANID_TX_HEARTBEAT          0x501
 #define CANID_CONSOLE_C0            0x502   // No compression 
 #define CANID_CONSOLE_C3            0x505   // Aggressive compression -- Huffman encoding
@@ -14,13 +16,23 @@
 #define CANID_CELLSTATE_TEMPS       0x508
 #define CANID_FATAL_ERROR           0x50B   // = SOB = Son Of a Bitch
 
+#define CANID_TX_GET_CONFIG         0x523
+#define CANID_TX_CFG_ACK            0x522
+
 #define CANID_RX_HEARTBEAT          0x541
-#define CANID_RX_CONFIG             0x542
+#define CANID_RX_SET_CONFIG         0x542
+#define CANID_RX_GET_CONFIG         0x543
+
+#define ERR_CFGID_NOT_FOUND         54
 
 typedef enum _CanRxChannel {
     CAN_RX_0,
     CAN_RX_1
 } CanRxChannel;
+
+typedef enum _CanConfigAction {
+    CFG_SET, CFG_GET
+} CanConfigAction;
 
 // Configure the CAN peripheral
 int ConfigCan(DbmsCtx* ctx);
@@ -29,7 +41,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8]);
 
 int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code);
 
-#define CAN_REPORT_FAULT(ctx, ERR) CanReportFault(ctx, __FILE__, __LINE__, ERR);
+#define CAN_REPORT_FAULT(CTX, ERR) CanReportFault(CTX, __FILE__, __LINE__, ERR);
 // #define CHECK_ERROR_AND_RETURN(STATUS, CALL)     if ((STATUS = CALL) != 0) { CanReportFault(__FILE__, __LINE__, ) }
 
 #define CAN_LOG_BUFFER_SIZE     256     // max formatted string length
@@ -40,6 +52,6 @@ void DumpCellState(DbmsCtx* ctx);
 
 int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc);
 
-int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data);
+int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action);
 
 #endif

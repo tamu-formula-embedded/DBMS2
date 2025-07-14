@@ -7,7 +7,7 @@ typedef struct _LedMapping {
     GPIO_TypeDef* rx;
     uint16_t rp;
     GPIO_TypeDef* gx;
-    uint16_t gp;
+    uint16_t gp; 
 } LedMapping;
 
 void LedSet(Led led, LedColor color) {
