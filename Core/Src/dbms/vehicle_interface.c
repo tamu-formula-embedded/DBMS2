@@ -108,29 +108,35 @@ void DumpCellState(DbmsCtx* ctx)
 
 int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 {
+    ctx->led_show_error = true;
+
     // TODO: add forward fn -> the last /
 
-    static uint8_t buf[8] = {0};                        // only taking the first 8 characters
     static uint8_t frame[8] = {0};
 
+    // static uint8_t buf[8] = {0};                        // only taking the first 8 characters
     // Compression algorithm to encode up to 8 characters of the filename
-    for (size_t i = 0; fn[i] != 0 && i <= 8; i++)       
+    // for (size_t i = 0; fn[i] != 0 && i <= 8; i++)       
+    // {
+    //     if (isalpha((uint8_t)fn[i])) 
+    //         buf[i] = tolower(fn[i]) - 'a';      // 0-25 = a-z
+    //     if (fn[i] == '.') buf[i] = 26;          // 26 = 
+    //     else buf[i] = 27;                       // 27   = other
+    //     buf[i] &= 0b11111;                      // ensure 5 bits
+    // }
+    // Pack the first 5 bytes (40 bits) with 8 x 5 bit character representations
+    // frame[0] = (buf[0] << 3) | (buf[1] >> 2);
+    // frame[1] = ((buf[1] & 0x03) << 6) | (buf[2] << 1) | (buf[3] >> 4);
+    // frame[2] = (buf[4] << 3) | (buf[5] >> 2);
+    // frame[3] = ((buf[5] & 0x03) << 6) | (buf[6] << 1) | (buf[7] >> 4);
+    // frame[4] = (buf[7] & 0x0F) << 4;
+
+    for (size_t i = 0; fn[i] != 0 && i <= 4; i++)       
     {
-        if (isalpha((uint8_t)fn[i])) 
-            buf[i] = tolower(fn[i]) - 'a';      // 0-25 = a-z
-        if (fn[i] == '.') buf[i] = 26;          // 26 = 
-        else buf[i] = 27;                       // 27   = other
-        buf[i] &= 0b11111;                      // ensure 5 bits
+        frame[i] = fn[i];
     }
 
-    // Pack the first 5 bytes (40 bits) with 8 x 5 bit character representations
-    frame[0] = (buf[0] << 3) | (buf[1] >> 2);
-    frame[1] = ((buf[1] & 0x03) << 6) | (buf[2] << 1) | (buf[3] >> 4);
-    frame[2] = (buf[4] << 3) | (buf[5] >> 2);
-    frame[3] = ((buf[5] & 0x03) << 6) | (buf[6] << 1) | (buf[7] >> 4);
-    frame[4] = (buf[7] & 0x0F) << 4;
-
-    frame[5] = (line_num >> 8) & 0xFF;
+    frame[5] = (line_num >> 8) & 0xff;
     frame[6] = line_num & 0x00ff;
     frame[7] = err_code & 0xff;
     
@@ -147,29 +153,39 @@ int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc)
     return CanTransmit(ctx, CANID_TX_HEARTBEAT, frame);
 }
 
-#define UNPACK_UINT32(BUF)      (((BUF)[0] & 0xff000000) << 24)     \
-                                | (((BUF)[1] & 0x00ff0000) << 16)   \
-                                | (((BUF)[2] & 0x0000ff00) << 8)    \
-                                | (((BUF)[3] & 0x000000ff)); 
+#define HANDLE_CFG(ACTION, Y, SETTING, X) if (ACTION == CFG_SET) { SETTING = X; } else { Y = SETTING; }
 
-int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data)
+int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
 {
     // This is an inefficient frame format ):
-
     uint8_t cfg_id  = rx_data[0];
-    int32_t cfg_val = UNPACK_UINT32(rx_data + 4);
+    int32_t cfg_set = 0, cfg_get = 0;
+    
+    memcpy(&cfg_set, rx_data + 4, sizeof(int32_t));
+
+    uint8_t frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
+    //CanTransmit(ctx, CANID_TX_CFG_ACK, frame);
 
     switch (cfg_id)
     {
         case CFGID_MAX_ALLOWED_PACK_VOLTS:
-            ctx->settings.max_allowed_pack_voltage = cfg_val & 0xffff;
+            HANDLE_CFG(action, cfg_get, ctx->settings.max_allowed_pack_voltage, cfg_set & 0xffff);
             break;
         case CFGID_QUIET_MS_BEFORE_SHUTDOWN:
-            ctx->settings.quiet_ms_before_shutdown = cfg_val;
+            HANDLE_CFG(action, cfg_get, ctx->settings.quiet_ms_before_shutdown, cfg_set & 0xffff);
             break;
 
         default:
-            break;
+            return ERR_CFGID_NOT_FOUND;
+    }
+
+    if (action == CFG_SET)
+        ctx->need_to_sync_settings = true;
+    else 
+    {      
+        uint8_t frame[] = { cfg_id, 0, 0, 0, 0, 0, 0, 0 };
+        memcpy(frame + 4, &cfg_get, sizeof(int32_t));
+        CanTransmit(ctx, CANID_TX_GET_CONFIG, frame);
     }
 
     return 0;
