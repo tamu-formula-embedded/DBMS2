@@ -108,7 +108,7 @@ void DumpCellState(DbmsCtx* ctx)
 
 int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 {
-    ctx->led_show_error = true;
+    ctx->led_state = ERROR;
 
     // TODO: add forward fn -> the last /
 
