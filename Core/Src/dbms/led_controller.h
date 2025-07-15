@@ -25,14 +25,25 @@ typedef enum _LedState {
 } LedState;
 
 /**
+*  Enum for actual LED colors
+*/
+typedef enum _LedColor {
+    LED_OFF = 0,
+    LED_RED,
+    LED_GREEN,
+    LED_YELLOW,
+} LedColor;
+
+/**
 *  Enum for system LED states (all 3 LEDs)
 *  these combos are mapped in implementation file's system_led_patterns
 */
 typedef enum _DbmsLedState {
-    ERROR,
+    ERROR = 0,
     ACTIVE,
     IDLE,
-
+    COMM_ERROR,
+    INIT,
     // ...
     DBMS_LED_STATE_COUNT
 } DbmsLedState;

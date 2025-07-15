@@ -34,11 +34,21 @@ int ConfigCan(DbmsCtx* ctx)
     s_filter_cfg.FilterMaskIdLow  = 0x0004;          // Mask IDE bit to reject extended frames
 
     // Add the filter to CAN peripheral
-    if ((status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg)) != HAL_OK) return status;
-
-    if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK) return status;
-    if ((status = HAL_CAN_ActivateNotification(ctx->hw.can, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK) 
+    if ((status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg)) != HAL_OK)
+    {
+        ctx->led_state = COMM_ERROR;
         return status;
+    }
+    if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK)
+        {
+        ctx->led_state = COMM_ERROR;
+        return status;
+    }
+    if ((status = HAL_CAN_ActivateNotification(ctx->hw.can, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK) 
+    {
+        ctx->led_state = COMM_ERROR;
+        return status;
+    }
 
     // Config TX header
     ctx->hw.can_tx_header.StdId = 0xdead;
@@ -54,6 +64,11 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
     ctx->hw.can_tx_header.StdId = id;
     int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, &ctx->hw.can_tx_header, data, &ctx->hw.can_tx_mailbox);
+    if(result != HAL_OK)
+    {
+        ctx->led_state = COMM_ERROR;
+    }
+    
     return result;
 }
 
