@@ -57,6 +57,8 @@ typedef enum _Led {
     LED8
 } Led;
 
+void ProcessLedAction(DbmsCtx* ctx);
+
 void SetLedState(DbmsLedState state);
 
 void LedSet(Led led, LedColor color);
