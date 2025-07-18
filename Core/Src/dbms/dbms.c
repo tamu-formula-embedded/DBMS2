@@ -79,10 +79,6 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = IDLE;
 
-    LedSet(LED6, LED_OFF);
-    LedSet(LED7, LED_OFF);
-    LedSet(LED8, LED_OFF);
-
     HAL_Delay(200);
     return status;
 }
@@ -121,11 +117,9 @@ void DbmsIter(DbmsCtx* ctx)
     //  
      if (HAL_GetTick() - ctx->last_rx_heartbeat > ctx->settings.quiet_ms_before_shutdown){
         ctx->req_state = DBMS_SHUTDOWN;
-        ctx->led_state = SHUTDOWN;
      }
      else{
         ctx->req_state = DBMS_ACTIVE;
-        ctx->led_state = ACTIVE;
      }
     
     // 
