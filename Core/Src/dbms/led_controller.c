@@ -8,7 +8,7 @@
 
 /**
 *  LedMapping struct maps a logical LED to its physical hardware pins. 
-*  It contains the GPIO port and pin number for both the red and green components of a single LED
+*  contains the GPIO port and pin number for both the red and green components of a single LED
 */
 typedef struct _LedMapping {
     GPIO_TypeDef* rx;
@@ -65,7 +65,7 @@ void ProcessLedAction(DbmsCtx* ctx) {
     static uint8_t blink_on = 0;
     uint32_t now = HAL_GetTick();
 
-    int blink_needed = 0;
+    uint8_t blink_needed = 0;
     uint32_t blink_interval = 0;
 
     // determine if any LED needs blinking, and set the interval
@@ -89,7 +89,8 @@ void ProcessLedAction(DbmsCtx* ctx) {
         }
     }
 
-    // handle blink timing
+    // calculate if we need a blink now or not
+    // if so, toggle the blink state and update the last blink time
     if(blink_needed && (now - last_blink_time >= blink_interval)){
         blink_on = !blink_on;
         last_blink_time = now;
