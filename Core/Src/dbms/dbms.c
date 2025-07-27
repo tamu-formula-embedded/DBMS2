@@ -33,9 +33,8 @@ void DbmsInit(DbmsCtx* ctx)
     //memset(ctx->cell_states, 0, N_SEGMENTS * N_MONITORS_PER_SEG * (N_GROUPS * sizeof(int16_t)) * (N_TEMPS * sizeof(int16_t)));
 
     HAL_TIM_Base_Start(ctx->hw.timer);
-    status = ConfigCan(ctx);
 
-    if (status != HAL_OK)
+    if (status = ConfigCan(ctx) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
         ctx->led_state = ERROR;

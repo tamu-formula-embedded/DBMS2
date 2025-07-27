@@ -5,6 +5,7 @@
 
 #define FAST_BLINK_INTERVAL 100
 #define SLOW_BLINK_INTERVAL 500
+#define NUM_LEDS (sizeof(leds) / sizeof(LedMapping))
 
 /**
 *  LedMapping struct maps a logical LED to its physical hardware pins. 
@@ -16,6 +17,22 @@ typedef struct _LedMapping {
     GPIO_TypeDef* gx;
     uint16_t gp; 
 } LedMapping;
+
+/**
+*  Enum for blink types
+*/
+typedef enum _BlinkType {
+    BLINK_TYPE_OFF = 0,
+    BLINK_TYPE_FAST,
+    BLINK_TYPE_SLOW,
+    BLINK_TYPE_COUNT
+} BlinkType;
+
+typedef struct _InternalLedState {
+    LedColor color;  
+    BlinkType blink_type;
+    bool locking; // for future
+} InternalLedState;
 
 /**
 *  Array of LED mappings for each LED
@@ -32,29 +49,43 @@ static const LedMapping leds[] = {
 /**
 *  Table mapping each system state to per-LED states
 */
-static const LedState system_led_patterns[DBMS_LED_STATE_COUNT][3] = {
-    [ERROR]      = { LED_STATE_SOLID_RED, LED_STATE_SOLID_RED, LED_STATE_SOLID_RED },
-    [ACTIVE]     = { LED_STATE_SOLID_GREEN, LED_STATE_SOLID_GREEN, LED_STATE_SOLID_GREEN },
-    [IDLE]       = { LED_STATE_SOLID_YELLOW, LED_STATE_SOLID_YELLOW, LED_STATE_SOLID_YELLOW },
-    [COMM_ERROR] = { LED_STATE_SOLID_RED, LED_STATE_SOLID_RED, LED_STATE_FAST_BLINK_RED },
-    [INIT]       = { LED_STATE_SOLID_GREEN, LED_STATE_SOLID_GREEN, LED_STATE_SLOW_BLINK_GREEN },
+static const InternalLedState system_led_patterns[DBMS_LED_STATE_COUNT][NUM_LEDS] = {
+    [ERROR] = {
+        { LED_RED,   BLINK_TYPE_OFF,  false },
+        { LED_RED,   BLINK_TYPE_OFF,  false },
+        { LED_RED,   BLINK_TYPE_OFF,  false }
+    },
+    [ACTIVE] = {
+        { LED_GREEN, BLINK_TYPE_OFF,  false },
+        { LED_GREEN, BLINK_TYPE_OFF,  false },
+        { LED_GREEN, BLINK_TYPE_OFF,  false }
+    },
+    [IDLE] = {
+        { LED_YELLOW, BLINK_TYPE_OFF, false },
+        { LED_YELLOW, BLINK_TYPE_OFF, false },
+        { LED_YELLOW, BLINK_TYPE_OFF, false }
+    },
+    [COMM_ERROR] = {
+        { LED_RED,   BLINK_TYPE_OFF,  false },
+        { LED_RED,   BLINK_TYPE_OFF,  false },
+        { LED_RED,   BLINK_TYPE_FAST, false }
+    },
+    [INIT] = {
+        { LED_GREEN, BLINK_TYPE_OFF,  false },
+        { LED_GREEN, BLINK_TYPE_OFF,  false },
+        { LED_GREEN, BLINK_TYPE_SLOW, false }
+    }
 };
 
-/**
-*  Table mapping each LED state their colors
-*/
-static const LedColor ledstate_to_color[] = {
-    [LED_STATE_OFF]              = LED_OFF,
-    [LED_STATE_SOLID_RED]        = LED_RED,
-    [LED_STATE_SOLID_GREEN]      = LED_GREEN,
-    [LED_STATE_SOLID_YELLOW]     = LED_YELLOW,
-    [LED_STATE_FAST_BLINK_RED]   = LED_RED,
-    [LED_STATE_FAST_BLINK_GREEN] = LED_GREEN,
-    [LED_STATE_FAST_BLINK_YELLOW]= LED_YELLOW,
-    [LED_STATE_SLOW_BLINK_RED]   = LED_RED,
-    [LED_STATE_SLOW_BLINK_GREEN] = LED_GREEN,
-    [LED_STATE_SLOW_BLINK_YELLOW]= LED_YELLOW
-};
+static InternalLedState internal_led_states[NUM_LEDS];
+
+void LedController_Init(void){
+    for(int i = 0; i < NUM_LEDS; i++){
+        internal_led_states[i].color = LED_OFF;
+        internal_led_states[i].blink_type = BLINK_TYPE_OFF;
+        internal_led_states[i].locking = false;
+    }
+}
 
 /**
 *  Function the dbms iter loop will actually call
@@ -69,23 +100,11 @@ void ProcessLedAction(DbmsCtx* ctx) {
     uint32_t blink_interval = 0;
 
     // determine if any LED needs blinking, and set the interval
-    for(int i = 0; i < 3; ++i){
-        LedState state = system_led_patterns[ctx->led_state][i];
-        switch(state){
-            case LED_STATE_FAST_BLINK_RED:
-            case LED_STATE_FAST_BLINK_GREEN:
-            case LED_STATE_FAST_BLINK_YELLOW:
-                blink_needed = 1;
-                blink_interval = FAST_BLINK_INTERVAL;
-                break;
-            case LED_STATE_SLOW_BLINK_RED:
-            case LED_STATE_SLOW_BLINK_GREEN:
-            case LED_STATE_SLOW_BLINK_YELLOW:
-                blink_needed = 1;
-                blink_interval = SLOW_BLINK_INTERVAL;
-                break;
-            default:
-                break;
+    for(int i = 0; i < NUM_LEDS; ++i){
+        InternalLedState state = system_led_patterns[ctx->led_state][i];
+        if(state.blink_type != BLINK_TYPE_OFF){
+            blink_needed = 1;
+            blink_interval = state.blink_type == BLINK_TYPE_FAST ? FAST_BLINK_INTERVAL : SLOW_BLINK_INTERVAL;
         }
     }
 
@@ -97,12 +116,12 @@ void ProcessLedAction(DbmsCtx* ctx) {
     }
 
     // set each LED according to its state and blink logic
-    for(int i = 0; i < 3; ++i){
-        LedState state = system_led_patterns[ctx->led_state][i];
-        LedColor color = ledstate_to_color[state];
+    for(int i = 0; i < NUM_LEDS; ++i){
+        InternalLedState state = system_led_patterns[ctx->led_state][i];
+        LedColor color = state.color;
 
         // if this is a blinking state and we're in the "off" part of the cycle, turn off the LED
-        if((state >= LED_STATE_FAST_BLINK_RED && state <= LED_STATE_SLOW_BLINK_YELLOW) && !blink_on){
+        if(state.blink_type != BLINK_TYPE_OFF && !blink_on){
             color = LED_OFF;
         }
         LedSet((Led)i, color);
