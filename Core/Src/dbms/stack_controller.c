@@ -256,6 +256,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
+    FillStackFrame(rx_buffer_volt_readings, rx_frames, N_STACKDEVS);
 
     int8_t addr;
     for (size_t i = 0; i < N_STACKDEVS; i++)
