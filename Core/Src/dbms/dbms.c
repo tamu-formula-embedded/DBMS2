@@ -146,8 +146,6 @@ void DbmsIter(DbmsCtx* ctx)
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
-
-        CanLog(ctx, "%d\n", ctx->cell_states[0][1].voltages[2]);
     }
 
     HAL_Delay(10);      // make adaptive
