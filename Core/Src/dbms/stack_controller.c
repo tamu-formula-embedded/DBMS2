@@ -267,7 +267,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_buffer_volt_readings, rx_frames, data_size, N_STACKDEVS);
+    FillStackFrames(rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS);
 
     CanLog(ctx, "fill_ok");
 
