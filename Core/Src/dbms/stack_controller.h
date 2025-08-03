@@ -9,9 +9,11 @@
 
 #include "vehicle_interface.h"
 
-#define STACK_SEND_TIMEOUT      100
-#define STACK_RECV_TIMEOUT      100
-#define STACK_RX_BUFFER_SIZE    1024    //N_STACKDEVS * 6 + N_GROUPS
+#define STACK_SEND_TIMEOUT          100
+#define STACK_RECV_TIMEOUT          100
+#define STACK_RX_BUFFER_SIZE        1024    //N_STACKDEVS * 6 + N_GROUPS
+
+#define RX_FRAME_SIZE(DATA_SIZE)    (DATA_SIZE + 6)
 
 typedef struct {            // ordering packed
     uint8_t* data;

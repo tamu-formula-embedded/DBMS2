@@ -234,6 +234,15 @@ int FillStackFrame(RxStackFrame* rx_frame, uint8_t* buffer, size_t size)
     return status;
 }
 
+int FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames)
+{
+    for (size_t i = 0; i < n_frames; i++)
+    {
+        FillStackFrame(rx_frames + i, buffer + (i * RX_FRAME_SIZE(size)), n_frames);
+    }
+    return 0;
+}
+
 void StackUpdateVoltReadings(DbmsCtx* ctx)
 {
     static uint8_t rx_buffer_volt_readings[1024];  
@@ -247,8 +256,10 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     }
     // DelayUs(ctx, 192 + 5 * N_STACKDEVS); // no !
 
-    size_t expected_rx_size = (4 + N_GROUPS * sizeof(int16_t) + 2) * N_STACKDEVS; // <- num frames
-    //                 header ^   ^ readings * 2 bytes each     ^ crc
+    size_t data_size = N_GROUPS * sizeof(int16_t);
+
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
+    //                 header+crc ^         ^ readings * 2 bytes each    
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_volt_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
     {
@@ -256,7 +267,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrame(rx_buffer_volt_readings, rx_frames, N_STACKDEVS);
+    FillStackFrames(rx_buffer_volt_readings, rx_frames, data_size, N_STACKDEVS);
 
     int8_t addr;
     for (size_t i = 0; i < N_STACKDEVS; i++)
