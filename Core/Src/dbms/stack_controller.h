@@ -11,20 +11,16 @@
 
 #define STACK_SEND_TIMEOUT      100
 #define STACK_RECV_TIMEOUT      100
-#define STACK_RX_BUFFER_SIZE    256
+#define STACK_RX_BUFFER_SIZE    1024    //N_STACKDEVS * 6 + N_GROUPS
 
-typedef struct {
-    uint8_t init_field;
-    uint8_t dev_addr;
-    uint16_t reg_addr;
-    uint8_t buffer[STACK_RX_BUFFER_SIZE];
+typedef struct {            // ordering packed
     uint8_t* data;
     size_t size;
+    uint16_t reg_addr;
+    uint16_t crc;
+    uint8_t init_field;
+    uint8_t dev_addr;
 } RxStackFrame;
-
-#define STACK_DEFINE_RX_FRAME(NAME, S)\
-    RxStackFrame NAME = {.init_field = 0, .dev_addr = 0, .reg_addr = 0, .buffer = {0}, .data = NULL, .size = S};\
-    NAME.data = NAME.buffer + 4;
 
 void __PrintStackRxFrame(RxStackFrame* f);
 
