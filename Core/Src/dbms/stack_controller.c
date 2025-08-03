@@ -269,18 +269,20 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     RxStackFrame rx_frames[N_STACKDEVS];
     FillStackFrames(rx_buffer_volt_readings, rx_frames, data_size, N_STACKDEVS);
 
+    CanLog("fill_ok");
+
     int8_t addr;
     for (size_t i = 0; i < N_STACKDEVS; i++)
     {
         if (rx_frames[i].dev_addr == 0) 
             continue; // this is myself
 
-        addr = rx_frames[i].dev_addr - 1;
-        for (size_t j = 0; j < N_GROUPS; j++)
-        {
-            ctx->cell_states[addr / N_MONITORS_PER_SEG][addr % N_MONITORS_PER_SEG].voltages[j]
-                = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-                + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
-        } 
-    }
+    //     addr = rx_frames[i].dev_addr - 1;
+    //     for (size_t j = 0; j < N_GROUPS; j++)
+    //     {
+    //         ctx->cell_states[addr / N_MONITORS_PER_SEG][addr % N_MONITORS_PER_SEG].voltages[j]
+    //             = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
+    //             + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
+    //     } 
+    // }
 }
