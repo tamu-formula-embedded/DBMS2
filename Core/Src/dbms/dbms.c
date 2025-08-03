@@ -147,8 +147,7 @@ void DbmsIter(DbmsCtx* ctx)
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
 
-
-        CanLog(ctx, "v=%d", ctx->cell_states[0][1].voltages[2]);
+        CanLog(ctx, "%d\n", ctx->cell_states[0][1].voltages[2]);
     }
 
     HAL_Delay(10);      // make adaptive
