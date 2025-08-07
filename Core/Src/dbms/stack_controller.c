@@ -284,3 +284,85 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
         } 
     }
 }
+
+int FaultOtpErrorCheck(DbmsCtx* ctx){
+        
+    int status = 0;
+    // FAULT_OTP Reg addr = 0x0535
+    uint8_t* buffer = {0xA0, 0x05, 0x35, 0x00, 0x00, 0x00};
+    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
+        return status;
+    }
+    // Receiving the FAULT_OTP register data from all monitor chips
+    size_t expected_rx_size = RX_FRAME_SIZE(sizeof(uint8_t)) * N_STACKDEVS;
+    uint8_t* buf[expected_rx_size];
+    if ((status = HAL_UART_Receive(ctx->hw.uart, buf, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
+        return status;
+    }
+    RxStackFrame rx_frames[N_STACKDEVS];
+    FillStackFrames(rx_frames, buf, sizeof(uint8_t), N_STACKDEVS);
+
+    //Parsing through received Rx frames and checking the FAULT_OTP registers of each monitor chip
+    for (size_t i = 0; i < N_STACKDEVS; i++){
+        if (rx_frames[i].data[0] != 0x00){
+            // Returning the device number in the stack that is having the error
+            return 1;
+        }
+    }
+    // Returning 0 if no errors found in any monitor chip when loading OTP
+    return 0;
+}
+
+int UnlockNVM(DbmsCtx* ctx)
+{
+    int status = 0;
+    //step 1: retreive FAULT_OTP data (Stack read command) and check for errors
+    if (FaultOtpErrorCheck(ctx) != 0){
+        return 1;
+    }
+    //step 2: sending write commands to OTP_PROG_UNLOCK** registers with specific data
+
+    // OTP_PROG_UNLOCK1A..D combined into one write command frame
+    uint8_t* buffer1 = {0xB3, 0x03, 0x00, 0x02, 0xB7, 0x78, 0xBC, 0x00, 0x00};
+    if ((status = SendStackFrameSetCrc(ctx, buffer1, sizeof(buffer1))) != 0){
+        return status;
+    }
+
+    //OTP_PROG_UNLOCK2A..D combined into one write command frame
+    uint8_t* buffer2 = {0xB3, 0x03, 0x52, 0x7E, 0x12, 0x08, 0x6F, 0x00, 0x00};
+    if ((status = SendStackFrameSetCrc(ctx, buffer2, sizeof(buffer2))) != 0){
+        return status;
+    }
+    
+    //Confirm unlock stack read command
+    uint8_t* confirm_unlock = {0xA0, 0x05, 0x19, 0x00, 0x00, 0x00};
+    if ((status = SendStackFrameSetCrc(ctx, confirm_unlock, sizeof(confirm_unlock))) != 0){
+        return status;
+    }
+    // Receiving OTP_PROG_STAT data from monitor chips
+    size_t expected_rx_size = RX_FRAME_SIZE(sizeof(uint8_t)) * N_STACKDEVS;
+    uint8_t* rx_buffer[expected_rx_size];
+    RxStackFrame rx_frames[N_STACKDEVS];
+
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
+        return status;
+    }
+    FillStackFrames(rx_frames, rx_buffer, sizeof(uint8_t), N_STACKDEVS);
+
+    for (size_t i = 0; i < N_STACKDEVS; i++){
+        //UNLOCK bit in the OTP_PROG_STAT register is 1 = successful unlock
+        if (rx_frames[i].data != 0x80){
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int ToggleMonitorChipLed(DbmsCtx* ctx)
+{
+    if (UnlockNVM(ctx) != 0){
+        return 1;
+    }
+    
+}
