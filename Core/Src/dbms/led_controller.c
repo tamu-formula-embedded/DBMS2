@@ -73,7 +73,7 @@ static const InternalLedState system_led_patterns[DBMS_LED_STATE_COUNT][NUM_LEDS
     [INIT] = {
         { LED_GREEN, BLINK_TYPE_OFF,  false },
         { LED_GREEN, BLINK_TYPE_OFF,  false },
-        { LED_GREEN, BLINK_TYPE_SLOW, false }
+        { LED_YELLOW, BLINK_TYPE_OFF, false }
     }
 };
 

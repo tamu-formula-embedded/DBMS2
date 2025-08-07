@@ -54,6 +54,20 @@ typedef struct _DbmsSettings {
 
 } DbmsSettings;
 
+/**
+*  Enum for system LED states (all 3 LEDs)
+*  these combos are mapped in implementation file's system_led_patterns
+*/
+typedef enum _DbmsLedState {
+	DBMS_ERROR = 0,
+    ACTIVE,
+    IDLE,
+    COMM_ERROR,
+    INIT,
+    // ...
+    DBMS_LED_STATE_COUNT
+} DbmsLedState;
+
 typedef struct _DbmsCtx {
 
     HwCtx hw;                   // Holds points to hardware peripherals
