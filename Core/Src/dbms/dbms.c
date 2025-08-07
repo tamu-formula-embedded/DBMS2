@@ -84,6 +84,11 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
 
 void DbmsIter(DbmsCtx* ctx)
 {
+	if(ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE){
+		ctx->led_state = INIT;
+		ProcessLedAction(ctx);
+	}
+
 	int status = 0;
     ctx->iterct++;
 
