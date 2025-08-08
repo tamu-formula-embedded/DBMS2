@@ -7,6 +7,9 @@
 static uint8_t FRAME_WAKE_STACK[] = { 0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95 };
 static uint8_t FRAME_SHUTDOWN_STACK[] = { 0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00 };
 
+/**
+ * Provides a blocking delay in microseconds
+ */
 void DelayUs(DbmsCtx* ctx, uint16_t us)
 {
 #ifdef SIM
@@ -18,6 +21,9 @@ void DelayUs(DbmsCtx* ctx, uint16_t us)
 #endif
 }
 
+/**
+ * Prints the contents of a received RxStackFrame for debugging
+ */
 void __PrintStackRxFrame(RxStackFrame* f)
 {
     printf("RxStackFrame:\n\tinit=%d dev_addr=%d reg_addr=%d size=%d\n\tdata=",
@@ -29,25 +35,39 @@ void __PrintStackRxFrame(RxStackFrame* f)
     printf("\n");
 }
 
+/**
+ * Sends a raw data frame to the battery stack via UART
+ */
 int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len)
 {
     return HAL_UART_Transmit(ctx->hw.uart, buf, len, STACK_SEND_TIMEOUT);
 }
 
+
+/**
+ * Sends a data frame to the battery stack via UART with a CRC appended to the end for verification
+ */
 int SendStackFrameSetCrc(DbmsCtx* ctx, uint8_t* buf, size_t len)
 {
     int status = 0;
+    // Calculate the CRC on the payload
 	uint16_t crc = CalcCrc16(buf, len - 2);
+    // Tape the CRC to the end of the frame
     buf[len - 2] = crc & 0xFF;
     buf[len - 1] = (crc >> 8) & 0xFF;
+    // Send the frame
     status = HAL_UART_Transmit(ctx->hw.uart, buf, len, STACK_SEND_TIMEOUT);
+    // Clear the CRC from the payload
     buf[len - 2] = 0;
     buf[len - 1] = 0;
     return status;
 }
 
 
-
+/**
+ * Utility function to set the baud rate of the UART
+ * Used for shutdown and wakeup
+ */
 void SetBrr(uint64_t brr)
 {
 #ifndef SIM
@@ -57,22 +77,38 @@ void SetBrr(uint64_t brr)
 #endif
 }
 
+/**
+ * Sends a wake blip to the battery stack
+ */
 int SendStackWakeBlip(DbmsCtx* ctx)
 {
     int status = 0;
     // uart_set_brr(APBxCLK / (1 / (2.75 / (1 * 1000))));
+
+    // 1. Switch to a very slow baud rate. receiving chips will see this
+    //    as a weird, long and continuous low signal
     SetBrr(25700/2); // ?
+
+    // 2. Send a single byte at this slow speed
     uint8_t wake_frame[] = {0x00};
     if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0) 
     {
         CAN_REPORT_FAULT(ctx, status);
         return status;
     }
+    // 3. Immediately switch back to the normal high speed baud rate
+    //    so we can tell the chips they are awake now
     SetBrr(APBxCLK / 1000000); // 84
     DelayUs(ctx, 3500);
     return status;
 }
 
+/**
+ * Sends a shutdown blip to the battery stack
+ * Follows the exact same logic as the wake blip function,
+ * except we are setting a different baud rate. the rate
+ * is like a secret code we send to the chips to say we are waking up or shutting down
+ */
 int SendStackShutdownBlip(DbmsCtx* ctx)
 {
     int status = 0;
@@ -89,7 +125,11 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
     return status;
 }
 
-
+/**
+ * Wakes up the battery stack
+ * Use this when we turn the vehicle on, or when waking up from a sleep mode
+ * We could also use this to recover from a communication error (if we lose contact with the stack for some reason)
+ */
 int StackWake(DbmsCtx* ctx)
 {
     int status = HAL_OK;
@@ -110,6 +150,11 @@ int StackWake(DbmsCtx* ctx)
     return status;
 }
 
+/**
+ * Shuts down the battery stack
+ * Use this when we turn the vehicle off, or when going to sleep
+ * We could also use this in response to a critical fault
+ */
 int StackShutdown(DbmsCtx* ctx)
 {
     int status = HAL_OK;
@@ -130,6 +175,10 @@ int StackShutdown(DbmsCtx* ctx)
     return status;
 }
 
+/**
+ * Sends the OTP (one-time programmable) ECC (error correction code)
+ * Used to initalize the stack
+ */
 void SendOtpEccDatain(DbmsCtx* ctx)  
 {
     // uint8_t frame_otp_ecc_datain[] = { 0xB0, 0x03, 0x43, 0x00, 0x00, 0x00 };
@@ -141,6 +190,12 @@ void SendOtpEccDatain(DbmsCtx* ctx)
     }
 }
 
+/**
+ * Automatically assigns a unique address to each battery monitoring chip in the stack
+ * For example, if we want to ask what the voltage of chip 5 is, we need to make one
+ * of them chip #5, another chip #6, and so on
+ * Used to initalize the stack
+ */
 void SendAutoAddr(DbmsCtx* ctx) 
 {
     // 0xB0 at first
@@ -151,6 +206,10 @@ void SendAutoAddr(DbmsCtx* ctx)
     }
 }
 
+/**
+ * Tells the chips who is at the bottom and top of the stack
+ * Used to initalize the stack
+ */
 void SendSetStackTop(DbmsCtx* ctx) 
 {
     // 2nd byte replaced with id (num of stack devs), last 2 bytes for crc
@@ -160,6 +219,10 @@ void SendSetStackTop(DbmsCtx* ctx)
     SendStackFrameSetCrc(ctx, frame_set_stack_top, sizeof(frame_set_stack_top));
 }
 
+/**
+ * Reads the OTP (one-time programmable) ECC (error correction code)
+ * Used to initalize the stack
+ */
 void ReadOtpEccDatain(DbmsCtx* ctx)  
 {
     // uint8_t frame_otp_ecc_datain[] = { 0xA0, 0x03, 0x43, 0x00, 0x00, 0x00};
@@ -171,6 +234,11 @@ void ReadOtpEccDatain(DbmsCtx* ctx)
     }
 }
 
+/**
+ * "main" function for initalization
+ * Builds a fully configured and operational battery stack
+ * Uses helper functions defined above
+ */
 void StackAutoAddr(DbmsCtx* ctx)
 {
     SendOtpEccDatain(ctx); // step 1
@@ -194,6 +262,10 @@ void StackAutoAddr(DbmsCtx* ctx)
     // SendStackFrameSetCrc(ctx, FRAME_CONF1_READ, sizeof(FRAME_CONF1_READ));
 }
 
+/**
+ * Sets the number of active cells in the stack
+ * Used to initalize the stack
+ */
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
     // possible sw guide error 0xB0 (stack write) --> 0xD0 (broadcast write)
@@ -212,6 +284,9 @@ void StackSetupTempReadings(DbmsCtx* ctx)
 
 }
 
+/**
+ * Tells all battery monitoring chips to start measuring the voltage of each cell
+ */
 void StackSetupVoltReadings(DbmsCtx* ctx)
 {
     static uint8_t FRAME_SET_ADC_CONT_RUN[] = {0xD0, 0x03, 0x0D, 0x06, 0x00, 0x00 };

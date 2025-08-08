@@ -7,23 +7,44 @@
 #include "common.h"
 #include "context.h"
 
+/**
+*  Enum for individual LED states
+*/
+typedef enum _LedState {
+    LED_STATE_OFF = 0,
+    LED_STATE_SOLID_RED,
+    LED_STATE_SOLID_GREEN,
+    LED_STATE_SOLID_YELLOW,
+    LED_STATE_FAST_BLINK_RED,
+    LED_STATE_FAST_BLINK_GREEN,
+    LED_STATE_FAST_BLINK_YELLOW,
+    LED_STATE_SLOW_BLINK_RED,
+    LED_STATE_SLOW_BLINK_GREEN,
+    LED_STATE_SLOW_BLINK_YELLOW,
+    LED_STATE_COUNT // for bounds checking
+} LedState;
+
+/**
+*  Enum for actual LED colors
+*/
 typedef enum _LedColor {
-    LED_OFF,
+    LED_OFF = 0,
     LED_RED,
     LED_GREEN,
-    LED_YELLOW
+    LED_YELLOW,
 } LedColor;
 
+/**
+*  Enum for individual LEDs, used to index
+*/
 typedef enum _Led {
     LED6 = 0,
     LED7,
     LED8
 } Led;
 
+void ProcessLedAction(DbmsCtx* ctx);
+
 void LedSet(Led led, LedColor color);
-
-#define LED_SHOW_ERROR() { LedSet(LED6, LED_RED); LedSet(LED7, LED_RED); LedSet(LED8, LED_RED); }
-
-
 
 #endif

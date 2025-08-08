@@ -54,6 +54,20 @@ typedef struct _DbmsSettings {
 
 } DbmsSettings;
 
+/**
+*  Enum for system LED states (all 3 LEDs)
+*  these combos are mapped in implementation file's system_led_patterns
+*/
+typedef enum _DbmsLedState {
+	DBMS_ERROR = 0,
+    ACTIVE,
+    IDLE,
+    COMM_ERROR,
+    INIT,
+    // ...
+    DBMS_LED_STATE_COUNT
+} DbmsLedState;
+
 typedef struct _DbmsCtx {
 
     HwCtx hw;                   // Holds points to hardware peripherals
@@ -61,6 +75,7 @@ typedef struct _DbmsCtx {
     DbmsState       req_state;        // the state we want
     DbmsState       cur_state;        // the state we are in
     DbmsSettings    settings;
+    DbmsLedState    led_state;        // the state of the LEDs
 
     // 2D grid representing the battery
     // example with 5 segments and 4 monitors each
@@ -77,7 +92,6 @@ typedef struct _DbmsCtx {
     uint64_t    last_rx_heartbeat;
 
     bool        need_to_sync_settings;
-    bool        led_show_error;
 
 } DbmsCtx;
 
