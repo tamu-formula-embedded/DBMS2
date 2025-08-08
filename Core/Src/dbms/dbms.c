@@ -146,7 +146,9 @@ void DbmsIter(DbmsCtx* ctx)
     if (ctx->cur_state == DBMS_ACTIVE)
     {
         // Need to look into this
-        // StackUpdateVoltReadings(ctx);
+        // todo: will time out a few times before stack is 
+        //       correctly configed, fix this
+        StackUpdateVoltReadings(ctx);
     }
 
     //
