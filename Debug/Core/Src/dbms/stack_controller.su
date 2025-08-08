@@ -1,23 +1,21 @@
-<<<<<<< HEAD
 ../Core/Src/dbms/stack_controller.c:13:6:DelayUs	32	static
 ../Core/Src/dbms/stack_controller.c:27:6:__PrintStackRxFrame	32	static
 ../Core/Src/dbms/stack_controller.c:41:5:SendStackFrame	24	static
 ../Core/Src/dbms/stack_controller.c:50:5:SendStackFrameSetCrc	32	static
-../Core/Src/dbms/stack_controller.c:70:5:RecvStackFrame	24	static
-../Core/Src/dbms/stack_controller.c:88:6:SetBrr	16	static
-../Core/Src/dbms/stack_controller.c:100:5:SendStackWakeBlip	24	static
-../Core/Src/dbms/stack_controller.c:129:5:SendStackShutdownBlip	24	static
-../Core/Src/dbms/stack_controller.c:150:5:StackWake	24	static
-../Core/Src/dbms/stack_controller.c:175:5:StackShutdown	24	static
-../Core/Src/dbms/stack_controller.c:199:6:SendOtpEccDatain	32	static
-../Core/Src/dbms/stack_controller.c:216:6:SendAutoAddr	32	static
-../Core/Src/dbms/stack_controller.c:230:6:SendSetStackTop	32	static
-../Core/Src/dbms/stack_controller.c:243:6:ReadOtpEccDatain	32	static
-../Core/Src/dbms/stack_controller.c:259:6:StackAutoAddr	16	static
-../Core/Src/dbms/stack_controller.c:286:6:StackSetNumActiveCells	24	static
-../Core/Src/dbms/stack_controller.c:294:6:StackSetupGpio	16	static
-../Core/Src/dbms/stack_controller.c:299:6:StackSetupTempReadings	16	static
-../Core/Src/dbms/stack_controller.c:307:6:StackSetupVoltReadings	24	static
-../Core/Src/dbms/stack_controller.c:316:6:StackUpdateVoltReadings	304	static
-=======
->>>>>>> master
+../Core/Src/dbms/stack_controller.c:71:6:SetBrr	16	static
+../Core/Src/dbms/stack_controller.c:83:5:SendStackWakeBlip	24	static
+../Core/Src/dbms/stack_controller.c:112:5:SendStackShutdownBlip	24	static
+../Core/Src/dbms/stack_controller.c:133:5:StackWake	24	static
+../Core/Src/dbms/stack_controller.c:158:5:StackShutdown	24	static
+../Core/Src/dbms/stack_controller.c:182:6:SendOtpEccDatain	32	static
+../Core/Src/dbms/stack_controller.c:199:6:SendAutoAddr	32	static
+../Core/Src/dbms/stack_controller.c:213:6:SendSetStackTop	32	static
+../Core/Src/dbms/stack_controller.c:226:6:ReadOtpEccDatain	32	static
+../Core/Src/dbms/stack_controller.c:242:6:StackAutoAddr	16	static
+../Core/Src/dbms/stack_controller.c:269:6:StackSetNumActiveCells	24	static
+../Core/Src/dbms/stack_controller.c:277:6:StackSetupGpio	16	static
+../Core/Src/dbms/stack_controller.c:282:6:StackSetupTempReadings	16	static
+../Core/Src/dbms/stack_controller.c:290:6:StackSetupVoltReadings	16	static
+../Core/Src/dbms/stack_controller.c:296:5:FillStackFrame	32	static
+../Core/Src/dbms/stack_controller.c:312:5:FillStackFrames	32	static
+../Core/Src/dbms/stack_controller.c:321:6:StackUpdateVoltReadings	136	static

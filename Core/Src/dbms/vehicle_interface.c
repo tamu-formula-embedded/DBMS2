@@ -178,8 +178,10 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     
     memcpy(&cfg_set, rx_data + 4, sizeof(int32_t));
 
-    uint8_t frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
-    //CanTransmit(ctx, CANID_TX_CFG_ACK, frame);
+#ifdef ACK_CFG
+    uint8_t ack_frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
+    CanTransmit(ctx, CANID_TX_CFG_ACK, ack_frame);
+#endif
 
     switch (cfg_id)
     {
