@@ -16,7 +16,7 @@ void DbmsInit(DbmsCtx* ctx)
 {
     int status = 0;
     ctx->cur_state = DBMS_SHUTDOWN;
-
+    ctx->led_state = INIT;
     if ((status = LoadSettings(ctx, &ctx->settings)) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
@@ -33,7 +33,15 @@ void DbmsInit(DbmsCtx* ctx)
     //memset(ctx->cell_states, 0, N_SEGMENTS * N_MONITORS_PER_SEG * (N_GROUPS * sizeof(int16_t)) * (N_TEMPS * sizeof(int16_t)));
 
     HAL_TIM_Base_Start(ctx->hw.timer);
-    status = ConfigCan(ctx);
+
+    if ((status = ConfigCan(ctx) != HAL_OK))
+    {
+        CAN_REPORT_FAULT(ctx, status);
+        ctx->led_state = ERROR;
+        return;
+    }
+    // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
+    ctx->led_state = IDLE;
 }
 
 int DbmsPerformWakeup(DbmsCtx* ctx)
@@ -44,20 +52,17 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     if ((status = StackWake(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
+        ctx->led_state = ERROR;
         return status;                  // we are cooked
     }
     ctx->cur_state = DBMS_ACTIVE;
-
-    LedSet(LED6, LED_GREEN);
-    LedSet(LED7, LED_GREEN);
-    LedSet(LED8, LED_GREEN);
+    ctx->led_state = ACTIVE;
 
     StackAutoAddr(ctx);
     StackSetNumActiveCells(ctx, 0x0A);
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx);     // todo: rn start
 
-    ctx->cur_state = DBMS_ACTIVE;
     return status;
 }
 
@@ -67,13 +72,11 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     if ((status = StackShutdown(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
+        ctx->led_state = ERROR;
         return status;
     }
     ctx->cur_state = DBMS_SHUTDOWN;
-
-    LedSet(LED6, LED_OFF);
-    LedSet(LED7, LED_OFF);
-    LedSet(LED8, LED_OFF);
+    ctx->led_state = IDLE;
 
     HAL_Delay(200);
     return status;
@@ -81,6 +84,11 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
 
 void DbmsIter(DbmsCtx* ctx)
 {
+	if(ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE){
+		ctx->led_state = INIT;
+		ProcessLedAction(ctx);
+	}
+
 	int status = 0;
     ctx->iterct++;
 
@@ -96,32 +104,27 @@ void DbmsIter(DbmsCtx* ctx)
         if ((status = SaveSettings(ctx, &ctx->settings)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
+            ctx->led_state = ERROR;
         }
         ctx->need_to_sync_settings = false;
     }
-    
+
     //
     //  Let everybody know that we are alive
     //
-    if (ctx->led_show_error) 
-    {
-        LED_SHOW_ERROR();
-    } else {
-        if (ctx->cur_state == DBMS_ACTIVE)
-            LedSet(LED6, ((ctx->iterct / 20) % 2 == 0) ? LED_GREEN : LED_OFF);
-        else 
-            LedSet(LED6, ((ctx->iterct / 20) % 2 == 0) ? LED_YELLOW : LED_OFF);
-    }
+    
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)&ctx->settings, sizeof(DbmsSettings)));
 
     //
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //  
-     if (HAL_GetTick() - ctx->last_rx_heartbeat > ctx->settings.quiet_ms_before_shutdown)
-         ctx->req_state = DBMS_SHUTDOWN;
-     else
+     if (HAL_GetTick() - ctx->last_rx_heartbeat > ctx->settings.quiet_ms_before_shutdown){
+        ctx->req_state = DBMS_SHUTDOWN;
+     }
+     else{
         ctx->req_state = DBMS_ACTIVE;
+     }
     
     // 
     //  Gracefully handle state transition
@@ -148,6 +151,10 @@ void DbmsIter(DbmsCtx* ctx)
         StackUpdateVoltReadings(ctx);
     }
 
+    //
+    //  Update the LEDs. Led state should be set every time the cur_state changes
+    //
+    ProcessLedAction(ctx);
     HAL_Delay(10);      // make adaptive
 }
 
@@ -182,10 +189,13 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 //
 void DbmsErr(DbmsCtx* ctx)
 {
-    
+    ctx->cur_state = DBMS_SHUTDOWN;
+    ctx->led_state = ERROR;
 }
 
 void DbmsClose(DbmsCtx* ctx)
 {
+    ctx->cur_state = DBMS_SHUTDOWN;
+    ctx->led_state = IDLE;
 }
 
