@@ -3,14 +3,12 @@
 //  
 #include "dbms.h"
 
-
 void LoadFallbackSettings(DbmsSettings* settings)
 {
     // if this fails we are in deep trouble lol
     settings->max_allowed_pack_voltage = 64000; // 64V -> mV
     settings->quiet_ms_before_shutdown = 5000;  // 5s -> ms
 }
-
 
 void DbmsInit(DbmsCtx* ctx)
 {
