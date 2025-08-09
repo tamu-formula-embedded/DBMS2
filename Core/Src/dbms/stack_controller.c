@@ -350,7 +350,7 @@ int UnlockNVM(DbmsCtx* ctx)
     FillStackFrames(rx_frames, rx_buffer, sizeof(uint8_t), N_STACKDEVS);
 
     for (size_t i = 0; i < N_STACKDEVS; i++){
-        //UNLOCK bit in the OTP_PROG_STAT register is 1 = successful unlock
+        //UNLOCK bit in the OTP_PROG_STAT[7] register is 1 = successful unlock
         if (rx_frames[i].data != 0x80){
             return 1;
         }
@@ -359,10 +359,78 @@ int UnlockNVM(DbmsCtx* ctx)
     return 0;
 }
 
-int ToggleMonitorChipLed(DbmsCtx* ctx)
-{
-    if (UnlockNVM(ctx) != 0){
-        return 1;
+int OTPProgrammingErrorCheck(DbmsCtx* ctx){
+    int status = 0;
+
+    // step 1: read registers OTP_PROG_STAT, OTP_CUST1_STAT and OTP_CUST2_STAT
+    // send read command frame
+    uint8_t* buffer = {0xA0, 0x05, 0x19, 0x02, 0x00, 0x00};
+    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
+        return status;
+    }
+
+    // receive response frames
+    size_t data_size = sizeof(uint8_t) * 3;
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS;
+    uint8_t* rx_buffer[expected_rx_size];
+
+    RxStackFrame rx_frames[N_STACKDEVS];
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
+        return status;
+    }
+    FillStackFrames(rx_frames, rx_buffer, data_size, N_STACKDEVS);
+
+    // Check corresponding error register bits
+    for (size_t i = 0; i < N_STACKDEVS; i++){
+        if (rx_frames[i].data[0] != 0x01){
+            return 1;
+        }
+        if (rx_frames[1].data[1] != 0x0F){
+            return 1;
+        }
+        if (rx_frames[i].data[2] != 0x00){
+            return 1; // Although we are not loading page 2 at all, doesnt hurt to check
+        }
     }
     
+    return status;
+
+}
+
+int TurnMonitorChipLedOn(DbmsCtx* ctx)
+{   
+    int status = 0;
+    // step 1: unlock NVM memory programming
+    if ((status = UnlockNVM(ctx)) != 0){
+        return status;
+    }
+    
+    //step 2: select OTP page to program
+    uint8_t* buffer = {0xB0, 0x03, 0x0B, 0x01, 0x00, 0x00};
+    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
+        return status;
+    }
+
+    //step 3: program GPIO_CONF4[5:3] = 100 for high and 101 for low
+    buffer[1] = 0x00;
+    buffer[2] = 0x11;
+    buffer[3] = 0x20;
+    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
+        return status;
+    }
+
+    DelayUs(ctx, 100);
+
+    //step 4: Confirm successful OTP page programming with no errors
+    if ((status = OTPProgrammingErrorCheck(ctx)) != 0){
+        return status;
+    }
+
+    //step 5: digital reset and reload registers with updated OTP values
+    buffer[1] = 0x03;
+    buffer[2] = 0x09;
+    buffer[3] = 0x02;
+    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
+        return status;
+    }
 }
