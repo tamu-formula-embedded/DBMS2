@@ -399,11 +399,13 @@ int OTPProgrammingErrorCheck(DbmsCtx* ctx){
 
 int TurnMonitorChipLedOn(DbmsCtx* ctx)
 {   
+    // Can skip a couple steps when doing this over and over again, such as:
+    // Doesn't need to check specific page faults (page 1 or 2) every time if theres no programming in page
     int status = 0;
     // step 1: unlock NVM memory programming
-    if ((status = UnlockNVM(ctx)) != 0){
-        return status;
-    }
+    // if ((status = UnlockNVM(ctx)) != 0){
+    //     return status;
+    // }
     
     //step 2: select OTP page to program
     uint8_t* buffer = {0xB0, 0x03, 0x0B, 0x01, 0x00, 0x00};
