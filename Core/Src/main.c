@@ -116,6 +116,7 @@ int main(void)
   dbms_ctx.hw.timer = &htim1;
   dbms_ctx.hw.uart = &huart4;
   dbms_ctx.hw.i2c = &hi2c2;
+
   DbmsInit(&dbms_ctx);
 
   /* USER CODE END 2 */
