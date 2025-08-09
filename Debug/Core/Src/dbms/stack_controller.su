@@ -19,3 +19,7 @@
 ../Core/Src/dbms/stack_controller.c:296:5:FillStackFrame	32	static
 ../Core/Src/dbms/stack_controller.c:312:5:FillStackFrames	32	static
 ../Core/Src/dbms/stack_controller.c:321:6:StackUpdateVoltReadings	136	static
+../Core/Src/dbms/stack_controller.c:363:5:FaultOtpErrorCheck	144	dynamic
+../Core/Src/dbms/stack_controller.c:391:5:UnlockNVM	152	dynamic
+../Core/Src/dbms/stack_controller.c:437:5:OTPProgrammingErrorCheck	152	dynamic
+../Core/Src/dbms/stack_controller.c:475:5:TurnMonitorChipLedOn	32	static
