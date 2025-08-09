@@ -150,10 +150,17 @@ void DbmsIter(DbmsCtx* ctx)
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
     }
+    HAL_Delay(100);
 
     //
-    //  Update the LEDs. Led state should be set every time the cur_state changes
+    //  Turn off monitor chip
     //
+    TurnMonitorChipLedOn(ctx);
+    HAL_Delay(100);
+
+    //
+	//  Update the LEDs. Led state should be set every time the cur_state changes
+	//
     ProcessLedAction(ctx);
     HAL_Delay(10);      // make adaptive
 }

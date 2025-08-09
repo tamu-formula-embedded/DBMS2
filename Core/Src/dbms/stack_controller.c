@@ -483,31 +483,33 @@ int TurnMonitorChipLedOn(DbmsCtx* ctx)
     // }
     
     //step 2: select OTP page to program
-    uint8_t* buffer = {0xB0, 0x03, 0x0B, 0x01, 0x00, 0x00};
-    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
-        return status;
-    }
+    uint8_t buffer[] = {0xB0, 0x00, 0x11, 0x28, 0x00, 0x00};
+//    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
+//        return status;
+//    }
 
     //step 3: program GPIO_CONF4[5:3] = 100 for high and 101 for low
-    buffer[1] = 0x00;
-    buffer[2] = 0x11;
-    buffer[3] = 0x20;
+//    buffer[1] = 0x00;
+//    buffer[2] = 0x11;
+//    buffer[3] = 0x28;
     if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
         return status;
     }
 
-    DelayUs(ctx, 100);
+//	DelayUs(ctx, 100);
+
+    return 0;
 
     //step 4: Confirm successful OTP page programming with no errors
-    if ((status = OTPProgrammingErrorCheck(ctx)) != 0){
-        return status;
-    }
+//    if ((status = OTPProgrammingErrorCheck(ctx)) != 0){
+//        return status;
+//    }
 
     //step 5: digital reset and reload registers with updated OTP values
-    buffer[1] = 0x03;
-    buffer[2] = 0x09;
-    buffer[3] = 0x02;
-    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
-        return status;
-    }
+//    buffer[1] = 0x03;
+//    buffer[2] = 0x09;
+//    buffer[3] = 0x02;
+//    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
+//        return status;
+//    }
 }
