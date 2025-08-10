@@ -14,6 +14,10 @@
 #include <stddef.h>
 #include <math.h>
 
+#define MIN(A, B) (((A) < (B)) ? (A) : (B))
+#define MAX(A, B) (((A) > (B)) ? (A) : (B))
+
+
 #ifdef __vscode__
     typedef int int32_t;
     typedef unsigned int uint32_t;

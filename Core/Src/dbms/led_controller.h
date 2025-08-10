@@ -8,21 +8,20 @@
 #include "context.h"
 
 /**
-*  Enum for individual LED states
+*  Enum for system LED states (all 3 LEDs)
+*  these combos are mapped in implementation file's system_led_patterns
+* 
+*  (fwd declared)
 */
-typedef enum _LedState {
-    LED_STATE_OFF = 0,
-    LED_STATE_SOLID_RED,
-    LED_STATE_SOLID_GREEN,
-    LED_STATE_SOLID_YELLOW,
-    LED_STATE_FAST_BLINK_RED,
-    LED_STATE_FAST_BLINK_GREEN,
-    LED_STATE_FAST_BLINK_YELLOW,
-    LED_STATE_SLOW_BLINK_RED,
-    LED_STATE_SLOW_BLINK_GREEN,
-    LED_STATE_SLOW_BLINK_YELLOW,
-    LED_STATE_COUNT // for bounds checking
-} LedState;
+enum _LedState {
+	LED_ERROR = 0,
+    LED_ACTIVE,
+    LED_IDLE,
+    LED_COMM_ERROR,
+    LED_INIT,
+    // ...
+    LED_STATE_COUNT
+};
 
 /**
 *  Enum for actual LED colors

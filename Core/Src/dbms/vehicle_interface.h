@@ -8,6 +8,7 @@
 #include "context.h"
 
 #include "led_controller.h"
+#include "settings.h"
 
 #define CANID_TX_HEARTBEAT          0x501
 #define CANID_CONSOLE_C0            0x502   // No compression 
