@@ -35,8 +35,7 @@ void DbmsInit(DbmsCtx* ctx)
             ctx->need_to_sync_settings = true;          // queue up a write
         }  
         else    {}  // fatal error
-}
-    //memset(ctx->cell_states, 0, N_SEGMENTS * N_MONITORS_PER_SEG * (N_GROUPS * sizeof(int16_t)) * (N_TEMPS * sizeof(int16_t)));
+    }
 
     HAL_TIM_Base_Start(ctx->hw.timer);
 

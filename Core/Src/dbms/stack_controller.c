@@ -329,10 +329,8 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     {
         CAN_REPORT_FAULT(ctx, status);
     }
-    // DelayUs(ctx, 192 + 5 * N_STACKDEVS); // no !
 
     size_t data_size = N_GROUPS * sizeof(int16_t);
-
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
     //                 header+crc ^         ^ readings * 2 bytes each    
 
@@ -349,13 +347,16 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     {
         if (rx_frames[i].dev_addr == 0) 
             continue; // this is myself
+        addr = rx_frames[i].dev_addr - 1;   // ignore the controller from a broadcast   
 
-        addr = rx_frames[i].dev_addr - 1;
-        for (size_t j = 0; j < N_GROUPS; j++)
-        {
-            ctx->cell_states[addr / N_MONITORS_PER_SEG][addr % N_MONITORS_PER_SEG].voltages[j]
-                = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-                + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
-        } 
+        memcpy(ctx->cell_states[addr].voltages, rx_frames[i].data, data_size);
+
+    //     for (size_t j = 0; j < N_GROUPS; j++)
+    //     {
+    //         ctx->cell_states[addr].voltages[j]
+    //             = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
+    //             + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
+    //     } 
+
     }
 }
