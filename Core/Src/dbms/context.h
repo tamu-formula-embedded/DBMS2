@@ -21,6 +21,9 @@ typedef enum _DbmsState {
     DBMS_SHUTDOWN,
 } DbmsState;
 
+// fwd definition -- defined in perf_counters.h
+typedef struct _PerfCounters PerfCounters;  
+
 // Hardware context stores prts 
 // to peripheral interfaces
 typedef struct _HwCtx {
