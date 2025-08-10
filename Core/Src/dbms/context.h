@@ -21,7 +21,7 @@ typedef enum _DbmsState {
     DBMS_SHUTDOWN,
 } DbmsState;
 
-// fwd definition -- defined in perf_counters.h
+// fwd definition -- perf_counters.h
 typedef struct _PerfCounters PerfCounters;  
 
 // Hardware context stores prts 
@@ -43,33 +43,12 @@ typedef struct _CellMonitorState {
     uint16_t temps[N_TEMPS];
 } CellMonitorState;
 
-typedef struct _DbmsSettings {
+// fwd definition -- settings.h
+typedef enum _UserSettingIndex UserSettingIndex; 
+typedef struct _DbmsSettings DbmsSettings;
 
-    // The maximum voltage of the pack or else a fault is thrown
-    #define CFGID_MAX_ALLOWED_PACK_VOLTS    0x01
-    uint16_t max_allowed_pack_voltage;
-
-    // How many miliseconds since the last heartbeat do we wait
-    // before initiating a shutdown
-    #define CFGID_QUIET_MS_BEFORE_SHUTDOWN  0x02
-    uint32_t quiet_ms_before_shutdown;
-
-
-} DbmsSettings;
-
-/**
-*  Enum for system LED states (all 3 LEDs)
-*  these combos are mapped in implementation file's system_led_patterns
-*/
-typedef enum _DbmsLedState {
-	DBMS_ERROR = 0,
-    ACTIVE,
-    IDLE,
-    COMM_ERROR,
-    INIT,
-    // ...
-    DBMS_LED_STATE_COUNT
-} DbmsLedState;
+// fwd definition for enum -- led_controller.h
+typedef int32_t LedState;   
 
 typedef struct _DbmsCtx {
 
@@ -77,8 +56,10 @@ typedef struct _DbmsCtx {
 
     DbmsState       req_state;        // the state we want
     DbmsState       cur_state;        // the state we are in
-    DbmsSettings    settings;
-    DbmsLedState    led_state;        // the state of the LEDs
+    LedState        led_state;        // the state of the LEDs
+
+    DbmsSettings*   settings;         // struct fwd defs has to be a ptr
+    PerfCounters*   perfctrs;  
 
     // 2D grid representing the battery
     // example with 5 segments and 4 monitors each

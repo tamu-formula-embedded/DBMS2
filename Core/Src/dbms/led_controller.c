@@ -49,28 +49,28 @@ static const LedMapping leds[] = {
 /**
 *  Table mapping each system state to per-LED states
 */
-static const InternalLedState system_led_patterns[DBMS_LED_STATE_COUNT][NUM_LEDS] = {
-    [ERROR] = {
+static const InternalLedState system_led_patterns[LED_STATE_COUNT][NUM_LEDS] = {
+    [LED_ERROR] = {
         { LED_RED,   BLINK_TYPE_OFF,  false },
         { LED_RED,   BLINK_TYPE_OFF,  false },
         { LED_RED,   BLINK_TYPE_OFF,  false }
     },
-    [ACTIVE] = {
+    [LED_ACTIVE] = {
         { LED_GREEN, BLINK_TYPE_OFF,  false },
         { LED_GREEN, BLINK_TYPE_OFF,  false },
         { LED_GREEN, BLINK_TYPE_OFF,  false }
     },
-    [IDLE] = {
+    [LED_IDLE] = {
         { LED_YELLOW, BLINK_TYPE_OFF, false },
         { LED_YELLOW, BLINK_TYPE_OFF, false },
         { LED_YELLOW, BLINK_TYPE_OFF, false }
     },
-    [COMM_ERROR] = {
+    [LED_COMM_ERROR] = {
         { LED_RED,   BLINK_TYPE_OFF,  false },
         { LED_RED,   BLINK_TYPE_OFF,  false },
         { LED_RED,   BLINK_TYPE_FAST, false }
     },
-    [INIT] = {
+    [LED_INIT] = {
         { LED_GREEN, BLINK_TYPE_OFF,  false },
         { LED_GREEN, BLINK_TYPE_OFF,  false },
         { LED_YELLOW, BLINK_TYPE_OFF, false }

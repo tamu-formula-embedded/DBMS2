@@ -13,11 +13,16 @@
 #include "common.h"
 #include "context.h"
 
+#include "settings.h"
 #include "vehicle_interface.h"  // should go first?
 #include "current_meter.h"
 #include "led_controller.h"
 #include "stack_controller.h"
 #include "storage.h"
+#include "perf_counters.h"
+
+// Called before the main loop but strictly used for memory allocation
+void DbmsAlloc(DbmsCtx* ctx);
 
 // Called before the main loop
 void DbmsInit(DbmsCtx* ctx);

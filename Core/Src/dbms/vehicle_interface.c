@@ -36,17 +36,17 @@ int ConfigCan(DbmsCtx* ctx)
     // Add the filter to CAN peripheral
     if ((status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg)) != HAL_OK)
     {
-        ctx->led_state = COMM_ERROR;
+        ctx->led_state = LED_COMM_ERROR;
         return status;
     }
     if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK)
         {
-        ctx->led_state = COMM_ERROR;
+        ctx->led_state = LED_COMM_ERROR;
         return status;
     }
     if ((status = HAL_CAN_ActivateNotification(ctx->hw.can, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK) 
     {
-        ctx->led_state = COMM_ERROR;
+        ctx->led_state = LED_COMM_ERROR;
         return status;
     }
 
@@ -66,7 +66,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, &ctx->hw.can_tx_header, data, &ctx->hw.can_tx_mailbox);
     if(result != HAL_OK)
     {
-        ctx->led_state = COMM_ERROR;
+        ctx->led_state = LED_COMM_ERROR;
     }
     
     return result;
@@ -121,9 +121,25 @@ void DumpCellState(DbmsCtx* ctx)
     }
 }
 
+void FillShortModuleName(char* buffer, size_t sz, char* raw)
+{
+    char *sk, *head, *dot;
+    for (sk = head = raw; *sk != 0; sk++)
+    {
+        if (*sk == '/' || *sk == '\\') head = sk+1;
+    }
+    size_t len = MIN(sz, sk-head);
+    memcpy(buffer, head, len);
+    if ((dot = memchr(buffer, '.', len)))
+    {
+        memset(dot, 0, (buffer+len)-dot);
+    }
+}
+// todo: implement^
+
 int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 {
-    ctx->led_state = ERROR;
+    ctx->led_state = LED_ERROR;
 
     // TODO: add forward fn -> the last /
 
@@ -145,11 +161,12 @@ int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
     // frame[2] = (buf[4] << 3) | (buf[5] >> 2);
     // frame[3] = ((buf[5] & 0x03) << 6) | (buf[6] << 1) | (buf[7] >> 4);
     // frame[4] = (buf[7] & 0x0F) << 4;
+    // for (size_t i = 0; fn[i] != 0 && i <= 4; i++)       
+    // {
+    //     frame[i] = fn[i];
+    // }
 
-    for (size_t i = 0; fn[i] != 0 && i <= 4; i++)       
-    {
-        frame[i] = fn[i];
-    }
+    FillShortModuleName((char*)frame, 5, fn);
 
     frame[5] = (line_num >> 8) & 0xff;
     frame[6] = line_num & 0x00ff;
@@ -168,8 +185,6 @@ int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc)
     return CanTransmit(ctx, CANID_TX_HEARTBEAT, frame);
 }
 
-#define HANDLE_CFG(ACTION, Y, SETTING, X) if (ACTION == CFG_SET) { SETTING = X; } else { Y = SETTING; }
-
 int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
 {
     // This is an inefficient frame format ):
@@ -183,23 +198,17 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     CanTransmit(ctx, CANID_TX_CFG_ACK, ack_frame);
 #endif
 
-    switch (cfg_id)
-    {
-        case CFGID_MAX_ALLOWED_PACK_VOLTS:
-            HANDLE_CFG(action, cfg_get, ctx->settings.max_allowed_pack_voltage, cfg_set & 0xffff);
-            break;
-        case CFGID_QUIET_MS_BEFORE_SHUTDOWN:
-            HANDLE_CFG(action, cfg_get, ctx->settings.quiet_ms_before_shutdown, cfg_set & 0xffff);
-            break;
-
-        default:
-            return ERR_CFGID_NOT_FOUND;
-    }
+    if (!IsValidSettingIndex(ctx, cfg_id)) 
+        return ERR_CFGID_NOT_FOUND;
 
     if (action == CFG_SET)
+    {
+        SetSetting(ctx, cfg_id, cfg_set);
         ctx->need_to_sync_settings = true;
+    }
     else 
     {      
+        cfg_get = GetSetting(ctx, cfg_id);
         uint8_t frame[] = { cfg_id, 0, 0, 0, 0, 0, 0, 0 };
         memcpy(frame + 4, &cfg_get, sizeof(int32_t));
         CanTransmit(ctx, CANID_TX_GET_CONFIG, frame);
