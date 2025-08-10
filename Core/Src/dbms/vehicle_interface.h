@@ -49,7 +49,8 @@ int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code);
 
 void CanLog(DbmsCtx* ctx, const char* fmt, ...);
 
-void DumpCellState(DbmsCtx* ctx);
+int SendCellVoltages(DbmsCtx* ctx);
+int SendCellTemps(DbmsCtx* ctx);
 
 int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc);
 

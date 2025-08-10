@@ -13,8 +13,12 @@
 #define N_TEMPS 14
 // DONT CHANGE AFTER THIS
 
-#define N_STACKDEVS (N_SEGMENTS * N_MONITORS_PER_SEG + 1)
-// #define STACKITER(I) for (int I = 0; I < N_STACKDEVS; I++)
+#define N_MONITORS (N_SEGMENTS * N_MONITORS_PER_SEG)
+#define N_STACKDEVS (N_MONITORS + 1)    // technically "bus devs"
+
+#define ADDR_BCAST_TO_STACK(BCAST_ADDR) (BCAST_ADDR - 1)
+#define ADDR_STACK_TO_BCAST(STACK_ADDR) (STACK_ADDR + 1)
+
 
 typedef enum _DbmsState {
     DBMS_ACTIVE = 0,
@@ -61,16 +65,7 @@ typedef struct _DbmsCtx {
     DbmsSettings*   settings;         // struct fwd defs has to be a ptr
     PerfCounters*   perfctrs;  
 
-    // 2D grid representing the battery
-    // example with 5 segments and 4 monitors each
-    // [
-    //   seg1 [ monitor1, monitor2, monitor3, monitor4 ]
-    //   seg2 [ monitor1, monitor2, monitor3, monitor4 ]
-    //   seg3 [ monitor1, monitor2, monitor3, monitor4 ]
-    //   seg4 [ monitor1, monitor2, monitor3, monitor4 ]
-    //   seg5 [ monitor1, monitor2, monitor3, monitor4 ]
-    // ]
-    CellMonitorState cell_states[N_SEGMENTS][N_MONITORS_PER_SEG];
+    CellMonitorState cell_states[N_MONITORS];
 
     uint64_t    iterct;
     uint64_t    last_rx_heartbeat;

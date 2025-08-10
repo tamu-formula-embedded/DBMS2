@@ -91,34 +91,52 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...)
     }
 }
 
-void DumpCellState(DbmsCtx* ctx)
-{
-    uint8_t frame[8] = {0};
 
-    for (size_t i = 0; i < N_SEGMENTS; i++)
+#define PAD_BUFFER(SZ, K) (((SZ / K) + 1) * K)
+#define PAD_BUFFER_3(SZ) (PAD_BUFFER(SZ, 3))
+
+int SendCellVoltages(DbmsCtx* ctx)  
+{
+    int status = 0;
+    uint8_t frame[8] = {0};
+    uint16_t buffer[PAD_BUFFER_3(N_GROUPS)] = {0};
+
+    for (size_t i = 0; i < N_MONITORS; i++)
     {
-        frame[0] = i;
-        for (size_t j = 0; j < N_MONITORS_PER_SEG; j++)
+        memcpy(buffer, ctx->cell_states[i].voltages, N_GROUPS * sizeof(uint16_t));
+        frame[0] = i;       // ^ using an extra copy to keep the code simple
+
+        for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS); j += 3)
         {
             frame[1] = j;
-            for (size_t k = 0; k < N_GROUPS; k++)
-            {
-                frame[2] = k;
-                uint16_t v = ctx->cell_states[i][j].voltages[k];
-                frame[6] = (v & 0xff00) >> 8;
-                frame[7] = (v & 0x00ff);
-                CanTransmit(ctx, CANID_CELLSTATE_VOLTS, frame);
-            }
-            for (size_t k = 0; k < N_TEMPS; k++)
-            {
-                frame[2] = k;
-                uint16_t t = ctx->cell_states[i][j].temps[k];
-                frame[6] = (t & 0xff00) >> 8;
-                frame[7] = (t & 0x00ff);
-                CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame);
-            }
+            memcpy(frame + 2, buffer + j * sizeof(uint16_t), 3 * sizeof(uint16_t));
+            if ((status = CanTransmit(ctx, CANID_CELLSTATE_VOLTS, frame)) != 0)
+                return status;
         }
     }
+    return status;
+}
+
+int SendCellTemps(DbmsCtx* ctx)
+{
+    int status = 0;
+    uint8_t frame[8] = {0};
+    uint16_t buffer[PAD_BUFFER_3(N_TEMPS)] = {0};
+
+    for (size_t i = 0; i < N_MONITORS; i++)
+    {
+        memcpy(buffer, ctx->cell_states[i].temps, N_TEMPS * sizeof(uint16_t));
+        frame[0] = i;       
+
+        for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS); j += 3)
+        {
+            frame[1] = j;
+            memcpy(frame + 2, buffer + j * sizeof(uint16_t), 3 * sizeof(uint16_t));
+            if ((status = CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame)) != 0)
+                return status;
+        }
+    }
+    return status;
 }
 
 void FillShortModuleName(char* buffer, size_t sz, char* raw)
