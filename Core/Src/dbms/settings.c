@@ -27,7 +27,15 @@ int SaveSettings(DbmsCtx* ctx)
 
 void LoadFallbackSettings(DbmsCtx* ctx)
 {
-    // optional implementation
+    ctx->settings->user_defined[QUIET_MS_BEFORE_SHUTDOWN] = 2000;   // 2s
+
+    ctx->settings->user_defined[MAX_GROUP_VOLTAGE] = 5000;          // 1v
+    ctx->settings->user_defined[MIN_GROUP_VOLTAGE] = 1000;          // 5v
+    ctx->settings->user_defined[MAX_PACK_VOLTAGE] = 600000;         // 600v
+    ctx->settings->user_defined[MIN_PACK_VOLTAGE] = 30000;          // 30v
+
+    ctx->settings->user_defined[MAX_THERMISTOR_TEMP] = 1000;        // todo: ?
+    ctx->settings->user_defined[MAX_CURRENT] = 100000;              // todo: ?
 }
 
 

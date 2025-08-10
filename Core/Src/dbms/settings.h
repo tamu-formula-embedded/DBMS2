@@ -11,11 +11,16 @@
 // these objects are fwd declared
 
 enum _UserSettingIndex {
-    UNUSED1 = 0,
+    __UNUSED = 0,
 
     QUIET_MS_BEFORE_SHUTDOWN,
     MAX_GROUP_VOLTAGE,
     MIN_GROUP_VOLTAGE,
+    MAX_PACK_VOLTAGE,
+    MIN_PACK_VOLTAGE,
+
+    MAX_THERMISTOR_TEMP,
+    MAX_CURRENT,
 
     __NUM_USER_DEFINED_SETTINGS     // ALWAYS LAST
 }; 
