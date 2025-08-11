@@ -184,12 +184,13 @@ int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
     //     frame[i] = fn[i];
     // }
 
+    // CanLog(ctx, "Errno %d @ %s:%d\n", err_code, fn, line_num);
     FillShortModuleName((char*)frame, 5, fn);
 
     frame[5] = (line_num >> 8) & 0xff;
     frame[6] = line_num & 0x00ff;
     frame[7] = err_code & 0xff;
-    
+
     CanTransmit(ctx, CANID_FATAL_ERROR, frame);      // Ignore this error code
 
     return err_code;

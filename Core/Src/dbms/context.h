@@ -6,6 +6,8 @@
 
 #include "common.h"
 
+#define ITER_TARGET_HZ 10
+
 // USER DEFINED UNIQUE TO EACH BATTERY
 #define N_SEGMENTS 1
 #define N_MONITORS_PER_SEG 4
@@ -69,6 +71,9 @@ typedef struct _DbmsCtx {
 
     uint64_t    iterct;
     uint64_t    last_rx_heartbeat;
+
+    uint64_t    iter_start_us;
+    uint64_t    iter_end_us;
 
     bool        need_to_sync_settings;
 

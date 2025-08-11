@@ -66,6 +66,7 @@ int SaveStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_s
 
 int LoadStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_size) 
 {
+    printf("%p %d\n", object, obj_size);
     int status = 0;
     uint8_t buf[obj_size + sizeof(uint16_t)];
 
@@ -77,7 +78,7 @@ int LoadStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_s
     memcpy(object, buf, obj_size);
 
     uint16_t r_crc;
-    memcpy(&r_crc, buf + sizeof(DbmsSettings), sizeof(r_crc));
+    memcpy(&r_crc, buf + obj_size, sizeof(r_crc));
 
     uint16_t c_crc = CalcCrc16((uint8_t*)object, obj_size);
     if (r_crc != c_crc)
