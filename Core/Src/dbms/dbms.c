@@ -155,7 +155,7 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Turn off monitor chip
     //
-    ToggleMonitorChipLed(ctx, false, 0x00);
+    ToggleAllMonitorChipLeds(ctx, false);
     HAL_Delay(100);
 
     //
