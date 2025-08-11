@@ -3,15 +3,16 @@
 //  
 #include "dbms.h"
 
+static DbmsSettings mem_settings;
+static PerfCounters mem_perf_counters;
+
 //
 //  Allocate space for pointer objects
 //
 void DbmsAlloc(DbmsCtx* ctx)
 {
-    static DbmsSettings mem_settings;
     ctx->settings = &mem_settings;
 
-    static PerfCounters mem_perf_counters;
     ctx->perfctrs = &mem_perf_counters;
 }
 
@@ -89,13 +90,17 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
 
 void DbmsIter(DbmsCtx* ctx)
 {
-	if(ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE){
+	int status = 0;
+    ctx->iterct++;
+    ctx->iter_start_us = GetUs(ctx);
+
+
+	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
+    {
 		ctx->led_state = LED_INIT;
 		ProcessLedAction(ctx);
 	}
 
-	int status = 0;
-    ctx->iterct++;
 
     //
     //  Store the settings when required
@@ -154,14 +159,17 @@ void DbmsIter(DbmsCtx* ctx)
         // Need to look into this
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
-        StackUpdateVoltReadings(ctx);
+        // StackUpdateVoltReadings(ctx);
     }
 
     //
     //  Update the LEDs. Led state should be set every time the cur_state changes
     //
     ProcessLedAction(ctx);
-    HAL_Delay(10);      // make adaptive
+
+    ctx->iter_end_us = GetUs(ctx);
+    uint32_t end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
+    DelayUs(ctx, end_delay);
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])

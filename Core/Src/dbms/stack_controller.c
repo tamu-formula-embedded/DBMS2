@@ -8,20 +8,6 @@ static uint8_t FRAME_WAKE_STACK[] = { 0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95 };
 static uint8_t FRAME_SHUTDOWN_STACK[] = { 0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00 };
 
 /**
- * Provides a blocking delay in microseconds
- */
-void DelayUs(DbmsCtx* ctx, uint16_t us)
-{
-#ifdef SIM
-    usleep(us);
-#else
-    __HAL_TIM_SET_COUNTER(ctx->hw.timer, 0);
-    uint64_t big_ctr;
-    while ((big_ctr = __HAL_TIM_GET_COUNTER(ctx->hw.timer)) < us);
-#endif
-}
-
-/**
  * Prints the contents of a received RxStackFrame for debugging
  */
 void __PrintStackRxFrame(RxStackFrame* f)
@@ -349,14 +335,16 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
             continue; // this is myself
         addr = rx_frames[i].dev_addr - 1;   // ignore the controller from a broadcast   
 
-        memcpy(ctx->cell_states[addr].voltages, rx_frames[i].data, data_size);
+        // memcpy(ctx->cell_states[addr].voltages, rx_frames[i].data, data_size);
 
-    //     for (size_t j = 0; j < N_GROUPS; j++)
-    //     {
-    //         ctx->cell_states[addr].voltages[j]
-    //             = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-    //             + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
-    //     } 
+
+        for (size_t j = 0; j < N_GROUPS; j++)
+        {
+            ctx->cell_states[addr].voltages[j]
+                = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
+                + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
+        } 
+        printf("%d\n", ctx->cell_states[addr].voltages[0]);
 
     }
 }
