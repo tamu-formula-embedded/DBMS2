@@ -181,12 +181,12 @@ int StackShutdown(DbmsCtx* ctx)
  */
 void SendOtpEccDatain(DbmsCtx* ctx)  
 {
-    // uint8_t frame_otp_ecc_datain[] = { 0xB0, 0x03, 0x43, 0x00, 0x00, 0x00 };
-    uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x4C, 0x00, 0x00, 0x00 };
+    uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x43, 0x00, 0x00, 0x00 };
+    // uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x4C, 0x00, 0x00, 0x00 };
     for (int i = 0; i < 8; i++) 
     {
         SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
-        frame_otp_ecc_datain[2]++;   
+        frame_otp_ecc_datain[2]++;
     }
 }
 
@@ -213,9 +213,17 @@ void SendAutoAddr(DbmsCtx* ctx)
 void SendSetStackTop(DbmsCtx* ctx) 
 {
     // 2nd byte replaced with id (num of stack devs), last 2 bytes for crc
+
+    // Sets all devices as stack devices
+    uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08 , 0x02, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, frame_set_stack_devices, sizeof(frame_set_stack_devices));
+
+    // Sets bridge device as non-stack device and bottom of stack
     uint8_t frame_set_stack_base[] = { 0x90, 0x00, 0x03, 0x08, 0x00, 0x00, 0x00 }; 
-    uint8_t frame_set_stack_top[] = { 0x90, N_STACKDEVS-1, 0x03, 0x08, 0x03, 0x00, 0x00 }; 
     SendStackFrameSetCrc(ctx, frame_set_stack_base, sizeof(frame_set_stack_base));
+
+    // Sets top of stack
+    uint8_t frame_set_stack_top[] = { 0x90, N_STACKDEVS-1, 0x03, 0x08, 0x03, 0x00, 0x00 }; 
     SendStackFrameSetCrc(ctx, frame_set_stack_top, sizeof(frame_set_stack_top));
 }
 
@@ -360,156 +368,31 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     }
 }
 
-int FaultOtpErrorCheck(DbmsCtx* ctx){
-        
-    int status = 0;
-    // FAULT_OTP Reg addr = 0x0535
-    uint8_t* buffer = {0xA0, 0x05, 0x35, 0x00, 0x00, 0x00};
-    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
-        return status;
-    }
-    // Receiving the FAULT_OTP register data from all monitor chips
-    size_t expected_rx_size = RX_FRAME_SIZE(sizeof(uint8_t)) * N_STACKDEVS;
-    uint8_t* buf[expected_rx_size];
-    if ((status = HAL_UART_Receive(ctx->hw.uart, buf, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
-        return status;
-    }
-    RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_frames, buf, sizeof(uint8_t), N_STACKDEVS);
-
-    //Parsing through received Rx frames and checking the FAULT_OTP registers of each monitor chip
-    for (size_t i = 0; i < N_STACKDEVS; i++){
-        if (rx_frames[i].data[0] != 0x00){
-            // Returning the device number in the stack that is having the error
-            return 1;
-        }
-    }
-    // Returning 0 if no errors found in any monitor chip when loading OTP
-    return 0;
-}
-
-int UnlockNVM(DbmsCtx* ctx)
-{
-    int status = 0;
-    //step 1: retreive FAULT_OTP data (Stack read command) and check for errors
-    if (FaultOtpErrorCheck(ctx) != 0){
-        return 1;
-    }
-    //step 2: sending write commands to OTP_PROG_UNLOCK** registers with specific data
-
-    // OTP_PROG_UNLOCK1A..D combined into one write command frame
-    uint8_t* buffer1 = {0xB3, 0x03, 0x00, 0x02, 0xB7, 0x78, 0xBC, 0x00, 0x00};
-    if ((status = SendStackFrameSetCrc(ctx, buffer1, sizeof(buffer1))) != 0){
-        return status;
-    }
-
-    //OTP_PROG_UNLOCK2A..D combined into one write command frame
-    uint8_t* buffer2 = {0xB3, 0x03, 0x52, 0x7E, 0x12, 0x08, 0x6F, 0x00, 0x00};
-    if ((status = SendStackFrameSetCrc(ctx, buffer2, sizeof(buffer2))) != 0){
-        return status;
-    }
-    
-    //Confirm unlock stack read command
-    uint8_t* confirm_unlock = {0xA0, 0x05, 0x19, 0x00, 0x00, 0x00};
-    if ((status = SendStackFrameSetCrc(ctx, confirm_unlock, sizeof(confirm_unlock))) != 0){
-        return status;
-    }
-    // Receiving OTP_PROG_STAT data from monitor chips
-    size_t expected_rx_size = RX_FRAME_SIZE(sizeof(uint8_t)) * N_STACKDEVS;
-    uint8_t* rx_buffer[expected_rx_size];
-    RxStackFrame rx_frames[N_STACKDEVS];
-
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
-        return status;
-    }
-    FillStackFrames(rx_frames, rx_buffer, sizeof(uint8_t), N_STACKDEVS);
-
-    for (size_t i = 0; i < N_STACKDEVS; i++){
-        //UNLOCK bit in the OTP_PROG_STAT[7] register is 1 = successful unlock
-        if (rx_frames[i].data != 0x80){
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-int OTPProgrammingErrorCheck(DbmsCtx* ctx){
-    int status = 0;
-
-    // step 1: read registers OTP_PROG_STAT, OTP_CUST1_STAT and OTP_CUST2_STAT
-    // send read command frame
-    uint8_t* buffer = {0xA0, 0x05, 0x19, 0x02, 0x00, 0x00};
-    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
-        return status;
-    }
-
-    // receive response frames
-    size_t data_size = sizeof(uint8_t) * 3;
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS;
-    uint8_t* rx_buffer[expected_rx_size];
-
-    RxStackFrame rx_frames[N_STACKDEVS];
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
-        return status;
-    }
-    FillStackFrames(rx_frames, rx_buffer, data_size, N_STACKDEVS);
-
-    // Check corresponding error register bits
-    for (size_t i = 0; i < N_STACKDEVS; i++){
-        if (rx_frames[i].data[0] != 0x01){
-            return 1;
-        }
-        if (rx_frames[1].data[1] != 0x0F){
-            return 1;
-        }
-        if (rx_frames[i].data[2] != 0x00){
-            return 1; // Although we are not loading page 2 at all, doesnt hurt to check
-        }
-    }
-    
-    return status;
-
-}
-
-int TurnMonitorChipLedOn(DbmsCtx* ctx)
+int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
 {   
-    // Can skip a couple steps when doing this over and over again, such as:
-    // Doesn't need to check specific page faults (page 1 or 2) every time if theres no programming in page
+    // Turns on or off LED connected to GPIO8 on the specified monitor chip
     int status = 0;
-    // step 1: unlock NVM memory programming
-    // if ((status = UnlockNVM(ctx)) != 0){
-    //     return status;
-    // }
-    
-    //step 2: select OTP page to program
-    uint8_t buffer[] = {0xB0, 0x00, 0x11, 0x28, 0x00, 0x00};
-//    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
-//        return status;
-//    }
+    uint8_t on_off_value = 0x28; // On = 0x20, Off = 0x28
+    if (on) on_off_value = 0x20;
+    uint8_t led_change_write_com[] = {0x90, dev_number, 0x00, 0x11, on_off_value, 0x00, 0x00};
 
-    //step 3: program GPIO_CONF4[5:3] = 100 for high and 101 for low
-//    buffer[1] = 0x00;
-//    buffer[2] = 0x11;
-//    buffer[3] = 0x28;
-    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
+    // Send single device write command frame
+    if ((status = SendStackFrameSetCrc(ctx, led_change_write_com, sizeof(led_change_write_com))) != 0){
         return status;
     }
+    return status;
+}
 
-//	DelayUs(ctx, 100);
+int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on){
+    // Turns on or off LED connected to GPIO8 on all monitor chips
+    int status = 0;
+    uint8_t on_off_value = 0x28; // On = 0x20, Off = 0x28
+    if (on) on_off_value = 0x20;
+    uint8_t leds_change_write_com[] = {0xB0, 0x00, 0x11, on_off_value, 0x00, 0x00};
 
-    return 0;
-
-    //step 4: Confirm successful OTP page programming with no errors
-//    if ((status = OTPProgrammingErrorCheck(ctx)) != 0){
-//        return status;
-//    }
-
-    //step 5: digital reset and reload registers with updated OTP values
-//    buffer[1] = 0x03;
-//    buffer[2] = 0x09;
-//    buffer[3] = 0x02;
-//    if ((status = SendStackFrameSetCrc(ctx, buffer, sizeof(buffer))) != 0){
-//        return status;
-//    }
+    // Send stack device write command frame
+    if ((status = SendStackFrameSetCrc(ctx, leds_change_write_com, sizeof(leds_change_write_com))) != 0){
+        return status;
+    }
+    return status;
 }
