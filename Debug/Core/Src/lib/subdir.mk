@@ -6,15 +6,18 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../Core/Src/lib/crc.c \
-../Core/Src/lib/exp_arr.c 
+../Core/Src/lib/exp_arr.c \
+../Core/Src/lib/lib.c 
 
 OBJS += \
 ./Core/Src/lib/crc.o \
-./Core/Src/lib/exp_arr.o 
+./Core/Src/lib/exp_arr.o \
+./Core/Src/lib/lib.o 
 
 C_DEPS += \
 ./Core/Src/lib/crc.d \
-./Core/Src/lib/exp_arr.d 
+./Core/Src/lib/exp_arr.d \
+./Core/Src/lib/lib.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -24,7 +27,7 @@ Core/Src/lib/%.o Core/Src/lib/%.su Core/Src/lib/%.cyclo: ../Core/Src/lib/%.c Cor
 clean: clean-Core-2f-Src-2f-lib
 
 clean-Core-2f-Src-2f-lib:
-	-$(RM) ./Core/Src/lib/crc.cyclo ./Core/Src/lib/crc.d ./Core/Src/lib/crc.o ./Core/Src/lib/crc.su ./Core/Src/lib/exp_arr.cyclo ./Core/Src/lib/exp_arr.d ./Core/Src/lib/exp_arr.o ./Core/Src/lib/exp_arr.su
+	-$(RM) ./Core/Src/lib/crc.cyclo ./Core/Src/lib/crc.d ./Core/Src/lib/crc.o ./Core/Src/lib/crc.su ./Core/Src/lib/exp_arr.cyclo ./Core/Src/lib/exp_arr.d ./Core/Src/lib/exp_arr.o ./Core/Src/lib/exp_arr.su ./Core/Src/lib/lib.cyclo ./Core/Src/lib/lib.d ./Core/Src/lib/lib.o ./Core/Src/lib/lib.su
 
 .PHONY: clean-Core-2f-Src-2f-lib
 

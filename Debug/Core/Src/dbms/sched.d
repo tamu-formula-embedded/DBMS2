@@ -1,7 +1,7 @@
-Core/Src/dbms/stack_controller.o: ../Core/Src/dbms/stack_controller.c \
- ../Core/Src/dbms/stack_controller.h ../Core/Src/dbms/common.h \
- ../Core/Src/dbms/../lib/lib.h ../Core/Src/dbms/../lib/crc.h \
- ../Core/Src/dbms/../lib/lib.h ../Core/Src/dbms/../lib/exp_arr.h \
+Core/Src/dbms/sched.o: ../Core/Src/dbms/sched.c ../Core/Src/dbms/sched.h \
+ ../Core/Src/dbms/common.h ../Core/Src/dbms/../lib/lib.h \
+ ../Core/Src/dbms/../lib/crc.h ../Core/Src/dbms/../lib/lib.h \
+ ../Core/Src/dbms/../lib/exp_arr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -36,10 +36,10 @@ Core/Src/dbms/stack_controller.o: ../Core/Src/dbms/stack_controller.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Src/dbms/context.h ../Core/Src/dbms/sched.h \
- ../Core/Src/dbms/storage.h ../Core/Src/dbms/vehicle_interface.h \
- ../Core/Src/dbms/led_controller.h ../Core/Src/dbms/settings.h
-../Core/Src/dbms/stack_controller.h:
+ ../Core/Src/dbms/context.h ../Core/Src/dbms/storage.h \
+ ../Core/Src/dbms/vehicle_interface.h ../Core/Src/dbms/led_controller.h \
+ ../Core/Src/dbms/settings.h
+../Core/Src/dbms/sched.h:
 ../Core/Src/dbms/common.h:
 ../Core/Src/dbms/../lib/lib.h:
 ../Core/Src/dbms/../lib/crc.h:
@@ -80,7 +80,6 @@ Core/Src/dbms/stack_controller.o: ../Core/Src/dbms/stack_controller.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 ../Core/Src/dbms/context.h:
-../Core/Src/dbms/sched.h:
 ../Core/Src/dbms/storage.h:
 ../Core/Src/dbms/vehicle_interface.h:
 ../Core/Src/dbms/led_controller.h:

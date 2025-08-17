@@ -89,7 +89,7 @@ class CanServer:
             print(f"[LOG] {s}")
         elif can_id == TX_HEARTBEAT:
             segs, mons, vgrps, therms, crc = d[0], d[1], d[2], d[3], d[7]
-            print(f"[HB] segs={segs} mons/seg={mons} vgrps/mon={vgrps} therms/mon={therms} settings_crc=0x{crc:02X}")
+            # print(f"[HB] segs={segs} mons/seg={mons} vgrps/mon={vgrps} therms/mon={therms} settings_crc=0x{crc:02X}")
         elif can_id == TX_VOLTAGE_MEAS:
             mon, first_idx = d[0], d[1]
             vals = [u16(d[2], d[3]), u16(d[4], d[5]), u16(d[6], d[7])]

@@ -39,7 +39,8 @@ Core/Src/dbms/dbms.o: ../Core/Src/dbms/dbms.c ../Core/Src/dbms/dbms.h \
  ../Core/Src/dbms/context.h ../Core/Src/dbms/settings.h \
  ../Core/Src/dbms/storage.h ../Core/Src/dbms/vehicle_interface.h \
  ../Core/Src/dbms/led_controller.h ../Core/Src/dbms/current_meter.h \
- ../Core/Src/dbms/stack_controller.h ../Core/Src/dbms/perf_counters.h
+ ../Core/Src/dbms/stack_controller.h ../Core/Src/dbms/sched.h \
+ ../Core/Src/dbms/perf_counters.h
 ../Core/Src/dbms/dbms.h:
 ../Core/Src/dbms/common.h:
 ../Core/Src/dbms/../lib/lib.h:
@@ -87,4 +88,5 @@ Core/Src/dbms/dbms.o: ../Core/Src/dbms/dbms.c ../Core/Src/dbms/dbms.h \
 ../Core/Src/dbms/led_controller.h:
 ../Core/Src/dbms/current_meter.h:
 ../Core/Src/dbms/stack_controller.h:
+../Core/Src/dbms/sched.h:
 ../Core/Src/dbms/perf_counters.h:
