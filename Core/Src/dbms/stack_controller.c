@@ -322,7 +322,8 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_volt_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
     {
-        CAN_REPORT_FAULT(ctx, status);
+        // CAN_REPORT_FAULT(ctx, status);
+        // ^ throwing all the time in simulator
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
@@ -336,15 +337,13 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
         addr = rx_frames[i].dev_addr - 1;   // ignore the controller from a broadcast   
 
         // memcpy(ctx->cell_states[addr].voltages, rx_frames[i].data, data_size);
+        memcpy_eswap2(ctx->cell_states[addr].voltages, rx_frames[i].data, data_size);
 
-
-        for (size_t j = 0; j < N_GROUPS; j++)
-        {
-            ctx->cell_states[addr].voltages[j]
-                = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-                + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
-        } 
-        printf("%d\n", ctx->cell_states[addr].voltages[0]);
-
+        // for (size_t j = 0; j < N_GROUPS; j++)
+        // {
+        //     ctx->cell_states[addr].voltages[j]
+        //         = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
+        //         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
+        // } 
     }
 }

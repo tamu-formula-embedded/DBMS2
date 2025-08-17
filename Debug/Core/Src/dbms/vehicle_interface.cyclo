@@ -1,8 +1,9 @@
 ../Core/Src/dbms/vehicle_interface.c:6:5:ConfigCan	4
 ../Core/Src/dbms/vehicle_interface.c:63:5:CanTransmit	2
 ../Core/Src/dbms/vehicle_interface.c:75:6:CanLog	3
-../Core/Src/dbms/vehicle_interface.c:94:6:DumpCellState	5
-../Core/Src/dbms/vehicle_interface.c:124:6:FillShortModuleName	5
-../Core/Src/dbms/vehicle_interface.c:140:5:CanReportFault	1
-../Core/Src/dbms/vehicle_interface.c:180:5:CanTxHeartbeat	1
-../Core/Src/dbms/vehicle_interface.c:188:5:HandleCanConfig	3
+../Core/Src/dbms/vehicle_interface.c:98:5:SendCellVoltages	4
+../Core/Src/dbms/vehicle_interface.c:123:5:SendCellTemps	4
+../Core/Src/dbms/vehicle_interface.c:145:6:FillShortModuleName	5
+../Core/Src/dbms/vehicle_interface.c:161:5:CanReportFault	1
+../Core/Src/dbms/vehicle_interface.c:203:5:CanTxHeartbeat	1
+../Core/Src/dbms/vehicle_interface.c:211:5:HandleCanConfig	3

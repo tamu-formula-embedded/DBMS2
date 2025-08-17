@@ -88,12 +88,15 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     return status;
 }
 
+#define PERIOD(CNT, HZ, OFFSET) (fmod(CNT, (ITER_TARGET_HZ/(HZ+0.))) == OFFSET)
+
 void DbmsIter(DbmsCtx* ctx)
 {
 	int status = 0;
     ctx->iterct++;
     ctx->iter_start_us = GetUs(ctx);
 
+    CanLog(ctx, "Hello, world! %ld\n", ctx->iterct);    // need a good log because why not
 
 	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
@@ -159,7 +162,12 @@ void DbmsIter(DbmsCtx* ctx)
         // Need to look into this
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
-        // StackUpdateVoltReadings(ctx);
+        StackUpdateVoltReadings(ctx);
+    }
+
+    if (PERIOD(ctx->iterct, 1, 0))
+    {
+        SendCellVoltages(ctx);
     }
 
     //

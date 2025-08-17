@@ -23,7 +23,6 @@
     typedef unsigned int uint32_t;
 #endif
 
-
 #include "../lib/lib.h"
 
 #ifdef SIM 
