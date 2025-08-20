@@ -7,6 +7,8 @@
 #include "common.h"
 #include "context.h"
 
+#include "sched.h"
+
 #include "vehicle_interface.h"
 
 #define STACK_SEND_TIMEOUT          100
@@ -25,8 +27,6 @@ typedef struct {            // ordering packed
 } RxStackFrame;
 
 void __PrintStackRxFrame(RxStackFrame* f);
-
-void DelayUs(DbmsCtx* ctx, uint16_t us);
 
 #define APBxCLK 42000000    // TODO: fix legacy name
 

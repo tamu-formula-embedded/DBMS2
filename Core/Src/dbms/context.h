@@ -6,6 +6,8 @@
 
 #include "common.h"
 
+#define ITER_TARGET_HZ 10
+
 // USER DEFINED UNIQUE TO EACH BATTERY
 #define N_SEGMENTS 1
 #define N_MONITORS_PER_SEG 4
@@ -13,13 +15,20 @@
 #define N_TEMPS 14
 // DONT CHANGE AFTER THIS
 
-#define N_STACKDEVS (N_SEGMENTS * N_MONITORS_PER_SEG + 1)
-// #define STACKITER(I) for (int I = 0; I < N_STACKDEVS; I++)
+#define N_MONITORS (N_SEGMENTS * N_MONITORS_PER_SEG)
+#define N_STACKDEVS (N_MONITORS + 1)    // technically "bus devs"
+
+#define ADDR_BCAST_TO_STACK(BCAST_ADDR) (BCAST_ADDR - 1)
+#define ADDR_STACK_TO_BCAST(STACK_ADDR) (STACK_ADDR + 1)
+
 
 typedef enum _DbmsState {
     DBMS_ACTIVE = 0,
     DBMS_SHUTDOWN,
 } DbmsState;
+
+// fwd definition -- perf_counters.h
+typedef struct _PerfCounters PerfCounters;  
 
 // Hardware context stores prts 
 // to peripheral interfaces
@@ -40,33 +49,12 @@ typedef struct _CellMonitorState {
     uint16_t temps[N_TEMPS];
 } CellMonitorState;
 
-typedef struct _DbmsSettings {
+// fwd definition -- settings.h
+typedef enum _UserSettingIndex UserSettingIndex; 
+typedef struct _DbmsSettings DbmsSettings;
 
-    // The maximum voltage of the pack or else a fault is thrown
-    #define CFGID_MAX_ALLOWED_PACK_VOLTS    0x01
-    uint16_t max_allowed_pack_voltage;
-
-    // How many miliseconds since the last heartbeat do we wait
-    // before initiating a shutdown
-    #define CFGID_QUIET_MS_BEFORE_SHUTDOWN  0x02
-    uint32_t quiet_ms_before_shutdown;
-
-
-} DbmsSettings;
-
-/**
-*  Enum for system LED states (all 3 LEDs)
-*  these combos are mapped in implementation file's system_led_patterns
-*/
-typedef enum _DbmsLedState {
-	DBMS_ERROR = 0,
-    ACTIVE,
-    IDLE,
-    COMM_ERROR,
-    INIT,
-    // ...
-    DBMS_LED_STATE_COUNT
-} DbmsLedState;
+// fwd definition for enum -- led_controller.h
+typedef int32_t LedState;   
 
 typedef struct _DbmsCtx {
 
@@ -74,22 +62,29 @@ typedef struct _DbmsCtx {
 
     DbmsState       req_state;        // the state we want
     DbmsState       cur_state;        // the state we are in
-    DbmsSettings    settings;
-    DbmsLedState    led_state;        // the state of the LEDs
+    LedState        led_state;        // the state of the LEDs
 
-    // 2D grid representing the battery
-    // example with 5 segments and 4 monitors each
-    // [
-    //   seg1 [ monitor1, monitor2, monitor3, monitor4 ]
-    //   seg2 [ monitor1, monitor2, monitor3, monitor4 ]
-    //   seg3 [ monitor1, monitor2, monitor3, monitor4 ]
-    //   seg4 [ monitor1, monitor2, monitor3, monitor4 ]
-    //   seg5 [ monitor1, monitor2, monitor3, monitor4 ]
-    // ]
-    CellMonitorState cell_states[N_SEGMENTS][N_MONITORS_PER_SEG];
+    DbmsSettings*   settings;         // struct fwd defs has to be a ptr
 
-    uint64_t    iterct;
+    CellMonitorState cell_states[N_MONITORS];
+
     uint64_t    last_rx_heartbeat;
+    uint64_t    iter_start_us;
+    uint64_t    iter_end_us;
+
+    struct {
+        uint64_t iters;
+
+#define N_HISTORIC_LOOPTIMES 16
+        wrap_queue_t looptimes_q;
+        uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
+
+        uint32_t n_tx_can_frames;
+        uint32_t n_rx_can_frames;
+        uint32_t n_unmatched_can_frames;
+
+        uint32_t n_overruns;
+    } stats;
 
     bool        need_to_sync_settings;
 

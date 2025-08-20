@@ -1,7 +1,11 @@
 ../Core/Src/dbms/vehicle_interface.c:6:5:ConfigCan	64	static
 ../Core/Src/dbms/vehicle_interface.c:63:5:CanTransmit	32	static
-../Core/Src/dbms/vehicle_interface.c:75:6:CanLog	300	static
-../Core/Src/dbms/vehicle_interface.c:94:6:DumpCellState	48	static
-../Core/Src/dbms/vehicle_interface.c:124:5:CanReportFault	32	static
-../Core/Src/dbms/vehicle_interface.c:163:5:CanTxHeartbeat	16	static
-../Core/Src/dbms/vehicle_interface.c:173:5:HandleCanConfig	48	static
+../Core/Src/dbms/vehicle_interface.c:76:6:CanLog	300	static
+../Core/Src/dbms/vehicle_interface.c:100:5:SendCellVoltages	72	static
+../Core/Src/dbms/vehicle_interface.c:129:5:SendCellTemps	72	static
+../Core/Src/dbms/vehicle_interface.c:151:6:FillShortModuleName	40	static
+../Core/Src/dbms/vehicle_interface.c:167:5:CanReportFault	24	static
+../Core/Src/dbms/vehicle_interface.c:209:5:CanTxHeartbeat	16	static
+../Core/Src/dbms/vehicle_interface.c:217:5:HandleCanConfig	48	static
+../Core/Src/dbms/vehicle_interface.c:254:5:SendMetric	24	static
+../Core/Src/dbms/vehicle_interface.c:265:5:SendMetrics	16	static

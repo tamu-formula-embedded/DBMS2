@@ -36,17 +36,17 @@ int ConfigCan(DbmsCtx* ctx)
     // Add the filter to CAN peripheral
     if ((status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg)) != HAL_OK)
     {
-        ctx->led_state = COMM_ERROR;
+        ctx->led_state = LED_COMM_ERROR;
         return status;
     }
     if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK)
         {
-        ctx->led_state = COMM_ERROR;
+        ctx->led_state = LED_COMM_ERROR;
         return status;
     }
     if ((status = HAL_CAN_ActivateNotification(ctx->hw.can, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK) 
     {
-        ctx->led_state = COMM_ERROR;
+        ctx->led_state = LED_COMM_ERROR;
         return status;
     }
 
@@ -62,11 +62,12 @@ int ConfigCan(DbmsCtx* ctx)
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
+    ctx->stats.n_tx_can_frames++;
     ctx->hw.can_tx_header.StdId = id;
     int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, &ctx->hw.can_tx_header, data, &ctx->hw.can_tx_mailbox);
     if(result != HAL_OK)
     {
-        ctx->led_state = COMM_ERROR;
+        ctx->led_state = LED_COMM_ERROR;
     }
     
     return result;
@@ -91,39 +92,79 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...)
     }
 }
 
-void DumpCellState(DbmsCtx* ctx)
-{
-    uint8_t frame[8] = {0};
 
-    for (size_t i = 0; i < N_SEGMENTS; i++)
+
+#define PAD_BUFFER(SZ, K) (((SZ / K) + 1) * K)
+#define PAD_BUFFER_3(SZ) (PAD_BUFFER(SZ, 3))
+
+int SendCellVoltages(DbmsCtx* ctx)
+{
+    int status = 0;
+    uint8_t  frame[8];
+    uint16_t buffer[PAD_BUFFER_3(N_GROUPS)] = {0};
+
+    for (size_t i = 0; i < N_MONITORS; i++)
     {
-        frame[0] = i;
-        for (size_t j = 0; j < N_MONITORS_PER_SEG; j++)
+        memcpy_eswap2(buffer, ctx->cell_states[i].voltages, N_GROUPS * sizeof(uint16_t));
+
+        for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS); j += 3)
         {
-            frame[1] = j;
-            for (size_t k = 0; k < N_GROUPS; k++)
-            {
-                frame[2] = k;
-                uint16_t v = ctx->cell_states[i][j].voltages[k];
-                frame[6] = (v & 0xff00) >> 8;
-                frame[7] = (v & 0x00ff);
-                CanTransmit(ctx, CANID_CELLSTATE_VOLTS, frame);
-            }
-            for (size_t k = 0; k < N_TEMPS; k++)
-            {
-                frame[2] = k;
-                uint16_t t = ctx->cell_states[i][j].temps[k];
-                frame[6] = (t & 0xff00) >> 8;
-                frame[7] = (t & 0x00ff);
-                CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame);
-            }
+            frame[0] = (uint8_t)i;        // monitor id
+            frame[1] = (uint8_t)j;        // group index (in uint16_t units)
+
+            memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
+
+            status = CanTransmit(ctx, CANID_CELLSTATE_VOLTS, frame);
+            if (status != 0) return status;
         }
     }
+    return 0; // todo: make a real return value
 }
+
+int SendCellTemps(DbmsCtx* ctx)        
+{
+     int status = 0;
+    uint8_t  frame[8];
+    uint16_t buffer[PAD_BUFFER_3(N_GROUPS)] = {0};
+
+    for (size_t i = 0; i < N_MONITORS; i++)
+    {
+        memcpy_eswap2(buffer, ctx->cell_states[i].temps, N_TEMPS * sizeof(uint16_t));
+
+        for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS); j += 3)
+        {
+            frame[0] = (uint8_t)i;        // monitor id
+            frame[1] = (uint8_t)j;        // group index (in uint16_t units)
+
+            memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
+
+            status = CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame);
+            if (status != 0) return status;
+        }
+    }
+    return 0;
+}
+
+void FillShortModuleName(char* buffer, size_t sz, char* raw)
+{
+    char *sk, *head, *dot;
+    for (sk = head = raw; *sk != 0; sk++)
+    {
+        if (*sk == '/' || *sk == '\\') head = sk+1;
+    }
+    size_t len = MIN(sz, sk-head);
+    memcpy(buffer, head, len);
+    if ((dot = memchr(buffer, '.', len)))
+    {
+        memset(dot, 0, (buffer+len)-dot);
+    }
+}
+// todo: implement^
 
 int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 {
-    ctx->led_state = ERROR;
+    // printf("%s %d\n", fn, line_num);
+    ctx->led_state = LED_ERROR;
 
     // TODO: add forward fn -> the last /
 
@@ -145,16 +186,18 @@ int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
     // frame[2] = (buf[4] << 3) | (buf[5] >> 2);
     // frame[3] = ((buf[5] & 0x03) << 6) | (buf[6] << 1) | (buf[7] >> 4);
     // frame[4] = (buf[7] & 0x0F) << 4;
+    // for (size_t i = 0; fn[i] != 0 && i <= 4; i++)       
+    // {
+    //     frame[i] = fn[i];
+    // }
 
-    for (size_t i = 0; fn[i] != 0 && i <= 4; i++)       
-    {
-        frame[i] = fn[i];
-    }
+    // CanLog(ctx, "Errno %d @ %s:%d\n", err_code, fn, line_num);
+    FillShortModuleName((char*)frame, 5, fn);
 
     frame[5] = (line_num >> 8) & 0xff;
     frame[6] = line_num & 0x00ff;
     frame[7] = err_code & 0xff;
-    
+
     CanTransmit(ctx, CANID_FATAL_ERROR, frame);      // Ignore this error code
 
     return err_code;
@@ -167,8 +210,6 @@ int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc)
     frame[7] = (settings_crc & 0xff);
     return CanTransmit(ctx, CANID_TX_HEARTBEAT, frame);
 }
-
-#define HANDLE_CFG(ACTION, Y, SETTING, X) if (ACTION == CFG_SET) { SETTING = X; } else { Y = SETTING; }
 
 int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
 {
@@ -183,27 +224,56 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     CanTransmit(ctx, CANID_TX_CFG_ACK, ack_frame);
 #endif
 
-    switch (cfg_id)
-    {
-        case CFGID_MAX_ALLOWED_PACK_VOLTS:
-            HANDLE_CFG(action, cfg_get, ctx->settings.max_allowed_pack_voltage, cfg_set & 0xffff);
-            break;
-        case CFGID_QUIET_MS_BEFORE_SHUTDOWN:
-            HANDLE_CFG(action, cfg_get, ctx->settings.quiet_ms_before_shutdown, cfg_set & 0xffff);
-            break;
-
-        default:
-            return ERR_CFGID_NOT_FOUND;
-    }
+    if (!IsValidSettingIndex(ctx, cfg_id)) 
+        return ERR_CFGID_NOT_FOUND;
 
     if (action == CFG_SET)
+    {
+        SetSetting(ctx, cfg_id, cfg_set);
         ctx->need_to_sync_settings = true;
+    }
     else 
     {      
+        cfg_get = GetSetting(ctx, cfg_id);
         uint8_t frame[] = { cfg_id, 0, 0, 0, 0, 0, 0, 0 };
-        memcpy(frame + 4, &cfg_get, sizeof(int32_t));
+        // memcpy_eswap4(frame + 4, &cfg_get, sizeof(int32_t));
+        // memcpy(frame + 4, &cfg_get, sizeof(int32_t));
+        frame[4] = ((cfg_get >> 3*8) & 0xFF);
+        frame[5] = ((cfg_get >> 2*8) & 0xFF);
+        frame[6] = ((cfg_get >> 1*8) & 0xFF);
+        frame[7] = ((cfg_get >> 0*8) & 0xFF);
         CanTransmit(ctx, CANID_TX_GET_CONFIG, frame);
     }
+
+    return 0;
+}
+
+int SendMetric(DbmsCtx* ctx, uint8_t id, uint32_t value)
+{
+    static uint8_t data[8] = {0};
+    data[0] = id;
+    data[4] = ((value >> 3*8) & 0xFF);
+    data[5] = ((value >> 2*8) & 0xFF);
+    data[6] = ((value >> 1*8) & 0xFF);
+    data[7] = ((value >> 0*8) & 0xFF);
+    return CanTransmit(ctx, CANID_METRIC, data);
+}
+
+int SendMetrics(DbmsCtx* ctx)
+{
+
+    // uint64_t looptime_sum = 0;
+    // for (size_t i = 0; i < N_HISTORIC_LOOPTIMES; i++)
+    // {
+    //     // accessing the raw q buffer data is technically dangerous but not really
+    //     looptime_sum += ctx->stats.looptimes_d[i];
+    // }
+    // SendMetric(ctx, 1, looptime_sum / N_HISTORIC_LOOPTIMES);
+    SendMetric(ctx, 0, 1000);
+
+    SendMetric(ctx, 1, ctx->stats.n_tx_can_frames);
+    SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
+    SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
 
     return 0;
 }
