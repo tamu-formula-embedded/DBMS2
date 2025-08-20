@@ -331,7 +331,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     static uint8_t rx_buffer_volt_readings[1024];  
 
     int status = 0;
-    uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xB0, 0x05, 0x68 + 2*(16-N_GROUPS), N_GROUPS*2-1, 0x00, 0x00 };
+    uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xA0, 0x05, 0x68 + 2*(16-N_GROUPS), N_GROUPS*2-1, 0x00, 0x00 };
 
     if ((status = SendStackFrameSetCrc(ctx, FRAME_ADC_MEASUREMENTS, sizeof(FRAME_ADC_MEASUREMENTS))) != 0)
     {
