@@ -132,7 +132,7 @@ void DbmsIter(DbmsCtx* ctx)
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //  
-    if (HAL_GetTick() - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    if (HAL_GetTick() - ctx->last_rx_heartbeat > 5000)//GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         ctx->req_state = DBMS_SHUTDOWN;
     }
@@ -163,18 +163,15 @@ void DbmsIter(DbmsCtx* ctx)
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
+        StackSetupTempReadings(ctx);
+        CanLog(ctx, "%d\n", ctx->cell_states[0].temps[1]);
     }
-
-    if (PERIOD(ctx->iterct, 1, 0))
-    {
-        SendCellVoltages(ctx);
-    }
+    
+    SendCellTemps(ctx);
+    SendCellVoltages(ctx);
 
     // Setup GPIOs for temperature readings and LEDs
-    StackSetupGpio(ctx);
-    DelayUs(ctx, 100);
     // Read temperatures
-    StackSetupTempReadings(ctx);
 
     //
     //  Update the LEDs. Led state should be set every time the cur_state changes

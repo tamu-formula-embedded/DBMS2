@@ -275,7 +275,7 @@ void StackSetupGpio(DbmsCtx* ctx)
     // Configures all GPIOs to be ADC and OTUT input
     // Note: Can be made more effecient by using NVM
     // Note 2: Also configures GPIO8 even though we dont need to, hence just setting GPIO8 to output low
-    uint8_t frame_gpio_configs[] = {0xB3, 0x00, 0x0E, 0x09, 0x09, 0x09, 0x29, 0x00, 0x00};
+    uint8_t frame_gpio_configs[] = {0xB3, 0x00, 0x0E, 0x09, 0x09, 0x09, 0x21, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_gpio_configs, sizeof(frame_gpio_configs));
 }
 
@@ -284,7 +284,7 @@ void StackSetupTempReadings(DbmsCtx* ctx)
     // Retreives GPIO1 through GPIO7 values and stores them into the cell_states->temps array
     int status = 0;
     // Send read command to read GPIO1..7
-    uint8_t frame_read_gpio[] = {0xA0, 0x05, 0x8E, 0x0E, 0x00, 0x00};
+    uint8_t frame_read_gpio[] = {0xA0, 0x05, 0x8E, 0x0D, 0x00, 0x00}; // Reading 14 bytes
     SendStackFrameSetCrc(ctx, frame_read_gpio, sizeof(frame_read_gpio));
 
     // Receive response frame
