@@ -65,15 +65,26 @@ typedef struct _DbmsCtx {
     LedState        led_state;        // the state of the LEDs
 
     DbmsSettings*   settings;         // struct fwd defs has to be a ptr
-    PerfCounters*   perfctrs;  
 
     CellMonitorState cell_states[N_MONITORS];
 
-    uint64_t    iterct;
     uint64_t    last_rx_heartbeat;
-
     uint64_t    iter_start_us;
     uint64_t    iter_end_us;
+
+    struct {
+        uint64_t iters;
+
+#define N_HISTORIC_LOOPTIMES 16
+        wrap_queue_t looptimes_q;
+        uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
+
+        uint32_t n_tx_can_frames;
+        uint32_t n_rx_can_frames;
+        uint32_t n_unmatched_can_frames;
+
+        uint32_t n_overruns;
+    } stats;
 
     bool        need_to_sync_settings;
 

@@ -4,7 +4,6 @@
 #include "dbms.h"
 
 static DbmsSettings mem_settings;
-static PerfCounters mem_perf_counters;
 
 //
 //  Allocate space for pointer objects
@@ -12,8 +11,7 @@ static PerfCounters mem_perf_counters;
 void DbmsAlloc(DbmsCtx* ctx)
 {
     ctx->settings = &mem_settings;
-
-    ctx->perfctrs = &mem_perf_counters;
+    memset(&ctx->stats, 0, sizeof(ctx->stats));
 }
 
 //
@@ -24,6 +22,10 @@ void DbmsInit(DbmsCtx* ctx)
     int status = 0;
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_INIT;
+
+    wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
+
+
     if ((status = LoadSettings(ctx)) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
@@ -40,7 +42,7 @@ void DbmsInit(DbmsCtx* ctx)
 
     HAL_TIM_Base_Start(ctx->hw.timer);
 
-    if ((status = ConfigCan(ctx) != HAL_OK))
+    if ((status = ConfigCan(ctx)) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
         ctx->led_state = LED_ERROR;
@@ -93,10 +95,11 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
 void DbmsIter(DbmsCtx* ctx)
 {
 	int status = 0;
-    ctx->iterct++;
+    ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
 
-    CanLog(ctx, "Hello, world! %ld\n", ctx->iterct);    // need a good log because why not
+    CanLog(ctx, "Hello, world! %ld\n", ctx->stats.iters);    // need a good log because why not
+    CanLog(ctx, "Max group voltage = %d\n", ctx->settings->user_defined[MAX_GROUP_VOLTAGE]);
 
 	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
@@ -165,10 +168,11 @@ void DbmsIter(DbmsCtx* ctx)
         StackUpdateVoltReadings(ctx);
     }
 
-    if (PERIOD(ctx->iterct, 1, 0))
+    if (PERIOD(ctx->stats.iters, 1, 0))
     {
         SendCellVoltages(ctx);
     }
+    SendMetrics(ctx);
 
     //
     //  Update the LEDs. Led state should be set every time the cur_state changes
@@ -177,12 +181,15 @@ void DbmsIter(DbmsCtx* ctx)
 
     ctx->iter_end_us = GetUs(ctx);
     uint32_t end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
+    // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
     DelayUs(ctx, end_delay);
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
     int status = 0;
+
+    ctx->stats.n_rx_can_frames++;
 
     switch (rx_header.StdId)
     {
@@ -201,7 +208,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             {
                 if (status == ERR_CFGID_NOT_FOUND) {}   
             }
+            break;
         default:
+            ctx->stats.n_unmatched_can_frames++;
             break;
     }
 }

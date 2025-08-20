@@ -347,3 +347,13 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
         // } 
     }
 }
+
+// votlages ->  if (addr % 2 == 0)
+//                  monitor id = addr / 2
+//                  write(0...N_GROUPS)
+
+// temps ->     monitor id = addr / 2 
+//              if (addr % 2 == 0)
+//                  write(0...N_TEMPS)
+//              else
+//                  write(N_TEMPS+1...2*N_TEMPS)
