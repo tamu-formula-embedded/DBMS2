@@ -19,7 +19,6 @@
 #include "led_controller.h"
 #include "stack_controller.h"
 #include "storage.h"
-#include "perf_counters.h"
 #include "sched.h"
 
 // Called before the main loop but strictly used for memory allocation
