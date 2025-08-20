@@ -215,8 +215,8 @@ void SendSetStackTop(DbmsCtx* ctx)
     // 2nd byte replaced with id (num of stack devs), last 2 bytes for crc
 
     // Sets all devices as stack devices
-    uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08 , 0x02, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, frame_set_stack_devices, sizeof(frame_set_stack_devices));
+    // uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08 , 0x02, 0x00, 0x00};
+    // SendStackFrameSetCrc(ctx, frame_set_stack_devices, sizeof(frame_set_stack_devices));
 
     // Sets bridge device as non-stack device and bottom of stack
     uint8_t frame_set_stack_base[] = { 0x90, 0x00, 0x03, 0x08, 0x00, 0x00, 0x00 }; 
@@ -388,7 +388,7 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on){
     int status = 0;
     uint8_t on_off_value = 0x28; // On = 0x20, Off = 0x28
     if (on) on_off_value = 0x20;
-    uint8_t leds_change_write_com[] = {0xB0, 0x00, 0x11, on_off_value, 0x00, 0x00};
+    uint8_t leds_change_write_com[] = {0xD0, 0x00, 0x11, on_off_value, 0x00, 0x00};
 
     // Send stack device write command frame
     if ((status = SendStackFrameSetCrc(ctx, leds_change_write_com, sizeof(leds_change_write_com))) != 0){
