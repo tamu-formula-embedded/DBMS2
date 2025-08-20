@@ -53,34 +53,34 @@ int ReadEEPROM(DbmsCtx* ctx, uint32_t addr, uint8_t* data, uint16_t len)
     return HAL_I2C_Master_Receive(ctx->hw.i2c, dev_addr, data, len, EEPROM_READ_TIMEOUT);
 }
 
-int SaveSettings(DbmsCtx* ctx, DbmsSettings* settings) 
+int SaveStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_size) 
 {
-    uint8_t buf[sizeof(DbmsSettings) + sizeof(uint16_t)];
-    memcpy(buf, settings, sizeof(DbmsSettings));
+    uint8_t buf[obj_size + sizeof(uint16_t)];
+    memcpy(buf, object, obj_size);
     
-    uint16_t crc = CalcCrc16((uint8_t*)settings, sizeof(DbmsSettings));
-    memcpy(buf + sizeof(DbmsSettings), &crc, sizeof(crc));
+    uint16_t crc = CalcCrc16((uint8_t*)object, obj_size);
+    memcpy(buf + obj_size, &crc, sizeof(crc));
 
     return WriteEEPROM(ctx, EEPROM_SETTINGS_ADDR, buf, sizeof(buf));
 }
 
-
-int LoadSettings(DbmsCtx* ctx, DbmsSettings* settings)
+int LoadStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_size) 
 {
+    printf("%p %d\n", object, obj_size);
     int status = 0;
-    uint8_t buf[sizeof(DbmsSettings) + sizeof(uint16_t)];
+    uint8_t buf[obj_size + sizeof(uint16_t)];
 
     if ((status = ReadEEPROM(ctx, EEPROM_SETTINGS_ADDR, buf, sizeof(buf))) != HAL_OK)
     {
         return status;
     }
 
-    memcpy(settings, buf, sizeof(DbmsSettings));
+    memcpy(object, buf, obj_size);
 
     uint16_t r_crc;
-    memcpy(&r_crc, buf + sizeof(DbmsSettings), sizeof(r_crc));
+    memcpy(&r_crc, buf + obj_size, sizeof(r_crc));
 
-    uint16_t c_crc = CalcCrc16((uint8_t*)settings, sizeof(DbmsSettings));
+    uint16_t c_crc = CalcCrc16((uint8_t*)object, obj_size);
     if (r_crc != c_crc)
     {
         status = ERR_CRC_MISMATCH;

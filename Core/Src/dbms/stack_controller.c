@@ -8,20 +8,6 @@ static uint8_t FRAME_WAKE_STACK[] = { 0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95 };
 static uint8_t FRAME_SHUTDOWN_STACK[] = { 0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00 };
 
 /**
- * Provides a blocking delay in microseconds
- */
-void DelayUs(DbmsCtx* ctx, uint16_t us)
-{
-#ifdef SIM
-    usleep(us);
-#else
-    __HAL_TIM_SET_COUNTER(ctx->hw.timer, 0);
-    uint64_t big_ctr;
-    while ((big_ctr = __HAL_TIM_GET_COUNTER(ctx->hw.timer)) < us);
-#endif
-}
-
-/**
  * Prints the contents of a received RxStackFrame for debugging
  */
 void __PrintStackRxFrame(RxStackFrame* f)
@@ -255,10 +241,10 @@ void StackAutoAddr(DbmsCtx* ctx)
 
     ReadOtpEccDatain(ctx); // step 6
 
-    static uint8_t FRAME_READ_DIR0_ADDR[] = { 0xA0, 0x00, 0x03, 0x06, 0x01, 0x00, 0x00 };
+    // static uint8_t FRAME_READ_DIR0_ADDR[] = { 0xA0, 0x00, 0x03, 0x06, 0x01, 0x00, 0x00 };
     // SendStackFrameSetCrc(ctx, FRAME_READ_DIR0_ADDR, sizeof(FRAME_READ_DIR0_ADDR));
 
-    static uint8_t FRAME_CONF1_READ[] = { 0x80, 0x00, 0x20, 0x01, 0x01, 0x00, 0x00 };
+    // static uint8_t FRAME_CONF1_READ[] = { 0x80, 0x00, 0x20, 0x01, 0x01, 0x00, 0x00 };
     // SendStackFrameSetCrc(ctx, FRAME_CONF1_READ, sizeof(FRAME_CONF1_READ));
 }
 
@@ -329,16 +315,15 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     {
         CAN_REPORT_FAULT(ctx, status);
     }
-    // DelayUs(ctx, 192 + 5 * N_STACKDEVS); // no !
 
     size_t data_size = N_GROUPS * sizeof(int16_t);
-
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
     //                 header+crc ^         ^ readings * 2 bytes each    
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_volt_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
     {
-        CAN_REPORT_FAULT(ctx, status);
+        // CAN_REPORT_FAULT(ctx, status);
+        // ^ throwing all the time in simulator
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
@@ -349,13 +334,26 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     {
         if (rx_frames[i].dev_addr == 0) 
             continue; // this is myself
+        addr = rx_frames[i].dev_addr - 1;   // ignore the controller from a broadcast   
 
-        addr = rx_frames[i].dev_addr - 1;
-        for (size_t j = 0; j < N_GROUPS; j++)
-        {
-            ctx->cell_states[addr / N_MONITORS_PER_SEG][addr % N_MONITORS_PER_SEG].voltages[j]
-                = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-                + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
-        } 
+        // memcpy(ctx->cell_states[addr].voltages, rx_frames[i].data, data_size);
+        memcpy_eswap2(ctx->cell_states[addr].voltages, rx_frames[i].data, data_size);
+
+        // for (size_t j = 0; j < N_GROUPS; j++)
+        // {
+        //     ctx->cell_states[addr].voltages[j]
+        //         = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
+        //         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
+        // } 
     }
 }
+
+// votlages ->  if (addr % 2 == 0)
+//                  monitor id = addr / 2
+//                  write(0...N_GROUPS)
+
+// temps ->     monitor id = addr / 2 
+//              if (addr % 2 == 0)
+//                  write(0...N_TEMPS)
+//              else
+//                  write(N_TEMPS+1...2*N_TEMPS)

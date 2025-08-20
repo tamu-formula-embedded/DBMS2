@@ -15,7 +15,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS) 
 
-CFLAGS := '-D SIM -std=C11'
+CFLAGS := '-D SIM -std=C11 -O0'
 
 # assembly
 $(BUILD_DIR)/%.s.o: %.s

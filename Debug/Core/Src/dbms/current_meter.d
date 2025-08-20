@@ -1,7 +1,7 @@
 Core/Src/dbms/current_meter.o: ../Core/Src/dbms/current_meter.c \
  ../Core/Src/dbms/current_meter.h ../Core/Src/dbms/common.h \
  ../Core/Src/dbms/../lib/lib.h ../Core/Src/dbms/../lib/crc.h \
- ../Core/Src/dbms/../lib/lib.h ../Core/Src/dbms/../lib/exp_arr.h \
+ ../Core/Src/dbms/../lib/lib.h ../Core/Src/dbms/../lib/wrap_q.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -42,7 +42,7 @@ Core/Src/dbms/current_meter.o: ../Core/Src/dbms/current_meter.c \
 ../Core/Src/dbms/../lib/lib.h:
 ../Core/Src/dbms/../lib/crc.h:
 ../Core/Src/dbms/../lib/lib.h:
-../Core/Src/dbms/../lib/exp_arr.h:
+../Core/Src/dbms/../lib/wrap_q.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
