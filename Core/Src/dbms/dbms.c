@@ -168,10 +168,8 @@ void DbmsIter(DbmsCtx* ctx)
         StackUpdateVoltReadings(ctx);
     }
 
-    if (PERIOD(ctx->stats.iters, 1, 0))
-    {
-        SendCellVoltages(ctx);
-    }
+    // if (PERIOD(ctx->stats.iters, 1, 0)) //todo: fix ts
+    SendCellVoltages(ctx);
     SendMetrics(ctx);
 
     //
@@ -180,9 +178,10 @@ void DbmsIter(DbmsCtx* ctx)
     ProcessLedAction(ctx);
 
     ctx->iter_end_us = GetUs(ctx);
-    uint32_t end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
+    // uint32_t end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
-    DelayUs(ctx, end_delay);
+    // DelayUs(ctx, end_delay);
+    HAL_Delay(20);  // ^ todo: fix all this
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
