@@ -273,12 +273,29 @@ void StackSetupGpio(DbmsCtx* ctx)
 void StackSetupTempReadings(DbmsCtx* ctx)
 {
     // Retreives GPIO1 through GPIO7 values and stores them into the cell_states->temps array
-
+    int status = 0;
     // Send read command to read GPIO1..7
     uint8_t frame_read_gpio[] = {0xA0, 0x05, 0x8E, 0x0E, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_read_gpio, sizeof(frame_read_gpio));
 
     // Receive response frame
+    size_t data_size = N_TEMPS * 2;
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
+    uint8_t rx_frame[expected_rx_size];
+
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, sizeof(rx_frame), STACK_RECV_TIMEOUT)) != 0){
+        return status;
+    }
+
+    // Store data into cell_states->temps
+    int frame = 0;
+    int frame_size = RX_FRAME_SIZE(data_size);
+    for (int i = 0; i < N_MONITORS; i++){
+        for (int j = 0; j < N_TEMPS; j++){
+            frame = i * frame_size;
+            ctx->cell_states[i].temps[j] = rx_frame[frame + 4 + j] + rx_frame[frame + 5 + j];
+        }
+    }
 
 }
 
