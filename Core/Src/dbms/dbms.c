@@ -173,8 +173,13 @@ void DbmsIter(DbmsCtx* ctx)
     SendMetrics(ctx);
 
     //
-    //  Update the LEDs. Led state should be set every time the cur_state changes
+    //  Example usage: Turn off monitor chip
     //
+    // ToggleAllMonitorChipLeds(ctx, false);
+
+    //
+	//  Update the LEDs. Led state should be set every time the cur_state changes
+	//
     ProcessLedAction(ctx);
 
     ctx->iter_end_us = GetUs(ctx);
