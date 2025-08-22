@@ -284,7 +284,7 @@ void StackSetupTempReadings(DbmsCtx* ctx)
     uint8_t rx_frame[expected_rx_size];
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, sizeof(rx_frame), STACK_RECV_TIMEOUT)) != 0){
-        return status;
+        //Error
     }
 
     // Store data into cell_states->temps

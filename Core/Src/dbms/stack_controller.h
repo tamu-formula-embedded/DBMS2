@@ -47,6 +47,7 @@ void StackAutoAddr(DbmsCtx* ctx);
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells);
 
 void StackSetupGpio(DbmsCtx* ctx);
+void StackSetupTempReadings(DbmsCtx* ctx);
 
 void StackSetupVoltReadings(DbmsCtx* ctx);
 void StackUpdateVoltReadings(DbmsCtx* ctx);

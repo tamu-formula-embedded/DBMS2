@@ -170,6 +170,12 @@ void DbmsIter(DbmsCtx* ctx)
         SendCellVoltages(ctx);
     }
 
+    // Setup GPIOs for temperature readings and LEDs
+    StackSetupGpio(ctx);
+    DelayUs(ctx, 100);
+    // Read temperatures
+    StackSetupTempReadings(ctx);
+
     //
     //  Update the LEDs. Led state should be set every time the cur_state changes
     //
