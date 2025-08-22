@@ -217,7 +217,10 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     uint8_t cfg_id  = rx_data[0];
     int32_t cfg_set = 0, cfg_get = 0;
     
-    memcpy(&cfg_set, rx_data + 4, sizeof(int32_t));
+    cfg_set |= (rx_data[4] << 3*8);
+    cfg_set |= (rx_data[5] << 2*8);
+    cfg_set |= (rx_data[6] << 1*8);
+    cfg_set |= (rx_data[7] << 0*8);
 
 #ifdef ACK_CFG
     uint8_t ack_frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
@@ -236,8 +239,6 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     {      
         cfg_get = GetSetting(ctx, cfg_id);
         uint8_t frame[] = { cfg_id, 0, 0, 0, 0, 0, 0, 0 };
-        // memcpy_eswap4(frame + 4, &cfg_get, sizeof(int32_t));
-        // memcpy(frame + 4, &cfg_get, sizeof(int32_t));
         frame[4] = ((cfg_get >> 3*8) & 0xFF);
         frame[5] = ((cfg_get >> 2*8) & 0xFF);
         frame[6] = ((cfg_get >> 1*8) & 0xFF);
