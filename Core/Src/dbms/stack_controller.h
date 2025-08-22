@@ -51,4 +51,6 @@ void StackSetupGpio(DbmsCtx* ctx);
 void StackSetupVoltReadings(DbmsCtx* ctx);
 void StackUpdateVoltReadings(DbmsCtx* ctx);
 
+int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on);
+
 #endif
