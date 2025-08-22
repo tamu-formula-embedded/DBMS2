@@ -167,19 +167,14 @@ void DbmsIter(DbmsCtx* ctx)
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
     }
-    HAL_Delay(100);
 
-    if (PERIOD(ctx->stats.iters, 1, 0))
-    {
-        SendCellVoltages(ctx);
-    }
+    SendCellVoltages(ctx);
     SendMetrics(ctx);
 
     //
-    //  Turn off monitor chip
+    //  Example usage: Turn off monitor chip
     //
-    ToggleAllMonitorChipLeds(ctx, false);
-    HAL_Delay(100);
+    // ToggleAllMonitorChipLeds(ctx, false);
 
     //
 	//  Update the LEDs. Led state should be set every time the cur_state changes
