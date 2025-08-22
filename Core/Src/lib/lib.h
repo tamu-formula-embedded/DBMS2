@@ -20,8 +20,17 @@
 #endif
 
 #include "crc.h"
-#include "exp_arr.h"
+// #include "exp_arr.h" // uses dynamic memory: illegal
+#include "wrap_q.h"
 
 typedef struct exp_arr ExpArr;
+
+// performs memcpy and reverses endianness 
+// of every 2 byte int
+void memcpy_eswap2(void* dst, void* src, size_t n);
+
+// performs memcpy and reverses endianness 
+// of every 4 byte int 
+void memcpy_eswap4(void* dst, void* src, size_t n);
 
 #endif

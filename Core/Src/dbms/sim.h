@@ -15,6 +15,8 @@
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/time.h>
+#include <stdint.h>
 
 // DO NOT INCLUDE CONTEXT OR COMMON HERE
 
@@ -32,9 +34,16 @@ typedef struct {
 void __SimEnter(char* ipc_path_can, char* ipc_path_uart);
 void __SimExit();
 
-int __SimIpcCreate(const char* port_path, int baud_rate);
-
 int __SimIpcSend(int fd, const unsigned char* data, int size);
+
+
+
+// // Poll the CAN socket and enqueue any complete frames found (non-blocking)
+// void __SimCanPoll(void);
+
+// // Pop one frame from the internal queue.
+// // Returns 1 if a frame was returned in *out, 0 if queue empty.
+// int __SimCanPop(SimCanFrame* out);
 
 //---------------------------------------------------
 //            HAL Spoof
@@ -48,6 +57,10 @@ int __SimIpcSend(int fd, const unsigned char* data, int size);
 #define CAN_RTR_DATA 0
 #define DISABLE 0
 #define USART_CR1_UE 0
+
+#define CAN_IT_RX_FIFO0_MSG_PENDING 0
+#define CAN_IT_RX_FIFO1_MSG_PENDING 0
+#define CAN_FILTER_FIFO0 0
 
 
 #undef CR1
@@ -166,6 +179,13 @@ typedef struct
                           This parameter must be a number between Min_Data = 0 and Max_Data = 0xFF. */
 
 } CAN_RxHeaderTypeDef;
+
+int HAL_GetTick();
+
+int HAL_I2C_Master_Transmit(I2C_HandleTypeDef* _, int addr, char* buf, int size, int timeout);
+int HAL_I2C_Master_Receive(I2C_HandleTypeDef* _, int addr, char* buf, int size, int timeout);
+
+int HAL_CAN_ActivateNotification(CAN_HandleTypeDef* j, int k);
 
 #endif
 #endif

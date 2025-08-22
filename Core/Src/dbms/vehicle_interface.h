@@ -8,10 +8,12 @@
 #include "context.h"
 
 #include "led_controller.h"
+#include "settings.h"
 
 #define CANID_TX_HEARTBEAT          0x501
 #define CANID_CONSOLE_C0            0x502   // No compression 
 #define CANID_CONSOLE_C3            0x505   // Aggressive compression -- Huffman encoding
+#define CANID_METRIC                0x506
 #define CANID_CELLSTATE_VOLTS       0x507
 #define CANID_CELLSTATE_TEMPS       0x508
 #define CANID_FATAL_ERROR           0x50B   // = SOB = Son Of a Bitch
@@ -48,7 +50,9 @@ int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code);
 
 void CanLog(DbmsCtx* ctx, const char* fmt, ...);
 
-void DumpCellState(DbmsCtx* ctx);
+int SendCellVoltages(DbmsCtx* ctx);
+int SendCellTemps(DbmsCtx* ctx);
+int SendMetrics(DbmsCtx* ctx);
 
 int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc);
 

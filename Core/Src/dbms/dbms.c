@@ -3,21 +3,30 @@
 //  
 #include "dbms.h"
 
+static DbmsSettings mem_settings;
 
-void LoadFallbackSettings(DbmsSettings* settings)
+//
+//  Allocate space for pointer objects
+//
+void DbmsAlloc(DbmsCtx* ctx)
 {
-    // if this fails we are in deep trouble lol
-    settings->max_allowed_pack_voltage = 64000; // 64V -> mV
-    settings->quiet_ms_before_shutdown = 5000;  // 5s -> ms
+    ctx->settings = &mem_settings;
+    memset(&ctx->stats, 0, sizeof(ctx->stats));
 }
 
-
+//
+//  Initialization loop
+//
 void DbmsInit(DbmsCtx* ctx)
 {
     int status = 0;
     ctx->cur_state = DBMS_SHUTDOWN;
-    ctx->led_state = INIT;
-    if ((status = LoadSettings(ctx, &ctx->settings)) != HAL_OK)
+    ctx->led_state = LED_INIT;
+
+    wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
+
+
+    if ((status = LoadSettings(ctx)) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
         if (status == ERR_CRC_MISMATCH)
@@ -25,23 +34,22 @@ void DbmsInit(DbmsCtx* ctx)
             // This is a bad situation, but we can still proceed
             // by loading fallback settings? Ideally these should
             // be updated enough to be ok
-            LoadFallbackSettings(&ctx->settings);
+            LoadFallbackSettings(ctx);
             ctx->need_to_sync_settings = true;          // queue up a write
         }  
         else    {}  // fatal error
-}
-    //memset(ctx->cell_states, 0, N_SEGMENTS * N_MONITORS_PER_SEG * (N_GROUPS * sizeof(int16_t)) * (N_TEMPS * sizeof(int16_t)));
+    }
 
     HAL_TIM_Base_Start(ctx->hw.timer);
 
-    if ((status = ConfigCan(ctx) != HAL_OK))
+    if ((status = ConfigCan(ctx)) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = ERROR;
+        ctx->led_state = LED_ERROR;
         return;
     }
     // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
-    ctx->led_state = IDLE;
+    ctx->led_state = LED_IDLE;
 }
 
 int DbmsPerformWakeup(DbmsCtx* ctx)
@@ -52,11 +60,11 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     if ((status = StackWake(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = ERROR;
+        ctx->led_state = LED_ERROR;
         return status;                  // we are cooked
     }
     ctx->cur_state = DBMS_ACTIVE;
-    ctx->led_state = ACTIVE;
+    ctx->led_state = LED_ACTIVE;
 
     StackAutoAddr(ctx);
     StackSetNumActiveCells(ctx, 0x0A);
@@ -72,25 +80,33 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     if ((status = StackShutdown(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = ERROR;
+        ctx->led_state = LED_ERROR;
         return status;
     }
     ctx->cur_state = DBMS_SHUTDOWN;
-    ctx->led_state = IDLE;
+    ctx->led_state = LED_IDLE;
 
     HAL_Delay(200);
     return status;
 }
 
+#define PERIOD(CNT, HZ, OFFSET) (fmod(CNT, (ITER_TARGET_HZ/(HZ+0.))) == OFFSET)
+
 void DbmsIter(DbmsCtx* ctx)
 {
-	if(ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE){
-		ctx->led_state = INIT;
+	int status = 0;
+    ctx->stats.iters++;
+    ctx->iter_start_us = GetUs(ctx);
+
+    CanLog(ctx, "Hello, world! %ld\n", ctx->stats.iters);    // need a good log because why not
+    CanLog(ctx, "Max group voltage = %d\n", ctx->settings->user_defined[MAX_GROUP_VOLTAGE]);
+
+	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
+    {
+		ctx->led_state = LED_INIT;
 		ProcessLedAction(ctx);
 	}
 
-	int status = 0;
-    ctx->iterct++;
 
     //
     //  Store the settings when required
@@ -101,10 +117,10 @@ void DbmsIter(DbmsCtx* ctx)
         // should we allow the user to configure
         // settings while we are "shutdown"
         // even though the controller should be on
-        if ((status = SaveSettings(ctx, &ctx->settings)) != HAL_OK)
+        if ((status = SaveSettings(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
-            ctx->led_state = ERROR;
+            ctx->led_state = LED_ERROR;
         }
         ctx->need_to_sync_settings = false;
     }
@@ -119,12 +135,13 @@ void DbmsIter(DbmsCtx* ctx)
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //  
-     if (HAL_GetTick() - ctx->last_rx_heartbeat > ctx->settings.quiet_ms_before_shutdown){
+    if (HAL_GetTick() - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    {
         ctx->req_state = DBMS_SHUTDOWN;
-     }
-     else{
+    }
+    else {
         ctx->req_state = DBMS_ACTIVE;
-     }
+    }
     
     // 
     //  Gracefully handle state transition
@@ -152,6 +169,12 @@ void DbmsIter(DbmsCtx* ctx)
     }
     HAL_Delay(100);
 
+    if (PERIOD(ctx->stats.iters, 1, 0))
+    {
+        SendCellVoltages(ctx);
+    }
+    SendMetrics(ctx);
+
     //
     //  Turn off monitor chip
     //
@@ -162,12 +185,18 @@ void DbmsIter(DbmsCtx* ctx)
 	//  Update the LEDs. Led state should be set every time the cur_state changes
 	//
     ProcessLedAction(ctx);
-    HAL_Delay(10);      // make adaptive
+
+    ctx->iter_end_us = GetUs(ctx);
+    uint32_t end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
+    // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
+    DelayUs(ctx, end_delay);
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
     int status = 0;
+
+    ctx->stats.n_rx_can_frames++;
 
     switch (rx_header.StdId)
     {
@@ -186,7 +215,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             {
                 if (status == ERR_CFGID_NOT_FOUND) {}   
             }
+            break;
         default:
+            ctx->stats.n_unmatched_can_frames++;
             break;
     }
 }
@@ -197,12 +228,12 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 void DbmsErr(DbmsCtx* ctx)
 {
     ctx->cur_state = DBMS_SHUTDOWN;
-    ctx->led_state = ERROR;
+    ctx->led_state = LED_ERROR;
 }
 
 void DbmsClose(DbmsCtx* ctx)
 {
     ctx->cur_state = DBMS_SHUTDOWN;
-    ctx->led_state = IDLE;
+    ctx->led_state = LED_IDLE;
 }
 
