@@ -290,7 +290,7 @@ void StackSetupTempReadings(DbmsCtx* ctx)
     // Receive response frame
     size_t data_size = N_TEMPS * 2;
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
-    uint8_t rx_frame[expected_rx_size];
+    static uint8_t rx_frame[1024*4];
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
         //Error
@@ -353,7 +353,7 @@ int FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_
 
 void StackUpdateVoltReadings(DbmsCtx* ctx)
 {
-    static uint8_t rx_buffer_volt_readings[1024];  
+    static uint8_t rx_buffer_volt_readings[1024*4];
 
     int status = 0;
     uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xA0, 0x05, 0x68 + 2*(16-N_GROUPS), N_GROUPS*2-1, 0x00, 0x00 };
