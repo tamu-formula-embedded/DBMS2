@@ -50,6 +50,7 @@ void DbmsInit(DbmsCtx* ctx)
     }
     // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
     ctx->led_state = LED_IDLE;
+
 }
 
 int DbmsPerformWakeup(DbmsCtx* ctx)
@@ -105,8 +106,6 @@ void DbmsIter(DbmsCtx* ctx)
 		ctx->led_state = LED_INIT;
 		ProcessLedAction(ctx);
 	}
-
-
     //
     //  Store the settings when required
     //
@@ -188,6 +187,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
 
+    MonitorLedBlink(ctx);
     // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
     // DelayUs(ctx, end_delay);
     HAL_Delay(20);  // ^ todo: fix all this

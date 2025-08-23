@@ -71,6 +71,7 @@ typedef struct _DbmsCtx {
     uint64_t    last_rx_heartbeat;
     uint64_t    iter_start_us;
     uint64_t    iter_end_us;
+    uint64_t    M_LED_BLINK_TS;
 
     struct {
         uint64_t iters;
@@ -102,6 +103,7 @@ typedef struct _DbmsCtx {
 
     uint8_t     last_can_err;
     bool        need_to_sync_settings;
+    bool        M_LED_ON;
 
 } DbmsCtx;
 
