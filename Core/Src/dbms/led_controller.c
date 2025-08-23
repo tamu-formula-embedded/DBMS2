@@ -58,12 +58,12 @@ static const InternalLedState system_led_patterns[LED_STATE_COUNT][NUM_LEDS] = {
     [LED_ACTIVE] = {
         { LED_GREEN, BLINK_TYPE_OFF,  false },
         { LED_GREEN, BLINK_TYPE_OFF,  false },
-        { LED_GREEN, BLINK_TYPE_OFF,  false }
+        { LED_GREEN, BLINK_TYPE_FAST,  false }
     },
     [LED_IDLE] = {
         { LED_YELLOW, BLINK_TYPE_OFF, false },
         { LED_YELLOW, BLINK_TYPE_OFF, false },
-        { LED_YELLOW, BLINK_TYPE_OFF, false }
+        { LED_YELLOW, BLINK_TYPE_FAST, false }
     },
     [LED_COMM_ERROR] = {
         { LED_RED,   BLINK_TYPE_OFF,  false },

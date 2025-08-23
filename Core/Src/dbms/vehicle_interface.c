@@ -67,7 +67,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, &ctx->hw.can_tx_header, data, &ctx->hw.can_tx_mailbox);
     if(result != HAL_OK)
     {
-        ctx->led_state = LED_COMM_ERROR;
+        // ctx->led_state = LED_COMM_ERROR;
     }
     
     return result;
