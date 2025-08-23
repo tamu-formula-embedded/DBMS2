@@ -19,14 +19,26 @@
 #define CANID_CELLSTATE_TEMPS       0x508
 #define CANID_FATAL_ERROR           0x50B   // = SOB = Son Of a Bitch
 
-#define CANID_TX_GET_CONFIG         0x523
-#define CANID_TX_CFG_ACK            0x522
+#define CANID_ISENSE_CURRENT        0x521
+#define CANID_ISENSE_VOLTAGE1       0x522
+#define CANID_ISENSE_VOLTAGE2       0x523
+#define CANID_ISENSE_VOLTAGE3       0x524
+
+#define CANID_ISENSE_POWER          0x526
+#define CANID_ISENSE_CHARGE         0x527
+#define CANID_ISENSE_ENERGY         0x528
+
+#define CANID_TX_GET_CONFIG         0x533
+#define CANID_TX_CFG_ACK            0x532
 
 #define CANID_RX_HEARTBEAT          0x541
 #define CANID_RX_SET_CONFIG         0x542
 #define CANID_RX_GET_CONFIG         0x543
 
 #define ERR_CFGID_NOT_FOUND         54
+
+#define CAN_TX_WAIT_US              200     // polling sleep step
+#define CAN_TX_TIMEOUT_US           3000
 
 typedef enum _CanRxChannel {
     CAN_RX_0,

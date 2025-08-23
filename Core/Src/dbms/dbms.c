@@ -23,7 +23,7 @@ void DbmsInit(DbmsCtx* ctx)
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_INIT;
 
-    wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
+    // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
     {
@@ -184,10 +184,29 @@ void DbmsIter(DbmsCtx* ctx)
     ProcessLedAction(ctx);
 
     ctx->iter_end_us = GetUs(ctx);
-    // uint32_t end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
+
+    ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
+    ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
+
     // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
     // DelayUs(ctx, end_delay);
     HAL_Delay(20);  // ^ todo: fix all this
+}
+
+uint64_t UnpackCurrentSensorData(uint8_t* data) // expectes >=6 bytes
+{
+    // todo: move this to another file
+    // logic is:
+    //  for (int i = 0; i < n; i++)
+    //      res |= (data[i] << (n-i-1*8));
+    uint64_t res = 0;
+    res |= ((uint64_t)data[0] << 5*8);
+    res |= ((uint64_t)data[1] << 4*8);
+    res |= ((uint64_t)data[2] << 3*8);
+    res |= ((uint64_t)data[3] << 2*8);
+    res |= ((uint64_t)data[4] << 1*8);
+    res |= ((uint64_t)data[5] << 0*8);
+    return res;
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
@@ -213,6 +232,27 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             {
                 if (status == ERR_CFGID_NOT_FOUND) {}   
             }
+            break;
+        case CANID_ISENSE_CURRENT:
+            ctx->isense.current_ma = UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_VOLTAGE1:
+            ctx->isense.voltage1_mv = UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_VOLTAGE2:
+            ctx->isense.voltage2_mv = UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_VOLTAGE3:
+            ctx->isense.voltage3_mv = UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_POWER:
+            ctx->isense.power_w = UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_CHARGE:
+            ctx->isense.charge_as = UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_ENERGY:
+            ctx->isense.energy_wh = UnpackCurrentSensorData(rx_data);
             break;
         default:
             ctx->stats.n_unmatched_can_frames++;
