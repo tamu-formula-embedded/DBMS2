@@ -199,10 +199,19 @@ void SendAutoAddr(DbmsCtx* ctx)
 void SendSetStackTop(DbmsCtx* ctx) 
 {
     // 2nd byte replaced with id (num of stack devs), last 2 bytes for crc
+
+    // Sets all devices as stack devices
+    uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08 , 0x02, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, frame_set_stack_devices, sizeof(frame_set_stack_devices));
+
+    // Sets bridge device as non-stack device and bottom of stack
     uint8_t frame_set_stack_base[] = { 0x90, 0x00, 0x03, 0x08, 0x00, 0x00, 0x00 }; 
-    uint8_t frame_set_stack_top[] = { 0x90, N_STACKDEVS-1, 0x03, 0x08, 0x03, 0x00, 0x00 }; 
     SendStackFrameSetCrc(ctx, frame_set_stack_base, sizeof(frame_set_stack_base));
+
+    // Sets top of stack
+    uint8_t frame_set_stack_top[] = { 0x90, N_STACKDEVS-1, 0x03, 0x08, 0x03, 0x00, 0x00 }; 
     SendStackFrameSetCrc(ctx, frame_set_stack_top, sizeof(frame_set_stack_top));
+
 }
 
 /**
