@@ -82,10 +82,13 @@ typedef struct _DbmsCtx {
         uint32_t n_tx_can_frames;
         uint32_t n_rx_can_frames;
         uint32_t n_unmatched_can_frames;
+        uint32_t n_tx_can_drop_timeout;
+        uint32_t n_tx_can_fail;
 
         uint32_t n_overruns;
     } stats;
 
+    uint8_t     last_can_err;
     bool        need_to_sync_settings;
 
 } DbmsCtx;
