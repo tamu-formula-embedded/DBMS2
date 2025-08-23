@@ -282,14 +282,13 @@ void StackSetupTempReadings(DbmsCtx* ctx)
     size_t data_size = N_TEMPS * 2;
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
     uint8_t rx_frame[expected_rx_size];
-    RxStackFrame rx_frames[N_MONITORS];
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, sizeof(rx_frame), STACK_RECV_TIMEOUT)) != 0){
         //Error
     }
     RxStackFrame rx_frames[N_MONITORS];
     FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
-    
+
     // Store data into cell_states->temps
     for (int i = 0; i < N_MONITORS; i++){
         memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
