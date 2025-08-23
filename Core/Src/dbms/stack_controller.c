@@ -301,8 +301,17 @@ void StackSetupTempReadings(DbmsCtx* ctx)
     // Store data into cell_states->temps
     for (int i = 0; i < N_MONITORS; i++){
         memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
-    }
 
+        for (size_t j = 0; j < N_GROUPS; j++)
+        {
+            int8_t addr = rx_frames[i].dev_addr;   
+
+            uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
+                         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     
+            
+            ctx->cell_states[addr].voltages[j] = (float)raw; // todo: conversion
+        } 
+    }
 }
 
 /**
@@ -371,15 +380,13 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
             continue; // this is myself
         addr = rx_frames[i].dev_addr - 1;   // ignore the controller from a broadcast   
 
-        // memcpy(ctx->cell_states[addr].voltages, rx_frames[i].data, data_size);
-        memcpy_eswap2(ctx->cell_states[addr].voltages, rx_frames[i].data, data_size);
-
-        // for (size_t j = 0; j < N_GROUPS; j++)
-        // {
-        //     ctx->cell_states[addr].voltages[j]
-        //         = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-        //         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     // watch out! plus 1 inside
-        // } 
+        for (size_t j = 0; j < N_GROUPS; j++)
+        {
+            uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
+                         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     
+            
+            ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000000.0;    
+        } 
     }
 }
 

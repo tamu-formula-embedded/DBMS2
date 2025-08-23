@@ -15,6 +15,8 @@
 #define STACK_RECV_TIMEOUT          100
 #define STACK_RX_BUFFER_SIZE        1024    //N_STACKDEVS * 6 + N_GROUPS
 
+#define STACK_V_UV_PER_BIT      190.73
+
 #define RX_FRAME_SIZE(DATA_SIZE)    (DATA_SIZE + 6)
 
 typedef struct {            // ordering packed

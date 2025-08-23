@@ -105,7 +105,10 @@ int SendCellVoltages(DbmsCtx* ctx)
 
     for (size_t i = 0; i < N_MONITORS; i++)
     {
-        memcpy_eswap2(buffer, ctx->cell_states[i].voltages, N_GROUPS * sizeof(uint16_t));
+        for (size_t j = 0; j < N_GROUPS; j++) 
+        {
+            buffer[j] = ctx->cell_states[i].voltages[j] / 10000;   // .1mv
+        }
 
         for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS); j += 3)
         {
@@ -125,11 +128,14 @@ int SendCellTemps(DbmsCtx* ctx)
 {
      int status = 0;
     uint8_t  frame[8];
-    uint16_t buffer[PAD_BUFFER_3(N_GROUPS)] = {0};
+    uint16_t buffer[PAD_BUFFER_3(N_TEMPS)] = {0};
 
     for (size_t i = 0; i < N_MONITORS; i++)
     {
-        memcpy_eswap2(buffer, ctx->cell_states[i].temps, N_TEMPS * sizeof(uint16_t));
+        for (size_t j = 0; j < N_TEMPS; j++) 
+        {
+            buffer[j] = ctx->cell_states[i].temps[j];   // TODO: add anti-conversion
+        }
 
         for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS); j += 3)
         {

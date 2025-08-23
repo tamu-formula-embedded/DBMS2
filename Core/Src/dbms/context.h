@@ -45,8 +45,8 @@ typedef struct _HwCtx {
 
 
 typedef struct _CellMonitorState {
-    uint16_t voltages[N_GROUPS];
-    uint16_t temps[N_TEMPS];
+    float voltages[N_GROUPS];
+    float temps[N_TEMPS];
 } CellMonitorState;
 
 // fwd definition -- settings.h

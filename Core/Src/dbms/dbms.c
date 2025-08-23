@@ -98,8 +98,8 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
 
-    CanLog(ctx, "Hello, world! %ld\n", ctx->stats.iters);    // need a good log because why not
-    CanLog(ctx, "Max group voltage = %d\n", ctx->settings->user_defined[MAX_GROUP_VOLTAGE]);
+    CanLog(ctx, "MGV=%d\n", ctx->settings->user_defined[MAX_GROUP_VOLTAGE]);
+    CanLog(ctx, "V=%f\n", ctx->cell_states[0].voltages[0]);
 
 	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
@@ -167,7 +167,6 @@ void DbmsIter(DbmsCtx* ctx)
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
         StackSetupTempReadings(ctx);
-        CanLog(ctx, "%d\n", ctx->cell_states[0].temps[1]);
     }
     
     // TODO: fix period stuff
