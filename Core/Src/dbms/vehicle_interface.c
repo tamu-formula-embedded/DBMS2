@@ -62,6 +62,7 @@ int ConfigCan(DbmsCtx* ctx)
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
+    ctx->stats.n_tx_can_frames++;
     ctx->hw.can_tx_header.StdId = id;
     int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, &ctx->hw.can_tx_header, data, &ctx->hw.can_tx_mailbox);
     if(result != HAL_OK)
@@ -90,6 +91,7 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...)
         CanTransmit(ctx, CANID_CONSOLE_C0, chunk);
     }
 }
+
 
 
 #define PAD_BUFFER(SZ, K) (((SZ / K) + 1) * K)
@@ -215,7 +217,10 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     uint8_t cfg_id  = rx_data[0];
     int32_t cfg_set = 0, cfg_get = 0;
     
-    memcpy(&cfg_set, rx_data + 4, sizeof(int32_t));
+    cfg_set |= (rx_data[4] << 3*8);
+    cfg_set |= (rx_data[5] << 2*8);
+    cfg_set |= (rx_data[6] << 1*8);
+    cfg_set |= (rx_data[7] << 0*8);
 
 #ifdef ACK_CFG
     uint8_t ack_frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
@@ -234,9 +239,42 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     {      
         cfg_get = GetSetting(ctx, cfg_id);
         uint8_t frame[] = { cfg_id, 0, 0, 0, 0, 0, 0, 0 };
-        memcpy(frame + 4, &cfg_get, sizeof(int32_t));
+        frame[4] = ((cfg_get >> 3*8) & 0xFF);
+        frame[5] = ((cfg_get >> 2*8) & 0xFF);
+        frame[6] = ((cfg_get >> 1*8) & 0xFF);
+        frame[7] = ((cfg_get >> 0*8) & 0xFF);
         CanTransmit(ctx, CANID_TX_GET_CONFIG, frame);
     }
+
+    return 0;
+}
+
+int SendMetric(DbmsCtx* ctx, uint8_t id, uint32_t value)
+{
+    static uint8_t data[8] = {0};
+    data[0] = id;
+    data[4] = ((value >> 3*8) & 0xFF);
+    data[5] = ((value >> 2*8) & 0xFF);
+    data[6] = ((value >> 1*8) & 0xFF);
+    data[7] = ((value >> 0*8) & 0xFF);
+    return CanTransmit(ctx, CANID_METRIC, data);
+}
+
+int SendMetrics(DbmsCtx* ctx)
+{
+
+    // uint64_t looptime_sum = 0;
+    // for (size_t i = 0; i < N_HISTORIC_LOOPTIMES; i++)
+    // {
+    //     // accessing the raw q buffer data is technically dangerous but not really
+    //     looptime_sum += ctx->stats.looptimes_d[i];
+    // }
+    // SendMetric(ctx, 1, looptime_sum / N_HISTORIC_LOOPTIMES);
+    SendMetric(ctx, 0, 1000);
+
+    SendMetric(ctx, 1, ctx->stats.n_tx_can_frames);
+    SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
+    SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
 
     return 0;
 }
