@@ -289,20 +289,21 @@ void StackSetupTempReadings(DbmsCtx* ctx)
 
     // Receive response frame
     size_t data_size = N_TEMPS * 2;
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS;
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
     uint8_t rx_frame[expected_rx_size];
 
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, sizeof(rx_frame), STACK_RECV_TIMEOUT)) != 0){
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
         //Error
     }
-    RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_frames, rx_frame, data_size, N_STACKDEVS);
-
+    RxStackFrame rx_frames[N_MONITORS];
+    FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
+    int c = 0;
     // Store data into cell_states->temps
-    for (int i = 0; i < N_STACKDEVS; i++){
+    for (int i = 0; i < N_MONITORS; i++){
 //        memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
-        int8_t addr = rx_frames[i].dev_addr - 1;
-        CanLog(ctx, "a %d\n", addr);
+//        int8_t addr = rx_frames[i].dev_addr - 1;
+//        CanLog(ctx, "a %d\n", addr);
+        c++;
 
         for (size_t j = 0; j < N_TEMPS; j++)
         {
@@ -313,6 +314,7 @@ void StackSetupTempReadings(DbmsCtx* ctx)
             ctx->cell_states[i].temps[j] = (float)raw; // todo: conversion
         } 
     }
+    CanLog(ctx, "c %d", c);
 }
 
 /**
