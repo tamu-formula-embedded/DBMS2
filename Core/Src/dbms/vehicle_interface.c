@@ -78,7 +78,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
             ctx->led_state = LED_COMM_ERROR;
             return HAL_TIMEOUT;
         }
-        DelayUs(CAN_TX_WAIT_US);
+        DelayUs(ctx, CAN_TX_WAIT_US);
         waited += CAN_TX_WAIT_US;
     }
 
