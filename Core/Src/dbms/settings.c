@@ -2,6 +2,7 @@
 
 uint32_t GetSetting(DbmsCtx* ctx, UserSettingIndex index)
 {
+    CanLog(ctx, "GS %d %c\n", index, ctx->settings ? 'Y' : 'N');
     return ctx->settings->user_defined[index];
 }
 
