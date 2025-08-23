@@ -60,8 +60,7 @@ int ConfigCan(DbmsCtx* ctx)
     return status;
 }
 
-#define CAN_TX_WAIT_US   200   // polling sleep step
-#define CAN_TX_TIMEOUT_US 3000
+
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
@@ -298,11 +297,26 @@ int SendMetrics(DbmsCtx* ctx)
     //     looptime_sum += ctx->stats.looptimes_d[i];
     // }
     // SendMetric(ctx, 1, looptime_sum / N_HISTORIC_LOOPTIMES);
-    SendMetric(ctx, 0, 1000);
+    SendMetric(ctx, 0, ctx->stats.iters);
 
     SendMetric(ctx, 1, ctx->stats.n_tx_can_frames);
     SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
     SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
+
+    SendMetric(ctx, 4, ctx->isense.current_ma);
+    SendMetric(ctx, 5, ctx->isense.voltage1_mv);
+
+    SendMetric(ctx, 6, ctx->isense.voltage2_mv);
+    SendMetric(ctx, 7, ctx->isense.voltage3_mv);
+    SendMetric(ctx, 8, ctx->isense.power_w);
+    SendMetric(ctx, 9, ctx->isense.charge_as);
+    SendMetric(ctx, 10, ctx->isense.energy_wh);
+
+    SendMetric(ctx, 11, ctx->stats.n_tx_can_fail);
+    SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_timeout);
+
+    SendMetric(ctx, 13, ctx->stats.looptime);
+    SendMetric(ctx, 14, ctx->stats.end_delay);
 
     return 0;
 }

@@ -75,9 +75,9 @@ typedef struct _DbmsCtx {
     struct {
         uint64_t iters;
 
-#define N_HISTORIC_LOOPTIMES 16
-        wrap_queue_t looptimes_q;
-        uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
+// #define N_HISTORIC_LOOPTIMES 16
+//         wrap_queue_t looptimes_q;
+//         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
 
         uint32_t n_tx_can_frames;
         uint32_t n_rx_can_frames;
@@ -85,8 +85,20 @@ typedef struct _DbmsCtx {
         uint32_t n_tx_can_drop_timeout;
         uint32_t n_tx_can_fail;
 
-        uint32_t n_overruns;
+        uint32_t looptime;
+        uint32_t end_delay;
+        // uint32_t n_overruns;
     } stats;
+
+     struct {
+        uint64_t current_ma;
+        uint64_t voltage1_mv;
+        uint64_t voltage2_mv;
+        uint64_t voltage3_mv;
+        uint64_t power_w;
+        uint64_t charge_as;
+        uint64_t energy_wh;
+    } isense; // current = I, sense = sensor?
 
     uint8_t     last_can_err;
     bool        need_to_sync_settings;
