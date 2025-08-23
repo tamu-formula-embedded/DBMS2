@@ -60,16 +60,37 @@ int ConfigCan(DbmsCtx* ctx)
     return status;
 }
 
+#define CAN_TX_WAIT_US   200   // polling sleep step
+#define CAN_TX_TIMEOUT_US 3000
+
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
-    ctx->stats.n_tx_can_frames++;
-    ctx->hw.can_tx_header.StdId = id;
-    int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, &ctx->hw.can_tx_header, data, &ctx->hw.can_tx_mailbox);
-    if(result != HAL_OK)
-    {
-        // ctx->led_state = LED_COMM_ERROR;
+    CAN_TxHeaderTypeDef *hdr = &ctx->hw.can_tx_header;
+
+    hdr->StdId = id;      // ensure IDE=CAN_ID_STD elsewhere
+    // hdr->IDE = CAN_ID_STD; hdr->RTR = CAN_RTR_DATA; hdr->DLC = 8; // set once at init if fixed
+
+    // Wait (briefly) for a free mailbox instead of calling blindly.
+    uint32_t waited = 0;
+    while (HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) == 0U) {
+        if (waited >= CAN_TX_TIMEOUT_US) {
+            ctx->stats.n_tx_can_drop_timeout++;
+            ctx->led_state = LED_COMM_ERROR;
+            return HAL_TIMEOUT;
+        }
+        DelayUs(CAN_TX_WAIT_US);
+        waited += CAN_TX_WAIT_US;
     }
-    
+
+    int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, hdr, data, &ctx->hw.can_tx_mailbox);
+
+    if (result != HAL_OK) {
+        ctx->stats.n_tx_can_fail++;
+        ctx->led_state = LED_COMM_ERROR;
+        ctx->last_can_err = HAL_CAN_GetError(ctx->hw.can); // capture why
+    } else {
+        ctx->stats.n_tx_can_frames++;
+    }
     return result;
 }
 
