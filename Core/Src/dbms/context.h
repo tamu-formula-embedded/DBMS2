@@ -6,7 +6,7 @@
 
 #include "common.h"
 
-#define ITER_TARGET_HZ 10
+#define ITER_TARGET_HZ 25
 
 // USER DEFINED UNIQUE TO EACH BATTERY
 #define N_SEGMENTS 2
