@@ -309,7 +309,7 @@ void StackSetupTempReadings(DbmsCtx* ctx)
             uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
                          + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     
             
-            ctx->cell_states[addr].voltages[j] = (float)raw; // todo: conversion
+            ctx->cell_states[addr].temps[j] = (float)raw; // todo: conversion
         } 
     }
 }
