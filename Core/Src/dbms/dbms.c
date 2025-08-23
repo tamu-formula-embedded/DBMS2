@@ -25,19 +25,19 @@ void DbmsInit(DbmsCtx* ctx)
 
     wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
-    // if ((status = LoadSettings(ctx)) != HAL_OK)
-    // {
-    //     CAN_REPORT_FAULT(ctx, status);
-    //     if (status == ERR_CRC_MISMATCH)
-    //     {
-    //         // This is a bad situation, but we can still proceed
-    //         // by loading fallback settings? Ideally these should
-    //         // be updated enough to be ok
-    //         LoadFallbackSettings(ctx);
-    //         ctx->need_to_sync_settings = true;          // queue up a write
-    //     }  
-    //     else    {}  // fatal error
-    // }
+//     if ((status = LoadSettings(ctx)) != HAL_OK)
+//     {
+//         CAN_REPORT_FAULT(ctx, status);
+//         if (status == ERR_CRC_MISMATCH)
+//         {
+//             // This is a bad situation, but we can still proceed
+//             // by loading fallback settings? Ideally these should
+//             // be updated enough to be ok
+//             LoadFallbackSettings(ctx);
+//             ctx->need_to_sync_settings = true;          // queue up a write
+//         }
+//         else    {}  // fatal error
+//     }
 
     LoadFallbackSettings(ctx);
 
