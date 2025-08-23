@@ -3,12 +3,7 @@
 uint32_t GetSetting(DbmsCtx* ctx, UserSettingIndex index)
 {
     // CanLog(ctx, "GS %d %c\n", index, ctx->settings ? 'Y' : 'N');
-    if (ctx->settings != NULL)
         return ctx->settings->user_defined[index];
-    else {
-        CanLog(ctx, "SETING NULL %d\n", index);
-        return 1000;
-    }
 }
 
 void SetSetting(DbmsCtx* ctx, UserSettingIndex index, uint32_t new_val)
