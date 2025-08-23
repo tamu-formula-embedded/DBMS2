@@ -99,7 +99,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->iter_start_us = GetUs(ctx);
 
     CanLog(ctx, "MGV=%d\n", ctx->settings->user_defined[MAX_GROUP_VOLTAGE]);
-    CanLog(ctx, "V=%f\n", ctx->cell_states[0].voltages[0]);
+//    CanLog(ctx, "V=%f\n", ctx->cell_states[0].voltages[0]);
 
 	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
@@ -171,10 +171,9 @@ void DbmsIter(DbmsCtx* ctx)
     
     // TODO: fix period stuff
     // TODO: fix can issue
-    SendCellTemps(ctx);
-    SendCellVoltages(ctx);
-    SendCellVoltages(ctx);
-    SendMetrics(ctx);
+//    SendCellTemps(ctx);
+//    SendCellVoltages(ctx);
+//    SendMetrics(ctx);
 
     //
     //  Example usage: Turn off monitor chip
