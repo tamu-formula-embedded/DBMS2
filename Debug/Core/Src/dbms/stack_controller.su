@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ../Core/Src/dbms/stack_controller.c:13:6:__PrintStackRxFrame	32	static
 ../Core/Src/dbms/stack_controller.c:27:5:SendStackFrame	24	static
 ../Core/Src/dbms/stack_controller.c:36:5:SendStackFrameSetCrc	32	static
@@ -18,3 +19,27 @@
 ../Core/Src/dbms/stack_controller.c:317:5:FillStackFrame	32	static
 ../Core/Src/dbms/stack_controller.c:333:5:FillStackFrames	32	static
 ../Core/Src/dbms/stack_controller.c:342:6:StackUpdateVoltReadings	120	static
+=======
+../Core/Src/dbms/stack_controller.c:13:6:__PrintStackRxFrame	32	static
+../Core/Src/dbms/stack_controller.c:27:5:SendStackFrame	24	static
+../Core/Src/dbms/stack_controller.c:36:5:SendStackFrameSetCrc	32	static
+../Core/Src/dbms/stack_controller.c:57:6:SetBrr	16	static
+../Core/Src/dbms/stack_controller.c:69:5:SendStackWakeBlip	24	static
+../Core/Src/dbms/stack_controller.c:98:5:SendStackShutdownBlip	24	static
+../Core/Src/dbms/stack_controller.c:119:5:StackWake	24	static
+../Core/Src/dbms/stack_controller.c:144:5:StackShutdown	24	static
+../Core/Src/dbms/stack_controller.c:168:6:SendOtpEccDatain	32	static
+../Core/Src/dbms/stack_controller.c:185:6:SendAutoAddr	32	static
+../Core/Src/dbms/stack_controller.c:199:6:SendSetStackTop	40	static
+../Core/Src/dbms/stack_controller.c:220:6:ReadOtpEccDatain	32	static
+../Core/Src/dbms/stack_controller.c:236:6:StackAutoAddr	16	static
+../Core/Src/dbms/stack_controller.c:263:6:StackSetNumActiveCells	24	static
+../Core/Src/dbms/stack_controller.c:271:6:StackSetupGpio	16	static
+../Core/Src/dbms/stack_controller.c:276:6:StackSetupTempReadings	16	static
+../Core/Src/dbms/stack_controller.c:284:6:StackSetupVoltReadings	16	static
+../Core/Src/dbms/stack_controller.c:290:5:FillStackFrame	32	static
+../Core/Src/dbms/stack_controller.c:306:5:FillStackFrames	32	static
+../Core/Src/dbms/stack_controller.c:315:6:StackUpdateVoltReadings	120	static
+../Core/Src/dbms/stack_controller.c:359:5:ToggleMonitorChipLed	32	static
+../Core/Src/dbms/stack_controller.c:374:5:ToggleAllMonitorChipLeds	32	static
+>>>>>>> master

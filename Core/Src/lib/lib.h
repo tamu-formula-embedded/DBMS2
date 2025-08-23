@@ -20,7 +20,8 @@
 #endif
 
 #include "crc.h"
-#include "exp_arr.h"
+// #include "exp_arr.h" // uses dynamic memory: illegal
+#include "wrap_q.h"
 
 typedef struct exp_arr ExpArr;
 
