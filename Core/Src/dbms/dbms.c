@@ -99,7 +99,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
 
-    CanLog(ctx, "Hello, world! %ld\n", ctx->stats.iters);    // need a good log because why not
+    // CanLog(ctx, "Hello, world! %ld\n", ctx->stats.iters);    // need a good log because why not
 
 	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
@@ -166,7 +166,7 @@ void DbmsIter(DbmsCtx* ctx)
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
-       StackSetupTempReadings(ctx); // todo: rename this function
+    //    StackSetupTempReadings(ctx); // todo: rename this function
     }
 
     // if (PERIOD(ctx->stats.iters, 1, 0)) //todo: fix ts
