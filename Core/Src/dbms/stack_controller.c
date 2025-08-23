@@ -314,7 +314,7 @@ void StackSetupTempReadings(DbmsCtx* ctx)
             ctx->cell_states[i].temps[j] = (float)raw; // todo: conversion
         } 
     }
-    CanLog(ctx, "c %d", c);
+//    CanLog(ctx, "c %d", c);
 }
 
 /**
