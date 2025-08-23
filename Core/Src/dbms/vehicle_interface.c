@@ -233,6 +233,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     CanTransmit(ctx, CANID_TX_CFG_ACK, ack_frame);
 #endif
 
+    CanLog(ctx, "CFG %d\n", cfg_id);
     if (!IsValidSettingIndex(ctx, cfg_id)) 
         return ERR_CFGID_NOT_FOUND;
 
