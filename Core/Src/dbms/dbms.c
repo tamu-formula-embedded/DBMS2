@@ -98,8 +98,8 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
 
-    CanLog(ctx, "MGV=%d\n", ctx->settings->user_defined[MAX_GROUP_VOLTAGE]);
-//    CanLog(ctx, "V=%f\n", ctx->cell_states[0].voltages[0]);
+    CanLog(ctx, "Hello, world! %ld\n", ctx->stats.iters);    // need a good log because why not
+    CanLog(ctx, "Max group voltage = %d\n", ctx->settings->user_defined[MAX_GROUP_VOLTAGE]);
 
 	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
@@ -135,7 +135,7 @@ void DbmsIter(DbmsCtx* ctx)
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //  
-    if (HAL_GetTick() - ctx->last_rx_heartbeat > 5000)//GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    if (HAL_GetTick() - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         ctx->req_state = DBMS_SHUTDOWN;
     }
@@ -166,14 +166,11 @@ void DbmsIter(DbmsCtx* ctx)
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
-        StackSetupTempReadings(ctx);
     }
-    
-    // TODO: fix period stuff
-    // TODO: fix can issue
-//    SendCellTemps(ctx);
-//    SendCellVoltages(ctx);
-//    SendMetrics(ctx);
+
+    // if (PERIOD(ctx->stats.iters, 1, 0)) //todo: fix ts
+    // SendCellVoltages(ctx);
+    SendMetrics(ctx);
 
     //
     //  Example usage: Turn off monitor chip
