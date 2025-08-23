@@ -25,20 +25,21 @@ void DbmsInit(DbmsCtx* ctx)
 
     wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
+    // if ((status = LoadSettings(ctx)) != HAL_OK)
+    // {
+    //     CAN_REPORT_FAULT(ctx, status);
+    //     if (status == ERR_CRC_MISMATCH)
+    //     {
+    //         // This is a bad situation, but we can still proceed
+    //         // by loading fallback settings? Ideally these should
+    //         // be updated enough to be ok
+    //         LoadFallbackSettings(ctx);
+    //         ctx->need_to_sync_settings = true;          // queue up a write
+    //     }  
+    //     else    {}  // fatal error
+    // }
 
-    if ((status = LoadSettings(ctx)) != HAL_OK)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-        if (status == ERR_CRC_MISMATCH)
-        {
-            // This is a bad situation, but we can still proceed
-            // by loading fallback settings? Ideally these should
-            // be updated enough to be ok
-            LoadFallbackSettings(ctx);
-            ctx->need_to_sync_settings = true;          // queue up a write
-        }  
-        else    {}  // fatal error
-    }
+    LoadFallbackSettings(ctx);
 
     HAL_TIM_Base_Start(ctx->hw.timer);
 
@@ -99,7 +100,6 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->iter_start_us = GetUs(ctx);
 
     CanLog(ctx, "Hello, world! %ld\n", ctx->stats.iters);    // need a good log because why not
-//    CanLog(ctx, "Max group voltage = %f\n", ctx->settings->user_defined[MAX_GROUP_VOLTAGE]);
 
 	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
