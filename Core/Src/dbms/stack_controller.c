@@ -289,27 +289,28 @@ void StackSetupTempReadings(DbmsCtx* ctx)
 
     // Receive response frame
     size_t data_size = N_TEMPS * 2;
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS;
     uint8_t rx_frame[expected_rx_size];
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, sizeof(rx_frame), STACK_RECV_TIMEOUT)) != 0){
         //Error
     }
-    RxStackFrame rx_frames[N_MONITORS];
-    FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
+    RxStackFrame rx_frames[N_STACKDEVS];
+    FillStackFrames(rx_frames, rx_frame, data_size, N_STACKDEVS);
 
     // Store data into cell_states->temps
-    for (int i = 0; i < N_MONITORS; i++){
+    for (int i = 0; i < N_STACKDEVS; i++){
 //        memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
+        int8_t addr = rx_frames[i].dev_addr - 1;
+        CanLog(ctx, "a %d\n", addr);
 
         for (size_t j = 0; j < N_TEMPS; j++)
         {
-            int8_t addr = rx_frames[i].dev_addr;   
 
             uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-                         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     
+                         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);    
             
-            ctx->cell_states[addr].temps[j] = (float)raw; // todo: conversion
+            ctx->cell_states[i].temps[j] = (float)raw; // todo: conversion
         } 
     }
 }
@@ -379,6 +380,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
         if (rx_frames[i].dev_addr == 0) 
             continue; // this is myself
         addr = rx_frames[i].dev_addr - 1;   // ignore the controller from a broadcast   
+//        CanLog(ctx, "v %d\n", addr);
 
         for (size_t j = 0; j < N_GROUPS; j++)
         {
