@@ -300,9 +300,9 @@ void StackSetupTempReadings(DbmsCtx* ctx)
 
     // Store data into cell_states->temps
     for (int i = 0; i < N_MONITORS; i++){
-        memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
+//        memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
 
-        for (size_t j = 0; j < N_GROUPS; j++)
+        for (size_t j = 0; j < N_TEMPS; j++)
         {
             int8_t addr = rx_frames[i].dev_addr;   
 
