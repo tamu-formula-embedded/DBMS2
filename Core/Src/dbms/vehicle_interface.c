@@ -315,6 +315,8 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 13, ctx->stats.looptime);
     SendMetric(ctx, 14, ctx->stats.end_delay);
 
+    SendMetric(ctx, 15, ctx->fault_mask);
+    
     return 0;
 }
 

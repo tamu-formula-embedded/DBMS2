@@ -52,11 +52,11 @@ typedef struct _CellMonitorState {
 } CellMonitorState;
 
 // fwd definition -- settings.h
-typedef enum _UserSettingIndex UserSettingIndex; 
+typedef enum _UserSettingIndex UserSettingIndex;
 typedef struct _DbmsSettings DbmsSettings;
 
 // fwd definition for enum -- led_controller.h
-typedef int32_t LedState;   
+typedef int32_t LedState;
 
 typedef struct _DbmsCtx {
 
@@ -101,6 +101,7 @@ typedef struct _DbmsCtx {
         int32_t energy_wh;
     } isense; // current = I, sense = sensor?
 
+    uint32_t    fault_mask;
     uint8_t     last_can_err;
     bool        need_to_sync_settings;
     bool        M_LED_ON;
