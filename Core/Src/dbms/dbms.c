@@ -102,8 +102,7 @@ void DbmsIter(DbmsCtx* ctx)
 	int status = 0;
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
-    CanLog(ctx, "%d\n", GetSetting(ctx, MAX_GROUP_VOLTAGE));
-    // CanLog(ctx, "Hello, world! %ld\n", ctx->stats.iters);    // need a good log because why not
+    // CanLog(ctx, "%d\n", GetSetting(ctx, MAX_GROUP_VOLTAGE));
 
 	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
@@ -225,18 +224,23 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             break;
         case CANID_ISENSE_CURRENT:
             ctx->isense.current_ma = (UnpackCurrentSensorData(rx_data) / 1000.0);
+            CanLog(ctx, "CANID_ISENSE_CURRENT\n");
             break;
         case CANID_ISENSE_VOLTAGE1:
             ctx->isense.voltage1_mv = (UnpackCurrentSensorData(rx_data) / 1000.0);
+            CanLog(ctx, "CANID_ISENSE_VOLTAGE1\n");
             break;
         case CANID_ISENSE_POWER:
             ctx->isense.power_w = (float)UnpackCurrentSensorData(rx_data);
+            CanLog(ctx, "CANID_ISENSE_POWER\n");
             break;
         case CANID_ISENSE_CHARGE:
             ctx->isense.charge_as = (float)UnpackCurrentSensorData(rx_data);
+            CanLog(ctx, "CANID_ISENSE_CHARGE\n");
             break;
         case CANID_ISENSE_ENERGY:
             ctx->isense.energy_wh = (float)UnpackCurrentSensorData(rx_data);
+            CanLog(ctx, "CANID_ISENSE_ENERGY\n");
             break;
         default:
             ctx->stats.n_unmatched_can_frames++;

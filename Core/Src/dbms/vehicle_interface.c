@@ -303,8 +303,8 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
     SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
 
-    SendMetric(ctx, 4, (int32_t)(ctx->isense.current_ma * 1000));
-    SendMetric(ctx, 5, (int32_t)(ctx->isense.voltage1_mv * 1000));
+    SendMetric(ctx, 4, (int32_t)(ctx->isense.current_ma * 1000.0));
+    SendMetric(ctx, 5, (int32_t)(ctx->isense.voltage1_mv * 1000.0));
 
     SendMetric(ctx, 6, 0);
     SendMetric(ctx, 7, 0);
