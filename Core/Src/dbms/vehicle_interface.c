@@ -127,7 +127,7 @@ int SendCellVoltages(DbmsCtx* ctx)
     {
         for (size_t j = 0; j < N_GROUPS; j++) 
         {
-            buffer[j] = ctx->cell_states[i].voltages[j] / 10000;   // .1mv
+            buffer[j] = ctx->cell_states[i].voltages[j] * 10.0;   // .1mv
         }
 
         for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS); j += 3)

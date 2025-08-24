@@ -61,7 +61,7 @@ int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code);
 #define CAN_REPORT_FAULT(CTX, ERR) CanReportFault(CTX, __FILE__, __LINE__, ERR);
 // #define CHECK_ERROR_AND_RETURN(STATUS, CALL)     if ((STATUS = CALL) != 0) { CanReportFault(__FILE__, __LINE__, ) }
 
-#define CAN_LOG_BUFFER_SIZE     256     // max formatted string length
+#define CAN_LOG_BUFFER_SIZE     512     // max formatted string length
 
 void CanLog(DbmsCtx* ctx, const char* fmt, ...);
 
