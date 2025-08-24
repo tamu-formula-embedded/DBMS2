@@ -10,12 +10,14 @@
 
 // USER DEFINED UNIQUE TO EACH BATTERY
 #define N_SEGMENTS 4
-#define N_MONITORS_PER_SEG 4
-#define N_GROUPS 14
-#define N_TEMPS 7
+#define N_SIDES_PER_SEG 2
+#define N_MONITORS_PER_SIDE 2
+#define N_GROUPS_PER_SIDE 14
+#define N_TEMPS_PER_SIDE 7
 // DONT CHANGE AFTER THIS
 
-#define N_MONITORS (N_SEGMENTS * N_MONITORS_PER_SEG)
+#define N_SIDES (N_SEGMENTS * N_SIDES_PER_SEG)
+#define N_MONITORS (N_SEGMENTS * N_SIDES_PER_SEG * N_MONITORS_PER_SIDE)
 #define N_STACKDEVS (N_MONITORS + 1)    // technically "bus devs"
 
 #define ADDR_BCAST_TO_STACK(BCAST_ADDR) (BCAST_ADDR - 1)
@@ -45,8 +47,8 @@ typedef struct _HwCtx {
 
 
 typedef struct _CellMonitorState {
-    float voltages[N_GROUPS];
-    float temps[N_TEMPS];
+    float voltages[N_GROUPS_PER_SIDE];
+    float temps[N_TEMPS_PER_SIDE];
 } CellMonitorState;
 
 // fwd definition -- settings.h
@@ -66,7 +68,7 @@ typedef struct _DbmsCtx {
 
     DbmsSettings*   settings;         // struct fwd defs has to be a ptr
 
-    CellMonitorState cell_states[N_MONITORS];
+    CellMonitorState cell_states[N_SIDES];
 
     uint64_t    last_rx_heartbeat;
     uint64_t    iter_start_us;

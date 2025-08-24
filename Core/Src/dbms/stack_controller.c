@@ -279,43 +279,7 @@ void StackSetupGpio(DbmsCtx* ctx)
     SendStackFrameSetCrc(ctx, frame_gpio_configs, sizeof(frame_gpio_configs));
 }
 
-void StackSetupTempReadings(DbmsCtx* ctx)
-{
-    // Retreives GPIO1 through GPIO7 values and stores them into the cell_states->temps array
-    int status = 0;
-    // Send read command to read GPIO1..7
-    uint8_t frame_read_gpio[] = {0xA0, 0x05, 0x8E, 0x0D, 0x00, 0x00}; // Reading 14 bytes
-    SendStackFrameSetCrc(ctx, frame_read_gpio, sizeof(frame_read_gpio));
 
-    // Receive response frame
-    size_t data_size = N_TEMPS * 2;
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
-    static uint8_t rx_frame[1024*4];
-
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
-        //Error
-    }
-    RxStackFrame rx_frames[N_MONITORS];
-    FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
-    int c = 0;
-    // Store data into cell_states->temps
-    for (int i = 0; i < N_MONITORS; i++){
-//        memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
-//        int8_t addr = rx_frames[i].dev_addr - 1;
-//        CanLog(ctx, "a %d\n", addr);
-        c++;
-
-        for (size_t j = 0; j < N_TEMPS; j++)
-        {
-
-            uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-                         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);    
-            
-            ctx->cell_states[i].temps[j] = (float)raw; // todo: conversion
-        } 
-    }
-//    CanLog(ctx, "c %d", c);
-}
 
 /**
  * Tells all battery monitoring chips to start measuring the voltage of each cell
@@ -356,14 +320,14 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     static uint8_t rx_buffer_volt_readings[1024*4];
 
     int status = 0;
-    uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xA0, 0x05, 0x68 + 2*(16-N_GROUPS), N_GROUPS*2-1, 0x00, 0x00 };
+    uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xA0, 0x05, 0x68 + 2*(16-N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE*2-1, 0x00, 0x00 };
 
     if ((status = SendStackFrameSetCrc(ctx, FRAME_ADC_MEASUREMENTS, sizeof(FRAME_ADC_MEASUREMENTS))) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
     }
 
-    size_t data_size = N_GROUPS * sizeof(int16_t);
+    size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
     //                 header+crc ^         ^ readings * 2 bytes each    
 
@@ -376,25 +340,62 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     RxStackFrame rx_frames[N_STACKDEVS];
     FillStackFrames(rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS);
 
-    int8_t addr;
+    uint8_t addr;
     for (size_t i = 0; i < N_STACKDEVS; i++)
     {
-        if (rx_frames[i].dev_addr == 0) 
-            continue; // this is myself
-        addr = rx_frames[i].dev_addr - 1;   // ignore the controller from a broadcast   
-        if (addr > N_MONITORS) continue;    // throw some error here
-        if (addr % 2 == 1) continue;
-        addr /= 2;
+        if (rx_frames[i].dev_addr == 0) continue;   // this is myself
+        addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast   
+        if (addr > N_MONITORS) continue;            // throw some error here
+        if (addr % 2 == 1) continue;                // skip the odds
+        addr /= 2;                                  // addr now in side space
+        if (addr <= N_SIDES) continue;              // throw some error here
         
-        for (size_t j = 0; j < N_GROUPS; j++)
+        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
             uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
                          + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     
             
             ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0;    // floating mV
         } 
-        CanLog(ctx, "%d %d || \n", addr, (int) ctx->cell_states[addr].voltages[0]);
     }
+}
+
+void StackUpdateTempReadings(DbmsCtx* ctx)
+{
+    // Retreives GPIO1 through GPIO7 values and stores them into the cell_states->temps array
+    int status = 0;
+    // Send read command to read GPIO1..7
+    uint8_t frame_read_gpio[] = {0xA0, 0x05, 0x8E, 0x0D, 0x00, 0x00}; // Reading 14 bytes
+    SendStackFrameSetCrc(ctx, frame_read_gpio, sizeof(frame_read_gpio));
+
+    // Receive response frame
+    size_t data_size = N_TEMPS_PER_SIDE * sizeof(uint16_t);
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
+    static uint8_t rx_frame[1024*4];
+
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
+        //Error
+    }
+    RxStackFrame rx_frames[N_MONITORS];
+    FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
+    int c = 0;
+    // Store data into cell_states->temps
+    for (int i = 0; i < N_MONITORS; i++){
+//        memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
+//        int8_t addr = rx_frames[i].dev_addr - 1;
+//        CanLog(ctx, "a %d\n", addr);
+        c++;
+
+        for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++)
+        {
+
+            uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
+                         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);    
+            
+            ctx->cell_states[i].temps[j] = (float)raw; // todo: conversion
+        } 
+    }
+//    CanLog(ctx, "c %d", c);
 }
 
 int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
@@ -428,13 +429,13 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on){
 }
 // votlages ->  if (addr % 2 == 0)
 //                  monitor id = addr / 2
-//                  write(0...N_GROUPS)
+//                  write(0...N_GROUPS_PER_SIDE)
 
 // temps ->     monitor id = addr / 2 
 //              if (addr % 2 == 0)
-//                  write(0...N_TEMPS)
+//                  write(0...N_TEMPS_PER_SIDE)
 //              else
-//                  write(N_TEMPS+1...2*N_TEMPS)
+//                  write(N_TEMPS_PER_SIDE+1...2*N_TEMPS_PER_SIDE)
 
 
 void MonitorLedBlink(DbmsCtx* ctx){
