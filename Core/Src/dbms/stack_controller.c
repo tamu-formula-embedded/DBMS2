@@ -296,7 +296,13 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
     SendStackFrameSetCrc(ctx, FRAME_SET_ADC_CONT_RUN, sizeof(FRAME_SET_ADC_CONT_RUN));
 }
 
-int FillStackFrame(DbmsCtx* ctx, RxStackFrame* rx_frame, uint8_t* buffer, size_t size)
+uint16_t CalcStackFrameCrc(RxStackFrame* rx_frame)
+{   
+    // TODO: this data-4 is a STUPID decision but will fix once reg_addr endian is validated
+    return CalcCrc16(rx_frame->data-4, 4+rx_frame->size);
+}
+
+void FillStackFrame(RxStackFrame* rx_frame, uint8_t* buffer, size_t size)
 {
     rx_frame->init_field = buffer[0];
     rx_frame->dev_addr = buffer[1];
@@ -304,27 +310,14 @@ int FillStackFrame(DbmsCtx* ctx, RxStackFrame* rx_frame, uint8_t* buffer, size_t
     rx_frame->data = buffer + 4;
     rx_frame->size = size;
     rx_frame->crc = (buffer[4+size+1] << 8) + buffer[4+size];
-    uint16_t kcrc;
-    if (rx_frame->crc == (kcrc = CalcCrc16(buffer, 4+rx_frame->size))) {
-//    	CanLog(ctx, "Matched %X != %X -> %d\n", kcrc, rx_frame->crc, rx_frame->dev_addr);
-        return 0;
-    }
-    else {
-    	if (rx_frame->dev_addr != 0){
-        	CanLog(ctx, "Unmatched %X == %X -> %d\n", kcrc, rx_frame->crc, rx_frame->dev_addr);
-    	}
-        return 1;
-    }
 }
 
-int FillStackFrames(DbmsCtx* ctx, RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames)
+void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames)
 {
-    int bad_crc = 0;
     for (size_t i = 0; i < n_frames; i++)
     {
-        bad_crc += FillStackFrame(ctx, rx_frames + i, buffer + (i * RX_FRAME_SIZE(size)), size);
+        FillStackFrame(rx_frames + i, buffer + (i * RX_FRAME_SIZE(size)), size);
     }
-    return bad_crc;
 }
 
 void StackUpdateVoltReadings(DbmsCtx* ctx)
@@ -350,18 +343,28 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
-    ctx->stats.n_rx_stack_frames +=  N_STACKDEVS;
-    ctx->stats.n_rx_stack_bad_crcs += FillStackFrames(ctx, rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS) - 1; // ignoring bad crc from 0
-
+    FillStackFrames(rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS);
     uint8_t addr;
+    uint16_t kcrc;
+
     for (size_t i = 0; i < N_STACKDEVS; i++)
     {
+        ctx->stats.n_rx_stack_frames++;
+
         if (rx_frames[i].dev_addr == 0) continue;   // this is myself
         addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast   
         if (addr >= N_MONITORS) continue;            // throw some error here
         if (addr % 2 == 1) continue;                // skip the odds
         addr /= 2;                                  // addr now in side space
         if (addr >= N_SIDES) continue;              // throw some error here
+
+        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
+           	CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+        }
+        else {
+            CanLog(ctx, "Unmtched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+            ctx->stats.n_rx_stack_bad_crcs++;
+        }
         
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
@@ -369,6 +372,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
                          + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     
             
             ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0;    // floating mV
+
         } 
     }
 }
@@ -390,7 +394,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
         //Error
     }
     RxStackFrame rx_frames[N_MONITORS];
-    FillStackFrames(ctx, rx_frames, rx_frame, data_size, N_MONITORS);
+    FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
     int c = 0;
     // Store data into cell_states->temps
     for (int i = 0; i < N_MONITORS; i++){
