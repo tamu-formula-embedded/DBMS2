@@ -303,8 +303,8 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 4, ctx->isense.current_ma);
     SendMetric(ctx, 5, ctx->isense.voltage1_mv);
 
-    SendMetric(ctx, 6, 0);
-    SendMetric(ctx, 7, 0);
+    // SendMetric(ctx, 6, 0);
+    // SendMetric(ctx, 7, 0);
     SendMetric(ctx, 8, ctx->isense.power_w);
     SendMetric(ctx, 9, ctx->isense.charge_as);
     SendMetric(ctx, 10, ctx->isense.energy_wh);
@@ -314,6 +314,9 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 13, ctx->stats.looptime);
     SendMetric(ctx, 14, ctx->stats.end_delay);
+
+    SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
+    SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
 
     return 0;
 }

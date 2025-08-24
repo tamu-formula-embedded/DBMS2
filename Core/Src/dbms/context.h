@@ -90,6 +90,9 @@ typedef struct _DbmsCtx {
 
         uint32_t looptime;
         uint32_t end_delay;
+
+        uint32_t n_rx_stack_frames;
+        uint32_t n_rx_stack_bad_crcs;
         // uint32_t n_overruns;
     } stats;
 
