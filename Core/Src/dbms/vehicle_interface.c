@@ -348,7 +348,7 @@ void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time)
     HAL_Delay(1);
 }
 
-int64_t UnpackCurrentSensorData(const uint8_t *data)  // expects >= 6 bytes, big-endian
+int64_t UnpackCurrentSensorData(uint8_t *data)  // expects >= 6 bytes, big-endian
 {
     // Assemble into the low 48 bits
     uint64_t v = 0;

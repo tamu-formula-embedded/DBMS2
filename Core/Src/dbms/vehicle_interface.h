@@ -74,6 +74,6 @@ int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc);
 int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action);
 
 void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time);
-uint64_t UnpackCurrentSensorData(uint8_t* data);
+int64_t UnpackCurrentSensorData(uint8_t* data);
 
 #endif
