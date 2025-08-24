@@ -23,8 +23,7 @@ void DbmsInit(DbmsCtx* ctx)
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_INIT;
 
-    wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
-
+    // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
     {
@@ -36,9 +35,10 @@ void DbmsInit(DbmsCtx* ctx)
             // be updated enough to be ok
             LoadFallbackSettings(ctx);
             ctx->need_to_sync_settings = true;          // queue up a write
-        }  
+        }
         else    {}  // fatal error
     }
+
 
     HAL_TIM_Base_Start(ctx->hw.timer);
 
@@ -48,8 +48,13 @@ void DbmsInit(DbmsCtx* ctx)
         ctx->led_state = LED_ERROR;
         return;
     }
+
+    HAL_Delay(10);
+    ConfigCurrentSensor(ctx, 10);
+
     // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
     ctx->led_state = LED_IDLE;
+
 }
 
 int DbmsPerformWakeup(DbmsCtx* ctx)
@@ -97,17 +102,13 @@ void DbmsIter(DbmsCtx* ctx)
 	int status = 0;
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
-
-    CanLog(ctx, "Hello, world! %ld\n", ctx->stats.iters);    // need a good log because why not
-    CanLog(ctx, "Max group voltage = %d\n", ctx->settings->user_defined[MAX_GROUP_VOLTAGE]);
+    // CanLog(ctx, "%d\n", GetSetting(ctx, MAX_GROUP_VOLTAGE));
 
 	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
 		ctx->led_state = LED_INIT;
 		ProcessLedAction(ctx);
 	}
-
-
     //
     //  Store the settings when required
     //
@@ -129,7 +130,7 @@ void DbmsIter(DbmsCtx* ctx)
     //  Let everybody know that we are alive
     //
     
-    CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)&ctx->settings, sizeof(DbmsSettings)));
+    CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
 
     //
     //  Its been too long since we have recived a frame, we need to force a shutdown
@@ -166,10 +167,12 @@ void DbmsIter(DbmsCtx* ctx)
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
+//       StackUpdateTempReadings(ctx);
     }
 
     // if (PERIOD(ctx->stats.iters, 1, 0)) //todo: fix ts
     SendCellVoltages(ctx);
+    // SendCellTemps(ctx);
     SendMetrics(ctx);
 
     //
@@ -183,11 +186,17 @@ void DbmsIter(DbmsCtx* ctx)
     ProcessLedAction(ctx);
 
     ctx->iter_end_us = GetUs(ctx);
-    // uint32_t end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
+
+    ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
+    ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
+
+    MonitorLedBlink(ctx);
     // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
     // DelayUs(ctx, end_delay);
     HAL_Delay(20);  // ^ todo: fix all this
 }
+
+
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
@@ -212,6 +221,21 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             {
                 if (status == ERR_CFGID_NOT_FOUND) {}   
             }
+            break;
+        case CANID_ISENSE_CURRENT:
+            ctx->isense.current_ma = (int32_t)UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_VOLTAGE1:
+            ctx->isense.voltage1_mv = (int32_t)UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_POWER:
+            ctx->isense.power_w = (int32_t)UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_CHARGE:
+            ctx->isense.charge_as = (int32_t)UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_ISENSE_ENERGY:
+            ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
             break;
         default:
             ctx->stats.n_unmatched_can_frames++;
