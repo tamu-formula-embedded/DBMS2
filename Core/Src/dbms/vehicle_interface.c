@@ -119,7 +119,7 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...)
 
 int SendCellVoltages(DbmsCtx* ctx)
 {
-    int status = 0;
+   int status = 0;
     uint8_t  frame[8];
     uint16_t buffer[PAD_BUFFER_3(N_GROUPS_PER_SIDE)] = {0};
 
@@ -127,10 +127,9 @@ int SendCellVoltages(DbmsCtx* ctx)
     {
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++) 
         {
-            // buffer[j] = (uint16_t)fminf(fmaxf(lroundf(ctx->cell_states[i].voltages[j] * 10.0f), 0), UINT16_MAX);
             #define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
- 
             buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
+            // CanLog(ctx, "v=%d mV -> s=%ld\n", (uint16_t)ctx->cell_states[i].voltages[j], s);
         }
 
         for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS_PER_SIDE); j += 3)
@@ -138,7 +137,8 @@ int SendCellVoltages(DbmsCtx* ctx)
             frame[0] = (uint8_t)i;        // monitor id
             frame[1] = (uint8_t)j;        // group index (in uint16_t units)
 
-            memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
+            // memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
+            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t));
 
             status = CanTransmit(ctx, CANID_CELLSTATE_VOLTS, frame);
             if (status != 0) return status;
