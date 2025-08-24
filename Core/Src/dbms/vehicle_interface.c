@@ -147,7 +147,7 @@ int SendCellVoltages(DbmsCtx* ctx)
     return 0; // todo: make a real return value
 }
 
-int SendCellTemps(DbmsCtx* ctx)        
+int SendCellTemps(DbmsCtx* ctx)
 {
      int status = 0;
     uint8_t  frame[8];
