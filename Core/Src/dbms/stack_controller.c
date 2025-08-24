@@ -305,19 +305,19 @@ int FillStackFrame(RxStackFrame* rx_frame, uint8_t* buffer, size_t size)
     rx_frame->size = size;
     rx_frame->crc = (buffer[4+size] << 8) + buffer[4+size+1];
     if (rx_frame->crc == CalcCrc16(rx_frame->data, rx_frame->size))
-    {
-        // todo: do something here?
-    }
-    return status;
+        return 0;
+    else 
+        return 1;
 }
 
 int FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames)
 {
+    int bad_crc = 0;
     for (size_t i = 0; i < n_frames; i++)
     {
-        FillStackFrame(rx_frames + i, buffer + (i * RX_FRAME_SIZE(size)), n_frames);
+        bad_crc = FillStackFrame(rx_frames + i, buffer + (i * RX_FRAME_SIZE(size)), size);
     }
-    return 0;
+    return bad_crc;
 }
 
 void StackUpdateVoltReadings(DbmsCtx* ctx)
@@ -343,7 +343,8 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS);
+    ctx->stats.n_rx_stack_frames +=  N_STACKDEVS;
+    ctx->stats.n_rx_stack_bad_crcs += FillStackFrames(rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS);
 
     uint8_t addr;
     for (size_t i = 0; i < N_STACKDEVS; i++)
