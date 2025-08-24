@@ -290,13 +290,6 @@ int SendMetric(DbmsCtx* ctx, uint8_t id, uint32_t value)
 int SendMetrics(DbmsCtx* ctx)
 {
 
-    // uint64_t looptime_sum = 0;
-    // for (size_t i = 0; i < N_HISTORIC_LOOPTIMES; i++)
-    // {
-    //     // accessing the raw q buffer data is technically dangerous but not really
-    //     looptime_sum += ctx->stats.looptimes_d[i];
-    // }
-    // SendMetric(ctx, 1, looptime_sum / N_HISTORIC_LOOPTIMES);
     SendMetric(ctx, 0, ctx->stats.iters);
 
     SendMetric(ctx, 1, ctx->stats.n_tx_can_frames);

@@ -382,14 +382,14 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
         if (rx_frames[i].dev_addr == 0) 
             continue; // this is myself
         addr = rx_frames[i].dev_addr - 1;   // ignore the controller from a broadcast   
-//        CanLog(ctx, "v %d\n", addr);
+        if (addr > N_MONITORS) continue;    // throw some error here
 
         for (size_t j = 0; j < N_GROUPS; j++)
         {
             uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
                          + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     
             
-            ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000000.0;    
+            ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0;    // floating mV
         } 
     }
 }
