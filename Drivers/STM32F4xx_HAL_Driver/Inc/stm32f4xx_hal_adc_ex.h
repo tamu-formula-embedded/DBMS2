@@ -220,8 +220,8 @@ typedef struct
 
 #if defined(STM32F411xE) || defined(STM32F413xx) || defined(STM32F423xx) || defined(STM32F427xx) || defined(STM32F437xx) ||\
     defined(STM32F429xx) || defined(STM32F439xx) || defined(STM32F446xx) || defined(STM32F469xx) || defined(STM32F479xx)
-#define ADC_CHANNEL_DIFFERENCIATION_TEMPSENSOR_VBAT 0x10000000U /* Dummy bit for driver internal usage, not used in ADC channel setting registers CR1 or SQRx */
-#define ADC_CHANNEL_TEMPSENSOR  ((uint32_t)ADC_CHANNEL_18 | ADC_CHANNEL_DIFFERENCIATION_TEMPSENSOR_VBAT)
+#define ADC_CHANNEL_DIFFERENCIATION_TEMPS_PER_SIDEENSOR_VBAT 0x10000000U /* Dummy bit for driver internal usage, not used in ADC channel setting registers CR1 or SQRx */
+#define ADC_CHANNEL_TEMPSENSOR  ((uint32_t)ADC_CHANNEL_18 | ADC_CHANNEL_DIFFERENCIATION_TEMPS_PER_SIDEENSOR_VBAT)
 #endif /* STM32F411xE || STM32F413xx || STM32F423xx || STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx || STM32F446xx || STM32F469xx || STM32F479xx */
 /**
   * @}

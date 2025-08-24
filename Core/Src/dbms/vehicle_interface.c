@@ -121,16 +121,16 @@ int SendCellVoltages(DbmsCtx* ctx)
 {
     int status = 0;
     uint8_t  frame[8];
-    uint16_t buffer[PAD_BUFFER_3(N_GROUPS)] = {0};
+    uint16_t buffer[PAD_BUFFER_3(N_GROUPS_PER_SIDE)] = {0};
 
-    for (size_t i = 0; i < N_MONITORS; i++)
+    for (size_t i = 0; i < N_SIDES; i++)
     {
-        for (size_t j = 0; j < N_GROUPS; j++) 
+        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++) 
         {
-            buffer[j] = ctx->cell_states[i].voltages[j] * 10.0;   // .1mv
+            buffer[j] = (uint16_t)fminf(fmaxf(lroundf(ctx->cell_states[i].voltages[j] * 10.0f), 0), UINT16_MAX);
         }
 
-        for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS); j += 3)
+        for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS_PER_SIDE); j += 3)
         {
             frame[0] = (uint8_t)i;        // monitor id
             frame[1] = (uint8_t)j;        // group index (in uint16_t units)
@@ -148,16 +148,16 @@ int SendCellTemps(DbmsCtx* ctx)
 {
      int status = 0;
     uint8_t  frame[8];
-    uint16_t buffer[PAD_BUFFER_3(N_TEMPS)] = {0};
+    uint16_t buffer[PAD_BUFFER_3(N_TEMPS_PER_SIDE)] = {0};
 
     for (size_t i = 0; i < N_MONITORS; i++)
     {
-        for (size_t j = 0; j < N_TEMPS; j++) 
+        for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++) 
         {
             buffer[j] = ctx->cell_states[i].temps[j];   // TODO: add anti-conversion
         }
 
-        for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS); j += 3)
+        for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS_PER_SIDE); j += 3)
         {
             frame[0] = (uint8_t)i;        // monitor id
             frame[1] = (uint8_t)j;        // group index (in uint16_t units)
@@ -231,7 +231,8 @@ int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 
 int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc)
 {
-    static uint8_t frame[] = { N_SEGMENTS, N_MONITORS_PER_SEG, N_GROUPS, N_TEMPS, 0, 0, 0, 0};
+    // TODO: rethink this
+    static uint8_t frame[] = { N_SEGMENTS, N_SIDES_PER_SEG, N_GROUPS_PER_SIDE, N_TEMPS_PER_SIDE, 0, 0, 0, 0};
     frame[6] = (settings_crc & 0xff00) >> 8;
     frame[7] = (settings_crc & 0xff);
     return CanTransmit(ctx, CANID_TX_HEARTBEAT, frame);
