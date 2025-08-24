@@ -60,16 +60,36 @@ int ConfigCan(DbmsCtx* ctx)
     return status;
 }
 
+
+
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
-    ctx->stats.n_tx_can_frames++;
-    ctx->hw.can_tx_header.StdId = id;
-    int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, &ctx->hw.can_tx_header, data, &ctx->hw.can_tx_mailbox);
-    if(result != HAL_OK)
-    {
-        ctx->led_state = LED_COMM_ERROR;
+    CAN_TxHeaderTypeDef *hdr = &ctx->hw.can_tx_header;
+
+    hdr->StdId = id;      // ensure IDE=CAN_ID_STD elsewhere
+    // hdr->IDE = CAN_ID_STD; hdr->RTR = CAN_RTR_DATA; hdr->DLC = 8; // set once at init if fixed
+
+    // Wait (briefly) for a free mailbox instead of calling blindly.
+    uint32_t waited = 0;
+    while (HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) == 0U) {
+        if (waited >= CAN_TX_TIMEOUT_US) {
+            ctx->stats.n_tx_can_drop_timeout++;
+            // ctx->led_state = LED_COMM_ERROR; // not worth a locking error 
+            return HAL_TIMEOUT;
+        }
+        DelayUs(ctx, CAN_TX_WAIT_US);
+        waited += CAN_TX_WAIT_US;
     }
-    
+
+    int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, hdr, data, &ctx->hw.can_tx_mailbox);
+
+    if (result != HAL_OK) {
+        ctx->stats.n_tx_can_fail++;
+        ctx->led_state = LED_COMM_ERROR;
+        ctx->last_can_err = HAL_CAN_GetError(ctx->hw.can); // capture why
+    } else {
+        ctx->stats.n_tx_can_frames++;
+    }
     return result;
 }
 
@@ -99,20 +119,26 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...)
 
 int SendCellVoltages(DbmsCtx* ctx)
 {
-    int status = 0;
+   int status = 0;
     uint8_t  frame[8];
-    uint16_t buffer[PAD_BUFFER_3(N_GROUPS)] = {0};
+    uint16_t buffer[PAD_BUFFER_3(N_GROUPS_PER_SIDE)] = {0};
 
-    for (size_t i = 0; i < N_MONITORS; i++)
+    for (size_t i = 0; i < N_SIDES; i++)
     {
-        memcpy_eswap2(buffer, ctx->cell_states[i].voltages, N_GROUPS * sizeof(uint16_t));
+        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++) 
+        {
+            #define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
+            buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
+            // CanLog(ctx, "v=%d mV -> s=%ld\n", (uint16_t)ctx->cell_states[i].voltages[j], s);
+        }
 
-        for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS); j += 3)
+        for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS_PER_SIDE); j += 3)
         {
             frame[0] = (uint8_t)i;        // monitor id
             frame[1] = (uint8_t)j;        // group index (in uint16_t units)
 
-            memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
+            // memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
+            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t));
 
             status = CanTransmit(ctx, CANID_CELLSTATE_VOLTS, frame);
             if (status != 0) return status;
@@ -121,17 +147,20 @@ int SendCellVoltages(DbmsCtx* ctx)
     return 0; // todo: make a real return value
 }
 
-int SendCellTemps(DbmsCtx* ctx)        
+int SendCellTemps(DbmsCtx* ctx)
 {
      int status = 0;
     uint8_t  frame[8];
-    uint16_t buffer[PAD_BUFFER_3(N_GROUPS)] = {0};
+    uint16_t buffer[PAD_BUFFER_3(N_TEMPS_PER_SIDE)] = {0};
 
     for (size_t i = 0; i < N_MONITORS; i++)
     {
-        memcpy_eswap2(buffer, ctx->cell_states[i].temps, N_TEMPS * sizeof(uint16_t));
+        for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++) 
+        {
+            buffer[j] = ctx->cell_states[i].temps[j];   // TODO: add anti-conversion
+        }
 
-        for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS); j += 3)
+        for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS_PER_SIDE); j += 3)
         {
             frame[0] = (uint8_t)i;        // monitor id
             frame[1] = (uint8_t)j;        // group index (in uint16_t units)
@@ -205,7 +234,8 @@ int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 
 int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc)
 {
-    static uint8_t frame[] = { N_SEGMENTS, N_MONITORS_PER_SEG, N_GROUPS, N_TEMPS, 0, 0, 0, 0};
+    // TODO: rethink this
+    static uint8_t frame[] = { N_SEGMENTS, N_SIDES_PER_SEG, N_GROUPS_PER_SIDE, N_TEMPS_PER_SIDE, 0, 0, 0, 0};
     frame[6] = (settings_crc & 0xff00) >> 8;
     frame[7] = (settings_crc & 0xff);
     return CanTransmit(ctx, CANID_TX_HEARTBEAT, frame);
@@ -221,12 +251,14 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     cfg_set |= (rx_data[5] << 2*8);
     cfg_set |= (rx_data[6] << 1*8);
     cfg_set |= (rx_data[7] << 0*8);
+    // CanLog(ctx, "%d config_id\n", cfg_id);
 
 #ifdef ACK_CFG
     uint8_t ack_frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
     CanTransmit(ctx, CANID_TX_CFG_ACK, ack_frame);
 #endif
 
+//    CanLog(ctx, "CFG %d\n", cfg_id);
     if (!IsValidSettingIndex(ctx, cfg_id)) 
         return ERR_CFGID_NOT_FOUND;
 
@@ -263,18 +295,74 @@ int SendMetric(DbmsCtx* ctx, uint8_t id, uint32_t value)
 int SendMetrics(DbmsCtx* ctx)
 {
 
-    // uint64_t looptime_sum = 0;
-    // for (size_t i = 0; i < N_HISTORIC_LOOPTIMES; i++)
-    // {
-    //     // accessing the raw q buffer data is technically dangerous but not really
-    //     looptime_sum += ctx->stats.looptimes_d[i];
-    // }
-    // SendMetric(ctx, 1, looptime_sum / N_HISTORIC_LOOPTIMES);
-    SendMetric(ctx, 0, 1000);
+    SendMetric(ctx, 0, ctx->stats.iters);
 
     SendMetric(ctx, 1, ctx->stats.n_tx_can_frames);
     SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
     SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
 
+    SendMetric(ctx, 4, ctx->isense.current_ma);
+    SendMetric(ctx, 5, ctx->isense.voltage1_mv);
+
+    // SendMetric(ctx, 6, 0);
+    // SendMetric(ctx, 7, 0);
+    SendMetric(ctx, 8, ctx->isense.power_w);
+    SendMetric(ctx, 9, ctx->isense.charge_as);
+    SendMetric(ctx, 10, ctx->isense.energy_wh);
+
+    SendMetric(ctx, 11, ctx->stats.n_tx_can_fail);
+    SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_timeout);
+
+    SendMetric(ctx, 13, ctx->stats.looptime);
+    SendMetric(ctx, 14, ctx->stats.end_delay);
+
+    SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
+    SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
+
     return 0;
+}
+
+void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time)
+{
+    static uint8_t frame_set_stop_mode[8] = {0x34, 1, 0, 0, 0, 0, 0, 0};
+    static uint8_t frame_set_run_mode[8] = {0x34, 1, 1, 0, 0, 0, 0, 0};
+    static uint8_t frame_set_metric_cycle[8] = {0x20, 2, 0, 0, 0, 0, 0, 0};
+    frame_set_metric_cycle[2] = (cycle_time & 0xFF00) >> 8;
+    frame_set_metric_cycle[3] = (cycle_time & 0x00FF) >> 0;
+
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_stop_mode);
+    HAL_Delay(1);
+
+    frame_set_metric_cycle[0] = 0x21;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+    frame_set_metric_cycle[0] = 0x22;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+    frame_set_metric_cycle[0] = 0x25;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+    frame_set_metric_cycle[0] = 0x26;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+    frame_set_metric_cycle[0] = 0x27;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+
+    HAL_Delay(1);
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_run_mode);
+    HAL_Delay(1);
+}
+
+int64_t UnpackCurrentSensorData(uint8_t *data)  // expects >= 6 bytes, big-endian
+{
+    // Assemble into the low 48 bits
+    uint64_t v = 0;
+    v |= ((uint64_t)data[0] << 40);
+    v |= ((uint64_t)data[1] << 32);
+    v |= ((uint64_t)data[2] << 24);
+    v |= ((uint64_t)data[3] << 16);
+    v |= ((uint64_t)data[4] <<  8);
+    v |= ((uint64_t)data[5] <<  0);
+
+    // Sign bit is bit 47 (counting from 0). If set, extend the sign.
+    if (v & (1ULL << 47)) {
+        v |= ~((1ULL << 48) - 1);   // set all upper bits to 1
+    }
+    return (int64_t)v;
 }
