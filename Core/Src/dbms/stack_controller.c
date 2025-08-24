@@ -402,7 +402,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
         addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast
         if (addr >= N_MONITORS) continue;            // throw some error here
         if (addr % 2 == 0) continue;                // skip the odds
-        addr = (addr / 2) + 1;                               // addr now in side space
+        addr = (addr / 2) + 1;                              // addr now in side space
         if (addr >= N_SIDES) continue;              // throw some error here
 
         if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
@@ -412,7 +412,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
 				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
 							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
 
-				ctx->cell_states[addr].temps[j] = (float)raw * 1000.0;    // floating mV
+				ctx->cell_states[addr].temps[j] = (float)raw;    // floating mV
 				CanLog(ctx, "%d mV\n", ctx->cell_states[addr].temps[j]);
 			}
         }
