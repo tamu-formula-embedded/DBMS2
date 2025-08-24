@@ -282,6 +282,7 @@ void StackSetupGpio(DbmsCtx* ctx)
     // Setting up TSREF to active
 //    uint8_t frame_tsref_setup[] = {0xB0, 0x03, 0x0A, 0x01, 0x00, 0x00};
 //    SendStackFrameSetCrc(ctx, frame_tsref_setup, sizeof(frame_tsref_setup));
+    // DelayUs(10);
 }
 
 
@@ -295,27 +296,33 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
     SendStackFrameSetCrc(ctx, FRAME_SET_ADC_CONT_RUN, sizeof(FRAME_SET_ADC_CONT_RUN));
 }
 
-int FillStackFrame(RxStackFrame* rx_frame, uint8_t* buffer, size_t size)
+int FillStackFrame(DbmsCtx* ctx, RxStackFrame* rx_frame, uint8_t* buffer, size_t size)
 {
-    int status = 0;
     rx_frame->init_field = buffer[0];
     rx_frame->dev_addr = buffer[1];
     rx_frame->reg_addr = (buffer[2] << 8) + buffer[3];
     rx_frame->data = buffer + 4;
     rx_frame->size = size;
-    rx_frame->crc = (buffer[4+size] << 8) + buffer[4+size+1];
-    if (rx_frame->crc == CalcCrc16(rx_frame->data, rx_frame->size))
+    rx_frame->crc = (buffer[4+size+1] << 8) + buffer[4+size];
+    uint16_t kcrc;
+    if (rx_frame->crc == (kcrc = CalcCrc16(buffer, 4+rx_frame->size))) {
+//    	CanLog(ctx, "Matched %X != %X -> %d\n", kcrc, rx_frame->crc, rx_frame->dev_addr);
         return 0;
-    else 
+    }
+    else {
+    	if (rx_frame->dev_addr != 0){
+        	CanLog(ctx, "Unmatched %X == %X -> %d\n", kcrc, rx_frame->crc, rx_frame->dev_addr);
+    	}
         return 1;
+    }
 }
 
-int FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames)
+int FillStackFrames(DbmsCtx* ctx, RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames)
 {
     int bad_crc = 0;
     for (size_t i = 0; i < n_frames; i++)
     {
-        bad_crc = FillStackFrame(rx_frames + i, buffer + (i * RX_FRAME_SIZE(size)), size);
+        bad_crc += FillStackFrame(ctx, rx_frames + i, buffer + (i * RX_FRAME_SIZE(size)), size);
     }
     return bad_crc;
 }
@@ -344,7 +351,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
 
     RxStackFrame rx_frames[N_STACKDEVS];
     ctx->stats.n_rx_stack_frames +=  N_STACKDEVS;
-    ctx->stats.n_rx_stack_bad_crcs += FillStackFrames(rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS);
+    ctx->stats.n_rx_stack_bad_crcs += FillStackFrames(ctx, rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS) - 1; // ignoring bad crc from 0
 
     uint8_t addr;
     for (size_t i = 0; i < N_STACKDEVS; i++)
@@ -383,7 +390,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
         //Error
     }
     RxStackFrame rx_frames[N_MONITORS];
-    FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
+    FillStackFrames(ctx, rx_frames, rx_frame, data_size, N_MONITORS);
     int c = 0;
     // Store data into cell_states->temps
     for (int i = 0; i < N_MONITORS; i++){

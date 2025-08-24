@@ -251,6 +251,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     cfg_set |= (rx_data[5] << 2*8);
     cfg_set |= (rx_data[6] << 1*8);
     cfg_set |= (rx_data[7] << 0*8);
+    // CanLog(ctx, "%d config_id\n", cfg_id);
 
 #ifdef ACK_CFG
     uint8_t ack_frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
