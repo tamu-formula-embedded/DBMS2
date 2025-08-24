@@ -303,14 +303,14 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
     SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
 
-    SendMetric(ctx, 4, (int32_t)(ctx->isense.current_ma * 1000.0));
-    SendMetric(ctx, 5, (int32_t)(ctx->isense.voltage1_mv * 1000.0));
+    SendMetric(ctx, 4, ctx->isense.current_ma);
+    SendMetric(ctx, 5, ctx->isense.voltage1_mv);
 
     SendMetric(ctx, 6, 0);
     SendMetric(ctx, 7, 0);
-    SendMetric(ctx, 8, (int32_t)ctx->isense.power_w);
-    SendMetric(ctx, 9, (int32_t)ctx->isense.charge_as);
-    SendMetric(ctx, 10, (int32_t)ctx->isense.energy_wh);
+    SendMetric(ctx, 8, ctx->isense.power_w);
+    SendMetric(ctx, 9, ctx->isense.charge_as);
+    SendMetric(ctx, 10, ctx->isense.energy_wh);
 
     SendMetric(ctx, 11, ctx->stats.n_tx_can_fail);
     SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_timeout);
@@ -348,18 +348,20 @@ void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time)
     HAL_Delay(1);
 }
 
-uint64_t UnpackCurrentSensorData(uint8_t* data) // expectes >=6 bytes
+int64_t UnpackCurrentSensorData(const uint8_t *data)  // expects >= 6 bytes, big-endian
 {
-    // todo: move this to another file
-    // logic is:
-    //  for (int i = 0; i < n; i++)
-    //      res |= (data[i] << (n-i-1*8));
-    uint64_t res = 0;
-    res |= ((uint64_t)data[0] << 5*8);
-    res |= ((uint64_t)data[1] << 4*8);
-    res |= ((uint64_t)data[2] << 3*8);
-    res |= ((uint64_t)data[3] << 2*8);
-    res |= ((uint64_t)data[4] << 1*8);
-    res |= ((uint64_t)data[5] << 0*8);
-    return res;
+    // Assemble into the low 48 bits
+    uint64_t v = 0;
+    v |= ((uint64_t)data[0] << 40);
+    v |= ((uint64_t)data[1] << 32);
+    v |= ((uint64_t)data[2] << 24);
+    v |= ((uint64_t)data[3] << 16);
+    v |= ((uint64_t)data[4] <<  8);
+    v |= ((uint64_t)data[5] <<  0);
+
+    // Sign bit is bit 47 (counting from 0). If set, extend the sign.
+    if (v & (1ULL << 47)) {
+        v |= ~((1ULL << 48) - 1);   // set all upper bits to 1
+    }
+    return (int64_t)v;
 }
