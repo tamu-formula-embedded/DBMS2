@@ -264,7 +264,8 @@ void StackAutoAddr(DbmsCtx* ctx)
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
     // possible sw guide error 0xB0 (stack write) --> 0xD0 (broadcast write)
-    uint8_t frame_set_active_cell[] =  { 0xD0, 0x00, N_STACKDEVS, n_active_cells, 0x00, 0x00 };
+    // uint8_t frame_set_active_cell[] =  { 0xD0, 0x00, N_STACKDEVS, n_active_cells, 0x00, 0x00 };
+    uint8_t frame_set_active_cell[] =  { 0xD0, 0x00, 0x03, n_active_cells, 0x00, 0x00 };
 
     SendStackFrameSetCrc(ctx, frame_set_active_cell, sizeof(frame_set_active_cell));
 }
@@ -277,6 +278,10 @@ void StackSetupGpio(DbmsCtx* ctx)
     // Note 2: Also configures GPIO8 even though we dont need to, hence just setting GPIO8 to output low
     uint8_t frame_gpio_configs[] = {0xB3, 0x00, 0x0E, 0x09, 0x09, 0x09, 0x21, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_gpio_configs, sizeof(frame_gpio_configs));
+
+    // Setting up TSREF to active
+//    uint8_t frame_tsref_setup[] = {0xB0, 0x03, 0x0A, 0x01, 0x00, 0x00};
+//    SendStackFrameSetCrc(ctx, frame_tsref_setup, sizeof(frame_tsref_setup));
 }
 
 
@@ -345,10 +350,10 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     {
         if (rx_frames[i].dev_addr == 0) continue;   // this is myself
         addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast   
-        if (addr > N_MONITORS) continue;            // throw some error here
+        if (addr >= N_MONITORS) continue;            // throw some error here
         if (addr % 2 == 1) continue;                // skip the odds
         addr /= 2;                                  // addr now in side space
-        if (addr <= N_SIDES) continue;              // throw some error here
+        if (addr >= N_SIDES) continue;              // throw some error here
         
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
@@ -382,7 +387,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
     // Store data into cell_states->temps
     for (int i = 0; i < N_MONITORS; i++){
 //        memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
-//        int8_t addr = rx_frames[i].dev_addr - 1;
+//        uint8_t addr = rx_frames[i].dev_addr - 1;
 //        CanLog(ctx, "a %d\n", addr);
         c++;
 
