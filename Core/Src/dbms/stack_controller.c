@@ -359,7 +359,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
         if (addr >= N_SIDES) continue;              // throw some error here
 
         if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
-//           	CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+          	// CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
         	for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
 			{
 				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
@@ -376,6 +376,16 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     }
 }
 
+// votlages ->  if (addr % 2 == 0)
+//                  monitor id = addr / 2
+//                  write(0...N_GROUPS_PER_SIDE)
+
+// temps ->     monitor id = addr / 2 
+//              if (addr % 2 == 0)
+//                  write(0...N_TEMPS_PER_SIDE)
+//              else
+//                  write(N_TEMPS_PER_SIDE+1...2*N_TEMPS_PER_SIDE)
+
 void StackUpdateTempReadings(DbmsCtx* ctx)
 {
     // Retreives GPIO1 through GPIO7 values and stores them into the cell_states->temps array
@@ -385,7 +395,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
     SendStackFrameSetCrc(ctx, frame_read_gpio, sizeof(frame_read_gpio));
 
     // Receive response frame
-    size_t data_size = N_TEMPS_PER_SIDE * sizeof(uint16_t);
+    size_t data_size = N_TEMPS_PER_MONITOR * sizeof(uint16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
     static uint8_t rx_frame[1024];
 
@@ -395,25 +405,25 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
     RxStackFrame rx_frames[N_MONITORS];
     FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
     // Store data into cell_states->temps
-    uint8_t addr;
+    uint8_t addr, offset;
     uint16_t kcrc;
     for (int i = 0; i < N_MONITORS; i++){
-        if (rx_frames[i].dev_addr == 0) continue;   // this is myself
-        addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast
-        if (addr >= N_MONITORS) continue;            // throw some error here
-        if (addr % 2 == 0) continue;                // skip the odds
-        addr = (addr / 2) + 1;                              // addr now in side space
-        if (addr >= N_SIDES) continue;              // throw some error here
+        if (rx_frames[i].dev_addr == 0) continue;               // this is myself
+        addr = rx_frames[i].dev_addr - 1;                       // ignore the controller from a broadcast
+        if (addr >= N_MONITORS) continue;                       // throw some error here
+        if (addr >= N_SIDES) continue;                          // throw some error here
+        offset = addr % 2 == 0 ? 0 : (N_TEMPS_PER_MONITOR);    // what the fuckkk
+        addr /= 2;                                              // addr is halfed
 
         if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
-//           	CanLog(ctx, "Temps Matched %X != %X Addr %d, %d and %X\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr, rx_frames[i].data[0]);
-        	for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++)
+          	// CanLog(ctx, "Temps Matched %X != %X Addr %d, %d and %X\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr, rx_frames[i].data[0]);
+        	for (size_t j = 0; j < N_TEMPS_PER_MONITOR; j++)
 			{
 				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
 							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
 
-				ctx->cell_states[addr].temps[j] = (float)raw;    // floating mV
-				CanLog(ctx, "%d mV\n", ctx->cell_states[addr].temps[j]);
+				ctx->cell_states[addr].temps[j+offset] = (float)raw;    // floating mV
+				CanLog(ctx, "%d.%d = %ld mV\n", addr, j+offset, lround(ctx->cell_states[addr].temps[j+offset]));
 			}
         }
         else {
@@ -452,15 +462,7 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on){
     }
     return status;
 }
-// votlages ->  if (addr % 2 == 0)
-//                  monitor id = addr / 2
-//                  write(0...N_GROUPS_PER_SIDE)
 
-// temps ->     monitor id = addr / 2 
-//              if (addr % 2 == 0)
-//                  write(0...N_TEMPS_PER_SIDE)
-//              else
-//                  write(N_TEMPS_PER_SIDE+1...2*N_TEMPS_PER_SIDE)
 
 
 void MonitorLedBlink(DbmsCtx* ctx){

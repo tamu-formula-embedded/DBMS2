@@ -167,12 +167,12 @@ void DbmsIter(DbmsCtx* ctx)
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
         StackUpdateVoltReadings(ctx);
-//        StackUpdateTempReadings(ctx); // todo: rename this function
+       StackUpdateTempReadings(ctx); // todo: rename this function
     }
 
     // if (PERIOD(ctx->stats.iters, 1, 0)) //todo: fix ts
     SendCellVoltages(ctx);
-    SendCellTemps(ctx);
+    // SendCellTemps(ctx);
     SendMetrics(ctx);
 
     //
