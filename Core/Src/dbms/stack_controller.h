@@ -13,7 +13,9 @@
 
 #define STACK_SEND_TIMEOUT          100
 #define STACK_RECV_TIMEOUT          100
-#define STACK_RX_BUFFER_SIZE        1024    //N_STACKDEVS * 6 + N_GROUPS
+#define STACK_RX_BUFFER_SIZE        1024    //N_STACKDEVS * 6 + N_GROUPS_PER_SIDE
+
+#define STACK_V_UV_PER_BIT      190.73
 
 #define RX_FRAME_SIZE(DATA_SIZE)    (DATA_SIZE + 6)
 
@@ -47,10 +49,13 @@ void StackAutoAddr(DbmsCtx* ctx);
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells);
 
 void StackSetupGpio(DbmsCtx* ctx);
+void StackUpdateTempReadings(DbmsCtx* ctx);
 
 void StackSetupVoltReadings(DbmsCtx* ctx);
 void StackUpdateVoltReadings(DbmsCtx* ctx);
 
 int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on);
+
+void MonitorLedBlink(DbmsCtx* ctx);
 
 #endif
