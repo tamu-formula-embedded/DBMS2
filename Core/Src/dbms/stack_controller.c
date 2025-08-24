@@ -280,9 +280,9 @@ void StackSetupGpio(DbmsCtx* ctx)
     SendStackFrameSetCrc(ctx, frame_gpio_configs, sizeof(frame_gpio_configs));
 
     // Setting up TSREF to active
-//    uint8_t frame_tsref_setup[] = {0xB0, 0x03, 0x0A, 0x01, 0x00, 0x00};
-//    SendStackFrameSetCrc(ctx, frame_tsref_setup, sizeof(frame_tsref_setup));
-    // DelayUs(10);
+    uint8_t frame_tsref_setup[] = {0xB0, 0x03, 0x0A, 0x01, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, frame_tsref_setup, sizeof(frame_tsref_setup));
+    DelayUs(ctx, 10);
 }
 
 
@@ -359,21 +359,20 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
         if (addr >= N_SIDES) continue;              // throw some error here
 
         if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
-           	CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+//           	CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+        	for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+			{
+				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
+							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
+
+				ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0;    // floating mV
+
+			}
         }
         else {
-            CanLog(ctx, "Unmtched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+            CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
             ctx->stats.n_rx_stack_bad_crcs++;
         }
-        
-        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
-        {
-            uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-                         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);     
-            
-            ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0;    // floating mV
-
-        } 
     }
 }
 
@@ -388,31 +387,40 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
     // Receive response frame
     size_t data_size = N_TEMPS_PER_SIDE * sizeof(uint16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
-    static uint8_t rx_frame[1024*4];
+    static uint8_t rx_frame[1024];
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, expected_rx_size, STACK_RECV_TIMEOUT)) != 0){
         //Error
     }
     RxStackFrame rx_frames[N_MONITORS];
     FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
-    int c = 0;
     // Store data into cell_states->temps
+    uint8_t addr;
+    uint16_t kcrc;
     for (int i = 0; i < N_MONITORS; i++){
-//        memcpy_eswap2(ctx->cell_states[i].temps, rx_frames[i].data, data_size);
-//        uint8_t addr = rx_frames[i].dev_addr - 1;
-//        CanLog(ctx, "a %d\n", addr);
-        c++;
+        if (rx_frames[i].dev_addr == 0) continue;   // this is myself
+        addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast
+        if (addr >= N_MONITORS) continue;            // throw some error here
+        if (addr % 2 == 0) continue;                // skip the odds
+        addr = (addr / 2) + 1;                               // addr now in side space
+        if (addr >= N_SIDES) continue;              // throw some error here
 
-        for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++)
-        {
+        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
+//           	CanLog(ctx, "Temps Matched %X != %X Addr %d, %d and %X\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr, rx_frames[i].data[0]);
+        	for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++)
+			{
+				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
+							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
 
-            uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8) 
-                         + (rx_frames[i].data[j * sizeof(int16_t) + 1]);    
-            
-            ctx->cell_states[i].temps[j] = (float)raw; // todo: conversion
-        } 
+				ctx->cell_states[addr].temps[j] = (float)raw * 1000.0;    // floating mV
+				CanLog(ctx, "%d mV\n", ctx->cell_states[addr].temps[j]);
+			}
+        }
+        else {
+            CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+            ctx->stats.n_rx_stack_bad_crcs++;
+        }
     }
-//    CanLog(ctx, "c %d", c);
 }
 
 int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
