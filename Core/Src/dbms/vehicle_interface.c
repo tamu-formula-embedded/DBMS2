@@ -303,14 +303,14 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
     SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
 
-    SendMetric(ctx, 4, ctx->isense.current_ma);
-    SendMetric(ctx, 5, ctx->isense.voltage1_mv);
+    SendMetric(ctx, 4, (int32_t)(ctx->isense.current_ma * 1000));
+    SendMetric(ctx, 5, (int32_t)(ctx->isense.voltage1_mv * 1000));
 
-    SendMetric(ctx, 6, ctx->isense.voltage2_mv);
-    SendMetric(ctx, 7, ctx->isense.voltage3_mv);
-    SendMetric(ctx, 8, ctx->isense.power_w);
-    SendMetric(ctx, 9, ctx->isense.charge_as);
-    SendMetric(ctx, 10, ctx->isense.energy_wh);
+    SendMetric(ctx, 6, 0);
+    SendMetric(ctx, 7, 0);
+    SendMetric(ctx, 8, (int32_t)ctx->isense.power_w);
+    SendMetric(ctx, 9, (int32_t)ctx->isense.charge_as);
+    SendMetric(ctx, 10, (int32_t)ctx->isense.energy_wh);
 
     SendMetric(ctx, 11, ctx->stats.n_tx_can_fail);
     SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_timeout);
@@ -319,4 +319,47 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 14, ctx->stats.end_delay);
 
     return 0;
+}
+
+void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time)
+{
+    static uint8_t frame_set_stop_mode[8] = {0x34, 1, 0, 0, 0, 0, 0, 0};
+    static uint8_t frame_set_run_mode[8] = {0x34, 1, 1, 0, 0, 0, 0, 0};
+    static uint8_t frame_set_metric_cycle[8] = {0x20, 2, 0, 0, 0, 0, 0, 0};
+    frame_set_metric_cycle[2] = (cycle_time & 0xFF00) >> 8;
+    frame_set_metric_cycle[3] = (cycle_time & 0x00FF) >> 0;
+
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_stop_mode);
+    HAL_Delay(1);
+
+    frame_set_metric_cycle[0] = 0x21;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+    frame_set_metric_cycle[0] = 0x22;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+    frame_set_metric_cycle[0] = 0x25;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+    frame_set_metric_cycle[0] = 0x26;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+    frame_set_metric_cycle[0] = 0x27;
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
+
+    HAL_Delay(1);
+    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_run_mode);
+    HAL_Delay(1);
+}
+
+uint64_t UnpackCurrentSensorData(uint8_t* data) // expectes >=6 bytes
+{
+    // todo: move this to another file
+    // logic is:
+    //  for (int i = 0; i < n; i++)
+    //      res |= (data[i] << (n-i-1*8));
+    uint64_t res = 0;
+    res |= ((uint64_t)data[0] << 5*8);
+    res |= ((uint64_t)data[1] << 4*8);
+    res |= ((uint64_t)data[2] << 3*8);
+    res |= ((uint64_t)data[3] << 2*8);
+    res |= ((uint64_t)data[4] << 1*8);
+    res |= ((uint64_t)data[5] << 0*8);
+    return res;
 }

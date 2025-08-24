@@ -48,6 +48,10 @@ void DbmsInit(DbmsCtx* ctx)
         ctx->led_state = LED_ERROR;
         return;
     }
+
+    HAL_Delay(10);
+    ConfigCurrentSensor(ctx, 10);
+
     // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
     ctx->led_state = LED_IDLE;
 
@@ -193,21 +197,7 @@ void DbmsIter(DbmsCtx* ctx)
     HAL_Delay(20);  // ^ todo: fix all this
 }
 
-uint64_t UnpackCurrentSensorData(uint8_t* data) // expectes >=6 bytes
-{
-    // todo: move this to another file
-    // logic is:
-    //  for (int i = 0; i < n; i++)
-    //      res |= (data[i] << (n-i-1*8));
-    uint64_t res = 0;
-    res |= ((uint64_t)data[0] << 5*8);
-    res |= ((uint64_t)data[1] << 4*8);
-    res |= ((uint64_t)data[2] << 3*8);
-    res |= ((uint64_t)data[3] << 2*8);
-    res |= ((uint64_t)data[4] << 1*8);
-    res |= ((uint64_t)data[5] << 0*8);
-    return res;
-}
+
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
@@ -234,25 +224,19 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             }
             break;
         case CANID_ISENSE_CURRENT:
-            ctx->isense.current_ma = UnpackCurrentSensorData(rx_data);
+            ctx->isense.current_ma = (UnpackCurrentSensorData(rx_data) / 1000.0);
             break;
         case CANID_ISENSE_VOLTAGE1:
-            ctx->isense.voltage1_mv = UnpackCurrentSensorData(rx_data);
-            break;
-        case CANID_ISENSE_VOLTAGE2:
-            ctx->isense.voltage2_mv = UnpackCurrentSensorData(rx_data);
-            break;
-        case CANID_ISENSE_VOLTAGE3:
-            ctx->isense.voltage3_mv = UnpackCurrentSensorData(rx_data);
+            ctx->isense.voltage1_mv = (UnpackCurrentSensorData(rx_data) / 1000.0);
             break;
         case CANID_ISENSE_POWER:
-            ctx->isense.power_w = UnpackCurrentSensorData(rx_data);
+            ctx->isense.power_w = (float)UnpackCurrentSensorData(rx_data);
             break;
         case CANID_ISENSE_CHARGE:
-            ctx->isense.charge_as = UnpackCurrentSensorData(rx_data);
+            ctx->isense.charge_as = (float)UnpackCurrentSensorData(rx_data);
             break;
         case CANID_ISENSE_ENERGY:
-            ctx->isense.energy_wh = UnpackCurrentSensorData(rx_data);
+            ctx->isense.energy_wh = (float)UnpackCurrentSensorData(rx_data);
             break;
         default:
             ctx->stats.n_unmatched_can_frames++;

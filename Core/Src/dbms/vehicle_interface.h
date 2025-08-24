@@ -11,6 +11,8 @@
 #include "settings.h"
 #include "sched.h"
 
+#define CANID_ISENSE_COMMAND        0x411
+
 #define CANID_TX_HEARTBEAT          0x501
 #define CANID_CONSOLE_C0            0x502   // No compression 
 #define CANID_CONSOLE_C3            0x505   // Aggressive compression -- Huffman encoding
@@ -70,5 +72,8 @@ int SendMetrics(DbmsCtx* ctx);
 int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc);
 
 int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action);
+
+void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time);
+uint64_t UnpackCurrentSensorData(uint8_t* data);
 
 #endif

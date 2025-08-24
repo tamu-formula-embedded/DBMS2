@@ -92,13 +92,11 @@ typedef struct _DbmsCtx {
     } stats;
 
      struct {
-        uint64_t current_ma;
-        uint64_t voltage1_mv;
-        uint64_t voltage2_mv;
-        uint64_t voltage3_mv;
-        uint64_t power_w;
-        uint64_t charge_as;
-        uint64_t energy_wh;
+        double current_ma;
+        double voltage1_mv;
+        double power_w;
+        double charge_as;
+        double energy_wh;
     } isense; // current = I, sense = sensor?
 
     uint8_t     last_can_err;
