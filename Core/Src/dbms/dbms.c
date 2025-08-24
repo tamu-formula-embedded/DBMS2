@@ -223,24 +223,19 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             }
             break;
         case CANID_ISENSE_CURRENT:
-            ctx->isense.current_ma = (UnpackCurrentSensorData(rx_data) / 1000.0);
-            CanLog(ctx, "CANID_ISENSE_CURRENT\n");
+            ctx->isense.current_ma = (int32_t)UnpackCurrentSensorData(rx_data);
             break;
         case CANID_ISENSE_VOLTAGE1:
-            ctx->isense.voltage1_mv = (UnpackCurrentSensorData(rx_data) / 1000.0);
-            CanLog(ctx, "CANID_ISENSE_VOLTAGE1\n");
+            ctx->isense.voltage1_mv = (int32_t)UnpackCurrentSensorData(rx_data);
             break;
         case CANID_ISENSE_POWER:
-            ctx->isense.power_w = (float)UnpackCurrentSensorData(rx_data);
-            CanLog(ctx, "CANID_ISENSE_POWER\n");
+            ctx->isense.power_w = (int32_t)UnpackCurrentSensorData(rx_data);
             break;
         case CANID_ISENSE_CHARGE:
-            ctx->isense.charge_as = (float)UnpackCurrentSensorData(rx_data);
-            CanLog(ctx, "CANID_ISENSE_CHARGE\n");
+            ctx->isense.charge_as = (int32_t)UnpackCurrentSensorData(rx_data);
             break;
         case CANID_ISENSE_ENERGY:
-            ctx->isense.energy_wh = (float)UnpackCurrentSensorData(rx_data);
-            CanLog(ctx, "CANID_ISENSE_ENERGY\n");
+            ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
             break;
         default:
             ctx->stats.n_unmatched_can_frames++;
