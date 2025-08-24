@@ -9,8 +9,8 @@ from ipc import SerialIpcReader
 
 N_SEGMENTS = 1
 N_MONITORS_PER_SEG = 2
-N_GROUPS = 10
-N_TEMPS = 8
+N_GROUPS_PER_SIDE = 10
+N_TEMPS_PER_SIDE = 8
 N_STACKDEVS = (N_SEGMENTS * N_MONITORS_PER_SEG + 1)
 
 FRAME_WAKE = [ b'\x00', b'\x90\x00\x03\t \x13\x95' ]
@@ -20,7 +20,7 @@ FRAME_START_ADC = [ b'\xd0\x03\r\x06Lv' ]
 
 def form_vresp(sdev):
     vresp = b'\x01' + (sdev).to_bytes(1, byteorder='big') + b'\x00\x00'
-    for i in range(N_GROUPS):
+    for i in range(N_GROUPS_PER_SIDE):
         vresp += (i+1).to_bytes(2, byteorder='big')
     return vresp + b'\x00\x00'
         

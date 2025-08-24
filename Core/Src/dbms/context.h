@@ -6,16 +6,19 @@
 
 #include "common.h"
 
-#define ITER_TARGET_HZ 10
+#define ITER_TARGET_HZ 25
 
 // USER DEFINED UNIQUE TO EACH BATTERY
 #define N_SEGMENTS 1
-#define N_MONITORS_PER_SEG 4
-#define N_GROUPS 14
-#define N_TEMPS 14
+#define N_SIDES_PER_SEG 2
+#define N_MONITORS_PER_SIDE 2
+#define N_GROUPS_PER_SIDE 14
+#define N_TEMPS_PER_MONITOR 7
 // DONT CHANGE AFTER THIS
 
-#define N_MONITORS (N_SEGMENTS * N_MONITORS_PER_SEG)
+#define N_TEMPS_PER_SIDE (N_MONITORS_PER_SIDE * N_TEMPS_PER_MONITOR)
+#define N_SIDES (N_SEGMENTS * N_SIDES_PER_SEG)
+#define N_MONITORS (N_SEGMENTS * N_SIDES_PER_SEG * N_MONITORS_PER_SIDE)
 #define N_STACKDEVS (N_MONITORS + 1)    // technically "bus devs"
 
 #define ADDR_BCAST_TO_STACK(BCAST_ADDR) (BCAST_ADDR - 1)
@@ -45,8 +48,8 @@ typedef struct _HwCtx {
 
 
 typedef struct _CellMonitorState {
-    uint16_t voltages[N_GROUPS];
-    uint16_t temps[N_TEMPS];
+    float voltages[N_GROUPS_PER_SIDE];
+    float temps[N_TEMPS_PER_SIDE];
 } CellMonitorState;
 
 // fwd definition -- settings.h
@@ -66,27 +69,45 @@ typedef struct _DbmsCtx {
 
     DbmsSettings*   settings;         // struct fwd defs has to be a ptr
 
-    CellMonitorState cell_states[N_MONITORS];
+    CellMonitorState cell_states[N_SIDES];
 
     uint64_t    last_rx_heartbeat;
     uint64_t    iter_start_us;
     uint64_t    iter_end_us;
+    uint64_t    M_LED_BLINK_TS;
 
     struct {
         uint64_t iters;
 
-#define N_HISTORIC_LOOPTIMES 16
-        wrap_queue_t looptimes_q;
-        uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
+// #define N_HISTORIC_LOOPTIMES 16
+//         wrap_queue_t looptimes_q;
+//         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
 
         uint32_t n_tx_can_frames;
         uint32_t n_rx_can_frames;
         uint32_t n_unmatched_can_frames;
+        uint32_t n_tx_can_drop_timeout;
+        uint32_t n_tx_can_fail;
 
-        uint32_t n_overruns;
+        uint32_t looptime;
+        uint32_t end_delay;
+
+        uint32_t n_rx_stack_frames;
+        uint32_t n_rx_stack_bad_crcs;
+        // uint32_t n_overruns;
     } stats;
 
+     struct {
+        int32_t current_ma;
+        int32_t voltage1_mv;
+        int32_t power_w;
+        int32_t charge_as;
+        int32_t energy_wh;
+    } isense; // current = I, sense = sensor?
+
+    uint8_t     last_can_err;
     bool        need_to_sync_settings;
+    bool        M_LED_ON;
 
 } DbmsCtx;
 
