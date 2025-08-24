@@ -74,7 +74,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     while (HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) == 0U) {
         if (waited >= CAN_TX_TIMEOUT_US) {
             ctx->stats.n_tx_can_drop_timeout++;
-            ctx->led_state = LED_COMM_ERROR;
+            // ctx->led_state = LED_COMM_ERROR; // not worth a locking error 
             return HAL_TIMEOUT;
         }
         DelayUs(ctx, CAN_TX_WAIT_US);
