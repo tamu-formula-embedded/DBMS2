@@ -1,35 +1,36 @@
+//  
+//  Copyright (c) Texas A&M University.
+//  
 #ifndef _FAULT_HANDLER_H_
 #define _FAULT_HANDLER_H_
 
 #include "common.h"
 #include "context.h"
 
-// Fault types as bit positions for bitmask
+/*
+ *  Fault types, ordinal determines position in bitmask
+ */
 typedef enum {
-    FAULT_VOLTAGE_OVER = 0,      // Cell voltage too high
-    FAULT_VOLTAGE_UNDER = 1,     // Cell voltage too low
-    FAULT_TEMP_OVER = 2,         // Temperature too high
-    FAULT_TEMP_UNDER = 3,        // Temperature too low
-    FAULT_CURRENT_OVER = 4,      // Current too high (discharge)
-    FAULT_CURRENT_UNDER = 5,     // Current too low (charge)
-    FAULT_PACK_VOLTAGE_OVER = 6, // Pack voltage too high
-    FAULT_PACK_VOLTAGE_UNDER = 7,// Pack voltage too low
-    // ...
-    FAULT_TYPE_COUNT             // Total number of fault types
+    FAULT_VOLTAGE_OVER = 0,      
+    FAULT_VOLTAGE_UNDER = 1,     
+    FAULT_TEMP_OVER = 2,         
+    FAULT_TEMP_UNDER = 3,        
+    FAULT_CURRENT_OVER = 4,      
+    FAULT_CURRENT_UNDER = 5,     
+    FAULT_PACK_VOLTAGE_OVER = 6, 
+    FAULT_PACK_VOLTAGE_UNDER = 7,
+    FAULT_TYPE_COUNT             // Total number of fault types -- should be last
 } FaultType;
+
+void SetFault(DbmsCtx* ctx, FaultType fault);
+void ClearFault(DbmsCtx* ctx, FaultType fault);
+bool HasFault(DbmsCtx* ctx, FaultType fault);
+#define HAS_ANY_FAULTS(CTX) (((DbmsCtx*)CTX)->fault_mask != 0)
+#define CLEAR_ALL_FAULTS(CTX) (((DbmsCtx*)CTX)->fault_mask = 0)
 
 // Fault checking functions
 void CheckVoltageFaults(DbmsCtx* ctx);
 void CheckTemperatureFaults(DbmsCtx* ctx);
 void CheckCurrentFaults(DbmsCtx* ctx);
-void CheckAllFaults(DbmsCtx* ctx);
 
-// Fault utility functions
-void SetFault(DbmsCtx* ctx, FaultType fault);
-void ClearFault(DbmsCtx* ctx, FaultType fault);
-bool HasFault(DbmsCtx* ctx, FaultType fault);
-bool HasAnyFaults(DbmsCtx* ctx);
-uint32_t GetFaultMask(DbmsCtx* ctx);
-void ClearAllFaults(DbmsCtx* ctx);
-
-#endif // _FAULT_HANDLER_H_
+#endif 
