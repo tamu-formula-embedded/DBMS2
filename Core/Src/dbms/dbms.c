@@ -103,12 +103,12 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
     // CanLog(ctx, "%d\n", GetSetting(ctx, MAX_GROUP_VOLTAGE));
+	// if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
+    // {
+	// 	ctx->led_state = LED_INIT;
+	// 	ProcessLedAction(ctx);
+	// }
 
-	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
-    {
-		ctx->led_state = LED_INIT;
-		ProcessLedAction(ctx);
-	}
     //
     //  Store the settings when required
     //
@@ -129,7 +129,6 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Let everybody know that we are alive
     //
-    
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
 
     //
@@ -155,45 +154,49 @@ void DbmsIter(DbmsCtx* ctx)
     else if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
         // on these states -- probably need to write to disk too
+        ctx->led_state = LED_INIT;
+		ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
     }
 
     //
-    //  Read information from the stack
+    //   Main State Dispatch
     //
     if (ctx->cur_state == DBMS_ACTIVE)
     {
-        // Need to look into this
-        // todo: will time out a few times before stack is 
-        //       correctly configed, fix this
+        //
+        //  Communicate with the stack
+        //
         StackUpdateVoltReadings(ctx);
-//       StackUpdateTempReadings(ctx);
+
+        //
+        //  Check fault conditions
+        //
+        CheckVoltageFaults(ctx);
+        CheckTemperatureFaults(ctx);
+        CheckCurrentFaults(ctx);
     }
 
-    // if (PERIOD(ctx->stats.iters, 1, 0)) //todo: fix ts
-    SendCellVoltages(ctx);
-    // SendCellTemps(ctx);
+    //
+    // Transmit important telemetry 
+    //
     SendMetrics(ctx);
-
-    //
-    //  Example usage: Turn off monitor chip
-    //
-    // ToggleAllMonitorChipLeds(ctx, false);
+    SendCellVoltages(ctx);
 
     //
 	//  Update the LEDs. Led state should be set every time the cur_state changes
 	//
     ProcessLedAction(ctx);
+    MonitorLedBlink(ctx);
 
+    //
+    //  Schedule the next loop
+    //
     ctx->iter_end_us = GetUs(ctx);
-
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
-
-    MonitorLedBlink(ctx);
-    // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
     // DelayUs(ctx, end_delay);
-    HAL_Delay(20);  // ^ todo: fix all this
+    HAL_Delay(5);  // ^ todo: fix all ts
 }
 
 
