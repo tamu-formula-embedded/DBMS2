@@ -74,7 +74,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     while (HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) == 0U) {
         if (waited >= CAN_TX_TIMEOUT_US) {
             ctx->stats.n_tx_can_drop_timeout++;
-            ctx->led_state = LED_COMM_ERROR;
+            // ctx->led_state = LED_COMM_ERROR; // not worth a locking error 
             return HAL_TIMEOUT;
         }
         DelayUs(ctx, CAN_TX_WAIT_US);
@@ -147,7 +147,7 @@ int SendCellVoltages(DbmsCtx* ctx)
     return 0; // todo: make a real return value
 }
 
-int SendCellTemps(DbmsCtx* ctx)        
+int SendCellTemps(DbmsCtx* ctx)
 {
      int status = 0;
     uint8_t  frame[8];
@@ -251,6 +251,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     cfg_set |= (rx_data[5] << 2*8);
     cfg_set |= (rx_data[6] << 1*8);
     cfg_set |= (rx_data[7] << 0*8);
+    // CanLog(ctx, "%d config_id\n", cfg_id);
 
 #ifdef ACK_CFG
     uint8_t ack_frame[] = { action, cfg_id, 0, 0, 0, 0, 0, 0 };
@@ -303,8 +304,8 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 4, ctx->isense.current_ma);
     SendMetric(ctx, 5, ctx->isense.voltage1_mv);
 
-    SendMetric(ctx, 6, 0);
-    SendMetric(ctx, 7, 0);
+    // SendMetric(ctx, 6, 0);
+    // SendMetric(ctx, 7, 0);
     SendMetric(ctx, 8, ctx->isense.power_w);
     SendMetric(ctx, 9, ctx->isense.charge_as);
     SendMetric(ctx, 10, ctx->isense.energy_wh);
@@ -317,6 +318,9 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 15, ctx->fault_mask);
     
+    SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
+    SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
+
     return 0;
 }
 

@@ -9,13 +9,14 @@
 #define ITER_TARGET_HZ 25
 
 // USER DEFINED UNIQUE TO EACH BATTERY
-#define N_SEGMENTS 4
+#define N_SEGMENTS 1
 #define N_SIDES_PER_SEG 2
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
-#define N_TEMPS_PER_SIDE 7
+#define N_TEMPS_PER_MONITOR 7
 // DONT CHANGE AFTER THIS
 
+#define N_TEMPS_PER_SIDE (N_MONITORS_PER_SIDE * N_TEMPS_PER_MONITOR)
 #define N_SIDES (N_SEGMENTS * N_SIDES_PER_SEG)
 #define N_MONITORS (N_SEGMENTS * N_SIDES_PER_SEG * N_MONITORS_PER_SIDE)
 #define N_STACKDEVS (N_MONITORS + 1)    // technically "bus devs"
@@ -90,6 +91,9 @@ typedef struct _DbmsCtx {
 
         uint32_t looptime;
         uint32_t end_delay;
+
+        uint32_t n_rx_stack_frames;
+        uint32_t n_rx_stack_bad_crcs;
         // uint32_t n_overruns;
     } stats;
 
