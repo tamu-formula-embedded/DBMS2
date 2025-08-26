@@ -11,6 +11,7 @@
 #include "settings.h"
 #include "sched.h"
 
+
 #define CANID_ISENSE_COMMAND        0x411
 
 #define CANID_TX_HEARTBEAT          0x501

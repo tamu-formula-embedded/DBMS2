@@ -168,12 +168,13 @@ void DbmsIter(DbmsCtx* ctx)
         //  Communicate with the stack
         //
         StackUpdateVoltReadings(ctx);
+        // StackUpdateTempReadings(ctx);
 
         //
         //  Check fault conditions
         //
         CheckVoltageFaults(ctx);
-        CheckTemperatureFaults(ctx);
+        // CheckTemperatureFaults(ctx);
         CheckCurrentFaults(ctx);
     }
 
@@ -181,7 +182,12 @@ void DbmsIter(DbmsCtx* ctx)
     // Transmit important telemetry 
     //
     SendMetrics(ctx);
-    SendCellVoltages(ctx);
+    if (ctx->iter_start_us - ctx->batch_telem_ts > 10000) 
+    {
+        ctx->batch_telem_ts = ctx->iter_start_us;
+        SendCellVoltages(ctx);
+        SendCellTemps(ctx);
+    }
 
     //
 	//  Update the LEDs. Led state should be set every time the cur_state changes

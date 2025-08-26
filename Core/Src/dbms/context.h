@@ -9,7 +9,7 @@
 #define ITER_TARGET_HZ 25
 
 // USER DEFINED UNIQUE TO EACH BATTERY
-#define N_SEGMENTS 1
+#define N_SEGMENTS 3
 #define N_SIDES_PER_SEG 2
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
@@ -75,6 +75,7 @@ typedef struct _DbmsCtx {
     uint64_t    iter_start_us;
     uint64_t    iter_end_us;
     uint64_t    M_LED_BLINK_TS;
+    uint64_t    batch_telem_ts;
 
     struct {
         uint64_t iters;
@@ -106,6 +107,7 @@ typedef struct _DbmsCtx {
     } isense; // current = I, sense = sensor?
 
     uint32_t    fault_mask;
+    uint16_t    can_log_ordering_index;
     uint8_t     last_can_err;
     bool        need_to_sync_settings;
     bool        M_LED_ON;

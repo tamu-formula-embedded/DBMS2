@@ -109,6 +109,7 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...)
         int chunk_size = (len - i >= 8) ? 8 : (len - i);
         memcpy(chunk, &buffer[i], chunk_size);
         CanTransmit(ctx, CANID_CONSOLE_C0, chunk);
+        DelayUs(ctx, 10);
     }
 }
 
@@ -137,7 +138,6 @@ int SendCellVoltages(DbmsCtx* ctx)
             frame[0] = (uint8_t)i;        // monitor id
             frame[1] = (uint8_t)j;        // group index (in uint16_t units)
 
-            // memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
             memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t));
 
             status = CanTransmit(ctx, CANID_CELLSTATE_VOLTS, frame);
@@ -153,7 +153,7 @@ int SendCellTemps(DbmsCtx* ctx)
     uint8_t  frame[8];
     uint16_t buffer[PAD_BUFFER_3(N_TEMPS_PER_SIDE)] = {0};
 
-    for (size_t i = 0; i < N_MONITORS; i++)
+    for (size_t i = 0; i < N_SIDES; i++)
     {
         for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++) 
         {
@@ -165,7 +165,7 @@ int SendCellTemps(DbmsCtx* ctx)
             frame[0] = (uint8_t)i;        // monitor id
             frame[1] = (uint8_t)j;        // group index (in uint16_t units)
 
-            memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
+            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t));
 
             status = CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame);
             if (status != 0) return status;
@@ -193,7 +193,7 @@ void FillShortModuleName(char* buffer, size_t sz, char* raw)
 int CanReportFault(DbmsCtx* ctx, char* fn, int line_num, int err_code)
 {
     // printf("%s %d\n", fn, line_num);
-    ctx->led_state = LED_ERROR;
+    ctx->led_state = LED_ERROR; // todo: why?
 
     // TODO: add forward fn -> the last /
 
