@@ -431,6 +431,57 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
 //            ctx->stats.n_rx_stack_bad_crcs++;
 //        }
 //    }
+    static uint8_t rx_buffer_temp_readings[1024*4];
+
+    int status = 0;
+    uint8_t FRAME_TEMP_MEASUREMENTS[] = { 0xA0, 0x05, 0x8E, N_TEMPS_PER_MONITOR*2-1, 0x00, 0x00 };
+
+    if ((status = SendStackFrameSetCrc(ctx, FRAME_TEMP_MEASUREMENTS, sizeof(FRAME_TEMP_MEASUREMENTS))) != 0)
+    {
+        CAN_REPORT_FAULT(ctx, status);
+    }
+
+    size_t data_size = N_TEMPS_PER_MONITOR * sizeof(int16_t);
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
+    //                 header+crc ^         ^ readings * 2 bytes each    
+
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_temp_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
+    {
+        // CAN_REPORT_FAULT(ctx, status);
+        // ^ throwing all the time in simulator
+    }
+
+    RxStackFrame rx_frames[N_STACKDEVS];
+    FillStackFrames(rx_frames, rx_buffer_temp_readings, data_size, N_STACKDEVS);
+    
+    uint8_t addr, offset;
+    uint16_t kcrc;
+
+    for (size_t i = 0; i < N_STACKDEVS; i++)
+    {
+        ctx->stats.n_rx_stack_frames++;
+        if (rx_frames[i].dev_addr == 0) continue;   // this is myself
+        addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast   
+        if (addr >= N_MONITORS) continue;            // throw some error here
+        if (addr >= N_SIDES) continue;              // throw some error here
+        offset = addr % 2 == 0 ? 0 : (N_TEMPS_PER_MONITOR);                // offset for temperatures one each side
+        addr /= 2;                                  // addr now in side space
+
+        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
+          	// CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+        	for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++)
+			{
+				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
+							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
+
+				ctx->cell_states[addr].temps[j+offset] = (float) raw / 1000.0;    // floating mV conversion 152.59 uV/LSB
+			}
+        }
+        else {
+            // CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+            ctx->stats.n_rx_stack_bad_crcs++;
+        }
+    }
 }
 
 int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
