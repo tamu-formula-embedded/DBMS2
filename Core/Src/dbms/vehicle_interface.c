@@ -113,8 +113,6 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...)
     }
 }
 
-
-
 #define PAD_BUFFER(SZ, K) (((SZ / K) + 1) * K)
 #define PAD_BUFFER_3(SZ) (PAD_BUFFER(SZ, 3))
 

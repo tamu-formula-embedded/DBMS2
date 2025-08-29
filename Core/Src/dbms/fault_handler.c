@@ -72,3 +72,13 @@ void CheckCurrentFaults(DbmsCtx* ctx)
         SetFault(ctx, FAULT_CURRENT_OVER);
     }
 }
+
+
+void ThrowHardFault(DbmsCtx* ctx)
+{
+    if (HAS_ANY_FAULTS(ctx)) 
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+    else 
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+}
+
