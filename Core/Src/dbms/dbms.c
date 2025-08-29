@@ -25,6 +25,11 @@ void DbmsInit(DbmsCtx* ctx)
 
     // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
+    if ((status = LoadStoredObject(ctx, EEPROM_FAULT_MASK_ADDR, &ctx->fault_mask, sizeof(ctx->fault_mask))))
+    {
+        // todo: check an error here
+    }
+
     if ((status = LoadSettings(ctx)) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
@@ -76,6 +81,10 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx);     // todo: rn start
 
+   if ((status = LoadStoredObject(ctx, EEPROM_FAULT_MASK_ADDR, &ctx->fault_mask, sizeof(ctx->fault_mask))))
+    {
+        // todo: check an error here
+    }
     return status;
 }
 
@@ -183,6 +192,7 @@ void DbmsIter(DbmsCtx* ctx)
     //  If there is a hard fault we are shutting off the car
     //
     ThrowHardFault(ctx);
+    SaveStoredObject(ctx, EEPROM_FAULT_MASK_ADDR, &ctx->fault_mask, sizeof(ctx->fault_mask));
 
     //
     //  Transmit important telemetry 
