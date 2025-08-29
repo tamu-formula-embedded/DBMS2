@@ -178,6 +178,8 @@ void DbmsIter(DbmsCtx* ctx)
         //
         StackUpdateVoltReadings(ctx);
         // StackUpdateTempReadings(ctx);
+        HAL_Delay(8);
+        StackUpdateFaultReadings(ctx);
 
         //
         //  Check fault conditions
@@ -218,7 +220,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     // DelayUs(ctx, end_delay);
-    HAL_Delay(5);  // ^ todo: fix all ts
+    HAL_Delay(8);  // ^ todo: fix all ts
 }
 
 

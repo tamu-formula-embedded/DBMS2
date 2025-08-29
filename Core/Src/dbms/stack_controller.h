@@ -58,4 +58,6 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on);
 
 void MonitorLedBlink(DbmsCtx* ctx);
 
+void StackUpdateFaultReadings(DbmsCtx* ctx);
+
 #endif

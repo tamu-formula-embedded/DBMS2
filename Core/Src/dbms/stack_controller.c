@@ -497,3 +497,66 @@ void MonitorLedBlink(DbmsCtx* ctx){
     }
 
 }
+
+
+
+void StackUpdateFaultReadings(DbmsCtx* ctx)
+{
+    static uint8_t rx_fault_readings[1024*4];
+    size_t data_size = 1 * sizeof(uint8_t);
+
+    int status = 0; // size is 1 lol
+    uint8_t FRAME_POLL_FAULT_SUMMARY[] = { 0xA0, 0x21, 0x00, data_size-1, 0x00, 0x00 };
+
+    if ((status = SendStackFrameSetCrc(ctx, FRAME_POLL_FAULT_SUMMARY, sizeof(FRAME_POLL_FAULT_SUMMARY))) != 0)
+    {
+        CAN_REPORT_FAULT(ctx, status);
+    }
+
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
+
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_fault_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
+    {
+        // CAN_REPORT_FAULT(ctx, status);
+        // ^ throwing all the time in simulator
+        // return;
+        // CanLog(ctx, "BadV %d\n", status);
+    }
+
+    RxStackFrame rx_frames[N_STACKDEVS];
+    FillStackFrames(rx_frames, rx_fault_readings, data_size, N_STACKDEVS);
+    uint16_t addr;//, kcrc;
+
+    for (size_t i = 0; i < N_STACKDEVS; i++)
+    {
+        ctx->stats.n_rx_stack_frames++;
+
+        if (rx_frames[i].dev_addr == 0) continue;   // this is myself
+        addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast   
+
+        CanLog(ctx, "F %d->%d\n", addr, *rx_frames[i].data);
+        DelayUs(ctx, 50);
+
+    //     if (addr >= N_MONITORS) continue;            // throw some error here
+    //     if (addr % 2 == 1) continue;                // skip the odds
+    //     addr /= 2;                                  // addr now in side space
+    //     if (addr >= N_SIDES) continue;              // throw some error here
+
+    //     if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
+    //       	// CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+    //     	for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+	// 		{
+	// 			uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
+	// 						 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
+
+	// 			ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0;    // floating mV
+
+	// 		}
+    //     }
+    //     else {
+    //        // CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+    //         ctx->stats.n_rx_stack_bad_crcs++;
+    //     }
+    // }
+    }
+}
