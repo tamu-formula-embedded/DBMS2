@@ -178,8 +178,14 @@ void DbmsIter(DbmsCtx* ctx)
         CheckCurrentFaults(ctx);
     }
 
+
+    // 
+    //  If there is a hard fault we are shutting off the car
     //
-    // Transmit important telemetry 
+    ThrowHardFault(ctx);
+
+    //
+    //  Transmit important telemetry 
     //
     SendMetrics(ctx);
     if (ctx->iter_start_us - ctx->batch_telem_ts > 10000) 
@@ -245,6 +251,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             break;
         case CANID_ISENSE_ENERGY:
             ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_RX_CLEAR_FAULTS:
+            CLEAR_ALL_FAULTS(ctx);
             break;
         default:
             ctx->stats.n_unmatched_can_frames++;

@@ -33,4 +33,7 @@ void CheckVoltageFaults(DbmsCtx* ctx);
 void CheckTemperatureFaults(DbmsCtx* ctx);
 void CheckCurrentFaults(DbmsCtx* ctx);
 
+// Comm to the GPIO
+void ThrowHardFault(DbmsCtx* ctx);
+
 #endif 

@@ -37,6 +37,7 @@
 #define CANID_RX_HEARTBEAT          0x541
 #define CANID_RX_SET_CONFIG         0x542
 #define CANID_RX_GET_CONFIG         0x543
+#define CANID_RX_CLEAR_FAULTS       0x544
 
 #define ERR_CFGID_NOT_FOUND         54
 
