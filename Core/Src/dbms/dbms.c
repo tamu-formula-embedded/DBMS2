@@ -173,6 +173,8 @@ void DbmsIter(DbmsCtx* ctx)
         //
         //  Check fault conditions
         //
+        CLEAR_ALL_FAULTS(ctx);
+
         CheckVoltageFaults(ctx);
         // CheckTemperatureFaults(ctx);
         CheckCurrentFaults(ctx);

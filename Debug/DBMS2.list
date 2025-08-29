@@ -21,9 +21,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
   8 .data         000002b0  20000000  08008cb0  0000a000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  9 .bss          0000166c  200002b0  08008f60  0000a2b0  2**3
+  9 .bss          0000158c  200002b0  08008f60  0000a2b0  2**3
                   ALLOC
- 10 ._user_heap_stack 00000604  2000191c  08008f60  0000a91c  2**0
+ 10 ._user_heap_stack 00000604  2000183c  08008f60  0000a83c  2**0
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  0000a2b0  2**0
                   CONTENTS, READONLY
@@ -1097,7 +1097,7 @@ void DbmsAlloc(DbmsCtx* ctx)
  8000de8:	639a      	str	r2, [r3, #56]	@ 0x38
     memset(&ctx->stats, 0, sizeof(ctx->stats));
  8000dea:	687b      	ldr	r3, [r7, #4]
- 8000dec:	f503 7342 	add.w	r3, r3, #776	@ 0x308
+ 8000dec:	f503 730a 	add.w	r3, r3, #552	@ 0x228
  8000df0:	2230      	movs	r2, #48	@ 0x30
  8000df2:	2100      	movs	r1, #0
  8000df4:	4618      	mov	r0, r3
@@ -1137,7 +1137,7 @@ void DbmsInit(DbmsCtx* ctx)
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
  8000e22:	6878      	ldr	r0, [r7, #4]
- 8000e24:	f000 fc73 	bl	800170e <LoadSettings>
+ 8000e24:	f000 fc77 	bl	8001716 <LoadSettings>
  8000e28:	60f8      	str	r0, [r7, #12]
  8000e2a:	68fb      	ldr	r3, [r7, #12]
  8000e2c:	2b00      	cmp	r3, #0
@@ -1159,11 +1159,11 @@ void DbmsInit(DbmsCtx* ctx)
             // be updated enough to be ok
             LoadFallbackSettings(ctx);
  8000e42:	6878      	ldr	r0, [r7, #4]
- 8000e44:	f000 fc84 	bl	8001750 <LoadFallbackSettings>
+ 8000e44:	f000 fc88 	bl	8001758 <LoadFallbackSettings>
             ctx->need_to_sync_settings = true;          // queue up a write
  8000e48:	687b      	ldr	r3, [r7, #4]
  8000e4a:	2201      	movs	r2, #1
- 8000e4c:	f883 2353 	strb.w	r2, [r3, #851]	@ 0x353
+ 8000e4c:	f883 2273 	strb.w	r2, [r3, #627]	@ 0x273
         }
         else    {}  // fatal error
     }
@@ -1235,7 +1235,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
 
     if ((status = StackWake(ctx)) != 0)
  8000eb0:	6878      	ldr	r0, [r7, #4]
- 8000eb2:	f000 fd4f 	bl	8001954 <StackWake>
+ 8000eb2:	f000 fd53 	bl	800195c <StackWake>
  8000eb6:	60f8      	str	r0, [r7, #12]
  8000eb8:	68fb      	ldr	r3, [r7, #12]
  8000eba:	2b00      	cmp	r3, #0
@@ -1266,17 +1266,17 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
 
     StackAutoAddr(ctx);
  8000ee2:	6878      	ldr	r0, [r7, #4]
- 8000ee4:	f000 fe68 	bl	8001bb8 <StackAutoAddr>
+ 8000ee4:	f000 fe6c 	bl	8001bc0 <StackAutoAddr>
     StackSetNumActiveCells(ctx, 0x0A);
  8000ee8:	210a      	movs	r1, #10
  8000eea:	6878      	ldr	r0, [r7, #4]
- 8000eec:	f000 fe86 	bl	8001bfc <StackSetNumActiveCells>
+ 8000eec:	f000 fe8a 	bl	8001c04 <StackSetNumActiveCells>
     StackSetupGpio(ctx);
  8000ef0:	6878      	ldr	r0, [r7, #4]
- 8000ef2:	f000 fea1 	bl	8001c38 <StackSetupGpio>
+ 8000ef2:	f000 fea5 	bl	8001c40 <StackSetupGpio>
     StackSetupVoltReadings(ctx);     // todo: rn start
  8000ef6:	6878      	ldr	r0, [r7, #4]
- 8000ef8:	f000 feca 	bl	8001c90 <StackSetupVoltReadings>
+ 8000ef8:	f000 fece 	bl	8001c98 <StackSetupVoltReadings>
 
     return status;
  8000efc:	68fb      	ldr	r3, [r7, #12]
@@ -1301,7 +1301,7 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
  8000f16:	60fb      	str	r3, [r7, #12]
     if ((status = StackShutdown(ctx)) != 0)
  8000f18:	6878      	ldr	r0, [r7, #4]
- 8000f1a:	f000 fd57 	bl	80019cc <StackShutdown>
+ 8000f1a:	f000 fd5b 	bl	80019d4 <StackShutdown>
  8000f1e:	60f8      	str	r0, [r7, #12]
  8000f20:	68fb      	ldr	r3, [r7, #12]
  8000f22:	2b00      	cmp	r3, #0
@@ -1358,21 +1358,21 @@ void DbmsIter(DbmsCtx* ctx)
  8000f6c:	61fb      	str	r3, [r7, #28]
     ctx->stats.iters++;
  8000f6e:	697b      	ldr	r3, [r7, #20]
- 8000f70:	e9d3 23c2 	ldrd	r2, r3, [r3, #776]	@ 0x308
+ 8000f70:	e9d3 238a 	ldrd	r2, r3, [r3, #552]	@ 0x228
  8000f74:	1c51      	adds	r1, r2, #1
  8000f76:	6039      	str	r1, [r7, #0]
  8000f78:	f143 0300 	adc.w	r3, r3, #0
  8000f7c:	607b      	str	r3, [r7, #4]
  8000f7e:	697b      	ldr	r3, [r7, #20]
  8000f80:	e9d7 1200 	ldrd	r1, r2, [r7]
- 8000f84:	e9c3 12c2 	strd	r1, r2, [r3, #776]	@ 0x308
+ 8000f84:	e9c3 128a 	strd	r1, r2, [r3, #552]	@ 0x228
     ctx->iter_start_us = GetUs(ctx);
  8000f88:	6978      	ldr	r0, [r7, #20]
- 8000f8a:	f000 fafd 	bl	8001588 <GetUs>
+ 8000f8a:	f000 fb01 	bl	8001590 <GetUs>
  8000f8e:	4602      	mov	r2, r0
  8000f90:	460b      	mov	r3, r1
  8000f92:	6979      	ldr	r1, [r7, #20]
- 8000f94:	e9c1 23ba 	strd	r2, r3, [r1, #744]	@ 0x2e8
+ 8000f94:	e9c1 2382 	strd	r2, r3, [r1, #520]	@ 0x208
 	// }
 
     //
@@ -1380,7 +1380,7 @@ void DbmsIter(DbmsCtx* ctx)
     //
     if (ctx->need_to_sync_settings)
  8000f98:	697b      	ldr	r3, [r7, #20]
- 8000f9a:	f893 3353 	ldrb.w	r3, [r3, #851]	@ 0x353
+ 8000f9a:	f893 3273 	ldrb.w	r3, [r3, #627]	@ 0x273
  8000f9e:	2b00      	cmp	r3, #0
  8000fa0:	d013      	beq.n	8000fca <DbmsIter+0x6a>
     {
@@ -1390,7 +1390,7 @@ void DbmsIter(DbmsCtx* ctx)
         // even though the controller should be on
         if ((status = SaveSettings(ctx)) != HAL_OK)
  8000fa2:	6978      	ldr	r0, [r7, #20]
- 8000fa4:	f000 fbc3 	bl	800172e <SaveSettings>
+ 8000fa4:	f000 fbc7 	bl	8001736 <SaveSettings>
  8000fa8:	61f8      	str	r0, [r7, #28]
  8000faa:	69fb      	ldr	r3, [r7, #28]
  8000fac:	2b00      	cmp	r3, #0
@@ -1399,7 +1399,7 @@ void DbmsIter(DbmsCtx* ctx)
             CAN_REPORT_FAULT(ctx, status);
  8000fb0:	69fb      	ldr	r3, [r7, #28]
  8000fb2:	227b      	movs	r2, #123	@ 0x7b
- 8000fb4:	4958      	ldr	r1, [pc, #352]	@ (8001118 <DbmsIter+0x1b8>)
+ 8000fb4:	495a      	ldr	r1, [pc, #360]	@ (8001120 <DbmsIter+0x1c0>)
  8000fb6:	6978      	ldr	r0, [r7, #20]
  8000fb8:	f001 fc28 	bl	800280c <CanReportFault>
             ctx->led_state = LED_ERROR;
@@ -1410,7 +1410,7 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->need_to_sync_settings = false;
  8000fc2:	697b      	ldr	r3, [r7, #20]
  8000fc4:	2200      	movs	r2, #0
- 8000fc6:	f883 2353 	strb.w	r2, [r3, #851]	@ 0x353
+ 8000fc6:	f883 2273 	strb.w	r2, [r3, #627]	@ 0x273
     }
 
     //
@@ -1438,14 +1438,14 @@ void DbmsIter(DbmsCtx* ctx)
  8000fe8:	60bb      	str	r3, [r7, #8]
  8000fea:	60fa      	str	r2, [r7, #12]
  8000fec:	697b      	ldr	r3, [r7, #20]
- 8000fee:	e9d3 23b8 	ldrd	r2, r3, [r3, #736]	@ 0x2e0
+ 8000fee:	e9d3 2380 	ldrd	r2, r3, [r3, #512]	@ 0x200
  8000ff2:	68b9      	ldr	r1, [r7, #8]
  8000ff4:	ebb1 0802 	subs.w	r8, r1, r2
  8000ff8:	68f9      	ldr	r1, [r7, #12]
  8000ffa:	eb61 0903 	sbc.w	r9, r1, r3
  8000ffe:	2101      	movs	r1, #1
  8001000:	6978      	ldr	r0, [r7, #20]
- 8001002:	f000 fb4f 	bl	80016a4 <GetSetting>
+ 8001002:	f000 fb53 	bl	80016ac <GetSetting>
  8001006:	4603      	mov	r3, r0
  8001008:	2200      	movs	r2, #0
  800100a:	469a      	mov	sl, r3
@@ -1503,7 +1503,7 @@ void DbmsIter(DbmsCtx* ctx)
  800105c:	635a      	str	r2, [r3, #52]	@ 0x34
 		ProcessLedAction(ctx);
  800105e:	6978      	ldr	r0, [r7, #20]
- 8001060:	f000 f9b4 	bl	80013cc <ProcessLedAction>
+ 8001060:	f000 f9b8 	bl	80013d4 <ProcessLedAction>
         DbmsPerformWakeup(ctx);
  8001064:	6978      	ldr	r0, [r7, #20]
  8001066:	f7ff ff19 	bl	8000e9c <DbmsPerformWakeup>
@@ -1516,2326 +1516,2328 @@ void DbmsIter(DbmsCtx* ctx)
  800106a:	697b      	ldr	r3, [r7, #20]
  800106c:	f893 3031 	ldrb.w	r3, [r3, #49]	@ 0x31
  8001070:	2b00      	cmp	r3, #0
- 8001072:	d108      	bne.n	8001086 <DbmsIter+0x126>
+ 8001072:	d10c      	bne.n	800108e <DbmsIter+0x12e>
     {
         //
         //  Communicate with the stack
         //
         StackUpdateVoltReadings(ctx);
  8001074:	6978      	ldr	r0, [r7, #20]
- 8001076:	f000 fe8b 	bl	8001d90 <StackUpdateVoltReadings>
+ 8001076:	f000 fe8f 	bl	8001d98 <StackUpdateVoltReadings>
         // StackUpdateTempReadings(ctx);
 
         //
         //  Check fault conditions
         //
+        CLEAR_ALL_FAULTS(ctx);
+ 800107a:	697b      	ldr	r3, [r7, #20]
+ 800107c:	2200      	movs	r2, #0
+ 800107e:	f8c3 226c 	str.w	r2, [r3, #620]	@ 0x26c
+
         CheckVoltageFaults(ctx);
- 800107a:	6978      	ldr	r0, [r7, #20]
- 800107c:	f000 f932 	bl	80012e4 <CheckVoltageFaults>
+ 8001082:	6978      	ldr	r0, [r7, #20]
+ 8001084:	f000 f932 	bl	80012ec <CheckVoltageFaults>
         // CheckTemperatureFaults(ctx);
         CheckCurrentFaults(ctx);
- 8001080:	6978      	ldr	r0, [r7, #20]
- 8001082:	f000 f98c 	bl	800139e <CheckCurrentFaults>
+ 8001088:	6978      	ldr	r0, [r7, #20]
+ 800108a:	f000 f98c 	bl	80013a6 <CheckCurrentFaults>
     }
 
     //
     // Transmit important telemetry 
     //
     SendMetrics(ctx);
- 8001086:	6978      	ldr	r0, [r7, #20]
- 8001088:	f001 fca6 	bl	80029d8 <SendMetrics>
+ 800108e:	6978      	ldr	r0, [r7, #20]
+ 8001090:	f001 fca2 	bl	80029d8 <SendMetrics>
     if (ctx->iter_start_us - ctx->batch_telem_ts > 10000) 
- 800108c:	697b      	ldr	r3, [r7, #20]
- 800108e:	e9d3 01ba 	ldrd	r0, r1, [r3, #744]	@ 0x2e8
- 8001092:	697b      	ldr	r3, [r7, #20]
- 8001094:	e9d3 23c0 	ldrd	r2, r3, [r3, #768]	@ 0x300
- 8001098:	1a84      	subs	r4, r0, r2
- 800109a:	eb61 0503 	sbc.w	r5, r1, r3
- 800109e:	f242 7311 	movw	r3, #10001	@ 0x2711
- 80010a2:	429c      	cmp	r4, r3
- 80010a4:	f175 0300 	sbcs.w	r3, r5, #0
- 80010a8:	d30b      	bcc.n	80010c2 <DbmsIter+0x162>
+ 8001094:	697b      	ldr	r3, [r7, #20]
+ 8001096:	e9d3 0182 	ldrd	r0, r1, [r3, #520]	@ 0x208
+ 800109a:	697b      	ldr	r3, [r7, #20]
+ 800109c:	e9d3 2388 	ldrd	r2, r3, [r3, #544]	@ 0x220
+ 80010a0:	1a84      	subs	r4, r0, r2
+ 80010a2:	eb61 0503 	sbc.w	r5, r1, r3
+ 80010a6:	f242 7311 	movw	r3, #10001	@ 0x2711
+ 80010aa:	429c      	cmp	r4, r3
+ 80010ac:	f175 0300 	sbcs.w	r3, r5, #0
+ 80010b0:	d30b      	bcc.n	80010ca <DbmsIter+0x16a>
     {
         ctx->batch_telem_ts = ctx->iter_start_us;
- 80010aa:	697b      	ldr	r3, [r7, #20]
- 80010ac:	e9d3 23ba 	ldrd	r2, r3, [r3, #744]	@ 0x2e8
- 80010b0:	6979      	ldr	r1, [r7, #20]
- 80010b2:	e9c1 23c0 	strd	r2, r3, [r1, #768]	@ 0x300
+ 80010b2:	697b      	ldr	r3, [r7, #20]
+ 80010b4:	e9d3 2382 	ldrd	r2, r3, [r3, #520]	@ 0x208
+ 80010b8:	6979      	ldr	r1, [r7, #20]
+ 80010ba:	e9c1 2388 	strd	r2, r3, [r1, #544]	@ 0x220
         SendCellVoltages(ctx);
- 80010b6:	6978      	ldr	r0, [r7, #20]
- 80010b8:	f001 fa58 	bl	800256c <SendCellVoltages>
+ 80010be:	6978      	ldr	r0, [r7, #20]
+ 80010c0:	f001 fa54 	bl	800256c <SendCellVoltages>
         SendCellTemps(ctx);
- 80010bc:	6978      	ldr	r0, [r7, #20]
- 80010be:	f001 fafb 	bl	80026b8 <SendCellTemps>
+ 80010c4:	6978      	ldr	r0, [r7, #20]
+ 80010c6:	f001 faf7 	bl	80026b8 <SendCellTemps>
     }
 
     //
 	//  Update the LEDs. Led state should be set every time the cur_state changes
 	//
     ProcessLedAction(ctx);
- 80010c2:	6978      	ldr	r0, [r7, #20]
- 80010c4:	f000 f982 	bl	80013cc <ProcessLedAction>
+ 80010ca:	6978      	ldr	r0, [r7, #20]
+ 80010cc:	f000 f982 	bl	80013d4 <ProcessLedAction>
     MonitorLedBlink(ctx);
- 80010c8:	6978      	ldr	r0, [r7, #20]
- 80010ca:	f000 ff9f 	bl	800200c <MonitorLedBlink>
+ 80010d0:	6978      	ldr	r0, [r7, #20]
+ 80010d2:	f000 ff9b 	bl	800200c <MonitorLedBlink>
 
     //
     //  Schedule the next loop
     //
     ctx->iter_end_us = GetUs(ctx);
- 80010ce:	6978      	ldr	r0, [r7, #20]
- 80010d0:	f000 fa5a 	bl	8001588 <GetUs>
- 80010d4:	4602      	mov	r2, r0
- 80010d6:	460b      	mov	r3, r1
- 80010d8:	6979      	ldr	r1, [r7, #20]
- 80010da:	e9c1 23bc 	strd	r2, r3, [r1, #752]	@ 0x2f0
+ 80010d6:	6978      	ldr	r0, [r7, #20]
+ 80010d8:	f000 fa5a 	bl	8001590 <GetUs>
+ 80010dc:	4602      	mov	r2, r0
+ 80010de:	460b      	mov	r3, r1
+ 80010e0:	6979      	ldr	r1, [r7, #20]
+ 80010e2:	e9c1 2384 	strd	r2, r3, [r1, #528]	@ 0x210
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
- 80010de:	697b      	ldr	r3, [r7, #20]
- 80010e0:	e9d3 23bc 	ldrd	r2, r3, [r3, #752]	@ 0x2f0
- 80010e4:	4611      	mov	r1, r2
  80010e6:	697b      	ldr	r3, [r7, #20]
- 80010e8:	e9d3 23ba 	ldrd	r2, r3, [r3, #744]	@ 0x2e8
- 80010ec:	4613      	mov	r3, r2
- 80010ee:	1aca      	subs	r2, r1, r3
- 80010f0:	697b      	ldr	r3, [r7, #20]
- 80010f2:	f8c3 2324 	str.w	r2, [r3, #804]	@ 0x324
+ 80010e8:	e9d3 2384 	ldrd	r2, r3, [r3, #528]	@ 0x210
+ 80010ec:	4611      	mov	r1, r2
+ 80010ee:	697b      	ldr	r3, [r7, #20]
+ 80010f0:	e9d3 2382 	ldrd	r2, r3, [r3, #520]	@ 0x208
+ 80010f4:	4613      	mov	r3, r2
+ 80010f6:	1aca      	subs	r2, r1, r3
+ 80010f8:	697b      	ldr	r3, [r7, #20]
+ 80010fa:	f8c3 2244 	str.w	r2, [r3, #580]	@ 0x244
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
- 80010f6:	2119      	movs	r1, #25
- 80010f8:	6978      	ldr	r0, [r7, #20]
- 80010fa:	f000 fa91 	bl	8001620 <CalcIterDelay>
- 80010fe:	4602      	mov	r2, r0
- 8001100:	697b      	ldr	r3, [r7, #20]
- 8001102:	f8c3 2328 	str.w	r2, [r3, #808]	@ 0x328
+ 80010fe:	2119      	movs	r1, #25
+ 8001100:	6978      	ldr	r0, [r7, #20]
+ 8001102:	f000 fa91 	bl	8001628 <CalcIterDelay>
+ 8001106:	4602      	mov	r2, r0
+ 8001108:	697b      	ldr	r3, [r7, #20]
+ 800110a:	f8c3 2248 	str.w	r2, [r3, #584]	@ 0x248
     // DelayUs(ctx, end_delay);
     HAL_Delay(5);  // ^ todo: fix all ts
- 8001106:	2005      	movs	r0, #5
- 8001108:	f002 fc60 	bl	80039cc <HAL_Delay>
+ 800110e:	2005      	movs	r0, #5
+ 8001110:	f002 fc5c 	bl	80039cc <HAL_Delay>
 }
- 800110c:	bf00      	nop
- 800110e:	3720      	adds	r7, #32
- 8001110:	46bd      	mov	sp, r7
- 8001112:	e8bd 8fb0 	ldmia.w	sp!, {r4, r5, r7, r8, r9, sl, fp, pc}
- 8001116:	bf00      	nop
- 8001118:	08008b14 	.word	0x08008b14
+ 8001114:	bf00      	nop
+ 8001116:	3720      	adds	r7, #32
+ 8001118:	46bd      	mov	sp, r7
+ 800111a:	e8bd 8fb0 	ldmia.w	sp!, {r4, r5, r7, r8, r9, sl, fp, pc}
+ 800111e:	bf00      	nop
+ 8001120:	08008b14 	.word	0x08008b14
 
-0800111c <DbmsCanRx>:
+08001124 <DbmsCanRx>:
 
 
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
- 800111c:	b082      	sub	sp, #8
- 800111e:	b5b0      	push	{r4, r5, r7, lr}
- 8001120:	b084      	sub	sp, #16
- 8001122:	af00      	add	r7, sp, #0
- 8001124:	6078      	str	r0, [r7, #4]
- 8001126:	f107 0020 	add.w	r0, r7, #32
- 800112a:	e880 000c 	stmia.w	r0, {r2, r3}
- 800112e:	460b      	mov	r3, r1
- 8001130:	70fb      	strb	r3, [r7, #3]
+ 8001124:	b082      	sub	sp, #8
+ 8001126:	b5b0      	push	{r4, r5, r7, lr}
+ 8001128:	b084      	sub	sp, #16
+ 800112a:	af00      	add	r7, sp, #0
+ 800112c:	6078      	str	r0, [r7, #4]
+ 800112e:	f107 0020 	add.w	r0, r7, #32
+ 8001132:	e880 000c 	stmia.w	r0, {r2, r3}
+ 8001136:	460b      	mov	r3, r1
+ 8001138:	70fb      	strb	r3, [r7, #3]
     int status = 0;
- 8001132:	2300      	movs	r3, #0
- 8001134:	60fb      	str	r3, [r7, #12]
+ 800113a:	2300      	movs	r3, #0
+ 800113c:	60fb      	str	r3, [r7, #12]
 
     ctx->stats.n_rx_can_frames++;
- 8001136:	687b      	ldr	r3, [r7, #4]
- 8001138:	f8d3 3314 	ldr.w	r3, [r3, #788]	@ 0x314
- 800113c:	1c5a      	adds	r2, r3, #1
  800113e:	687b      	ldr	r3, [r7, #4]
- 8001140:	f8c3 2314 	str.w	r2, [r3, #788]	@ 0x314
+ 8001140:	f8d3 3234 	ldr.w	r3, [r3, #564]	@ 0x234
+ 8001144:	1c5a      	adds	r2, r3, #1
+ 8001146:	687b      	ldr	r3, [r7, #4]
+ 8001148:	f8c3 2234 	str.w	r2, [r3, #564]	@ 0x234
 
     switch (rx_header.StdId)
- 8001144:	6a3b      	ldr	r3, [r7, #32]
- 8001146:	f2a3 5321 	subw	r3, r3, #1313	@ 0x521
- 800114a:	2b22      	cmp	r3, #34	@ 0x22
- 800114c:	f200 808f 	bhi.w	800126e <DbmsCanRx+0x152>
- 8001150:	a201      	add	r2, pc, #4	@ (adr r2, 8001158 <DbmsCanRx+0x3c>)
- 8001152:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
- 8001156:	bf00      	nop
- 8001158:	08001215 	.word	0x08001215
- 800115c:	08001227 	.word	0x08001227
- 8001160:	0800126f 	.word	0x0800126f
- 8001164:	0800126f 	.word	0x0800126f
- 8001168:	0800126f 	.word	0x0800126f
- 800116c:	08001239 	.word	0x08001239
- 8001170:	0800124b 	.word	0x0800124b
- 8001174:	0800125d 	.word	0x0800125d
- 8001178:	0800126f 	.word	0x0800126f
- 800117c:	0800126f 	.word	0x0800126f
- 8001180:	0800126f 	.word	0x0800126f
- 8001184:	0800126f 	.word	0x0800126f
- 8001188:	0800126f 	.word	0x0800126f
- 800118c:	0800126f 	.word	0x0800126f
- 8001190:	0800126f 	.word	0x0800126f
- 8001194:	0800126f 	.word	0x0800126f
- 8001198:	0800126f 	.word	0x0800126f
- 800119c:	0800126f 	.word	0x0800126f
- 80011a0:	0800126f 	.word	0x0800126f
- 80011a4:	0800126f 	.word	0x0800126f
- 80011a8:	0800126f 	.word	0x0800126f
- 80011ac:	0800126f 	.word	0x0800126f
- 80011b0:	0800126f 	.word	0x0800126f
- 80011b4:	0800126f 	.word	0x0800126f
- 80011b8:	0800126f 	.word	0x0800126f
- 80011bc:	0800126f 	.word	0x0800126f
- 80011c0:	0800126f 	.word	0x0800126f
- 80011c4:	0800126f 	.word	0x0800126f
- 80011c8:	0800126f 	.word	0x0800126f
- 80011cc:	0800126f 	.word	0x0800126f
- 80011d0:	0800126f 	.word	0x0800126f
- 80011d4:	0800126f 	.word	0x0800126f
- 80011d8:	080011e5 	.word	0x080011e5
- 80011dc:	080011f9 	.word	0x080011f9
- 80011e0:	08001207 	.word	0x08001207
+ 800114c:	6a3b      	ldr	r3, [r7, #32]
+ 800114e:	f2a3 5321 	subw	r3, r3, #1313	@ 0x521
+ 8001152:	2b22      	cmp	r3, #34	@ 0x22
+ 8001154:	f200 808f 	bhi.w	8001276 <DbmsCanRx+0x152>
+ 8001158:	a201      	add	r2, pc, #4	@ (adr r2, 8001160 <DbmsCanRx+0x3c>)
+ 800115a:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
+ 800115e:	bf00      	nop
+ 8001160:	0800121d 	.word	0x0800121d
+ 8001164:	0800122f 	.word	0x0800122f
+ 8001168:	08001277 	.word	0x08001277
+ 800116c:	08001277 	.word	0x08001277
+ 8001170:	08001277 	.word	0x08001277
+ 8001174:	08001241 	.word	0x08001241
+ 8001178:	08001253 	.word	0x08001253
+ 800117c:	08001265 	.word	0x08001265
+ 8001180:	08001277 	.word	0x08001277
+ 8001184:	08001277 	.word	0x08001277
+ 8001188:	08001277 	.word	0x08001277
+ 800118c:	08001277 	.word	0x08001277
+ 8001190:	08001277 	.word	0x08001277
+ 8001194:	08001277 	.word	0x08001277
+ 8001198:	08001277 	.word	0x08001277
+ 800119c:	08001277 	.word	0x08001277
+ 80011a0:	08001277 	.word	0x08001277
+ 80011a4:	08001277 	.word	0x08001277
+ 80011a8:	08001277 	.word	0x08001277
+ 80011ac:	08001277 	.word	0x08001277
+ 80011b0:	08001277 	.word	0x08001277
+ 80011b4:	08001277 	.word	0x08001277
+ 80011b8:	08001277 	.word	0x08001277
+ 80011bc:	08001277 	.word	0x08001277
+ 80011c0:	08001277 	.word	0x08001277
+ 80011c4:	08001277 	.word	0x08001277
+ 80011c8:	08001277 	.word	0x08001277
+ 80011cc:	08001277 	.word	0x08001277
+ 80011d0:	08001277 	.word	0x08001277
+ 80011d4:	08001277 	.word	0x08001277
+ 80011d8:	08001277 	.word	0x08001277
+ 80011dc:	08001277 	.word	0x08001277
+ 80011e0:	080011ed 	.word	0x080011ed
+ 80011e4:	08001201 	.word	0x08001201
+ 80011e8:	0800120f 	.word	0x0800120f
     {
         case CANID_RX_HEARTBEAT:
             ctx->last_rx_heartbeat = HAL_GetTick();
- 80011e4:	f002 fbe6 	bl	80039b4 <HAL_GetTick>
- 80011e8:	4603      	mov	r3, r0
- 80011ea:	2200      	movs	r2, #0
- 80011ec:	461c      	mov	r4, r3
- 80011ee:	4615      	mov	r5, r2
- 80011f0:	687b      	ldr	r3, [r7, #4]
- 80011f2:	e9c3 45b8 	strd	r4, r5, [r3, #736]	@ 0x2e0
+ 80011ec:	f002 fbe2 	bl	80039b4 <HAL_GetTick>
+ 80011f0:	4603      	mov	r3, r0
+ 80011f2:	2200      	movs	r2, #0
+ 80011f4:	461c      	mov	r4, r3
+ 80011f6:	4615      	mov	r5, r2
+ 80011f8:	687b      	ldr	r3, [r7, #4]
+ 80011fa:	e9c3 4580 	strd	r4, r5, [r3, #512]	@ 0x200
             break;
- 80011f6:	e042      	b.n	800127e <DbmsCanRx+0x162>
+ 80011fe:	e042      	b.n	8001286 <DbmsCanRx+0x162>
 
         case CANID_RX_SET_CONFIG:
             if ((status = HandleCanConfig(ctx, rx_data, CFG_SET)) != 0)
- 80011f8:	2200      	movs	r2, #0
- 80011fa:	6bf9      	ldr	r1, [r7, #60]	@ 0x3c
- 80011fc:	6878      	ldr	r0, [r7, #4]
- 80011fe:	f001 fb4d 	bl	800289c <HandleCanConfig>
- 8001202:	60f8      	str	r0, [r7, #12]
+ 8001200:	2200      	movs	r2, #0
+ 8001202:	6bf9      	ldr	r1, [r7, #60]	@ 0x3c
+ 8001204:	6878      	ldr	r0, [r7, #4]
+ 8001206:	f001 fb49 	bl	800289c <HandleCanConfig>
+ 800120a:	60f8      	str	r0, [r7, #12]
             {
                 if (status == ERR_CFGID_NOT_FOUND) {}   
             }
             break;
- 8001204:	e03b      	b.n	800127e <DbmsCanRx+0x162>
+ 800120c:	e03b      	b.n	8001286 <DbmsCanRx+0x162>
         case CANID_RX_GET_CONFIG:
             if ((status = HandleCanConfig(ctx, rx_data, CFG_GET)) != 0)
- 8001206:	2201      	movs	r2, #1
- 8001208:	6bf9      	ldr	r1, [r7, #60]	@ 0x3c
- 800120a:	6878      	ldr	r0, [r7, #4]
- 800120c:	f001 fb46 	bl	800289c <HandleCanConfig>
- 8001210:	60f8      	str	r0, [r7, #12]
+ 800120e:	2201      	movs	r2, #1
+ 8001210:	6bf9      	ldr	r1, [r7, #60]	@ 0x3c
+ 8001212:	6878      	ldr	r0, [r7, #4]
+ 8001214:	f001 fb42 	bl	800289c <HandleCanConfig>
+ 8001218:	60f8      	str	r0, [r7, #12]
             {
                 if (status == ERR_CFGID_NOT_FOUND) {}   
             }
             break;
- 8001212:	e034      	b.n	800127e <DbmsCanRx+0x162>
+ 800121a:	e034      	b.n	8001286 <DbmsCanRx+0x162>
         case CANID_ISENSE_CURRENT:
             ctx->isense.current_ma = (int32_t)UnpackCurrentSensorData(rx_data);
- 8001214:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
- 8001216:	f001 fcc5 	bl	8002ba4 <UnpackCurrentSensorData>
- 800121a:	4602      	mov	r2, r0
- 800121c:	460b      	mov	r3, r1
- 800121e:	687b      	ldr	r3, [r7, #4]
- 8001220:	f8c3 2338 	str.w	r2, [r3, #824]	@ 0x338
+ 800121c:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
+ 800121e:	f001 fcc1 	bl	8002ba4 <UnpackCurrentSensorData>
+ 8001222:	4602      	mov	r2, r0
+ 8001224:	460b      	mov	r3, r1
+ 8001226:	687b      	ldr	r3, [r7, #4]
+ 8001228:	f8c3 2258 	str.w	r2, [r3, #600]	@ 0x258
             break;
- 8001224:	e02b      	b.n	800127e <DbmsCanRx+0x162>
+ 800122c:	e02b      	b.n	8001286 <DbmsCanRx+0x162>
         case CANID_ISENSE_VOLTAGE1:
             ctx->isense.voltage1_mv = (int32_t)UnpackCurrentSensorData(rx_data);
- 8001226:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
- 8001228:	f001 fcbc 	bl	8002ba4 <UnpackCurrentSensorData>
- 800122c:	4602      	mov	r2, r0
- 800122e:	460b      	mov	r3, r1
- 8001230:	687b      	ldr	r3, [r7, #4]
- 8001232:	f8c3 233c 	str.w	r2, [r3, #828]	@ 0x33c
+ 800122e:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
+ 8001230:	f001 fcb8 	bl	8002ba4 <UnpackCurrentSensorData>
+ 8001234:	4602      	mov	r2, r0
+ 8001236:	460b      	mov	r3, r1
+ 8001238:	687b      	ldr	r3, [r7, #4]
+ 800123a:	f8c3 225c 	str.w	r2, [r3, #604]	@ 0x25c
             break;
- 8001236:	e022      	b.n	800127e <DbmsCanRx+0x162>
+ 800123e:	e022      	b.n	8001286 <DbmsCanRx+0x162>
         case CANID_ISENSE_POWER:
             ctx->isense.power_w = (int32_t)UnpackCurrentSensorData(rx_data);
- 8001238:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
- 800123a:	f001 fcb3 	bl	8002ba4 <UnpackCurrentSensorData>
- 800123e:	4602      	mov	r2, r0
- 8001240:	460b      	mov	r3, r1
- 8001242:	687b      	ldr	r3, [r7, #4]
- 8001244:	f8c3 2340 	str.w	r2, [r3, #832]	@ 0x340
+ 8001240:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
+ 8001242:	f001 fcaf 	bl	8002ba4 <UnpackCurrentSensorData>
+ 8001246:	4602      	mov	r2, r0
+ 8001248:	460b      	mov	r3, r1
+ 800124a:	687b      	ldr	r3, [r7, #4]
+ 800124c:	f8c3 2260 	str.w	r2, [r3, #608]	@ 0x260
             break;
- 8001248:	e019      	b.n	800127e <DbmsCanRx+0x162>
+ 8001250:	e019      	b.n	8001286 <DbmsCanRx+0x162>
         case CANID_ISENSE_CHARGE:
             ctx->isense.charge_as = (int32_t)UnpackCurrentSensorData(rx_data);
- 800124a:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
- 800124c:	f001 fcaa 	bl	8002ba4 <UnpackCurrentSensorData>
- 8001250:	4602      	mov	r2, r0
- 8001252:	460b      	mov	r3, r1
- 8001254:	687b      	ldr	r3, [r7, #4]
- 8001256:	f8c3 2344 	str.w	r2, [r3, #836]	@ 0x344
+ 8001252:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
+ 8001254:	f001 fca6 	bl	8002ba4 <UnpackCurrentSensorData>
+ 8001258:	4602      	mov	r2, r0
+ 800125a:	460b      	mov	r3, r1
+ 800125c:	687b      	ldr	r3, [r7, #4]
+ 800125e:	f8c3 2264 	str.w	r2, [r3, #612]	@ 0x264
             break;
- 800125a:	e010      	b.n	800127e <DbmsCanRx+0x162>
+ 8001262:	e010      	b.n	8001286 <DbmsCanRx+0x162>
         case CANID_ISENSE_ENERGY:
             ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
- 800125c:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
- 800125e:	f001 fca1 	bl	8002ba4 <UnpackCurrentSensorData>
- 8001262:	4602      	mov	r2, r0
- 8001264:	460b      	mov	r3, r1
- 8001266:	687b      	ldr	r3, [r7, #4]
- 8001268:	f8c3 2348 	str.w	r2, [r3, #840]	@ 0x348
+ 8001264:	6bf8      	ldr	r0, [r7, #60]	@ 0x3c
+ 8001266:	f001 fc9d 	bl	8002ba4 <UnpackCurrentSensorData>
+ 800126a:	4602      	mov	r2, r0
+ 800126c:	460b      	mov	r3, r1
+ 800126e:	687b      	ldr	r3, [r7, #4]
+ 8001270:	f8c3 2268 	str.w	r2, [r3, #616]	@ 0x268
             break;
- 800126c:	e007      	b.n	800127e <DbmsCanRx+0x162>
+ 8001274:	e007      	b.n	8001286 <DbmsCanRx+0x162>
         default:
             ctx->stats.n_unmatched_can_frames++;
- 800126e:	687b      	ldr	r3, [r7, #4]
- 8001270:	f8d3 3318 	ldr.w	r3, [r3, #792]	@ 0x318
- 8001274:	1c5a      	adds	r2, r3, #1
  8001276:	687b      	ldr	r3, [r7, #4]
- 8001278:	f8c3 2318 	str.w	r2, [r3, #792]	@ 0x318
+ 8001278:	f8d3 3238 	ldr.w	r3, [r3, #568]	@ 0x238
+ 800127c:	1c5a      	adds	r2, r3, #1
+ 800127e:	687b      	ldr	r3, [r7, #4]
+ 8001280:	f8c3 2238 	str.w	r2, [r3, #568]	@ 0x238
             break;
- 800127c:	bf00      	nop
+ 8001284:	bf00      	nop
     }
 }
- 800127e:	bf00      	nop
- 8001280:	3710      	adds	r7, #16
- 8001282:	46bd      	mov	sp, r7
- 8001284:	e8bd 40b0 	ldmia.w	sp!, {r4, r5, r7, lr}
- 8001288:	b002      	add	sp, #8
- 800128a:	4770      	bx	lr
+ 8001286:	bf00      	nop
+ 8001288:	3710      	adds	r7, #16
+ 800128a:	46bd      	mov	sp, r7
+ 800128c:	e8bd 40b0 	ldmia.w	sp!, {r4, r5, r7, lr}
+ 8001290:	b002      	add	sp, #8
+ 8001292:	4770      	bx	lr
 
-0800128c <DbmsErr>:
+08001294 <DbmsErr>:
 
 //
 //  Handle fatal HAL error
 //
 void DbmsErr(DbmsCtx* ctx)
 {
- 800128c:	b480      	push	{r7}
- 800128e:	b083      	sub	sp, #12
- 8001290:	af00      	add	r7, sp, #0
- 8001292:	6078      	str	r0, [r7, #4]
+ 8001294:	b480      	push	{r7}
+ 8001296:	b083      	sub	sp, #12
+ 8001298:	af00      	add	r7, sp, #0
+ 800129a:	6078      	str	r0, [r7, #4]
     ctx->cur_state = DBMS_SHUTDOWN;
- 8001294:	687b      	ldr	r3, [r7, #4]
- 8001296:	2201      	movs	r2, #1
- 8001298:	f883 2031 	strb.w	r2, [r3, #49]	@ 0x31
-    ctx->led_state = LED_ERROR;
  800129c:	687b      	ldr	r3, [r7, #4]
- 800129e:	2200      	movs	r2, #0
- 80012a0:	635a      	str	r2, [r3, #52]	@ 0x34
+ 800129e:	2201      	movs	r2, #1
+ 80012a0:	f883 2031 	strb.w	r2, [r3, #49]	@ 0x31
+    ctx->led_state = LED_ERROR;
+ 80012a4:	687b      	ldr	r3, [r7, #4]
+ 80012a6:	2200      	movs	r2, #0
+ 80012a8:	635a      	str	r2, [r3, #52]	@ 0x34
 }
- 80012a2:	bf00      	nop
- 80012a4:	370c      	adds	r7, #12
- 80012a6:	46bd      	mov	sp, r7
- 80012a8:	f85d 7b04 	ldr.w	r7, [sp], #4
- 80012ac:	4770      	bx	lr
+ 80012aa:	bf00      	nop
+ 80012ac:	370c      	adds	r7, #12
+ 80012ae:	46bd      	mov	sp, r7
+ 80012b0:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80012b4:	4770      	bx	lr
 
-080012ae <SetFault>:
+080012b6 <SetFault>:
 #include "fault_handler.h"
 #include "settings.h"
 
 void SetFault(DbmsCtx* ctx, FaultType fault) 
 {
- 80012ae:	b480      	push	{r7}
- 80012b0:	b083      	sub	sp, #12
- 80012b2:	af00      	add	r7, sp, #0
- 80012b4:	6078      	str	r0, [r7, #4]
- 80012b6:	460b      	mov	r3, r1
- 80012b8:	70fb      	strb	r3, [r7, #3]
+ 80012b6:	b480      	push	{r7}
+ 80012b8:	b083      	sub	sp, #12
+ 80012ba:	af00      	add	r7, sp, #0
+ 80012bc:	6078      	str	r0, [r7, #4]
+ 80012be:	460b      	mov	r3, r1
+ 80012c0:	70fb      	strb	r3, [r7, #3]
     if (fault >= FAULT_TYPE_COUNT) return;
- 80012ba:	78fb      	ldrb	r3, [r7, #3]
- 80012bc:	2b07      	cmp	r3, #7
- 80012be:	d80b      	bhi.n	80012d8 <SetFault+0x2a>
+ 80012c2:	78fb      	ldrb	r3, [r7, #3]
+ 80012c4:	2b07      	cmp	r3, #7
+ 80012c6:	d80b      	bhi.n	80012e0 <SetFault+0x2a>
     ctx->fault_mask |= (1U << fault);
- 80012c0:	687b      	ldr	r3, [r7, #4]
- 80012c2:	f8d3 234c 	ldr.w	r2, [r3, #844]	@ 0x34c
- 80012c6:	78fb      	ldrb	r3, [r7, #3]
- 80012c8:	2101      	movs	r1, #1
- 80012ca:	fa01 f303 	lsl.w	r3, r1, r3
- 80012ce:	431a      	orrs	r2, r3
- 80012d0:	687b      	ldr	r3, [r7, #4]
- 80012d2:	f8c3 234c 	str.w	r2, [r3, #844]	@ 0x34c
- 80012d6:	e000      	b.n	80012da <SetFault+0x2c>
+ 80012c8:	687b      	ldr	r3, [r7, #4]
+ 80012ca:	f8d3 226c 	ldr.w	r2, [r3, #620]	@ 0x26c
+ 80012ce:	78fb      	ldrb	r3, [r7, #3]
+ 80012d0:	2101      	movs	r1, #1
+ 80012d2:	fa01 f303 	lsl.w	r3, r1, r3
+ 80012d6:	431a      	orrs	r2, r3
+ 80012d8:	687b      	ldr	r3, [r7, #4]
+ 80012da:	f8c3 226c 	str.w	r2, [r3, #620]	@ 0x26c
+ 80012de:	e000      	b.n	80012e2 <SetFault+0x2c>
     if (fault >= FAULT_TYPE_COUNT) return;
- 80012d8:	bf00      	nop
+ 80012e0:	bf00      	nop
 }
- 80012da:	370c      	adds	r7, #12
- 80012dc:	46bd      	mov	sp, r7
- 80012de:	f85d 7b04 	ldr.w	r7, [sp], #4
- 80012e2:	4770      	bx	lr
+ 80012e2:	370c      	adds	r7, #12
+ 80012e4:	46bd      	mov	sp, r7
+ 80012e6:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80012ea:	4770      	bx	lr
 
-080012e4 <CheckVoltageFaults>:
+080012ec <CheckVoltageFaults>:
     if (fault >= FAULT_TYPE_COUNT) return false;
     return (ctx->fault_mask & (1U << fault)) != 0;
 }
 
 void CheckVoltageFaults(DbmsCtx* ctx)
 {
- 80012e4:	b580      	push	{r7, lr}
- 80012e6:	b086      	sub	sp, #24
- 80012e8:	af00      	add	r7, sp, #0
- 80012ea:	6078      	str	r0, [r7, #4]
+ 80012ec:	b580      	push	{r7, lr}
+ 80012ee:	b086      	sub	sp, #24
+ 80012f0:	af00      	add	r7, sp, #0
+ 80012f2:	6078      	str	r0, [r7, #4]
     uint32_t max_group_v = GetSetting(ctx, MAX_GROUP_VOLTAGE);
- 80012ec:	2102      	movs	r1, #2
- 80012ee:	6878      	ldr	r0, [r7, #4]
- 80012f0:	f000 f9d8 	bl	80016a4 <GetSetting>
- 80012f4:	60f8      	str	r0, [r7, #12]
+ 80012f4:	2102      	movs	r1, #2
+ 80012f6:	6878      	ldr	r0, [r7, #4]
+ 80012f8:	f000 f9d8 	bl	80016ac <GetSetting>
+ 80012fc:	60f8      	str	r0, [r7, #12]
     uint32_t min_group_v = GetSetting(ctx, MIN_GROUP_VOLTAGE);
- 80012f6:	2103      	movs	r1, #3
- 80012f8:	6878      	ldr	r0, [r7, #4]
- 80012fa:	f000 f9d3 	bl	80016a4 <GetSetting>
- 80012fe:	60b8      	str	r0, [r7, #8]
+ 80012fe:	2103      	movs	r1, #3
+ 8001300:	6878      	ldr	r0, [r7, #4]
+ 8001302:	f000 f9d3 	bl	80016ac <GetSetting>
+ 8001306:	60b8      	str	r0, [r7, #8]
 
     for (int i = 0; i < N_SIDES; i++)
- 8001300:	2300      	movs	r3, #0
- 8001302:	617b      	str	r3, [r7, #20]
- 8001304:	e043      	b.n	800138e <CheckVoltageFaults+0xaa>
+ 8001308:	2300      	movs	r3, #0
+ 800130a:	617b      	str	r3, [r7, #20]
+ 800130c:	e043      	b.n	8001396 <CheckVoltageFaults+0xaa>
     {
         for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
- 8001306:	2300      	movs	r3, #0
- 8001308:	613b      	str	r3, [r7, #16]
- 800130a:	e03a      	b.n	8001382 <CheckVoltageFaults+0x9e>
+ 800130e:	2300      	movs	r3, #0
+ 8001310:	613b      	str	r3, [r7, #16]
+ 8001312:	e03a      	b.n	800138a <CheckVoltageFaults+0x9e>
         {
             if (ctx->cell_states[i].voltages[j] > max_group_v)
- 800130c:	6879      	ldr	r1, [r7, #4]
- 800130e:	697a      	ldr	r2, [r7, #20]
- 8001310:	4613      	mov	r3, r2
- 8001312:	00db      	lsls	r3, r3, #3
- 8001314:	1a9b      	subs	r3, r3, r2
- 8001316:	009b      	lsls	r3, r3, #2
- 8001318:	693a      	ldr	r2, [r7, #16]
- 800131a:	4413      	add	r3, r2
- 800131c:	330e      	adds	r3, #14
+ 8001314:	6879      	ldr	r1, [r7, #4]
+ 8001316:	697a      	ldr	r2, [r7, #20]
+ 8001318:	4613      	mov	r3, r2
+ 800131a:	00db      	lsls	r3, r3, #3
+ 800131c:	1a9b      	subs	r3, r3, r2
  800131e:	009b      	lsls	r3, r3, #2
- 8001320:	440b      	add	r3, r1
- 8001322:	3304      	adds	r3, #4
- 8001324:	ed93 7a00 	vldr	s14, [r3]
- 8001328:	68fb      	ldr	r3, [r7, #12]
- 800132a:	ee07 3a90 	vmov	s15, r3
- 800132e:	eef8 7a67 	vcvt.f32.u32	s15, s15
- 8001332:	eeb4 7ae7 	vcmpe.f32	s14, s15
- 8001336:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
- 800133a:	dd03      	ble.n	8001344 <CheckVoltageFaults+0x60>
+ 8001320:	693a      	ldr	r2, [r7, #16]
+ 8001322:	4413      	add	r3, r2
+ 8001324:	330e      	adds	r3, #14
+ 8001326:	009b      	lsls	r3, r3, #2
+ 8001328:	440b      	add	r3, r1
+ 800132a:	3304      	adds	r3, #4
+ 800132c:	ed93 7a00 	vldr	s14, [r3]
+ 8001330:	68fb      	ldr	r3, [r7, #12]
+ 8001332:	ee07 3a90 	vmov	s15, r3
+ 8001336:	eef8 7a67 	vcvt.f32.u32	s15, s15
+ 800133a:	eeb4 7ae7 	vcmpe.f32	s14, s15
+ 800133e:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+ 8001342:	dd03      	ble.n	800134c <CheckVoltageFaults+0x60>
             {
                 SetFault(ctx, FAULT_VOLTAGE_OVER);
- 800133c:	2100      	movs	r1, #0
- 800133e:	6878      	ldr	r0, [r7, #4]
- 8001340:	f7ff ffb5 	bl	80012ae <SetFault>
+ 8001344:	2100      	movs	r1, #0
+ 8001346:	6878      	ldr	r0, [r7, #4]
+ 8001348:	f7ff ffb5 	bl	80012b6 <SetFault>
             }
             if (ctx->cell_states[i].voltages[j] < min_group_v)
- 8001344:	6879      	ldr	r1, [r7, #4]
- 8001346:	697a      	ldr	r2, [r7, #20]
- 8001348:	4613      	mov	r3, r2
- 800134a:	00db      	lsls	r3, r3, #3
- 800134c:	1a9b      	subs	r3, r3, r2
- 800134e:	009b      	lsls	r3, r3, #2
- 8001350:	693a      	ldr	r2, [r7, #16]
- 8001352:	4413      	add	r3, r2
- 8001354:	330e      	adds	r3, #14
+ 800134c:	6879      	ldr	r1, [r7, #4]
+ 800134e:	697a      	ldr	r2, [r7, #20]
+ 8001350:	4613      	mov	r3, r2
+ 8001352:	00db      	lsls	r3, r3, #3
+ 8001354:	1a9b      	subs	r3, r3, r2
  8001356:	009b      	lsls	r3, r3, #2
- 8001358:	440b      	add	r3, r1
- 800135a:	3304      	adds	r3, #4
- 800135c:	ed93 7a00 	vldr	s14, [r3]
- 8001360:	68bb      	ldr	r3, [r7, #8]
- 8001362:	ee07 3a90 	vmov	s15, r3
- 8001366:	eef8 7a67 	vcvt.f32.u32	s15, s15
- 800136a:	eeb4 7ae7 	vcmpe.f32	s14, s15
- 800136e:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
- 8001372:	d503      	bpl.n	800137c <CheckVoltageFaults+0x98>
+ 8001358:	693a      	ldr	r2, [r7, #16]
+ 800135a:	4413      	add	r3, r2
+ 800135c:	330e      	adds	r3, #14
+ 800135e:	009b      	lsls	r3, r3, #2
+ 8001360:	440b      	add	r3, r1
+ 8001362:	3304      	adds	r3, #4
+ 8001364:	ed93 7a00 	vldr	s14, [r3]
+ 8001368:	68bb      	ldr	r3, [r7, #8]
+ 800136a:	ee07 3a90 	vmov	s15, r3
+ 800136e:	eef8 7a67 	vcvt.f32.u32	s15, s15
+ 8001372:	eeb4 7ae7 	vcmpe.f32	s14, s15
+ 8001376:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+ 800137a:	d503      	bpl.n	8001384 <CheckVoltageFaults+0x98>
             {
                 SetFault(ctx, FAULT_VOLTAGE_UNDER);
- 8001374:	2101      	movs	r1, #1
- 8001376:	6878      	ldr	r0, [r7, #4]
- 8001378:	f7ff ff99 	bl	80012ae <SetFault>
+ 800137c:	2101      	movs	r1, #1
+ 800137e:	6878      	ldr	r0, [r7, #4]
+ 8001380:	f7ff ff99 	bl	80012b6 <SetFault>
         for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
- 800137c:	693b      	ldr	r3, [r7, #16]
- 800137e:	3301      	adds	r3, #1
- 8001380:	613b      	str	r3, [r7, #16]
- 8001382:	693b      	ldr	r3, [r7, #16]
- 8001384:	2b0d      	cmp	r3, #13
- 8001386:	ddc1      	ble.n	800130c <CheckVoltageFaults+0x28>
+ 8001384:	693b      	ldr	r3, [r7, #16]
+ 8001386:	3301      	adds	r3, #1
+ 8001388:	613b      	str	r3, [r7, #16]
+ 800138a:	693b      	ldr	r3, [r7, #16]
+ 800138c:	2b0d      	cmp	r3, #13
+ 800138e:	ddc1      	ble.n	8001314 <CheckVoltageFaults+0x28>
     for (int i = 0; i < N_SIDES; i++)
- 8001388:	697b      	ldr	r3, [r7, #20]
- 800138a:	3301      	adds	r3, #1
- 800138c:	617b      	str	r3, [r7, #20]
- 800138e:	697b      	ldr	r3, [r7, #20]
- 8001390:	2b05      	cmp	r3, #5
- 8001392:	ddb8      	ble.n	8001306 <CheckVoltageFaults+0x22>
+ 8001390:	697b      	ldr	r3, [r7, #20]
+ 8001392:	3301      	adds	r3, #1
+ 8001394:	617b      	str	r3, [r7, #20]
+ 8001396:	697b      	ldr	r3, [r7, #20]
+ 8001398:	2b03      	cmp	r3, #3
+ 800139a:	ddb8      	ble.n	800130e <CheckVoltageFaults+0x22>
     if (ctx->isense.voltage1_mv < GetSetting(ctx, MIN_PACK_VOLTAGE))
     {
         SetFault(ctx, FAULT_PACK_VOLTAGE_UNDER);
     }
     */
 }
- 8001394:	bf00      	nop
- 8001396:	bf00      	nop
- 8001398:	3718      	adds	r7, #24
- 800139a:	46bd      	mov	sp, r7
- 800139c:	bd80      	pop	{r7, pc}
+ 800139c:	bf00      	nop
+ 800139e:	bf00      	nop
+ 80013a0:	3718      	adds	r7, #24
+ 80013a2:	46bd      	mov	sp, r7
+ 80013a4:	bd80      	pop	{r7, pc}
 
-0800139e <CheckCurrentFaults>:
+080013a6 <CheckCurrentFaults>:
         }
     }
 }
 
 void CheckCurrentFaults(DbmsCtx* ctx)
 {
- 800139e:	b590      	push	{r4, r7, lr}
- 80013a0:	b083      	sub	sp, #12
- 80013a2:	af00      	add	r7, sp, #0
- 80013a4:	6078      	str	r0, [r7, #4]
+ 80013a6:	b590      	push	{r4, r7, lr}
+ 80013a8:	b083      	sub	sp, #12
+ 80013aa:	af00      	add	r7, sp, #0
+ 80013ac:	6078      	str	r0, [r7, #4]
     if (ctx->isense.current_ma > GetSetting(ctx, MAX_CURRENT))
- 80013a6:	687b      	ldr	r3, [r7, #4]
- 80013a8:	f8d3 3338 	ldr.w	r3, [r3, #824]	@ 0x338
- 80013ac:	461c      	mov	r4, r3
- 80013ae:	2107      	movs	r1, #7
- 80013b0:	6878      	ldr	r0, [r7, #4]
- 80013b2:	f000 f977 	bl	80016a4 <GetSetting>
- 80013b6:	4603      	mov	r3, r0
- 80013b8:	429c      	cmp	r4, r3
- 80013ba:	d903      	bls.n	80013c4 <CheckCurrentFaults+0x26>
+ 80013ae:	687b      	ldr	r3, [r7, #4]
+ 80013b0:	f8d3 3258 	ldr.w	r3, [r3, #600]	@ 0x258
+ 80013b4:	461c      	mov	r4, r3
+ 80013b6:	2107      	movs	r1, #7
+ 80013b8:	6878      	ldr	r0, [r7, #4]
+ 80013ba:	f000 f977 	bl	80016ac <GetSetting>
+ 80013be:	4603      	mov	r3, r0
+ 80013c0:	429c      	cmp	r4, r3
+ 80013c2:	d903      	bls.n	80013cc <CheckCurrentFaults+0x26>
     {
         SetFault(ctx, FAULT_CURRENT_OVER);
- 80013bc:	2104      	movs	r1, #4
- 80013be:	6878      	ldr	r0, [r7, #4]
- 80013c0:	f7ff ff75 	bl	80012ae <SetFault>
+ 80013c4:	2104      	movs	r1, #4
+ 80013c6:	6878      	ldr	r0, [r7, #4]
+ 80013c8:	f7ff ff75 	bl	80012b6 <SetFault>
     }
- 80013c4:	bf00      	nop
- 80013c6:	370c      	adds	r7, #12
- 80013c8:	46bd      	mov	sp, r7
- 80013ca:	bd90      	pop	{r4, r7, pc}
+ 80013cc:	bf00      	nop
+ 80013ce:	370c      	adds	r7, #12
+ 80013d0:	46bd      	mov	sp, r7
+ 80013d2:	bd90      	pop	{r4, r7, pc}
 
-080013cc <ProcessLedAction>:
+080013d4 <ProcessLedAction>:
 
 /**
 *  Function the dbms iter loop will actually call
 *  Handles blinking and non-blinking states
 */
 void ProcessLedAction(DbmsCtx* ctx) {
- 80013cc:	b580      	push	{r7, lr}
- 80013ce:	b08a      	sub	sp, #40	@ 0x28
- 80013d0:	af00      	add	r7, sp, #0
- 80013d2:	6078      	str	r0, [r7, #4]
+ 80013d4:	b580      	push	{r7, lr}
+ 80013d6:	b08a      	sub	sp, #40	@ 0x28
+ 80013d8:	af00      	add	r7, sp, #0
+ 80013da:	6078      	str	r0, [r7, #4]
     static uint32_t last_blink_time = 0;
     static uint8_t blink_on = 0;
     uint32_t now = HAL_GetTick();
- 80013d4:	f002 faee 	bl	80039b4 <HAL_GetTick>
- 80013d8:	6138      	str	r0, [r7, #16]
+ 80013dc:	f002 faea 	bl	80039b4 <HAL_GetTick>
+ 80013e0:	6138      	str	r0, [r7, #16]
 
     uint8_t blink_needed = 0;
- 80013da:	2300      	movs	r3, #0
- 80013dc:	f887 3027 	strb.w	r3, [r7, #39]	@ 0x27
+ 80013e2:	2300      	movs	r3, #0
+ 80013e4:	f887 3027 	strb.w	r3, [r7, #39]	@ 0x27
     uint32_t blink_interval = 0;
- 80013e0:	2300      	movs	r3, #0
- 80013e2:	623b      	str	r3, [r7, #32]
+ 80013e8:	2300      	movs	r3, #0
+ 80013ea:	623b      	str	r3, [r7, #32]
 
     // determine if any LED needs blinking, and set the interval
     for(int i = 0; i < NUM_LEDS; ++i){
- 80013e4:	2300      	movs	r3, #0
- 80013e6:	61fb      	str	r3, [r7, #28]
- 80013e8:	e022      	b.n	8001430 <ProcessLedAction+0x64>
+ 80013ec:	2300      	movs	r3, #0
+ 80013ee:	61fb      	str	r3, [r7, #28]
+ 80013f0:	e022      	b.n	8001438 <ProcessLedAction+0x64>
         InternalLedState state = system_led_patterns[ctx->led_state][i];
- 80013ea:	687b      	ldr	r3, [r7, #4]
- 80013ec:	6b59      	ldr	r1, [r3, #52]	@ 0x34
- 80013ee:	4837      	ldr	r0, [pc, #220]	@ (80014cc <ProcessLedAction+0x100>)
- 80013f0:	69fb      	ldr	r3, [r7, #28]
- 80013f2:	461a      	mov	r2, r3
- 80013f4:	0052      	lsls	r2, r2, #1
- 80013f6:	441a      	add	r2, r3
- 80013f8:	460b      	mov	r3, r1
- 80013fa:	00db      	lsls	r3, r3, #3
- 80013fc:	440b      	add	r3, r1
- 80013fe:	4413      	add	r3, r2
- 8001400:	18c2      	adds	r2, r0, r3
- 8001402:	f107 030c 	add.w	r3, r7, #12
- 8001406:	8811      	ldrh	r1, [r2, #0]
- 8001408:	7892      	ldrb	r2, [r2, #2]
- 800140a:	8019      	strh	r1, [r3, #0]
- 800140c:	709a      	strb	r2, [r3, #2]
+ 80013f2:	687b      	ldr	r3, [r7, #4]
+ 80013f4:	6b59      	ldr	r1, [r3, #52]	@ 0x34
+ 80013f6:	4837      	ldr	r0, [pc, #220]	@ (80014d4 <ProcessLedAction+0x100>)
+ 80013f8:	69fb      	ldr	r3, [r7, #28]
+ 80013fa:	461a      	mov	r2, r3
+ 80013fc:	0052      	lsls	r2, r2, #1
+ 80013fe:	441a      	add	r2, r3
+ 8001400:	460b      	mov	r3, r1
+ 8001402:	00db      	lsls	r3, r3, #3
+ 8001404:	440b      	add	r3, r1
+ 8001406:	4413      	add	r3, r2
+ 8001408:	18c2      	adds	r2, r0, r3
+ 800140a:	f107 030c 	add.w	r3, r7, #12
+ 800140e:	8811      	ldrh	r1, [r2, #0]
+ 8001410:	7892      	ldrb	r2, [r2, #2]
+ 8001412:	8019      	strh	r1, [r3, #0]
+ 8001414:	709a      	strb	r2, [r3, #2]
         if(state.blink_type != BLINK_TYPE_OFF){
- 800140e:	7b7b      	ldrb	r3, [r7, #13]
- 8001410:	2b00      	cmp	r3, #0
- 8001412:	d00a      	beq.n	800142a <ProcessLedAction+0x5e>
+ 8001416:	7b7b      	ldrb	r3, [r7, #13]
+ 8001418:	2b00      	cmp	r3, #0
+ 800141a:	d00a      	beq.n	8001432 <ProcessLedAction+0x5e>
             blink_needed = 1;
- 8001414:	2301      	movs	r3, #1
- 8001416:	f887 3027 	strb.w	r3, [r7, #39]	@ 0x27
+ 800141c:	2301      	movs	r3, #1
+ 800141e:	f887 3027 	strb.w	r3, [r7, #39]	@ 0x27
             blink_interval = state.blink_type == BLINK_TYPE_FAST ? FAST_BLINK_INTERVAL : SLOW_BLINK_INTERVAL;
- 800141a:	7b7b      	ldrb	r3, [r7, #13]
- 800141c:	2b01      	cmp	r3, #1
- 800141e:	d101      	bne.n	8001424 <ProcessLedAction+0x58>
- 8001420:	2364      	movs	r3, #100	@ 0x64
- 8001422:	e001      	b.n	8001428 <ProcessLedAction+0x5c>
- 8001424:	f44f 73fa 	mov.w	r3, #500	@ 0x1f4
- 8001428:	623b      	str	r3, [r7, #32]
+ 8001422:	7b7b      	ldrb	r3, [r7, #13]
+ 8001424:	2b01      	cmp	r3, #1
+ 8001426:	d101      	bne.n	800142c <ProcessLedAction+0x58>
+ 8001428:	2364      	movs	r3, #100	@ 0x64
+ 800142a:	e001      	b.n	8001430 <ProcessLedAction+0x5c>
+ 800142c:	f44f 73fa 	mov.w	r3, #500	@ 0x1f4
+ 8001430:	623b      	str	r3, [r7, #32]
     for(int i = 0; i < NUM_LEDS; ++i){
- 800142a:	69fb      	ldr	r3, [r7, #28]
- 800142c:	3301      	adds	r3, #1
- 800142e:	61fb      	str	r3, [r7, #28]
- 8001430:	69fb      	ldr	r3, [r7, #28]
- 8001432:	2b02      	cmp	r3, #2
- 8001434:	d9d9      	bls.n	80013ea <ProcessLedAction+0x1e>
+ 8001432:	69fb      	ldr	r3, [r7, #28]
+ 8001434:	3301      	adds	r3, #1
+ 8001436:	61fb      	str	r3, [r7, #28]
+ 8001438:	69fb      	ldr	r3, [r7, #28]
+ 800143a:	2b02      	cmp	r3, #2
+ 800143c:	d9d9      	bls.n	80013f2 <ProcessLedAction+0x1e>
         }
     }
 
     // calculate if we need a blink now or not
     // if so, toggle the blink state and update the last blink time
     if(blink_needed && (now - last_blink_time >= blink_interval)){
- 8001436:	f897 3027 	ldrb.w	r3, [r7, #39]	@ 0x27
- 800143a:	2b00      	cmp	r3, #0
- 800143c:	d013      	beq.n	8001466 <ProcessLedAction+0x9a>
- 800143e:	4b24      	ldr	r3, [pc, #144]	@ (80014d0 <ProcessLedAction+0x104>)
- 8001440:	681b      	ldr	r3, [r3, #0]
- 8001442:	693a      	ldr	r2, [r7, #16]
- 8001444:	1ad3      	subs	r3, r2, r3
- 8001446:	6a3a      	ldr	r2, [r7, #32]
- 8001448:	429a      	cmp	r2, r3
- 800144a:	d80c      	bhi.n	8001466 <ProcessLedAction+0x9a>
+ 800143e:	f897 3027 	ldrb.w	r3, [r7, #39]	@ 0x27
+ 8001442:	2b00      	cmp	r3, #0
+ 8001444:	d013      	beq.n	800146e <ProcessLedAction+0x9a>
+ 8001446:	4b24      	ldr	r3, [pc, #144]	@ (80014d8 <ProcessLedAction+0x104>)
+ 8001448:	681b      	ldr	r3, [r3, #0]
+ 800144a:	693a      	ldr	r2, [r7, #16]
+ 800144c:	1ad3      	subs	r3, r2, r3
+ 800144e:	6a3a      	ldr	r2, [r7, #32]
+ 8001450:	429a      	cmp	r2, r3
+ 8001452:	d80c      	bhi.n	800146e <ProcessLedAction+0x9a>
         blink_on = !blink_on;
- 800144c:	4b21      	ldr	r3, [pc, #132]	@ (80014d4 <ProcessLedAction+0x108>)
- 800144e:	781b      	ldrb	r3, [r3, #0]
- 8001450:	2b00      	cmp	r3, #0
- 8001452:	bf0c      	ite	eq
- 8001454:	2301      	moveq	r3, #1
- 8001456:	2300      	movne	r3, #0
- 8001458:	b2db      	uxtb	r3, r3
- 800145a:	461a      	mov	r2, r3
- 800145c:	4b1d      	ldr	r3, [pc, #116]	@ (80014d4 <ProcessLedAction+0x108>)
- 800145e:	701a      	strb	r2, [r3, #0]
+ 8001454:	4b21      	ldr	r3, [pc, #132]	@ (80014dc <ProcessLedAction+0x108>)
+ 8001456:	781b      	ldrb	r3, [r3, #0]
+ 8001458:	2b00      	cmp	r3, #0
+ 800145a:	bf0c      	ite	eq
+ 800145c:	2301      	moveq	r3, #1
+ 800145e:	2300      	movne	r3, #0
+ 8001460:	b2db      	uxtb	r3, r3
+ 8001462:	461a      	mov	r2, r3
+ 8001464:	4b1d      	ldr	r3, [pc, #116]	@ (80014dc <ProcessLedAction+0x108>)
+ 8001466:	701a      	strb	r2, [r3, #0]
         last_blink_time = now;
- 8001460:	4a1b      	ldr	r2, [pc, #108]	@ (80014d0 <ProcessLedAction+0x104>)
- 8001462:	693b      	ldr	r3, [r7, #16]
- 8001464:	6013      	str	r3, [r2, #0]
+ 8001468:	4a1b      	ldr	r2, [pc, #108]	@ (80014d8 <ProcessLedAction+0x104>)
+ 800146a:	693b      	ldr	r3, [r7, #16]
+ 800146c:	6013      	str	r3, [r2, #0]
     }
 
     // set each LED according to its state and blink logic
     for(int i = 0; i < NUM_LEDS; ++i){
- 8001466:	2300      	movs	r3, #0
- 8001468:	61bb      	str	r3, [r7, #24]
- 800146a:	e026      	b.n	80014ba <ProcessLedAction+0xee>
+ 800146e:	2300      	movs	r3, #0
+ 8001470:	61bb      	str	r3, [r7, #24]
+ 8001472:	e026      	b.n	80014c2 <ProcessLedAction+0xee>
         InternalLedState state = system_led_patterns[ctx->led_state][i];
- 800146c:	687b      	ldr	r3, [r7, #4]
- 800146e:	6b59      	ldr	r1, [r3, #52]	@ 0x34
- 8001470:	4816      	ldr	r0, [pc, #88]	@ (80014cc <ProcessLedAction+0x100>)
- 8001472:	69bb      	ldr	r3, [r7, #24]
- 8001474:	461a      	mov	r2, r3
- 8001476:	0052      	lsls	r2, r2, #1
- 8001478:	441a      	add	r2, r3
- 800147a:	460b      	mov	r3, r1
- 800147c:	00db      	lsls	r3, r3, #3
- 800147e:	440b      	add	r3, r1
- 8001480:	4413      	add	r3, r2
- 8001482:	18c2      	adds	r2, r0, r3
- 8001484:	f107 0308 	add.w	r3, r7, #8
- 8001488:	8811      	ldrh	r1, [r2, #0]
- 800148a:	7892      	ldrb	r2, [r2, #2]
- 800148c:	8019      	strh	r1, [r3, #0]
- 800148e:	709a      	strb	r2, [r3, #2]
+ 8001474:	687b      	ldr	r3, [r7, #4]
+ 8001476:	6b59      	ldr	r1, [r3, #52]	@ 0x34
+ 8001478:	4816      	ldr	r0, [pc, #88]	@ (80014d4 <ProcessLedAction+0x100>)
+ 800147a:	69bb      	ldr	r3, [r7, #24]
+ 800147c:	461a      	mov	r2, r3
+ 800147e:	0052      	lsls	r2, r2, #1
+ 8001480:	441a      	add	r2, r3
+ 8001482:	460b      	mov	r3, r1
+ 8001484:	00db      	lsls	r3, r3, #3
+ 8001486:	440b      	add	r3, r1
+ 8001488:	4413      	add	r3, r2
+ 800148a:	18c2      	adds	r2, r0, r3
+ 800148c:	f107 0308 	add.w	r3, r7, #8
+ 8001490:	8811      	ldrh	r1, [r2, #0]
+ 8001492:	7892      	ldrb	r2, [r2, #2]
+ 8001494:	8019      	strh	r1, [r3, #0]
+ 8001496:	709a      	strb	r2, [r3, #2]
         LedColor color = state.color;
- 8001490:	7a3b      	ldrb	r3, [r7, #8]
- 8001492:	75fb      	strb	r3, [r7, #23]
+ 8001498:	7a3b      	ldrb	r3, [r7, #8]
+ 800149a:	75fb      	strb	r3, [r7, #23]
 
         // if this is a blinking state and we're in the "off" part of the cycle, turn off the LED
         if(state.blink_type != BLINK_TYPE_OFF && !blink_on){
- 8001494:	7a7b      	ldrb	r3, [r7, #9]
- 8001496:	2b00      	cmp	r3, #0
- 8001498:	d005      	beq.n	80014a6 <ProcessLedAction+0xda>
- 800149a:	4b0e      	ldr	r3, [pc, #56]	@ (80014d4 <ProcessLedAction+0x108>)
- 800149c:	781b      	ldrb	r3, [r3, #0]
+ 800149c:	7a7b      	ldrb	r3, [r7, #9]
  800149e:	2b00      	cmp	r3, #0
- 80014a0:	d101      	bne.n	80014a6 <ProcessLedAction+0xda>
+ 80014a0:	d005      	beq.n	80014ae <ProcessLedAction+0xda>
+ 80014a2:	4b0e      	ldr	r3, [pc, #56]	@ (80014dc <ProcessLedAction+0x108>)
+ 80014a4:	781b      	ldrb	r3, [r3, #0]
+ 80014a6:	2b00      	cmp	r3, #0
+ 80014a8:	d101      	bne.n	80014ae <ProcessLedAction+0xda>
             color = LED_OFF;
- 80014a2:	2300      	movs	r3, #0
- 80014a4:	75fb      	strb	r3, [r7, #23]
+ 80014aa:	2300      	movs	r3, #0
+ 80014ac:	75fb      	strb	r3, [r7, #23]
         }
         LedSet((Led)i, color);
- 80014a6:	69bb      	ldr	r3, [r7, #24]
- 80014a8:	b2db      	uxtb	r3, r3
- 80014aa:	7dfa      	ldrb	r2, [r7, #23]
- 80014ac:	4611      	mov	r1, r2
- 80014ae:	4618      	mov	r0, r3
- 80014b0:	f000 f812 	bl	80014d8 <LedSet>
+ 80014ae:	69bb      	ldr	r3, [r7, #24]
+ 80014b0:	b2db      	uxtb	r3, r3
+ 80014b2:	7dfa      	ldrb	r2, [r7, #23]
+ 80014b4:	4611      	mov	r1, r2
+ 80014b6:	4618      	mov	r0, r3
+ 80014b8:	f000 f812 	bl	80014e0 <LedSet>
     for(int i = 0; i < NUM_LEDS; ++i){
- 80014b4:	69bb      	ldr	r3, [r7, #24]
- 80014b6:	3301      	adds	r3, #1
- 80014b8:	61bb      	str	r3, [r7, #24]
- 80014ba:	69bb      	ldr	r3, [r7, #24]
- 80014bc:	2b02      	cmp	r3, #2
- 80014be:	d9d5      	bls.n	800146c <ProcessLedAction+0xa0>
+ 80014bc:	69bb      	ldr	r3, [r7, #24]
+ 80014be:	3301      	adds	r3, #1
+ 80014c0:	61bb      	str	r3, [r7, #24]
+ 80014c2:	69bb      	ldr	r3, [r7, #24]
+ 80014c4:	2b02      	cmp	r3, #2
+ 80014c6:	d9d5      	bls.n	8001474 <ProcessLedAction+0xa0>
     }
 }
- 80014c0:	bf00      	nop
- 80014c2:	bf00      	nop
- 80014c4:	3728      	adds	r7, #40	@ 0x28
- 80014c6:	46bd      	mov	sp, r7
- 80014c8:	bd80      	pop	{r7, pc}
+ 80014c8:	bf00      	nop
  80014ca:	bf00      	nop
- 80014cc:	08008c24 	.word	0x08008c24
- 80014d0:	200002ec 	.word	0x200002ec
- 80014d4:	200002f0 	.word	0x200002f0
+ 80014cc:	3728      	adds	r7, #40	@ 0x28
+ 80014ce:	46bd      	mov	sp, r7
+ 80014d0:	bd80      	pop	{r7, pc}
+ 80014d2:	bf00      	nop
+ 80014d4:	08008c24 	.word	0x08008c24
+ 80014d8:	200002ec 	.word	0x200002ec
+ 80014dc:	200002f0 	.word	0x200002f0
 
-080014d8 <LedSet>:
+080014e0 <LedSet>:
 
 /**
 *  Helper function to set the individual LED color using HAL
 */
 void LedSet(Led led, LedColor color) {
- 80014d8:	b580      	push	{r7, lr}
- 80014da:	b082      	sub	sp, #8
- 80014dc:	af00      	add	r7, sp, #0
- 80014de:	4603      	mov	r3, r0
- 80014e0:	460a      	mov	r2, r1
- 80014e2:	71fb      	strb	r3, [r7, #7]
- 80014e4:	4613      	mov	r3, r2
- 80014e6:	71bb      	strb	r3, [r7, #6]
+ 80014e0:	b580      	push	{r7, lr}
+ 80014e2:	b082      	sub	sp, #8
+ 80014e4:	af00      	add	r7, sp, #0
+ 80014e6:	4603      	mov	r3, r0
+ 80014e8:	460a      	mov	r2, r1
+ 80014ea:	71fb      	strb	r3, [r7, #7]
+ 80014ec:	4613      	mov	r3, r2
+ 80014ee:	71bb      	strb	r3, [r7, #6]
     HAL_GPIO_WritePin(leds[led].rx, leds[led].rp, color & 0b01);
- 80014e8:	79fb      	ldrb	r3, [r7, #7]
- 80014ea:	4a14      	ldr	r2, [pc, #80]	@ (800153c <LedSet+0x64>)
- 80014ec:	011b      	lsls	r3, r3, #4
- 80014ee:	4413      	add	r3, r2
- 80014f0:	6818      	ldr	r0, [r3, #0]
- 80014f2:	79fb      	ldrb	r3, [r7, #7]
- 80014f4:	4a11      	ldr	r2, [pc, #68]	@ (800153c <LedSet+0x64>)
- 80014f6:	011b      	lsls	r3, r3, #4
- 80014f8:	4413      	add	r3, r2
- 80014fa:	3304      	adds	r3, #4
- 80014fc:	8819      	ldrh	r1, [r3, #0]
- 80014fe:	79bb      	ldrb	r3, [r7, #6]
- 8001500:	f003 0301 	and.w	r3, r3, #1
- 8001504:	b2db      	uxtb	r3, r3
- 8001506:	461a      	mov	r2, r3
- 8001508:	f003 fe38 	bl	800517c <HAL_GPIO_WritePin>
+ 80014f0:	79fb      	ldrb	r3, [r7, #7]
+ 80014f2:	4a14      	ldr	r2, [pc, #80]	@ (8001544 <LedSet+0x64>)
+ 80014f4:	011b      	lsls	r3, r3, #4
+ 80014f6:	4413      	add	r3, r2
+ 80014f8:	6818      	ldr	r0, [r3, #0]
+ 80014fa:	79fb      	ldrb	r3, [r7, #7]
+ 80014fc:	4a11      	ldr	r2, [pc, #68]	@ (8001544 <LedSet+0x64>)
+ 80014fe:	011b      	lsls	r3, r3, #4
+ 8001500:	4413      	add	r3, r2
+ 8001502:	3304      	adds	r3, #4
+ 8001504:	8819      	ldrh	r1, [r3, #0]
+ 8001506:	79bb      	ldrb	r3, [r7, #6]
+ 8001508:	f003 0301 	and.w	r3, r3, #1
+ 800150c:	b2db      	uxtb	r3, r3
+ 800150e:	461a      	mov	r2, r3
+ 8001510:	f003 fe34 	bl	800517c <HAL_GPIO_WritePin>
     HAL_GPIO_WritePin(leds[led].gx, leds[led].gp, color & 0b10);
- 800150c:	79fb      	ldrb	r3, [r7, #7]
- 800150e:	4a0b      	ldr	r2, [pc, #44]	@ (800153c <LedSet+0x64>)
- 8001510:	011b      	lsls	r3, r3, #4
- 8001512:	4413      	add	r3, r2
- 8001514:	3308      	adds	r3, #8
- 8001516:	6818      	ldr	r0, [r3, #0]
- 8001518:	79fb      	ldrb	r3, [r7, #7]
- 800151a:	4a08      	ldr	r2, [pc, #32]	@ (800153c <LedSet+0x64>)
- 800151c:	011b      	lsls	r3, r3, #4
- 800151e:	4413      	add	r3, r2
- 8001520:	330c      	adds	r3, #12
- 8001522:	8819      	ldrh	r1, [r3, #0]
- 8001524:	79bb      	ldrb	r3, [r7, #6]
- 8001526:	f003 0302 	and.w	r3, r3, #2
- 800152a:	b2db      	uxtb	r3, r3
- 800152c:	461a      	mov	r2, r3
- 800152e:	f003 fe25 	bl	800517c <HAL_GPIO_WritePin>
+ 8001514:	79fb      	ldrb	r3, [r7, #7]
+ 8001516:	4a0b      	ldr	r2, [pc, #44]	@ (8001544 <LedSet+0x64>)
+ 8001518:	011b      	lsls	r3, r3, #4
+ 800151a:	4413      	add	r3, r2
+ 800151c:	3308      	adds	r3, #8
+ 800151e:	6818      	ldr	r0, [r3, #0]
+ 8001520:	79fb      	ldrb	r3, [r7, #7]
+ 8001522:	4a08      	ldr	r2, [pc, #32]	@ (8001544 <LedSet+0x64>)
+ 8001524:	011b      	lsls	r3, r3, #4
+ 8001526:	4413      	add	r3, r2
+ 8001528:	330c      	adds	r3, #12
+ 800152a:	8819      	ldrh	r1, [r3, #0]
+ 800152c:	79bb      	ldrb	r3, [r7, #6]
+ 800152e:	f003 0302 	and.w	r3, r3, #2
+ 8001532:	b2db      	uxtb	r3, r3
+ 8001534:	461a      	mov	r2, r3
+ 8001536:	f003 fe21 	bl	800517c <HAL_GPIO_WritePin>
 }
- 8001532:	bf00      	nop
- 8001534:	3708      	adds	r7, #8
- 8001536:	46bd      	mov	sp, r7
- 8001538:	bd80      	pop	{r7, pc}
  800153a:	bf00      	nop
- 800153c:	08008bf4 	.word	0x08008bf4
+ 800153c:	3708      	adds	r7, #8
+ 800153e:	46bd      	mov	sp, r7
+ 8001540:	bd80      	pop	{r7, pc}
+ 8001542:	bf00      	nop
+ 8001544:	08008bf4 	.word	0x08008bf4
 
-08001540 <DelayUs>:
+08001548 <DelayUs>:
 
 /**
  * Blocking delay in microseconds using the free-running timer.
  */
 void DelayUs(DbmsCtx* ctx, uint32_t us)
 {
- 8001540:	e92d 43b0 	stmdb	sp!, {r4, r5, r7, r8, r9, lr}
- 8001544:	b084      	sub	sp, #16
- 8001546:	af00      	add	r7, sp, #0
- 8001548:	6078      	str	r0, [r7, #4]
- 800154a:	6039      	str	r1, [r7, #0]
+ 8001548:	e92d 43b0 	stmdb	sp!, {r4, r5, r7, r8, r9, lr}
+ 800154c:	b084      	sub	sp, #16
+ 800154e:	af00      	add	r7, sp, #0
+ 8001550:	6078      	str	r0, [r7, #4]
+ 8001552:	6039      	str	r1, [r7, #0]
 #ifdef SIM
     usleep(us);
 #else
     uint64_t start = GetUs(ctx);
- 800154c:	6878      	ldr	r0, [r7, #4]
- 800154e:	f000 f81b 	bl	8001588 <GetUs>
- 8001552:	e9c7 0102 	strd	r0, r1, [r7, #8]
+ 8001554:	6878      	ldr	r0, [r7, #4]
+ 8001556:	f000 f81b 	bl	8001590 <GetUs>
+ 800155a:	e9c7 0102 	strd	r0, r1, [r7, #8]
     while ((GetUs(ctx) - start) < (uint64_t)us) {
- 8001556:	e000      	b.n	800155a <DelayUs+0x1a>
+ 800155e:	e000      	b.n	8001562 <DelayUs+0x1a>
         __NOP(); // optional: gives the pipeline a breather
- 8001558:	bf00      	nop
+ 8001560:	bf00      	nop
     while ((GetUs(ctx) - start) < (uint64_t)us) {
- 800155a:	6878      	ldr	r0, [r7, #4]
- 800155c:	f000 f814 	bl	8001588 <GetUs>
- 8001560:	e9d7 2302 	ldrd	r2, r3, [r7, #8]
- 8001564:	1a84      	subs	r4, r0, r2
- 8001566:	eb61 0503 	sbc.w	r5, r1, r3
- 800156a:	683b      	ldr	r3, [r7, #0]
- 800156c:	2200      	movs	r2, #0
- 800156e:	4698      	mov	r8, r3
- 8001570:	4691      	mov	r9, r2
- 8001572:	4544      	cmp	r4, r8
- 8001574:	eb75 0309 	sbcs.w	r3, r5, r9
- 8001578:	d3ee      	bcc.n	8001558 <DelayUs+0x18>
+ 8001562:	6878      	ldr	r0, [r7, #4]
+ 8001564:	f000 f814 	bl	8001590 <GetUs>
+ 8001568:	e9d7 2302 	ldrd	r2, r3, [r7, #8]
+ 800156c:	1a84      	subs	r4, r0, r2
+ 800156e:	eb61 0503 	sbc.w	r5, r1, r3
+ 8001572:	683b      	ldr	r3, [r7, #0]
+ 8001574:	2200      	movs	r2, #0
+ 8001576:	4698      	mov	r8, r3
+ 8001578:	4691      	mov	r9, r2
+ 800157a:	4544      	cmp	r4, r8
+ 800157c:	eb75 0309 	sbcs.w	r3, r5, r9
+ 8001580:	d3ee      	bcc.n	8001560 <DelayUs+0x18>
     }
 #endif
 }
- 800157a:	bf00      	nop
- 800157c:	bf00      	nop
- 800157e:	3710      	adds	r7, #16
- 8001580:	46bd      	mov	sp, r7
- 8001582:	e8bd 83b0 	ldmia.w	sp!, {r4, r5, r7, r8, r9, pc}
+ 8001582:	bf00      	nop
+ 8001584:	bf00      	nop
+ 8001586:	3710      	adds	r7, #16
+ 8001588:	46bd      	mov	sp, r7
+ 800158a:	e8bd 83b0 	ldmia.w	sp!, {r4, r5, r7, r8, r9, pc}
 	...
 
-08001588 <GetUs>:
+08001590 <GetUs>:
 /**
  * get time in microseconds from the hardware timer (monotonic, 64-bit)
  * Assumes timer tick = 1 us. Works with 16- or 32-bit counters.
  */
 uint64_t GetUs(DbmsCtx* ctx)
 {
- 8001588:	e92d 0fb0 	stmdb	sp!, {r4, r5, r7, r8, r9, sl, fp}
- 800158c:	b087      	sub	sp, #28
- 800158e:	af00      	add	r7, sp, #0
- 8001590:	60f8      	str	r0, [r7, #12]
+ 8001590:	e92d 0fb0 	stmdb	sp!, {r4, r5, r7, r8, r9, sl, fp}
+ 8001594:	b087      	sub	sp, #28
+ 8001596:	af00      	add	r7, sp, #0
+ 8001598:	60f8      	str	r0, [r7, #12]
 #ifdef SIM
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (uint64_t)ts.tv_sec * 1000000ull + (uint64_t)(ts.tv_nsec / 1000);
 #else
     TIM_HandleTypeDef* h = ctx->hw.timer;
- 8001592:	68fb      	ldr	r3, [r7, #12]
- 8001594:	685b      	ldr	r3, [r3, #4]
- 8001596:	617b      	str	r3, [r7, #20]
+ 800159a:	68fb      	ldr	r3, [r7, #12]
+ 800159c:	685b      	ldr	r3, [r3, #4]
+ 800159e:	617b      	str	r3, [r7, #20]
     static uint32_t    last_cnt = 0;
     static uint64_t    high_us  = 0;
     static uint32_t    rollover = 0;
 
     // Read current counter first
     uint32_t now = __HAL_TIM_GET_COUNTER(h);
- 8001598:	697b      	ldr	r3, [r7, #20]
- 800159a:	681b      	ldr	r3, [r3, #0]
- 800159c:	6a5b      	ldr	r3, [r3, #36]	@ 0x24
- 800159e:	613b      	str	r3, [r7, #16]
+ 80015a0:	697b      	ldr	r3, [r7, #20]
+ 80015a2:	681b      	ldr	r3, [r3, #0]
+ 80015a4:	6a5b      	ldr	r3, [r3, #36]	@ 0x24
+ 80015a6:	613b      	str	r3, [r7, #16]
 
     // Lazy-initialize rollover on first call
     if (rollover == 0) {
- 80015a0:	4b1c      	ldr	r3, [pc, #112]	@ (8001614 <GetUs+0x8c>)
- 80015a2:	681b      	ldr	r3, [r3, #0]
- 80015a4:	2b00      	cmp	r3, #0
- 80015a6:	d108      	bne.n	80015ba <GetUs+0x32>
+ 80015a8:	4b1c      	ldr	r3, [pc, #112]	@ (800161c <GetUs+0x8c>)
+ 80015aa:	681b      	ldr	r3, [r3, #0]
+ 80015ac:	2b00      	cmp	r3, #0
+ 80015ae:	d108      	bne.n	80015c2 <GetUs+0x32>
         // ARR is inclusive; rollover span is ARR+1 counts
         rollover = __HAL_TIM_GET_AUTORELOAD(h) + 1u;
- 80015a8:	697b      	ldr	r3, [r7, #20]
- 80015aa:	681b      	ldr	r3, [r3, #0]
- 80015ac:	6adb      	ldr	r3, [r3, #44]	@ 0x2c
- 80015ae:	3301      	adds	r3, #1
- 80015b0:	4a18      	ldr	r2, [pc, #96]	@ (8001614 <GetUs+0x8c>)
- 80015b2:	6013      	str	r3, [r2, #0]
+ 80015b0:	697b      	ldr	r3, [r7, #20]
+ 80015b2:	681b      	ldr	r3, [r3, #0]
+ 80015b4:	6adb      	ldr	r3, [r3, #44]	@ 0x2c
+ 80015b6:	3301      	adds	r3, #1
+ 80015b8:	4a18      	ldr	r2, [pc, #96]	@ (800161c <GetUs+0x8c>)
+ 80015ba:	6013      	str	r3, [r2, #0]
         last_cnt = now;
- 80015b4:	4a18      	ldr	r2, [pc, #96]	@ (8001618 <GetUs+0x90>)
- 80015b6:	693b      	ldr	r3, [r7, #16]
- 80015b8:	6013      	str	r3, [r2, #0]
+ 80015bc:	4a18      	ldr	r2, [pc, #96]	@ (8001620 <GetUs+0x90>)
+ 80015be:	693b      	ldr	r3, [r7, #16]
+ 80015c0:	6013      	str	r3, [r2, #0]
     }
 
     // Detect wrap: counter went from near ARR back to 0
     if (now < last_cnt) {
- 80015ba:	4b17      	ldr	r3, [pc, #92]	@ (8001618 <GetUs+0x90>)
- 80015bc:	681b      	ldr	r3, [r3, #0]
- 80015be:	693a      	ldr	r2, [r7, #16]
- 80015c0:	429a      	cmp	r2, r3
- 80015c2:	d20e      	bcs.n	80015e2 <GetUs+0x5a>
+ 80015c2:	4b17      	ldr	r3, [pc, #92]	@ (8001620 <GetUs+0x90>)
+ 80015c4:	681b      	ldr	r3, [r3, #0]
+ 80015c6:	693a      	ldr	r2, [r7, #16]
+ 80015c8:	429a      	cmp	r2, r3
+ 80015ca:	d20e      	bcs.n	80015ea <GetUs+0x5a>
         high_us += (uint64_t)rollover;   // add one full period (in microseconds)
- 80015c4:	4b13      	ldr	r3, [pc, #76]	@ (8001614 <GetUs+0x8c>)
- 80015c6:	681b      	ldr	r3, [r3, #0]
- 80015c8:	2200      	movs	r2, #0
- 80015ca:	4698      	mov	r8, r3
- 80015cc:	4691      	mov	r9, r2
- 80015ce:	4b13      	ldr	r3, [pc, #76]	@ (800161c <GetUs+0x94>)
- 80015d0:	e9d3 2300 	ldrd	r2, r3, [r3]
- 80015d4:	eb18 0a02 	adds.w	sl, r8, r2
- 80015d8:	eb49 0b03 	adc.w	fp, r9, r3
- 80015dc:	4b0f      	ldr	r3, [pc, #60]	@ (800161c <GetUs+0x94>)
- 80015de:	e9c3 ab00 	strd	sl, fp, [r3]
+ 80015cc:	4b13      	ldr	r3, [pc, #76]	@ (800161c <GetUs+0x8c>)
+ 80015ce:	681b      	ldr	r3, [r3, #0]
+ 80015d0:	2200      	movs	r2, #0
+ 80015d2:	4698      	mov	r8, r3
+ 80015d4:	4691      	mov	r9, r2
+ 80015d6:	4b13      	ldr	r3, [pc, #76]	@ (8001624 <GetUs+0x94>)
+ 80015d8:	e9d3 2300 	ldrd	r2, r3, [r3]
+ 80015dc:	eb18 0a02 	adds.w	sl, r8, r2
+ 80015e0:	eb49 0b03 	adc.w	fp, r9, r3
+ 80015e4:	4b0f      	ldr	r3, [pc, #60]	@ (8001624 <GetUs+0x94>)
+ 80015e6:	e9c3 ab00 	strd	sl, fp, [r3]
     }
 
     last_cnt = now;
- 80015e2:	4a0d      	ldr	r2, [pc, #52]	@ (8001618 <GetUs+0x90>)
- 80015e4:	693b      	ldr	r3, [r7, #16]
- 80015e6:	6013      	str	r3, [r2, #0]
+ 80015ea:	4a0d      	ldr	r2, [pc, #52]	@ (8001620 <GetUs+0x90>)
+ 80015ec:	693b      	ldr	r3, [r7, #16]
+ 80015ee:	6013      	str	r3, [r2, #0]
     return high_us + (uint64_t)now;
- 80015e8:	693b      	ldr	r3, [r7, #16]
- 80015ea:	2200      	movs	r2, #0
- 80015ec:	461c      	mov	r4, r3
- 80015ee:	4615      	mov	r5, r2
- 80015f0:	4b0a      	ldr	r3, [pc, #40]	@ (800161c <GetUs+0x94>)
- 80015f2:	e9d3 2300 	ldrd	r2, r3, [r3]
- 80015f6:	18a1      	adds	r1, r4, r2
- 80015f8:	6039      	str	r1, [r7, #0]
- 80015fa:	eb45 0303 	adc.w	r3, r5, r3
- 80015fe:	607b      	str	r3, [r7, #4]
- 8001600:	e9d7 2300 	ldrd	r2, r3, [r7]
+ 80015f0:	693b      	ldr	r3, [r7, #16]
+ 80015f2:	2200      	movs	r2, #0
+ 80015f4:	461c      	mov	r4, r3
+ 80015f6:	4615      	mov	r5, r2
+ 80015f8:	4b0a      	ldr	r3, [pc, #40]	@ (8001624 <GetUs+0x94>)
+ 80015fa:	e9d3 2300 	ldrd	r2, r3, [r3]
+ 80015fe:	18a1      	adds	r1, r4, r2
+ 8001600:	6039      	str	r1, [r7, #0]
+ 8001602:	eb45 0303 	adc.w	r3, r5, r3
+ 8001606:	607b      	str	r3, [r7, #4]
+ 8001608:	e9d7 2300 	ldrd	r2, r3, [r7]
 #endif
 }
- 8001604:	4610      	mov	r0, r2
- 8001606:	4619      	mov	r1, r3
- 8001608:	371c      	adds	r7, #28
- 800160a:	46bd      	mov	sp, r7
- 800160c:	e8bd 0fb0 	ldmia.w	sp!, {r4, r5, r7, r8, r9, sl, fp}
- 8001610:	4770      	bx	lr
- 8001612:	bf00      	nop
- 8001614:	200002f4 	.word	0x200002f4
- 8001618:	200002f8 	.word	0x200002f8
- 800161c:	20000300 	.word	0x20000300
+ 800160c:	4610      	mov	r0, r2
+ 800160e:	4619      	mov	r1, r3
+ 8001610:	371c      	adds	r7, #28
+ 8001612:	46bd      	mov	sp, r7
+ 8001614:	e8bd 0fb0 	ldmia.w	sp!, {r4, r5, r7, r8, r9, sl, fp}
+ 8001618:	4770      	bx	lr
+ 800161a:	bf00      	nop
+ 800161c:	200002f4 	.word	0x200002f4
+ 8001620:	200002f8 	.word	0x200002f8
+ 8001624:	20000300 	.word	0x20000300
 
-08001620 <CalcIterDelay>:
+08001628 <CalcIterDelay>:
  * Calculate how many microseconds to wait so each loop iteration lasts ~1/target_hz seconds.
  * Uses iter_start_us and iter_end_us captured around your work.
  * Returns 0 if you’re already late.
  */
 uint32_t CalcIterDelay(DbmsCtx* ctx, uint32_t hz)
 {
- 8001620:	e92d 4fb0 	stmdb	sp!, {r4, r5, r7, r8, r9, sl, fp, lr}
- 8001624:	b086      	sub	sp, #24
- 8001626:	af00      	add	r7, sp, #0
- 8001628:	6078      	str	r0, [r7, #4]
- 800162a:	6039      	str	r1, [r7, #0]
+ 8001628:	e92d 4fb0 	stmdb	sp!, {r4, r5, r7, r8, r9, sl, fp, lr}
+ 800162c:	b086      	sub	sp, #24
+ 800162e:	af00      	add	r7, sp, #0
+ 8001630:	6078      	str	r0, [r7, #4]
+ 8001632:	6039      	str	r1, [r7, #0]
     if (hz == 0) return 0; // avoid div-by-zero; no pacing requested
- 800162c:	6839      	ldr	r1, [r7, #0]
- 800162e:	2900      	cmp	r1, #0
- 8001630:	d101      	bne.n	8001636 <CalcIterDelay+0x16>
- 8001632:	2300      	movs	r3, #0
- 8001634:	e02f      	b.n	8001696 <CalcIterDelay+0x76>
+ 8001634:	6839      	ldr	r1, [r7, #0]
+ 8001636:	2900      	cmp	r1, #0
+ 8001638:	d101      	bne.n	800163e <CalcIterDelay+0x16>
+ 800163a:	2300      	movs	r3, #0
+ 800163c:	e02f      	b.n	800169e <CalcIterDelay+0x76>
 
     // Round to nearest microsecond period: T = round(1e6 / hz)
     const uint64_t period_us = (1000000ull + (hz / 2u)) / hz;
- 8001636:	6839      	ldr	r1, [r7, #0]
- 8001638:	0849      	lsrs	r1, r1, #1
- 800163a:	2000      	movs	r0, #0
- 800163c:	460a      	mov	r2, r1
- 800163e:	4603      	mov	r3, r0
- 8001640:	4917      	ldr	r1, [pc, #92]	@ (80016a0 <CalcIterDelay+0x80>)
- 8001642:	eb12 0801 	adds.w	r8, r2, r1
- 8001646:	f143 0900 	adc.w	r9, r3, #0
- 800164a:	683b      	ldr	r3, [r7, #0]
- 800164c:	2200      	movs	r2, #0
- 800164e:	469a      	mov	sl, r3
- 8001650:	4693      	mov	fp, r2
- 8001652:	4652      	mov	r2, sl
- 8001654:	465b      	mov	r3, fp
- 8001656:	4640      	mov	r0, r8
- 8001658:	4649      	mov	r1, r9
- 800165a:	f7ff fa47 	bl	8000aec <__aeabi_uldivmod>
- 800165e:	4602      	mov	r2, r0
- 8001660:	460b      	mov	r3, r1
- 8001662:	e9c7 2304 	strd	r2, r3, [r7, #16]
+ 800163e:	6839      	ldr	r1, [r7, #0]
+ 8001640:	0849      	lsrs	r1, r1, #1
+ 8001642:	2000      	movs	r0, #0
+ 8001644:	460a      	mov	r2, r1
+ 8001646:	4603      	mov	r3, r0
+ 8001648:	4917      	ldr	r1, [pc, #92]	@ (80016a8 <CalcIterDelay+0x80>)
+ 800164a:	eb12 0801 	adds.w	r8, r2, r1
+ 800164e:	f143 0900 	adc.w	r9, r3, #0
+ 8001652:	683b      	ldr	r3, [r7, #0]
+ 8001654:	2200      	movs	r2, #0
+ 8001656:	469a      	mov	sl, r3
+ 8001658:	4693      	mov	fp, r2
+ 800165a:	4652      	mov	r2, sl
+ 800165c:	465b      	mov	r3, fp
+ 800165e:	4640      	mov	r0, r8
+ 8001660:	4649      	mov	r1, r9
+ 8001662:	f7ff fa43 	bl	8000aec <__aeabi_uldivmod>
+ 8001666:	4602      	mov	r2, r0
+ 8001668:	460b      	mov	r3, r1
+ 800166a:	e9c7 2304 	strd	r2, r3, [r7, #16]
 
     // Elapsed time this iteration
     const uint64_t elapsed_us = ctx->iter_end_us - ctx->iter_start_us;
- 8001666:	687b      	ldr	r3, [r7, #4]
- 8001668:	e9d3 01bc 	ldrd	r0, r1, [r3, #752]	@ 0x2f0
- 800166c:	687b      	ldr	r3, [r7, #4]
- 800166e:	e9d3 23ba 	ldrd	r2, r3, [r3, #744]	@ 0x2e8
- 8001672:	1a84      	subs	r4, r0, r2
- 8001674:	eb61 0503 	sbc.w	r5, r1, r3
- 8001678:	e9c7 4502 	strd	r4, r5, [r7, #8]
+ 800166e:	687b      	ldr	r3, [r7, #4]
+ 8001670:	e9d3 0184 	ldrd	r0, r1, [r3, #528]	@ 0x210
+ 8001674:	687b      	ldr	r3, [r7, #4]
+ 8001676:	e9d3 2382 	ldrd	r2, r3, [r3, #520]	@ 0x208
+ 800167a:	1a84      	subs	r4, r0, r2
+ 800167c:	eb61 0503 	sbc.w	r5, r1, r3
+ 8001680:	e9c7 4502 	strd	r4, r5, [r7, #8]
 
     // Remaining time (saturate at 0)
     if (elapsed_us >= period_us) return 0;
- 800167c:	e9d7 0102 	ldrd	r0, r1, [r7, #8]
- 8001680:	e9d7 2304 	ldrd	r2, r3, [r7, #16]
- 8001684:	4290      	cmp	r0, r2
- 8001686:	eb71 0303 	sbcs.w	r3, r1, r3
- 800168a:	d301      	bcc.n	8001690 <CalcIterDelay+0x70>
- 800168c:	2300      	movs	r3, #0
- 800168e:	e002      	b.n	8001696 <CalcIterDelay+0x76>
+ 8001684:	e9d7 0102 	ldrd	r0, r1, [r7, #8]
+ 8001688:	e9d7 2304 	ldrd	r2, r3, [r7, #16]
+ 800168c:	4290      	cmp	r0, r2
+ 800168e:	eb71 0303 	sbcs.w	r3, r1, r3
+ 8001692:	d301      	bcc.n	8001698 <CalcIterDelay+0x70>
+ 8001694:	2300      	movs	r3, #0
+ 8001696:	e002      	b.n	800169e <CalcIterDelay+0x76>
     return (uint32_t)(period_us - elapsed_us);
- 8001690:	693a      	ldr	r2, [r7, #16]
- 8001692:	68bb      	ldr	r3, [r7, #8]
- 8001694:	1ad3      	subs	r3, r2, r3
+ 8001698:	693a      	ldr	r2, [r7, #16]
+ 800169a:	68bb      	ldr	r3, [r7, #8]
+ 800169c:	1ad3      	subs	r3, r2, r3
 }
- 8001696:	4618      	mov	r0, r3
- 8001698:	3718      	adds	r7, #24
- 800169a:	46bd      	mov	sp, r7
- 800169c:	e8bd 8fb0 	ldmia.w	sp!, {r4, r5, r7, r8, r9, sl, fp, pc}
- 80016a0:	000f4240 	.word	0x000f4240
+ 800169e:	4618      	mov	r0, r3
+ 80016a0:	3718      	adds	r7, #24
+ 80016a2:	46bd      	mov	sp, r7
+ 80016a4:	e8bd 8fb0 	ldmia.w	sp!, {r4, r5, r7, r8, r9, sl, fp, pc}
+ 80016a8:	000f4240 	.word	0x000f4240
 
-080016a4 <GetSetting>:
+080016ac <GetSetting>:
 #include "settings.h"
 
 uint32_t GetSetting(DbmsCtx* ctx, UserSettingIndex index)
 {
- 80016a4:	b480      	push	{r7}
- 80016a6:	b083      	sub	sp, #12
- 80016a8:	af00      	add	r7, sp, #0
- 80016aa:	6078      	str	r0, [r7, #4]
- 80016ac:	460b      	mov	r3, r1
- 80016ae:	70fb      	strb	r3, [r7, #3]
+ 80016ac:	b480      	push	{r7}
+ 80016ae:	b083      	sub	sp, #12
+ 80016b0:	af00      	add	r7, sp, #0
+ 80016b2:	6078      	str	r0, [r7, #4]
+ 80016b4:	460b      	mov	r3, r1
+ 80016b6:	70fb      	strb	r3, [r7, #3]
     // CanLog(ctx, "GS %d %c\n", index, ctx->settings ? 'Y' : 'N');
         return ctx->settings->user_defined[index];
- 80016b0:	687b      	ldr	r3, [r7, #4]
- 80016b2:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
- 80016b4:	78fa      	ldrb	r2, [r7, #3]
- 80016b6:	f853 3022 	ldr.w	r3, [r3, r2, lsl #2]
+ 80016b8:	687b      	ldr	r3, [r7, #4]
+ 80016ba:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
+ 80016bc:	78fa      	ldrb	r2, [r7, #3]
+ 80016be:	f853 3022 	ldr.w	r3, [r3, r2, lsl #2]
 }
- 80016ba:	4618      	mov	r0, r3
- 80016bc:	370c      	adds	r7, #12
- 80016be:	46bd      	mov	sp, r7
- 80016c0:	f85d 7b04 	ldr.w	r7, [sp], #4
- 80016c4:	4770      	bx	lr
+ 80016c2:	4618      	mov	r0, r3
+ 80016c4:	370c      	adds	r7, #12
+ 80016c6:	46bd      	mov	sp, r7
+ 80016c8:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80016cc:	4770      	bx	lr
 
-080016c6 <SetSetting>:
+080016ce <SetSetting>:
 
 void SetSetting(DbmsCtx* ctx, UserSettingIndex index, uint32_t new_val)
 {
- 80016c6:	b480      	push	{r7}
- 80016c8:	b085      	sub	sp, #20
- 80016ca:	af00      	add	r7, sp, #0
- 80016cc:	60f8      	str	r0, [r7, #12]
- 80016ce:	460b      	mov	r3, r1
- 80016d0:	607a      	str	r2, [r7, #4]
- 80016d2:	72fb      	strb	r3, [r7, #11]
+ 80016ce:	b480      	push	{r7}
+ 80016d0:	b085      	sub	sp, #20
+ 80016d2:	af00      	add	r7, sp, #0
+ 80016d4:	60f8      	str	r0, [r7, #12]
+ 80016d6:	460b      	mov	r3, r1
+ 80016d8:	607a      	str	r2, [r7, #4]
+ 80016da:	72fb      	strb	r3, [r7, #11]
     ctx->settings->user_defined[index] = new_val;
- 80016d4:	68fb      	ldr	r3, [r7, #12]
- 80016d6:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
- 80016d8:	7afa      	ldrb	r2, [r7, #11]
- 80016da:	6879      	ldr	r1, [r7, #4]
- 80016dc:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
+ 80016dc:	68fb      	ldr	r3, [r7, #12]
+ 80016de:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
+ 80016e0:	7afa      	ldrb	r2, [r7, #11]
+ 80016e2:	6879      	ldr	r1, [r7, #4]
+ 80016e4:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
 }
- 80016e0:	bf00      	nop
- 80016e2:	3714      	adds	r7, #20
- 80016e4:	46bd      	mov	sp, r7
- 80016e6:	f85d 7b04 	ldr.w	r7, [sp], #4
- 80016ea:	4770      	bx	lr
+ 80016e8:	bf00      	nop
+ 80016ea:	3714      	adds	r7, #20
+ 80016ec:	46bd      	mov	sp, r7
+ 80016ee:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80016f2:	4770      	bx	lr
 
-080016ec <IsValidSettingIndex>:
+080016f4 <IsValidSettingIndex>:
 
 bool IsValidSettingIndex(DbmsCtx* ctx, uint32_t index)
 {
- 80016ec:	b480      	push	{r7}
- 80016ee:	b083      	sub	sp, #12
- 80016f0:	af00      	add	r7, sp, #0
- 80016f2:	6078      	str	r0, [r7, #4]
- 80016f4:	6039      	str	r1, [r7, #0]
+ 80016f4:	b480      	push	{r7}
+ 80016f6:	b083      	sub	sp, #12
+ 80016f8:	af00      	add	r7, sp, #0
+ 80016fa:	6078      	str	r0, [r7, #4]
+ 80016fc:	6039      	str	r1, [r7, #0]
     return index < sizeof(ctx->settings->user_defined);
- 80016f6:	683b      	ldr	r3, [r7, #0]
- 80016f8:	2b1f      	cmp	r3, #31
- 80016fa:	bf94      	ite	ls
- 80016fc:	2301      	movls	r3, #1
- 80016fe:	2300      	movhi	r3, #0
- 8001700:	b2db      	uxtb	r3, r3
+ 80016fe:	683b      	ldr	r3, [r7, #0]
+ 8001700:	2b1f      	cmp	r3, #31
+ 8001702:	bf94      	ite	ls
+ 8001704:	2301      	movls	r3, #1
+ 8001706:	2300      	movhi	r3, #0
+ 8001708:	b2db      	uxtb	r3, r3
 }
- 8001702:	4618      	mov	r0, r3
- 8001704:	370c      	adds	r7, #12
- 8001706:	46bd      	mov	sp, r7
- 8001708:	f85d 7b04 	ldr.w	r7, [sp], #4
- 800170c:	4770      	bx	lr
+ 800170a:	4618      	mov	r0, r3
+ 800170c:	370c      	adds	r7, #12
+ 800170e:	46bd      	mov	sp, r7
+ 8001710:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8001714:	4770      	bx	lr
 
-0800170e <LoadSettings>:
+08001716 <LoadSettings>:
 
 int LoadSettings(DbmsCtx* ctx)
 {
- 800170e:	b580      	push	{r7, lr}
- 8001710:	b082      	sub	sp, #8
- 8001712:	af00      	add	r7, sp, #0
- 8001714:	6078      	str	r0, [r7, #4]
+ 8001716:	b580      	push	{r7, lr}
+ 8001718:	b082      	sub	sp, #8
+ 800171a:	af00      	add	r7, sp, #0
+ 800171c:	6078      	str	r0, [r7, #4]
     return LoadStoredObject(ctx, EEPROM_SETTINGS_ADDR, ctx->settings, sizeof(DbmsSettings));
- 8001716:	687b      	ldr	r3, [r7, #4]
- 8001718:	6b9a      	ldr	r2, [r3, #56]	@ 0x38
- 800171a:	2320      	movs	r3, #32
- 800171c:	2100      	movs	r1, #0
- 800171e:	6878      	ldr	r0, [r7, #4]
- 8001720:	f000 fe00 	bl	8002324 <LoadStoredObject>
- 8001724:	4603      	mov	r3, r0
+ 800171e:	687b      	ldr	r3, [r7, #4]
+ 8001720:	6b9a      	ldr	r2, [r3, #56]	@ 0x38
+ 8001722:	2320      	movs	r3, #32
+ 8001724:	2100      	movs	r1, #0
+ 8001726:	6878      	ldr	r0, [r7, #4]
+ 8001728:	f000 fdfc 	bl	8002324 <LoadStoredObject>
+ 800172c:	4603      	mov	r3, r0
 }
- 8001726:	4618      	mov	r0, r3
- 8001728:	3708      	adds	r7, #8
- 800172a:	46bd      	mov	sp, r7
- 800172c:	bd80      	pop	{r7, pc}
+ 800172e:	4618      	mov	r0, r3
+ 8001730:	3708      	adds	r7, #8
+ 8001732:	46bd      	mov	sp, r7
+ 8001734:	bd80      	pop	{r7, pc}
 
-0800172e <SaveSettings>:
+08001736 <SaveSettings>:
 
 int SaveSettings(DbmsCtx* ctx)
 {
- 800172e:	b580      	push	{r7, lr}
- 8001730:	b082      	sub	sp, #8
- 8001732:	af00      	add	r7, sp, #0
- 8001734:	6078      	str	r0, [r7, #4]
+ 8001736:	b580      	push	{r7, lr}
+ 8001738:	b082      	sub	sp, #8
+ 800173a:	af00      	add	r7, sp, #0
+ 800173c:	6078      	str	r0, [r7, #4]
     return SaveStoredObject(ctx, EEPROM_SETTINGS_ADDR, ctx->settings, sizeof(DbmsSettings));
- 8001736:	687b      	ldr	r3, [r7, #4]
- 8001738:	6b9a      	ldr	r2, [r3, #56]	@ 0x38
- 800173a:	2320      	movs	r3, #32
- 800173c:	2100      	movs	r1, #0
- 800173e:	6878      	ldr	r0, [r7, #4]
- 8001740:	f000 fda4 	bl	800228c <SaveStoredObject>
- 8001744:	4603      	mov	r3, r0
+ 800173e:	687b      	ldr	r3, [r7, #4]
+ 8001740:	6b9a      	ldr	r2, [r3, #56]	@ 0x38
+ 8001742:	2320      	movs	r3, #32
+ 8001744:	2100      	movs	r1, #0
+ 8001746:	6878      	ldr	r0, [r7, #4]
+ 8001748:	f000 fda0 	bl	800228c <SaveStoredObject>
+ 800174c:	4603      	mov	r3, r0
 }
- 8001746:	4618      	mov	r0, r3
- 8001748:	3708      	adds	r7, #8
- 800174a:	46bd      	mov	sp, r7
- 800174c:	bd80      	pop	{r7, pc}
+ 800174e:	4618      	mov	r0, r3
+ 8001750:	3708      	adds	r7, #8
+ 8001752:	46bd      	mov	sp, r7
+ 8001754:	bd80      	pop	{r7, pc}
 	...
 
-08001750 <LoadFallbackSettings>:
+08001758 <LoadFallbackSettings>:
 
 void LoadFallbackSettings(DbmsCtx* ctx)
 {
- 8001750:	b480      	push	{r7}
- 8001752:	b083      	sub	sp, #12
- 8001754:	af00      	add	r7, sp, #0
- 8001756:	6078      	str	r0, [r7, #4]
+ 8001758:	b480      	push	{r7}
+ 800175a:	b083      	sub	sp, #12
+ 800175c:	af00      	add	r7, sp, #0
+ 800175e:	6078      	str	r0, [r7, #4]
     ctx->settings->user_defined[QUIET_MS_BEFORE_SHUTDOWN] = 2000;   // 2s
- 8001758:	687b      	ldr	r3, [r7, #4]
- 800175a:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
- 800175c:	f44f 62fa 	mov.w	r2, #2000	@ 0x7d0
- 8001760:	605a      	str	r2, [r3, #4]
+ 8001760:	687b      	ldr	r3, [r7, #4]
+ 8001762:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
+ 8001764:	f44f 62fa 	mov.w	r2, #2000	@ 0x7d0
+ 8001768:	605a      	str	r2, [r3, #4]
 
     ctx->settings->user_defined[MAX_GROUP_VOLTAGE] = 5000;          // 1v
- 8001762:	687b      	ldr	r3, [r7, #4]
- 8001764:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
- 8001766:	f241 3288 	movw	r2, #5000	@ 0x1388
- 800176a:	609a      	str	r2, [r3, #8]
+ 800176a:	687b      	ldr	r3, [r7, #4]
+ 800176c:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
+ 800176e:	f241 3288 	movw	r2, #5000	@ 0x1388
+ 8001772:	609a      	str	r2, [r3, #8]
     ctx->settings->user_defined[MIN_GROUP_VOLTAGE] = 1000;          // 5v
- 800176c:	687b      	ldr	r3, [r7, #4]
- 800176e:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
- 8001770:	f44f 727a 	mov.w	r2, #1000	@ 0x3e8
- 8001774:	60da      	str	r2, [r3, #12]
+ 8001774:	687b      	ldr	r3, [r7, #4]
+ 8001776:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
+ 8001778:	f44f 727a 	mov.w	r2, #1000	@ 0x3e8
+ 800177c:	60da      	str	r2, [r3, #12]
     ctx->settings->user_defined[MAX_PACK_VOLTAGE] = 600000;         // 600v
- 8001776:	687b      	ldr	r3, [r7, #4]
- 8001778:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
- 800177a:	4a0b      	ldr	r2, [pc, #44]	@ (80017a8 <LoadFallbackSettings+0x58>)
- 800177c:	611a      	str	r2, [r3, #16]
-    ctx->settings->user_defined[MIN_PACK_VOLTAGE] = 30000;          // 30v
  800177e:	687b      	ldr	r3, [r7, #4]
  8001780:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
- 8001782:	f247 5230 	movw	r2, #30000	@ 0x7530
- 8001786:	615a      	str	r2, [r3, #20]
+ 8001782:	4a0b      	ldr	r2, [pc, #44]	@ (80017b0 <LoadFallbackSettings+0x58>)
+ 8001784:	611a      	str	r2, [r3, #16]
+    ctx->settings->user_defined[MIN_PACK_VOLTAGE] = 30000;          // 30v
+ 8001786:	687b      	ldr	r3, [r7, #4]
+ 8001788:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
+ 800178a:	f247 5230 	movw	r2, #30000	@ 0x7530
+ 800178e:	615a      	str	r2, [r3, #20]
 
     ctx->settings->user_defined[MAX_THERMISTOR_TEMP] = 1000;        // todo: ?
- 8001788:	687b      	ldr	r3, [r7, #4]
- 800178a:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
- 800178c:	f44f 727a 	mov.w	r2, #1000	@ 0x3e8
- 8001790:	619a      	str	r2, [r3, #24]
+ 8001790:	687b      	ldr	r3, [r7, #4]
+ 8001792:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
+ 8001794:	f44f 727a 	mov.w	r2, #1000	@ 0x3e8
+ 8001798:	619a      	str	r2, [r3, #24]
     ctx->settings->user_defined[MAX_CURRENT] = 100000;              // todo: ?
- 8001792:	687b      	ldr	r3, [r7, #4]
- 8001794:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
- 8001796:	4a05      	ldr	r2, [pc, #20]	@ (80017ac <LoadFallbackSettings+0x5c>)
- 8001798:	61da      	str	r2, [r3, #28]
+ 800179a:	687b      	ldr	r3, [r7, #4]
+ 800179c:	6b9b      	ldr	r3, [r3, #56]	@ 0x38
+ 800179e:	4a05      	ldr	r2, [pc, #20]	@ (80017b4 <LoadFallbackSettings+0x5c>)
+ 80017a0:	61da      	str	r2, [r3, #28]
 }
- 800179a:	bf00      	nop
- 800179c:	370c      	adds	r7, #12
- 800179e:	46bd      	mov	sp, r7
- 80017a0:	f85d 7b04 	ldr.w	r7, [sp], #4
- 80017a4:	4770      	bx	lr
- 80017a6:	bf00      	nop
- 80017a8:	000927c0 	.word	0x000927c0
- 80017ac:	000186a0 	.word	0x000186a0
+ 80017a2:	bf00      	nop
+ 80017a4:	370c      	adds	r7, #12
+ 80017a6:	46bd      	mov	sp, r7
+ 80017a8:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80017ac:	4770      	bx	lr
+ 80017ae:	bf00      	nop
+ 80017b0:	000927c0 	.word	0x000927c0
+ 80017b4:	000186a0 	.word	0x000186a0
 
-080017b0 <SendStackFrame>:
+080017b8 <SendStackFrame>:
 
 /**
  * Sends a raw data frame to the battery stack via UART
  */
 int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len)
 {
- 80017b0:	b580      	push	{r7, lr}
- 80017b2:	b084      	sub	sp, #16
- 80017b4:	af00      	add	r7, sp, #0
- 80017b6:	60f8      	str	r0, [r7, #12]
- 80017b8:	60b9      	str	r1, [r7, #8]
- 80017ba:	607a      	str	r2, [r7, #4]
+ 80017b8:	b580      	push	{r7, lr}
+ 80017ba:	b084      	sub	sp, #16
+ 80017bc:	af00      	add	r7, sp, #0
+ 80017be:	60f8      	str	r0, [r7, #12]
+ 80017c0:	60b9      	str	r1, [r7, #8]
+ 80017c2:	607a      	str	r2, [r7, #4]
     return HAL_UART_Transmit(ctx->hw.uart, buf, len, STACK_SEND_TIMEOUT);
- 80017bc:	68fb      	ldr	r3, [r7, #12]
- 80017be:	6898      	ldr	r0, [r3, #8]
- 80017c0:	687b      	ldr	r3, [r7, #4]
- 80017c2:	b29a      	uxth	r2, r3
- 80017c4:	2332      	movs	r3, #50	@ 0x32
- 80017c6:	68b9      	ldr	r1, [r7, #8]
- 80017c8:	f005 fdda 	bl	8007380 <HAL_UART_Transmit>
- 80017cc:	4603      	mov	r3, r0
+ 80017c4:	68fb      	ldr	r3, [r7, #12]
+ 80017c6:	6898      	ldr	r0, [r3, #8]
+ 80017c8:	687b      	ldr	r3, [r7, #4]
+ 80017ca:	b29a      	uxth	r2, r3
+ 80017cc:	2332      	movs	r3, #50	@ 0x32
+ 80017ce:	68b9      	ldr	r1, [r7, #8]
+ 80017d0:	f005 fdd6 	bl	8007380 <HAL_UART_Transmit>
+ 80017d4:	4603      	mov	r3, r0
 }
- 80017ce:	4618      	mov	r0, r3
- 80017d0:	3710      	adds	r7, #16
- 80017d2:	46bd      	mov	sp, r7
- 80017d4:	bd80      	pop	{r7, pc}
+ 80017d6:	4618      	mov	r0, r3
+ 80017d8:	3710      	adds	r7, #16
+ 80017da:	46bd      	mov	sp, r7
+ 80017dc:	bd80      	pop	{r7, pc}
 
-080017d6 <SendStackFrameSetCrc>:
+080017de <SendStackFrameSetCrc>:
 
 /**
  * Sends a data frame to the battery stack via UART with a CRC appended to the end for verification
  */
 int SendStackFrameSetCrc(DbmsCtx* ctx, uint8_t* buf, size_t len)
 {
- 80017d6:	b580      	push	{r7, lr}
- 80017d8:	b086      	sub	sp, #24
- 80017da:	af00      	add	r7, sp, #0
- 80017dc:	60f8      	str	r0, [r7, #12]
- 80017de:	60b9      	str	r1, [r7, #8]
- 80017e0:	607a      	str	r2, [r7, #4]
+ 80017de:	b580      	push	{r7, lr}
+ 80017e0:	b086      	sub	sp, #24
+ 80017e2:	af00      	add	r7, sp, #0
+ 80017e4:	60f8      	str	r0, [r7, #12]
+ 80017e6:	60b9      	str	r1, [r7, #8]
+ 80017e8:	607a      	str	r2, [r7, #4]
     int status = 0;
- 80017e2:	2300      	movs	r3, #0
- 80017e4:	617b      	str	r3, [r7, #20]
+ 80017ea:	2300      	movs	r3, #0
+ 80017ec:	617b      	str	r3, [r7, #20]
     // Calculate the CRC on the payload
 	uint16_t crc = CalcCrc16(buf, len - 2);
- 80017e6:	687b      	ldr	r3, [r7, #4]
- 80017e8:	3b02      	subs	r3, #2
- 80017ea:	4619      	mov	r1, r3
- 80017ec:	68b8      	ldr	r0, [r7, #8]
- 80017ee:	f001 fa9f 	bl	8002d30 <CalcCrc16>
- 80017f2:	4603      	mov	r3, r0
- 80017f4:	827b      	strh	r3, [r7, #18]
+ 80017ee:	687b      	ldr	r3, [r7, #4]
+ 80017f0:	3b02      	subs	r3, #2
+ 80017f2:	4619      	mov	r1, r3
+ 80017f4:	68b8      	ldr	r0, [r7, #8]
+ 80017f6:	f001 fa9b 	bl	8002d30 <CalcCrc16>
+ 80017fa:	4603      	mov	r3, r0
+ 80017fc:	827b      	strh	r3, [r7, #18]
     // Tape the CRC to the end of the frame
     buf[len - 2] = crc & 0xFF;
- 80017f6:	687b      	ldr	r3, [r7, #4]
- 80017f8:	3b02      	subs	r3, #2
- 80017fa:	68ba      	ldr	r2, [r7, #8]
- 80017fc:	4413      	add	r3, r2
- 80017fe:	8a7a      	ldrh	r2, [r7, #18]
- 8001800:	b2d2      	uxtb	r2, r2
- 8001802:	701a      	strb	r2, [r3, #0]
+ 80017fe:	687b      	ldr	r3, [r7, #4]
+ 8001800:	3b02      	subs	r3, #2
+ 8001802:	68ba      	ldr	r2, [r7, #8]
+ 8001804:	4413      	add	r3, r2
+ 8001806:	8a7a      	ldrh	r2, [r7, #18]
+ 8001808:	b2d2      	uxtb	r2, r2
+ 800180a:	701a      	strb	r2, [r3, #0]
     buf[len - 1] = (crc >> 8) & 0xFF;
- 8001804:	8a7b      	ldrh	r3, [r7, #18]
- 8001806:	0a1b      	lsrs	r3, r3, #8
- 8001808:	b299      	uxth	r1, r3
- 800180a:	687b      	ldr	r3, [r7, #4]
- 800180c:	3b01      	subs	r3, #1
- 800180e:	68ba      	ldr	r2, [r7, #8]
- 8001810:	4413      	add	r3, r2
- 8001812:	b2ca      	uxtb	r2, r1
- 8001814:	701a      	strb	r2, [r3, #0]
+ 800180c:	8a7b      	ldrh	r3, [r7, #18]
+ 800180e:	0a1b      	lsrs	r3, r3, #8
+ 8001810:	b299      	uxth	r1, r3
+ 8001812:	687b      	ldr	r3, [r7, #4]
+ 8001814:	3b01      	subs	r3, #1
+ 8001816:	68ba      	ldr	r2, [r7, #8]
+ 8001818:	4413      	add	r3, r2
+ 800181a:	b2ca      	uxtb	r2, r1
+ 800181c:	701a      	strb	r2, [r3, #0]
     // Send the frame
     status = HAL_UART_Transmit(ctx->hw.uart, buf, len, STACK_SEND_TIMEOUT);
- 8001816:	68fb      	ldr	r3, [r7, #12]
- 8001818:	6898      	ldr	r0, [r3, #8]
- 800181a:	687b      	ldr	r3, [r7, #4]
- 800181c:	b29a      	uxth	r2, r3
- 800181e:	2332      	movs	r3, #50	@ 0x32
- 8001820:	68b9      	ldr	r1, [r7, #8]
- 8001822:	f005 fdad 	bl	8007380 <HAL_UART_Transmit>
- 8001826:	4603      	mov	r3, r0
- 8001828:	617b      	str	r3, [r7, #20]
+ 800181e:	68fb      	ldr	r3, [r7, #12]
+ 8001820:	6898      	ldr	r0, [r3, #8]
+ 8001822:	687b      	ldr	r3, [r7, #4]
+ 8001824:	b29a      	uxth	r2, r3
+ 8001826:	2332      	movs	r3, #50	@ 0x32
+ 8001828:	68b9      	ldr	r1, [r7, #8]
+ 800182a:	f005 fda9 	bl	8007380 <HAL_UART_Transmit>
+ 800182e:	4603      	mov	r3, r0
+ 8001830:	617b      	str	r3, [r7, #20]
     // Clear the CRC from the payload
     buf[len - 2] = 0;
- 800182a:	687b      	ldr	r3, [r7, #4]
- 800182c:	3b02      	subs	r3, #2
- 800182e:	68ba      	ldr	r2, [r7, #8]
- 8001830:	4413      	add	r3, r2
- 8001832:	2200      	movs	r2, #0
- 8001834:	701a      	strb	r2, [r3, #0]
+ 8001832:	687b      	ldr	r3, [r7, #4]
+ 8001834:	3b02      	subs	r3, #2
+ 8001836:	68ba      	ldr	r2, [r7, #8]
+ 8001838:	4413      	add	r3, r2
+ 800183a:	2200      	movs	r2, #0
+ 800183c:	701a      	strb	r2, [r3, #0]
     buf[len - 1] = 0;
- 8001836:	687b      	ldr	r3, [r7, #4]
- 8001838:	3b01      	subs	r3, #1
- 800183a:	68ba      	ldr	r2, [r7, #8]
- 800183c:	4413      	add	r3, r2
- 800183e:	2200      	movs	r2, #0
- 8001840:	701a      	strb	r2, [r3, #0]
+ 800183e:	687b      	ldr	r3, [r7, #4]
+ 8001840:	3b01      	subs	r3, #1
+ 8001842:	68ba      	ldr	r2, [r7, #8]
+ 8001844:	4413      	add	r3, r2
+ 8001846:	2200      	movs	r2, #0
+ 8001848:	701a      	strb	r2, [r3, #0]
     return status;
- 8001842:	697b      	ldr	r3, [r7, #20]
+ 800184a:	697b      	ldr	r3, [r7, #20]
 }
- 8001844:	4618      	mov	r0, r3
- 8001846:	3718      	adds	r7, #24
- 8001848:	46bd      	mov	sp, r7
- 800184a:	bd80      	pop	{r7, pc}
+ 800184c:	4618      	mov	r0, r3
+ 800184e:	3718      	adds	r7, #24
+ 8001850:	46bd      	mov	sp, r7
+ 8001852:	bd80      	pop	{r7, pc}
 
-0800184c <SetBrr>:
+08001854 <SetBrr>:
 /**
  * Utility function to set the baud rate of the UART
  * Used for shutdown and wakeup
  */
 void SetBrr(uint64_t brr)
 {
- 800184c:	b480      	push	{r7}
- 800184e:	b083      	sub	sp, #12
- 8001850:	af00      	add	r7, sp, #0
- 8001852:	e9c7 0100 	strd	r0, r1, [r7]
+ 8001854:	b480      	push	{r7}
+ 8001856:	b083      	sub	sp, #12
+ 8001858:	af00      	add	r7, sp, #0
+ 800185a:	e9c7 0100 	strd	r0, r1, [r7]
 #ifndef SIM
     UART4->CR1 &= ~(USART_CR1_UE);
- 8001856:	4b0a      	ldr	r3, [pc, #40]	@ (8001880 <SetBrr+0x34>)
- 8001858:	68db      	ldr	r3, [r3, #12]
- 800185a:	4a09      	ldr	r2, [pc, #36]	@ (8001880 <SetBrr+0x34>)
- 800185c:	f423 5300 	bic.w	r3, r3, #8192	@ 0x2000
- 8001860:	60d3      	str	r3, [r2, #12]
+ 800185e:	4b0a      	ldr	r3, [pc, #40]	@ (8001888 <SetBrr+0x34>)
+ 8001860:	68db      	ldr	r3, [r3, #12]
+ 8001862:	4a09      	ldr	r2, [pc, #36]	@ (8001888 <SetBrr+0x34>)
+ 8001864:	f423 5300 	bic.w	r3, r3, #8192	@ 0x2000
+ 8001868:	60d3      	str	r3, [r2, #12]
     UART4->BRR = brr;
- 8001862:	4a07      	ldr	r2, [pc, #28]	@ (8001880 <SetBrr+0x34>)
- 8001864:	683b      	ldr	r3, [r7, #0]
- 8001866:	6093      	str	r3, [r2, #8]
+ 800186a:	4a07      	ldr	r2, [pc, #28]	@ (8001888 <SetBrr+0x34>)
+ 800186c:	683b      	ldr	r3, [r7, #0]
+ 800186e:	6093      	str	r3, [r2, #8]
     UART4->CR1 |= USART_CR1_UE;
- 8001868:	4b05      	ldr	r3, [pc, #20]	@ (8001880 <SetBrr+0x34>)
- 800186a:	68db      	ldr	r3, [r3, #12]
- 800186c:	4a04      	ldr	r2, [pc, #16]	@ (8001880 <SetBrr+0x34>)
- 800186e:	f443 5300 	orr.w	r3, r3, #8192	@ 0x2000
- 8001872:	60d3      	str	r3, [r2, #12]
+ 8001870:	4b05      	ldr	r3, [pc, #20]	@ (8001888 <SetBrr+0x34>)
+ 8001872:	68db      	ldr	r3, [r3, #12]
+ 8001874:	4a04      	ldr	r2, [pc, #16]	@ (8001888 <SetBrr+0x34>)
+ 8001876:	f443 5300 	orr.w	r3, r3, #8192	@ 0x2000
+ 800187a:	60d3      	str	r3, [r2, #12]
 #endif
 }
- 8001874:	bf00      	nop
- 8001876:	370c      	adds	r7, #12
- 8001878:	46bd      	mov	sp, r7
- 800187a:	f85d 7b04 	ldr.w	r7, [sp], #4
- 800187e:	4770      	bx	lr
- 8001880:	40004c00 	.word	0x40004c00
+ 800187c:	bf00      	nop
+ 800187e:	370c      	adds	r7, #12
+ 8001880:	46bd      	mov	sp, r7
+ 8001882:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8001886:	4770      	bx	lr
+ 8001888:	40004c00 	.word	0x40004c00
 
-08001884 <SendStackWakeBlip>:
+0800188c <SendStackWakeBlip>:
 
 /**
  * Sends a wake blip to the battery stack
  */
 int SendStackWakeBlip(DbmsCtx* ctx)
 {
- 8001884:	b580      	push	{r7, lr}
- 8001886:	b084      	sub	sp, #16
- 8001888:	af00      	add	r7, sp, #0
- 800188a:	6078      	str	r0, [r7, #4]
+ 800188c:	b580      	push	{r7, lr}
+ 800188e:	b084      	sub	sp, #16
+ 8001890:	af00      	add	r7, sp, #0
+ 8001892:	6078      	str	r0, [r7, #4]
     int status = 0;
- 800188c:	2300      	movs	r3, #0
- 800188e:	60fb      	str	r3, [r7, #12]
+ 8001894:	2300      	movs	r3, #0
+ 8001896:	60fb      	str	r3, [r7, #12]
     // uart_set_brr(APBxCLK / (1 / (2.75 / (1 * 1000))));
 
     // 1. Switch to a very slow baud rate. receiving chips will see this
     //    as a weird, long and continuous low signal
     SetBrr(25700/2); // ?
- 8001890:	f243 2032 	movw	r0, #12850	@ 0x3232
- 8001894:	f04f 0100 	mov.w	r1, #0
- 8001898:	f7ff ffd8 	bl	800184c <SetBrr>
+ 8001898:	f243 2032 	movw	r0, #12850	@ 0x3232
+ 800189c:	f04f 0100 	mov.w	r1, #0
+ 80018a0:	f7ff ffd8 	bl	8001854 <SetBrr>
 
     // 2. Send a single byte at this slow speed
     uint8_t wake_frame[] = {0x00};
- 800189c:	2300      	movs	r3, #0
- 800189e:	723b      	strb	r3, [r7, #8]
+ 80018a4:	2300      	movs	r3, #0
+ 80018a6:	723b      	strb	r3, [r7, #8]
     if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0) 
- 80018a0:	f107 0308 	add.w	r3, r7, #8
- 80018a4:	2201      	movs	r2, #1
- 80018a6:	4619      	mov	r1, r3
- 80018a8:	6878      	ldr	r0, [r7, #4]
- 80018aa:	f7ff ff81 	bl	80017b0 <SendStackFrame>
- 80018ae:	60f8      	str	r0, [r7, #12]
- 80018b0:	68fb      	ldr	r3, [r7, #12]
- 80018b2:	2b00      	cmp	r3, #0
- 80018b4:	d007      	beq.n	80018c6 <SendStackWakeBlip+0x42>
+ 80018a8:	f107 0308 	add.w	r3, r7, #8
+ 80018ac:	2201      	movs	r2, #1
+ 80018ae:	4619      	mov	r1, r3
+ 80018b0:	6878      	ldr	r0, [r7, #4]
+ 80018b2:	f7ff ff81 	bl	80017b8 <SendStackFrame>
+ 80018b6:	60f8      	str	r0, [r7, #12]
+ 80018b8:	68fb      	ldr	r3, [r7, #12]
+ 80018ba:	2b00      	cmp	r3, #0
+ 80018bc:	d007      	beq.n	80018ce <SendStackWakeBlip+0x42>
     {
         CAN_REPORT_FAULT(ctx, status);
- 80018b6:	68fb      	ldr	r3, [r7, #12]
- 80018b8:	2252      	movs	r2, #82	@ 0x52
- 80018ba:	490b      	ldr	r1, [pc, #44]	@ (80018e8 <SendStackWakeBlip+0x64>)
- 80018bc:	6878      	ldr	r0, [r7, #4]
- 80018be:	f000 ffa5 	bl	800280c <CanReportFault>
+ 80018be:	68fb      	ldr	r3, [r7, #12]
+ 80018c0:	2252      	movs	r2, #82	@ 0x52
+ 80018c2:	490b      	ldr	r1, [pc, #44]	@ (80018f0 <SendStackWakeBlip+0x64>)
+ 80018c4:	6878      	ldr	r0, [r7, #4]
+ 80018c6:	f000 ffa1 	bl	800280c <CanReportFault>
         return status;
- 80018c2:	68fb      	ldr	r3, [r7, #12]
- 80018c4:	e00b      	b.n	80018de <SendStackWakeBlip+0x5a>
+ 80018ca:	68fb      	ldr	r3, [r7, #12]
+ 80018cc:	e00b      	b.n	80018e6 <SendStackWakeBlip+0x5a>
     }
     // 3. Immediately switch back to the normal high speed baud rate
     //    so we can tell the chips they are awake now
     SetBrr(APBxCLK / 1000000); // 84
- 80018c6:	f04f 002a 	mov.w	r0, #42	@ 0x2a
- 80018ca:	f04f 0100 	mov.w	r1, #0
- 80018ce:	f7ff ffbd 	bl	800184c <SetBrr>
+ 80018ce:	f04f 002a 	mov.w	r0, #42	@ 0x2a
+ 80018d2:	f04f 0100 	mov.w	r1, #0
+ 80018d6:	f7ff ffbd 	bl	8001854 <SetBrr>
     DelayUs(ctx, 3500);
- 80018d2:	f640 51ac 	movw	r1, #3500	@ 0xdac
- 80018d6:	6878      	ldr	r0, [r7, #4]
- 80018d8:	f7ff fe32 	bl	8001540 <DelayUs>
+ 80018da:	f640 51ac 	movw	r1, #3500	@ 0xdac
+ 80018de:	6878      	ldr	r0, [r7, #4]
+ 80018e0:	f7ff fe32 	bl	8001548 <DelayUs>
     return status;
- 80018dc:	68fb      	ldr	r3, [r7, #12]
+ 80018e4:	68fb      	ldr	r3, [r7, #12]
 }
- 80018de:	4618      	mov	r0, r3
- 80018e0:	3710      	adds	r7, #16
- 80018e2:	46bd      	mov	sp, r7
- 80018e4:	bd80      	pop	{r7, pc}
- 80018e6:	bf00      	nop
- 80018e8:	08008b74 	.word	0x08008b74
+ 80018e6:	4618      	mov	r0, r3
+ 80018e8:	3710      	adds	r7, #16
+ 80018ea:	46bd      	mov	sp, r7
+ 80018ec:	bd80      	pop	{r7, pc}
+ 80018ee:	bf00      	nop
+ 80018f0:	08008b74 	.word	0x08008b74
 
-080018ec <SendStackShutdownBlip>:
+080018f4 <SendStackShutdownBlip>:
  * Follows the exact same logic as the wake blip function,
  * except we are setting a different baud rate. the rate
  * is like a secret code we send to the chips to say we are waking up or shutting down
  */
 int SendStackShutdownBlip(DbmsCtx* ctx)
 {
- 80018ec:	b580      	push	{r7, lr}
- 80018ee:	b084      	sub	sp, #16
- 80018f0:	af00      	add	r7, sp, #0
- 80018f2:	6078      	str	r0, [r7, #4]
+ 80018f4:	b580      	push	{r7, lr}
+ 80018f6:	b084      	sub	sp, #16
+ 80018f8:	af00      	add	r7, sp, #0
+ 80018fa:	6078      	str	r0, [r7, #4]
     int status = 0;
- 80018f4:	2300      	movs	r3, #0
- 80018f6:	60fb      	str	r3, [r7, #12]
+ 80018fc:	2300      	movs	r3, #0
+ 80018fe:	60fb      	str	r3, [r7, #12]
     // uart_set_brr(APBxCLK / (1 / (2.75 / (1 * 1000))));
     SetBrr(128000);
- 80018f8:	f44f 30fa 	mov.w	r0, #128000	@ 0x1f400
- 80018fc:	f04f 0100 	mov.w	r1, #0
- 8001900:	f7ff ffa4 	bl	800184c <SetBrr>
+ 8001900:	f44f 30fa 	mov.w	r0, #128000	@ 0x1f400
+ 8001904:	f04f 0100 	mov.w	r1, #0
+ 8001908:	f7ff ffa4 	bl	8001854 <SetBrr>
     uint8_t wake_frame[] = {0x00};
- 8001904:	2300      	movs	r3, #0
- 8001906:	723b      	strb	r3, [r7, #8]
+ 800190c:	2300      	movs	r3, #0
+ 800190e:	723b      	strb	r3, [r7, #8]
     if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0)
- 8001908:	f107 0308 	add.w	r3, r7, #8
- 800190c:	2201      	movs	r2, #1
- 800190e:	4619      	mov	r1, r3
- 8001910:	6878      	ldr	r0, [r7, #4]
- 8001912:	f7ff ff4d 	bl	80017b0 <SendStackFrame>
- 8001916:	60f8      	str	r0, [r7, #12]
- 8001918:	68fb      	ldr	r3, [r7, #12]
- 800191a:	2b00      	cmp	r3, #0
- 800191c:	d007      	beq.n	800192e <SendStackShutdownBlip+0x42>
+ 8001910:	f107 0308 	add.w	r3, r7, #8
+ 8001914:	2201      	movs	r2, #1
+ 8001916:	4619      	mov	r1, r3
+ 8001918:	6878      	ldr	r0, [r7, #4]
+ 800191a:	f7ff ff4d 	bl	80017b8 <SendStackFrame>
+ 800191e:	60f8      	str	r0, [r7, #12]
+ 8001920:	68fb      	ldr	r3, [r7, #12]
+ 8001922:	2b00      	cmp	r3, #0
+ 8001924:	d007      	beq.n	8001936 <SendStackShutdownBlip+0x42>
     {
         CAN_REPORT_FAULT(ctx, status);
- 800191e:	68fb      	ldr	r3, [r7, #12]
- 8001920:	226a      	movs	r2, #106	@ 0x6a
- 8001922:	490b      	ldr	r1, [pc, #44]	@ (8001950 <SendStackShutdownBlip+0x64>)
- 8001924:	6878      	ldr	r0, [r7, #4]
- 8001926:	f000 ff71 	bl	800280c <CanReportFault>
+ 8001926:	68fb      	ldr	r3, [r7, #12]
+ 8001928:	226a      	movs	r2, #106	@ 0x6a
+ 800192a:	490b      	ldr	r1, [pc, #44]	@ (8001958 <SendStackShutdownBlip+0x64>)
+ 800192c:	6878      	ldr	r0, [r7, #4]
+ 800192e:	f000 ff6d 	bl	800280c <CanReportFault>
         return status;
- 800192a:	68fb      	ldr	r3, [r7, #12]
- 800192c:	e00b      	b.n	8001946 <SendStackShutdownBlip+0x5a>
+ 8001932:	68fb      	ldr	r3, [r7, #12]
+ 8001934:	e00b      	b.n	800194e <SendStackShutdownBlip+0x5a>
     }
     SetBrr(APBxCLK / 1000000); // 84
- 800192e:	f04f 002a 	mov.w	r0, #42	@ 0x2a
- 8001932:	f04f 0100 	mov.w	r1, #0
- 8001936:	f7ff ff89 	bl	800184c <SetBrr>
+ 8001936:	f04f 002a 	mov.w	r0, #42	@ 0x2a
+ 800193a:	f04f 0100 	mov.w	r1, #0
+ 800193e:	f7ff ff89 	bl	8001854 <SetBrr>
     DelayUs(ctx, 3500);
- 800193a:	f640 51ac 	movw	r1, #3500	@ 0xdac
- 800193e:	6878      	ldr	r0, [r7, #4]
- 8001940:	f7ff fdfe 	bl	8001540 <DelayUs>
+ 8001942:	f640 51ac 	movw	r1, #3500	@ 0xdac
+ 8001946:	6878      	ldr	r0, [r7, #4]
+ 8001948:	f7ff fdfe 	bl	8001548 <DelayUs>
     return status;
- 8001944:	68fb      	ldr	r3, [r7, #12]
+ 800194c:	68fb      	ldr	r3, [r7, #12]
 }
- 8001946:	4618      	mov	r0, r3
- 8001948:	3710      	adds	r7, #16
- 800194a:	46bd      	mov	sp, r7
- 800194c:	bd80      	pop	{r7, pc}
- 800194e:	bf00      	nop
- 8001950:	08008b74 	.word	0x08008b74
+ 800194e:	4618      	mov	r0, r3
+ 8001950:	3710      	adds	r7, #16
+ 8001952:	46bd      	mov	sp, r7
+ 8001954:	bd80      	pop	{r7, pc}
+ 8001956:	bf00      	nop
+ 8001958:	08008b74 	.word	0x08008b74
 
-08001954 <StackWake>:
+0800195c <StackWake>:
  * Wakes up the battery stack
  * Use this when we turn the vehicle on, or when waking up from a sleep mode
  * We could also use this to recover from a communication error (if we lose contact with the stack for some reason)
  */
 int StackWake(DbmsCtx* ctx)
 {
- 8001954:	b580      	push	{r7, lr}
- 8001956:	b084      	sub	sp, #16
- 8001958:	af00      	add	r7, sp, #0
- 800195a:	6078      	str	r0, [r7, #4]
+ 800195c:	b580      	push	{r7, lr}
+ 800195e:	b084      	sub	sp, #16
+ 8001960:	af00      	add	r7, sp, #0
+ 8001962:	6078      	str	r0, [r7, #4]
     int status = HAL_OK;
- 800195c:	2300      	movs	r3, #0
- 800195e:	60fb      	str	r3, [r7, #12]
+ 8001964:	2300      	movs	r3, #0
+ 8001966:	60fb      	str	r3, [r7, #12]
     for (int i = 0; i < 2; i++) 
- 8001960:	2300      	movs	r3, #0
- 8001962:	60bb      	str	r3, [r7, #8]
- 8001964:	e025      	b.n	80019b2 <StackWake+0x5e>
+ 8001968:	2300      	movs	r3, #0
+ 800196a:	60bb      	str	r3, [r7, #8]
+ 800196c:	e025      	b.n	80019ba <StackWake+0x5e>
     {
         if ((status = SendStackWakeBlip(ctx)) != HAL_OK)
- 8001966:	6878      	ldr	r0, [r7, #4]
- 8001968:	f7ff ff8c 	bl	8001884 <SendStackWakeBlip>
- 800196c:	60f8      	str	r0, [r7, #12]
- 800196e:	68fb      	ldr	r3, [r7, #12]
- 8001970:	2b00      	cmp	r3, #0
- 8001972:	d007      	beq.n	8001984 <StackWake+0x30>
+ 800196e:	6878      	ldr	r0, [r7, #4]
+ 8001970:	f7ff ff8c 	bl	800188c <SendStackWakeBlip>
+ 8001974:	60f8      	str	r0, [r7, #12]
+ 8001976:	68fb      	ldr	r3, [r7, #12]
+ 8001978:	2b00      	cmp	r3, #0
+ 800197a:	d007      	beq.n	800198c <StackWake+0x30>
         {
             CAN_REPORT_FAULT(ctx, status);
- 8001974:	68fb      	ldr	r3, [r7, #12]
- 8001976:	227e      	movs	r2, #126	@ 0x7e
- 8001978:	4912      	ldr	r1, [pc, #72]	@ (80019c4 <StackWake+0x70>)
- 800197a:	6878      	ldr	r0, [r7, #4]
- 800197c:	f000 ff46 	bl	800280c <CanReportFault>
+ 800197c:	68fb      	ldr	r3, [r7, #12]
+ 800197e:	227e      	movs	r2, #126	@ 0x7e
+ 8001980:	4912      	ldr	r1, [pc, #72]	@ (80019cc <StackWake+0x70>)
+ 8001982:	6878      	ldr	r0, [r7, #4]
+ 8001984:	f000 ff42 	bl	800280c <CanReportFault>
             return status;
- 8001980:	68fb      	ldr	r3, [r7, #12]
- 8001982:	e01a      	b.n	80019ba <StackWake+0x66>
+ 8001988:	68fb      	ldr	r3, [r7, #12]
+ 800198a:	e01a      	b.n	80019c2 <StackWake+0x66>
         }
         if ((status = SendStackFrame(ctx, FRAME_WAKE_STACK, sizeof(FRAME_WAKE_STACK))) != HAL_OK)
- 8001984:	2207      	movs	r2, #7
- 8001986:	4910      	ldr	r1, [pc, #64]	@ (80019c8 <StackWake+0x74>)
- 8001988:	6878      	ldr	r0, [r7, #4]
- 800198a:	f7ff ff11 	bl	80017b0 <SendStackFrame>
- 800198e:	60f8      	str	r0, [r7, #12]
- 8001990:	68fb      	ldr	r3, [r7, #12]
- 8001992:	2b00      	cmp	r3, #0
- 8001994:	d007      	beq.n	80019a6 <StackWake+0x52>
+ 800198c:	2207      	movs	r2, #7
+ 800198e:	4910      	ldr	r1, [pc, #64]	@ (80019d0 <StackWake+0x74>)
+ 8001990:	6878      	ldr	r0, [r7, #4]
+ 8001992:	f7ff ff11 	bl	80017b8 <SendStackFrame>
+ 8001996:	60f8      	str	r0, [r7, #12]
+ 8001998:	68fb      	ldr	r3, [r7, #12]
+ 800199a:	2b00      	cmp	r3, #0
+ 800199c:	d007      	beq.n	80019ae <StackWake+0x52>
         {
             CAN_REPORT_FAULT(ctx, status);
- 8001996:	68fb      	ldr	r3, [r7, #12]
- 8001998:	2283      	movs	r2, #131	@ 0x83
- 800199a:	490a      	ldr	r1, [pc, #40]	@ (80019c4 <StackWake+0x70>)
- 800199c:	6878      	ldr	r0, [r7, #4]
- 800199e:	f000 ff35 	bl	800280c <CanReportFault>
+ 800199e:	68fb      	ldr	r3, [r7, #12]
+ 80019a0:	2283      	movs	r2, #131	@ 0x83
+ 80019a2:	490a      	ldr	r1, [pc, #40]	@ (80019cc <StackWake+0x70>)
+ 80019a4:	6878      	ldr	r0, [r7, #4]
+ 80019a6:	f000 ff31 	bl	800280c <CanReportFault>
             return status;
- 80019a2:	68fb      	ldr	r3, [r7, #12]
- 80019a4:	e009      	b.n	80019ba <StackWake+0x66>
+ 80019aa:	68fb      	ldr	r3, [r7, #12]
+ 80019ac:	e009      	b.n	80019c2 <StackWake+0x66>
         }
         HAL_Delay(15 + 12 * N_STACKDEVS);   // wtf  -- microseconds dumbass
- 80019a6:	20ab      	movs	r0, #171	@ 0xab
- 80019a8:	f002 f810 	bl	80039cc <HAL_Delay>
+ 80019ae:	207b      	movs	r0, #123	@ 0x7b
+ 80019b0:	f002 f80c 	bl	80039cc <HAL_Delay>
     for (int i = 0; i < 2; i++) 
- 80019ac:	68bb      	ldr	r3, [r7, #8]
- 80019ae:	3301      	adds	r3, #1
- 80019b0:	60bb      	str	r3, [r7, #8]
- 80019b2:	68bb      	ldr	r3, [r7, #8]
- 80019b4:	2b01      	cmp	r3, #1
- 80019b6:	ddd6      	ble.n	8001966 <StackWake+0x12>
+ 80019b4:	68bb      	ldr	r3, [r7, #8]
+ 80019b6:	3301      	adds	r3, #1
+ 80019b8:	60bb      	str	r3, [r7, #8]
+ 80019ba:	68bb      	ldr	r3, [r7, #8]
+ 80019bc:	2b01      	cmp	r3, #1
+ 80019be:	ddd6      	ble.n	800196e <StackWake+0x12>
     }
     return status;
- 80019b8:	68fb      	ldr	r3, [r7, #12]
+ 80019c0:	68fb      	ldr	r3, [r7, #12]
 }
- 80019ba:	4618      	mov	r0, r3
- 80019bc:	3710      	adds	r7, #16
- 80019be:	46bd      	mov	sp, r7
- 80019c0:	bd80      	pop	{r7, pc}
- 80019c2:	bf00      	nop
- 80019c4:	08008b74 	.word	0x08008b74
- 80019c8:	20000000 	.word	0x20000000
+ 80019c2:	4618      	mov	r0, r3
+ 80019c4:	3710      	adds	r7, #16
+ 80019c6:	46bd      	mov	sp, r7
+ 80019c8:	bd80      	pop	{r7, pc}
+ 80019ca:	bf00      	nop
+ 80019cc:	08008b74 	.word	0x08008b74
+ 80019d0:	20000000 	.word	0x20000000
 
-080019cc <StackShutdown>:
+080019d4 <StackShutdown>:
  * Shuts down the battery stack
  * Use this when we turn the vehicle off, or when going to sleep
  * We could also use this in response to a critical fault
  */
 int StackShutdown(DbmsCtx* ctx)
 {
- 80019cc:	b580      	push	{r7, lr}
- 80019ce:	b084      	sub	sp, #16
- 80019d0:	af00      	add	r7, sp, #0
- 80019d2:	6078      	str	r0, [r7, #4]
+ 80019d4:	b580      	push	{r7, lr}
+ 80019d6:	b084      	sub	sp, #16
+ 80019d8:	af00      	add	r7, sp, #0
+ 80019da:	6078      	str	r0, [r7, #4]
     int status = HAL_OK;
- 80019d4:	2300      	movs	r3, #0
- 80019d6:	60fb      	str	r3, [r7, #12]
+ 80019dc:	2300      	movs	r3, #0
+ 80019de:	60fb      	str	r3, [r7, #12]
     for (int i = 0; i < 2; i++) 
- 80019d8:	2300      	movs	r3, #0
- 80019da:	60bb      	str	r3, [r7, #8]
- 80019dc:	e025      	b.n	8001a2a <StackShutdown+0x5e>
+ 80019e0:	2300      	movs	r3, #0
+ 80019e2:	60bb      	str	r3, [r7, #8]
+ 80019e4:	e025      	b.n	8001a32 <StackShutdown+0x5e>
     {
     	if ((status = SendStackFrameSetCrc(ctx, FRAME_SHUTDOWN_STACK, sizeof(FRAME_SHUTDOWN_STACK))) != HAL_OK)
- 80019de:	2206      	movs	r2, #6
- 80019e0:	4916      	ldr	r1, [pc, #88]	@ (8001a3c <StackShutdown+0x70>)
- 80019e2:	6878      	ldr	r0, [r7, #4]
- 80019e4:	f7ff fef7 	bl	80017d6 <SendStackFrameSetCrc>
- 80019e8:	60f8      	str	r0, [r7, #12]
- 80019ea:	68fb      	ldr	r3, [r7, #12]
- 80019ec:	2b00      	cmp	r3, #0
- 80019ee:	d007      	beq.n	8001a00 <StackShutdown+0x34>
+ 80019e6:	2206      	movs	r2, #6
+ 80019e8:	4916      	ldr	r1, [pc, #88]	@ (8001a44 <StackShutdown+0x70>)
+ 80019ea:	6878      	ldr	r0, [r7, #4]
+ 80019ec:	f7ff fef7 	bl	80017de <SendStackFrameSetCrc>
+ 80019f0:	60f8      	str	r0, [r7, #12]
+ 80019f2:	68fb      	ldr	r3, [r7, #12]
+ 80019f4:	2b00      	cmp	r3, #0
+ 80019f6:	d007      	beq.n	8001a08 <StackShutdown+0x34>
         {
             CAN_REPORT_FAULT(ctx, status);
- 80019f0:	68fb      	ldr	r3, [r7, #12]
- 80019f2:	2297      	movs	r2, #151	@ 0x97
- 80019f4:	4912      	ldr	r1, [pc, #72]	@ (8001a40 <StackShutdown+0x74>)
- 80019f6:	6878      	ldr	r0, [r7, #4]
- 80019f8:	f000 ff08 	bl	800280c <CanReportFault>
+ 80019f8:	68fb      	ldr	r3, [r7, #12]
+ 80019fa:	2297      	movs	r2, #151	@ 0x97
+ 80019fc:	4912      	ldr	r1, [pc, #72]	@ (8001a48 <StackShutdown+0x74>)
+ 80019fe:	6878      	ldr	r0, [r7, #4]
+ 8001a00:	f000 ff04 	bl	800280c <CanReportFault>
             return status;
- 80019fc:	68fb      	ldr	r3, [r7, #12]
- 80019fe:	e018      	b.n	8001a32 <StackShutdown+0x66>
+ 8001a04:	68fb      	ldr	r3, [r7, #12]
+ 8001a06:	e018      	b.n	8001a3a <StackShutdown+0x66>
         }
     	if ((status = SendStackShutdownBlip(ctx)) != HAL_OK)
- 8001a00:	6878      	ldr	r0, [r7, #4]
- 8001a02:	f7ff ff73 	bl	80018ec <SendStackShutdownBlip>
- 8001a06:	60f8      	str	r0, [r7, #12]
- 8001a08:	68fb      	ldr	r3, [r7, #12]
- 8001a0a:	2b00      	cmp	r3, #0
- 8001a0c:	d007      	beq.n	8001a1e <StackShutdown+0x52>
+ 8001a08:	6878      	ldr	r0, [r7, #4]
+ 8001a0a:	f7ff ff73 	bl	80018f4 <SendStackShutdownBlip>
+ 8001a0e:	60f8      	str	r0, [r7, #12]
+ 8001a10:	68fb      	ldr	r3, [r7, #12]
+ 8001a12:	2b00      	cmp	r3, #0
+ 8001a14:	d007      	beq.n	8001a26 <StackShutdown+0x52>
         {
             CAN_REPORT_FAULT(ctx, status);
- 8001a0e:	68fb      	ldr	r3, [r7, #12]
- 8001a10:	229c      	movs	r2, #156	@ 0x9c
- 8001a12:	490b      	ldr	r1, [pc, #44]	@ (8001a40 <StackShutdown+0x74>)
- 8001a14:	6878      	ldr	r0, [r7, #4]
- 8001a16:	f000 fef9 	bl	800280c <CanReportFault>
+ 8001a16:	68fb      	ldr	r3, [r7, #12]
+ 8001a18:	229c      	movs	r2, #156	@ 0x9c
+ 8001a1a:	490b      	ldr	r1, [pc, #44]	@ (8001a48 <StackShutdown+0x74>)
+ 8001a1c:	6878      	ldr	r0, [r7, #4]
+ 8001a1e:	f000 fef5 	bl	800280c <CanReportFault>
             return status;
- 8001a1a:	68fb      	ldr	r3, [r7, #12]
- 8001a1c:	e009      	b.n	8001a32 <StackShutdown+0x66>
+ 8001a22:	68fb      	ldr	r3, [r7, #12]
+ 8001a24:	e009      	b.n	8001a3a <StackShutdown+0x66>
         }
         HAL_Delay(100);
- 8001a1e:	2064      	movs	r0, #100	@ 0x64
- 8001a20:	f001 ffd4 	bl	80039cc <HAL_Delay>
+ 8001a26:	2064      	movs	r0, #100	@ 0x64
+ 8001a28:	f001 ffd0 	bl	80039cc <HAL_Delay>
     for (int i = 0; i < 2; i++) 
- 8001a24:	68bb      	ldr	r3, [r7, #8]
- 8001a26:	3301      	adds	r3, #1
- 8001a28:	60bb      	str	r3, [r7, #8]
- 8001a2a:	68bb      	ldr	r3, [r7, #8]
- 8001a2c:	2b01      	cmp	r3, #1
- 8001a2e:	ddd6      	ble.n	80019de <StackShutdown+0x12>
+ 8001a2c:	68bb      	ldr	r3, [r7, #8]
+ 8001a2e:	3301      	adds	r3, #1
+ 8001a30:	60bb      	str	r3, [r7, #8]
+ 8001a32:	68bb      	ldr	r3, [r7, #8]
+ 8001a34:	2b01      	cmp	r3, #1
+ 8001a36:	ddd6      	ble.n	80019e6 <StackShutdown+0x12>
     }
     return status;
- 8001a30:	68fb      	ldr	r3, [r7, #12]
+ 8001a38:	68fb      	ldr	r3, [r7, #12]
 }
- 8001a32:	4618      	mov	r0, r3
- 8001a34:	3710      	adds	r7, #16
- 8001a36:	46bd      	mov	sp, r7
- 8001a38:	bd80      	pop	{r7, pc}
- 8001a3a:	bf00      	nop
- 8001a3c:	20000008 	.word	0x20000008
- 8001a40:	08008b74 	.word	0x08008b74
+ 8001a3a:	4618      	mov	r0, r3
+ 8001a3c:	3710      	adds	r7, #16
+ 8001a3e:	46bd      	mov	sp, r7
+ 8001a40:	bd80      	pop	{r7, pc}
+ 8001a42:	bf00      	nop
+ 8001a44:	20000008 	.word	0x20000008
+ 8001a48:	08008b74 	.word	0x08008b74
 
-08001a44 <SendOtpEccDatain>:
+08001a4c <SendOtpEccDatain>:
 /**
  * Sends the OTP (one-time programmable) ECC (error correction code)
  * Used to initalize the stack
  */
 void SendOtpEccDatain(DbmsCtx* ctx)  
 {
- 8001a44:	b580      	push	{r7, lr}
- 8001a46:	b086      	sub	sp, #24
- 8001a48:	af00      	add	r7, sp, #0
- 8001a4a:	6078      	str	r0, [r7, #4]
+ 8001a4c:	b580      	push	{r7, lr}
+ 8001a4e:	b086      	sub	sp, #24
+ 8001a50:	af00      	add	r7, sp, #0
+ 8001a52:	6078      	str	r0, [r7, #4]
     uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x43, 0x00, 0x00, 0x00 };
- 8001a4c:	4a10      	ldr	r2, [pc, #64]	@ (8001a90 <SendOtpEccDatain+0x4c>)
- 8001a4e:	f107 030c 	add.w	r3, r7, #12
- 8001a52:	e892 0003 	ldmia.w	r2, {r0, r1}
- 8001a56:	6018      	str	r0, [r3, #0]
- 8001a58:	3304      	adds	r3, #4
- 8001a5a:	8019      	strh	r1, [r3, #0]
+ 8001a54:	4a10      	ldr	r2, [pc, #64]	@ (8001a98 <SendOtpEccDatain+0x4c>)
+ 8001a56:	f107 030c 	add.w	r3, r7, #12
+ 8001a5a:	e892 0003 	ldmia.w	r2, {r0, r1}
+ 8001a5e:	6018      	str	r0, [r3, #0]
+ 8001a60:	3304      	adds	r3, #4
+ 8001a62:	8019      	strh	r1, [r3, #0]
     // uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x4C, 0x00, 0x00, 0x00 };
     for (int i = 0; i < 8; i++) 
- 8001a5c:	2300      	movs	r3, #0
- 8001a5e:	617b      	str	r3, [r7, #20]
- 8001a60:	e00d      	b.n	8001a7e <SendOtpEccDatain+0x3a>
+ 8001a64:	2300      	movs	r3, #0
+ 8001a66:	617b      	str	r3, [r7, #20]
+ 8001a68:	e00d      	b.n	8001a86 <SendOtpEccDatain+0x3a>
     {
         SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
- 8001a62:	f107 030c 	add.w	r3, r7, #12
- 8001a66:	2206      	movs	r2, #6
- 8001a68:	4619      	mov	r1, r3
- 8001a6a:	6878      	ldr	r0, [r7, #4]
- 8001a6c:	f7ff feb3 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001a6a:	f107 030c 	add.w	r3, r7, #12
+ 8001a6e:	2206      	movs	r2, #6
+ 8001a70:	4619      	mov	r1, r3
+ 8001a72:	6878      	ldr	r0, [r7, #4]
+ 8001a74:	f7ff feb3 	bl	80017de <SendStackFrameSetCrc>
         frame_otp_ecc_datain[2]++;
- 8001a70:	7bbb      	ldrb	r3, [r7, #14]
- 8001a72:	3301      	adds	r3, #1
- 8001a74:	b2db      	uxtb	r3, r3
- 8001a76:	73bb      	strb	r3, [r7, #14]
-    for (int i = 0; i < 8; i++) 
- 8001a78:	697b      	ldr	r3, [r7, #20]
+ 8001a78:	7bbb      	ldrb	r3, [r7, #14]
  8001a7a:	3301      	adds	r3, #1
- 8001a7c:	617b      	str	r3, [r7, #20]
- 8001a7e:	697b      	ldr	r3, [r7, #20]
- 8001a80:	2b07      	cmp	r3, #7
- 8001a82:	ddee      	ble.n	8001a62 <SendOtpEccDatain+0x1e>
+ 8001a7c:	b2db      	uxtb	r3, r3
+ 8001a7e:	73bb      	strb	r3, [r7, #14]
+    for (int i = 0; i < 8; i++) 
+ 8001a80:	697b      	ldr	r3, [r7, #20]
+ 8001a82:	3301      	adds	r3, #1
+ 8001a84:	617b      	str	r3, [r7, #20]
+ 8001a86:	697b      	ldr	r3, [r7, #20]
+ 8001a88:	2b07      	cmp	r3, #7
+ 8001a8a:	ddee      	ble.n	8001a6a <SendOtpEccDatain+0x1e>
     }
 }
- 8001a84:	bf00      	nop
- 8001a86:	bf00      	nop
- 8001a88:	3718      	adds	r7, #24
- 8001a8a:	46bd      	mov	sp, r7
- 8001a8c:	bd80      	pop	{r7, pc}
+ 8001a8c:	bf00      	nop
  8001a8e:	bf00      	nop
- 8001a90:	08008b98 	.word	0x08008b98
+ 8001a90:	3718      	adds	r7, #24
+ 8001a92:	46bd      	mov	sp, r7
+ 8001a94:	bd80      	pop	{r7, pc}
+ 8001a96:	bf00      	nop
+ 8001a98:	08008b98 	.word	0x08008b98
 
-08001a94 <SendAutoAddr>:
+08001a9c <SendAutoAddr>:
  * For example, if we want to ask what the voltage of chip 5 is, we need to make one
  * of them chip #5, another chip #6, and so on
  * Used to initalize the stack
  */
 void SendAutoAddr(DbmsCtx* ctx) 
 {
- 8001a94:	b580      	push	{r7, lr}
- 8001a96:	b086      	sub	sp, #24
- 8001a98:	af00      	add	r7, sp, #0
- 8001a9a:	6078      	str	r0, [r7, #4]
+ 8001a9c:	b580      	push	{r7, lr}
+ 8001a9e:	b086      	sub	sp, #24
+ 8001aa0:	af00      	add	r7, sp, #0
+ 8001aa2:	6078      	str	r0, [r7, #4]
     // 0xB0 at first
     uint8_t frame_addr_dev[] = { 0xD0, 0x03, 0x06, 0x00, 0x00, 0x00 };
- 8001a9c:	4a10      	ldr	r2, [pc, #64]	@ (8001ae0 <SendAutoAddr+0x4c>)
- 8001a9e:	f107 030c 	add.w	r3, r7, #12
- 8001aa2:	e892 0003 	ldmia.w	r2, {r0, r1}
- 8001aa6:	6018      	str	r0, [r3, #0]
- 8001aa8:	3304      	adds	r3, #4
- 8001aaa:	8019      	strh	r1, [r3, #0]
+ 8001aa4:	4a10      	ldr	r2, [pc, #64]	@ (8001ae8 <SendAutoAddr+0x4c>)
+ 8001aa6:	f107 030c 	add.w	r3, r7, #12
+ 8001aaa:	e892 0003 	ldmia.w	r2, {r0, r1}
+ 8001aae:	6018      	str	r0, [r3, #0]
+ 8001ab0:	3304      	adds	r3, #4
+ 8001ab2:	8019      	strh	r1, [r3, #0]
     for (int i = 0; i <= N_STACKDEVS; i++) {
- 8001aac:	2300      	movs	r3, #0
- 8001aae:	617b      	str	r3, [r7, #20]
- 8001ab0:	e00d      	b.n	8001ace <SendAutoAddr+0x3a>
+ 8001ab4:	2300      	movs	r3, #0
+ 8001ab6:	617b      	str	r3, [r7, #20]
+ 8001ab8:	e00d      	b.n	8001ad6 <SendAutoAddr+0x3a>
         SendStackFrameSetCrc(ctx, frame_addr_dev, sizeof(frame_addr_dev));
- 8001ab2:	f107 030c 	add.w	r3, r7, #12
- 8001ab6:	2206      	movs	r2, #6
- 8001ab8:	4619      	mov	r1, r3
- 8001aba:	6878      	ldr	r0, [r7, #4]
- 8001abc:	f7ff fe8b 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001aba:	f107 030c 	add.w	r3, r7, #12
+ 8001abe:	2206      	movs	r2, #6
+ 8001ac0:	4619      	mov	r1, r3
+ 8001ac2:	6878      	ldr	r0, [r7, #4]
+ 8001ac4:	f7ff fe8b 	bl	80017de <SendStackFrameSetCrc>
         frame_addr_dev[3]++;   
- 8001ac0:	7bfb      	ldrb	r3, [r7, #15]
- 8001ac2:	3301      	adds	r3, #1
- 8001ac4:	b2db      	uxtb	r3, r3
- 8001ac6:	73fb      	strb	r3, [r7, #15]
-    for (int i = 0; i <= N_STACKDEVS; i++) {
- 8001ac8:	697b      	ldr	r3, [r7, #20]
+ 8001ac8:	7bfb      	ldrb	r3, [r7, #15]
  8001aca:	3301      	adds	r3, #1
- 8001acc:	617b      	str	r3, [r7, #20]
- 8001ace:	697b      	ldr	r3, [r7, #20]
- 8001ad0:	2b0d      	cmp	r3, #13
- 8001ad2:	ddee      	ble.n	8001ab2 <SendAutoAddr+0x1e>
+ 8001acc:	b2db      	uxtb	r3, r3
+ 8001ace:	73fb      	strb	r3, [r7, #15]
+    for (int i = 0; i <= N_STACKDEVS; i++) {
+ 8001ad0:	697b      	ldr	r3, [r7, #20]
+ 8001ad2:	3301      	adds	r3, #1
+ 8001ad4:	617b      	str	r3, [r7, #20]
+ 8001ad6:	697b      	ldr	r3, [r7, #20]
+ 8001ad8:	2b09      	cmp	r3, #9
+ 8001ada:	ddee      	ble.n	8001aba <SendAutoAddr+0x1e>
     }
 }
- 8001ad4:	bf00      	nop
- 8001ad6:	bf00      	nop
- 8001ad8:	3718      	adds	r7, #24
- 8001ada:	46bd      	mov	sp, r7
- 8001adc:	bd80      	pop	{r7, pc}
+ 8001adc:	bf00      	nop
  8001ade:	bf00      	nop
- 8001ae0:	08008ba0 	.word	0x08008ba0
+ 8001ae0:	3718      	adds	r7, #24
+ 8001ae2:	46bd      	mov	sp, r7
+ 8001ae4:	bd80      	pop	{r7, pc}
+ 8001ae6:	bf00      	nop
+ 8001ae8:	08008ba0 	.word	0x08008ba0
 
-08001ae4 <SendSetStackTop>:
+08001aec <SendSetStackTop>:
 /**
  * Tells the chips who is at the bottom and top of the stack
  * Used to initalize the stack
  */
 void SendSetStackTop(DbmsCtx* ctx) 
 {
- 8001ae4:	b580      	push	{r7, lr}
- 8001ae6:	b088      	sub	sp, #32
- 8001ae8:	af00      	add	r7, sp, #0
- 8001aea:	6078      	str	r0, [r7, #4]
+ 8001aec:	b580      	push	{r7, lr}
+ 8001aee:	b088      	sub	sp, #32
+ 8001af0:	af00      	add	r7, sp, #0
+ 8001af2:	6078      	str	r0, [r7, #4]
     // 2nd byte replaced with id (num of stack devs), last 2 bytes for crc
 
     // Sets all devices as stack devices
     uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08 , 0x02, 0x00, 0x00};
- 8001aec:	4a1b      	ldr	r2, [pc, #108]	@ (8001b5c <SendSetStackTop+0x78>)
- 8001aee:	f107 0318 	add.w	r3, r7, #24
- 8001af2:	e892 0003 	ldmia.w	r2, {r0, r1}
- 8001af6:	6018      	str	r0, [r3, #0]
- 8001af8:	3304      	adds	r3, #4
- 8001afa:	8019      	strh	r1, [r3, #0]
+ 8001af4:	4a1b      	ldr	r2, [pc, #108]	@ (8001b64 <SendSetStackTop+0x78>)
+ 8001af6:	f107 0318 	add.w	r3, r7, #24
+ 8001afa:	e892 0003 	ldmia.w	r2, {r0, r1}
+ 8001afe:	6018      	str	r0, [r3, #0]
+ 8001b00:	3304      	adds	r3, #4
+ 8001b02:	8019      	strh	r1, [r3, #0]
     SendStackFrameSetCrc(ctx, frame_set_stack_devices, sizeof(frame_set_stack_devices));
- 8001afc:	f107 0318 	add.w	r3, r7, #24
- 8001b00:	2206      	movs	r2, #6
- 8001b02:	4619      	mov	r1, r3
- 8001b04:	6878      	ldr	r0, [r7, #4]
- 8001b06:	f7ff fe66 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001b04:	f107 0318 	add.w	r3, r7, #24
+ 8001b08:	2206      	movs	r2, #6
+ 8001b0a:	4619      	mov	r1, r3
+ 8001b0c:	6878      	ldr	r0, [r7, #4]
+ 8001b0e:	f7ff fe66 	bl	80017de <SendStackFrameSetCrc>
 
     // Sets bridge device as non-stack device and bottom of stack
     uint8_t frame_set_stack_base[] = { 0x90, 0x00, 0x03, 0x08, 0x00, 0x00, 0x00 }; 
- 8001b0a:	4a15      	ldr	r2, [pc, #84]	@ (8001b60 <SendSetStackTop+0x7c>)
- 8001b0c:	f107 0310 	add.w	r3, r7, #16
- 8001b10:	e892 0003 	ldmia.w	r2, {r0, r1}
- 8001b14:	6018      	str	r0, [r3, #0]
- 8001b16:	3304      	adds	r3, #4
- 8001b18:	8019      	strh	r1, [r3, #0]
- 8001b1a:	3302      	adds	r3, #2
- 8001b1c:	0c0a      	lsrs	r2, r1, #16
- 8001b1e:	701a      	strb	r2, [r3, #0]
+ 8001b12:	4a15      	ldr	r2, [pc, #84]	@ (8001b68 <SendSetStackTop+0x7c>)
+ 8001b14:	f107 0310 	add.w	r3, r7, #16
+ 8001b18:	e892 0003 	ldmia.w	r2, {r0, r1}
+ 8001b1c:	6018      	str	r0, [r3, #0]
+ 8001b1e:	3304      	adds	r3, #4
+ 8001b20:	8019      	strh	r1, [r3, #0]
+ 8001b22:	3302      	adds	r3, #2
+ 8001b24:	0c0a      	lsrs	r2, r1, #16
+ 8001b26:	701a      	strb	r2, [r3, #0]
     SendStackFrameSetCrc(ctx, frame_set_stack_base, sizeof(frame_set_stack_base));
- 8001b20:	f107 0310 	add.w	r3, r7, #16
- 8001b24:	2207      	movs	r2, #7
- 8001b26:	4619      	mov	r1, r3
- 8001b28:	6878      	ldr	r0, [r7, #4]
- 8001b2a:	f7ff fe54 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001b28:	f107 0310 	add.w	r3, r7, #16
+ 8001b2c:	2207      	movs	r2, #7
+ 8001b2e:	4619      	mov	r1, r3
+ 8001b30:	6878      	ldr	r0, [r7, #4]
+ 8001b32:	f7ff fe54 	bl	80017de <SendStackFrameSetCrc>
 
     // Sets top of stack
     uint8_t frame_set_stack_top[] = { 0x90, N_STACKDEVS-1, 0x03, 0x08, 0x03, 0x00, 0x00 }; 
- 8001b2e:	4a0d      	ldr	r2, [pc, #52]	@ (8001b64 <SendSetStackTop+0x80>)
- 8001b30:	f107 0308 	add.w	r3, r7, #8
- 8001b34:	e892 0003 	ldmia.w	r2, {r0, r1}
- 8001b38:	6018      	str	r0, [r3, #0]
- 8001b3a:	3304      	adds	r3, #4
- 8001b3c:	8019      	strh	r1, [r3, #0]
- 8001b3e:	3302      	adds	r3, #2
- 8001b40:	0c0a      	lsrs	r2, r1, #16
- 8001b42:	701a      	strb	r2, [r3, #0]
+ 8001b36:	4a0d      	ldr	r2, [pc, #52]	@ (8001b6c <SendSetStackTop+0x80>)
+ 8001b38:	f107 0308 	add.w	r3, r7, #8
+ 8001b3c:	e892 0003 	ldmia.w	r2, {r0, r1}
+ 8001b40:	6018      	str	r0, [r3, #0]
+ 8001b42:	3304      	adds	r3, #4
+ 8001b44:	8019      	strh	r1, [r3, #0]
+ 8001b46:	3302      	adds	r3, #2
+ 8001b48:	0c0a      	lsrs	r2, r1, #16
+ 8001b4a:	701a      	strb	r2, [r3, #0]
     SendStackFrameSetCrc(ctx, frame_set_stack_top, sizeof(frame_set_stack_top));
- 8001b44:	f107 0308 	add.w	r3, r7, #8
- 8001b48:	2207      	movs	r2, #7
- 8001b4a:	4619      	mov	r1, r3
- 8001b4c:	6878      	ldr	r0, [r7, #4]
- 8001b4e:	f7ff fe42 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001b4c:	f107 0308 	add.w	r3, r7, #8
+ 8001b50:	2207      	movs	r2, #7
+ 8001b52:	4619      	mov	r1, r3
+ 8001b54:	6878      	ldr	r0, [r7, #4]
+ 8001b56:	f7ff fe42 	bl	80017de <SendStackFrameSetCrc>
 
 }
- 8001b52:	bf00      	nop
- 8001b54:	3720      	adds	r7, #32
- 8001b56:	46bd      	mov	sp, r7
- 8001b58:	bd80      	pop	{r7, pc}
  8001b5a:	bf00      	nop
- 8001b5c:	08008ba8 	.word	0x08008ba8
- 8001b60:	08008bb0 	.word	0x08008bb0
- 8001b64:	08008bb8 	.word	0x08008bb8
+ 8001b5c:	3720      	adds	r7, #32
+ 8001b5e:	46bd      	mov	sp, r7
+ 8001b60:	bd80      	pop	{r7, pc}
+ 8001b62:	bf00      	nop
+ 8001b64:	08008ba8 	.word	0x08008ba8
+ 8001b68:	08008bb0 	.word	0x08008bb0
+ 8001b6c:	08008bb8 	.word	0x08008bb8
 
-08001b68 <ReadOtpEccDatain>:
+08001b70 <ReadOtpEccDatain>:
 /**
  * Reads the OTP (one-time programmable) ECC (error correction code)
  * Used to initalize the stack
  */
 void ReadOtpEccDatain(DbmsCtx* ctx)  
 {
- 8001b68:	b580      	push	{r7, lr}
- 8001b6a:	b086      	sub	sp, #24
- 8001b6c:	af00      	add	r7, sp, #0
- 8001b6e:	6078      	str	r0, [r7, #4]
+ 8001b70:	b580      	push	{r7, lr}
+ 8001b72:	b086      	sub	sp, #24
+ 8001b74:	af00      	add	r7, sp, #0
+ 8001b76:	6078      	str	r0, [r7, #4]
     // uint8_t frame_otp_ecc_datain[] = { 0xA0, 0x03, 0x43, 0x00, 0x00, 0x00};
     uint8_t frame_otp_ecc_datain[] = { 0xC0, 0x03, 0x4C, 0x00, 0x00, 0x00};
- 8001b70:	4a10      	ldr	r2, [pc, #64]	@ (8001bb4 <ReadOtpEccDatain+0x4c>)
- 8001b72:	f107 030c 	add.w	r3, r7, #12
- 8001b76:	e892 0003 	ldmia.w	r2, {r0, r1}
- 8001b7a:	6018      	str	r0, [r3, #0]
- 8001b7c:	3304      	adds	r3, #4
- 8001b7e:	8019      	strh	r1, [r3, #0]
+ 8001b78:	4a10      	ldr	r2, [pc, #64]	@ (8001bbc <ReadOtpEccDatain+0x4c>)
+ 8001b7a:	f107 030c 	add.w	r3, r7, #12
+ 8001b7e:	e892 0003 	ldmia.w	r2, {r0, r1}
+ 8001b82:	6018      	str	r0, [r3, #0]
+ 8001b84:	3304      	adds	r3, #4
+ 8001b86:	8019      	strh	r1, [r3, #0]
     for (int i = 0; i < 8; i++)
- 8001b80:	2300      	movs	r3, #0
- 8001b82:	617b      	str	r3, [r7, #20]
- 8001b84:	e00d      	b.n	8001ba2 <ReadOtpEccDatain+0x3a>
+ 8001b88:	2300      	movs	r3, #0
+ 8001b8a:	617b      	str	r3, [r7, #20]
+ 8001b8c:	e00d      	b.n	8001baa <ReadOtpEccDatain+0x3a>
     {
         SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
- 8001b86:	f107 030c 	add.w	r3, r7, #12
- 8001b8a:	2206      	movs	r2, #6
- 8001b8c:	4619      	mov	r1, r3
- 8001b8e:	6878      	ldr	r0, [r7, #4]
- 8001b90:	f7ff fe21 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001b8e:	f107 030c 	add.w	r3, r7, #12
+ 8001b92:	2206      	movs	r2, #6
+ 8001b94:	4619      	mov	r1, r3
+ 8001b96:	6878      	ldr	r0, [r7, #4]
+ 8001b98:	f7ff fe21 	bl	80017de <SendStackFrameSetCrc>
         frame_otp_ecc_datain[2]++;
- 8001b94:	7bbb      	ldrb	r3, [r7, #14]
- 8001b96:	3301      	adds	r3, #1
- 8001b98:	b2db      	uxtb	r3, r3
- 8001b9a:	73bb      	strb	r3, [r7, #14]
-    for (int i = 0; i < 8; i++)
- 8001b9c:	697b      	ldr	r3, [r7, #20]
+ 8001b9c:	7bbb      	ldrb	r3, [r7, #14]
  8001b9e:	3301      	adds	r3, #1
- 8001ba0:	617b      	str	r3, [r7, #20]
- 8001ba2:	697b      	ldr	r3, [r7, #20]
- 8001ba4:	2b07      	cmp	r3, #7
- 8001ba6:	ddee      	ble.n	8001b86 <ReadOtpEccDatain+0x1e>
+ 8001ba0:	b2db      	uxtb	r3, r3
+ 8001ba2:	73bb      	strb	r3, [r7, #14]
+    for (int i = 0; i < 8; i++)
+ 8001ba4:	697b      	ldr	r3, [r7, #20]
+ 8001ba6:	3301      	adds	r3, #1
+ 8001ba8:	617b      	str	r3, [r7, #20]
+ 8001baa:	697b      	ldr	r3, [r7, #20]
+ 8001bac:	2b07      	cmp	r3, #7
+ 8001bae:	ddee      	ble.n	8001b8e <ReadOtpEccDatain+0x1e>
     }
 }
- 8001ba8:	bf00      	nop
- 8001baa:	bf00      	nop
- 8001bac:	3718      	adds	r7, #24
- 8001bae:	46bd      	mov	sp, r7
- 8001bb0:	bd80      	pop	{r7, pc}
+ 8001bb0:	bf00      	nop
  8001bb2:	bf00      	nop
- 8001bb4:	08008bc0 	.word	0x08008bc0
+ 8001bb4:	3718      	adds	r7, #24
+ 8001bb6:	46bd      	mov	sp, r7
+ 8001bb8:	bd80      	pop	{r7, pc}
+ 8001bba:	bf00      	nop
+ 8001bbc:	08008bc0 	.word	0x08008bc0
 
-08001bb8 <StackAutoAddr>:
+08001bc0 <StackAutoAddr>:
  * "main" function for initalization
  * Builds a fully configured and operational battery stack
  * Uses helper functions defined above
  */
 void StackAutoAddr(DbmsCtx* ctx)
 {
- 8001bb8:	b580      	push	{r7, lr}
- 8001bba:	b082      	sub	sp, #8
- 8001bbc:	af00      	add	r7, sp, #0
- 8001bbe:	6078      	str	r0, [r7, #4]
+ 8001bc0:	b580      	push	{r7, lr}
+ 8001bc2:	b082      	sub	sp, #8
+ 8001bc4:	af00      	add	r7, sp, #0
+ 8001bc6:	6078      	str	r0, [r7, #4]
     SendOtpEccDatain(ctx); // step 1
- 8001bc0:	6878      	ldr	r0, [r7, #4]
- 8001bc2:	f7ff ff3f 	bl	8001a44 <SendOtpEccDatain>
+ 8001bc8:	6878      	ldr	r0, [r7, #4]
+ 8001bca:	f7ff ff3f 	bl	8001a4c <SendOtpEccDatain>
 
     static uint8_t FRAME_ENABLE_AUTO_ADDR[] = { 0xD0, 0x03, 0x09, 0x01, 0x0F, 0x74 };
     SendStackFrameSetCrc(ctx, FRAME_ENABLE_AUTO_ADDR, sizeof(FRAME_ENABLE_AUTO_ADDR)); // step 2
- 8001bc6:	2206      	movs	r2, #6
- 8001bc8:	490a      	ldr	r1, [pc, #40]	@ (8001bf4 <StackAutoAddr+0x3c>)
- 8001bca:	6878      	ldr	r0, [r7, #4]
- 8001bcc:	f7ff fe03 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001bce:	2206      	movs	r2, #6
+ 8001bd0:	490a      	ldr	r1, [pc, #40]	@ (8001bfc <StackAutoAddr+0x3c>)
+ 8001bd2:	6878      	ldr	r0, [r7, #4]
+ 8001bd4:	f7ff fe03 	bl	80017de <SendStackFrameSetCrc>
 
     SendAutoAddr(ctx); // step 3
- 8001bd0:	6878      	ldr	r0, [r7, #4]
- 8001bd2:	f7ff ff5f 	bl	8001a94 <SendAutoAddr>
+ 8001bd8:	6878      	ldr	r0, [r7, #4]
+ 8001bda:	f7ff ff5f 	bl	8001a9c <SendAutoAddr>
 
     static uint8_t FRAME_SET_ALL_STACK[] = { 0xD0, 0x03, 0x08, 0x02, 0x0, 0x0 };
     SendStackFrameSetCrc(ctx, FRAME_SET_ALL_STACK, sizeof(FRAME_SET_ALL_STACK)); // step 4
- 8001bd6:	2206      	movs	r2, #6
- 8001bd8:	4907      	ldr	r1, [pc, #28]	@ (8001bf8 <StackAutoAddr+0x40>)
- 8001bda:	6878      	ldr	r0, [r7, #4]
- 8001bdc:	f7ff fdfb 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001bde:	2206      	movs	r2, #6
+ 8001be0:	4907      	ldr	r1, [pc, #28]	@ (8001c00 <StackAutoAddr+0x40>)
+ 8001be2:	6878      	ldr	r0, [r7, #4]
+ 8001be4:	f7ff fdfb 	bl	80017de <SendStackFrameSetCrc>
 
     SendSetStackTop(ctx); // step 5
- 8001be0:	6878      	ldr	r0, [r7, #4]
- 8001be2:	f7ff ff7f 	bl	8001ae4 <SendSetStackTop>
+ 8001be8:	6878      	ldr	r0, [r7, #4]
+ 8001bea:	f7ff ff7f 	bl	8001aec <SendSetStackTop>
 
     ReadOtpEccDatain(ctx); // step 6
- 8001be6:	6878      	ldr	r0, [r7, #4]
- 8001be8:	f7ff ffbe 	bl	8001b68 <ReadOtpEccDatain>
+ 8001bee:	6878      	ldr	r0, [r7, #4]
+ 8001bf0:	f7ff ffbe 	bl	8001b70 <ReadOtpEccDatain>
     // static uint8_t FRAME_READ_DIR0_ADDR[] = { 0xA0, 0x00, 0x03, 0x06, 0x01, 0x00, 0x00 };
     // SendStackFrameSetCrc(ctx, FRAME_READ_DIR0_ADDR, sizeof(FRAME_READ_DIR0_ADDR));
 
     // static uint8_t FRAME_CONF1_READ[] = { 0x80, 0x00, 0x20, 0x01, 0x01, 0x00, 0x00 };
     // SendStackFrameSetCrc(ctx, FRAME_CONF1_READ, sizeof(FRAME_CONF1_READ));
 }
- 8001bec:	bf00      	nop
- 8001bee:	3708      	adds	r7, #8
- 8001bf0:	46bd      	mov	sp, r7
- 8001bf2:	bd80      	pop	{r7, pc}
- 8001bf4:	20000010 	.word	0x20000010
- 8001bf8:	20000018 	.word	0x20000018
+ 8001bf4:	bf00      	nop
+ 8001bf6:	3708      	adds	r7, #8
+ 8001bf8:	46bd      	mov	sp, r7
+ 8001bfa:	bd80      	pop	{r7, pc}
+ 8001bfc:	20000010 	.word	0x20000010
+ 8001c00:	20000018 	.word	0x20000018
 
-08001bfc <StackSetNumActiveCells>:
+08001c04 <StackSetNumActiveCells>:
 /**
  * Sets the number of active cells in the stack
  * Used to initalize the stack
  */
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
- 8001bfc:	b580      	push	{r7, lr}
- 8001bfe:	b084      	sub	sp, #16
- 8001c00:	af00      	add	r7, sp, #0
- 8001c02:	6078      	str	r0, [r7, #4]
- 8001c04:	460b      	mov	r3, r1
- 8001c06:	70fb      	strb	r3, [r7, #3]
+ 8001c04:	b580      	push	{r7, lr}
+ 8001c06:	b084      	sub	sp, #16
+ 8001c08:	af00      	add	r7, sp, #0
+ 8001c0a:	6078      	str	r0, [r7, #4]
+ 8001c0c:	460b      	mov	r3, r1
+ 8001c0e:	70fb      	strb	r3, [r7, #3]
     // possible sw guide error 0xB0 (stack write) --> 0xD0 (broadcast write)
     // uint8_t frame_set_active_cell[] =  { 0xD0, 0x00, N_STACKDEVS, n_active_cells, 0x00, 0x00 };
     uint8_t frame_set_active_cell[] =  { 0xD0, 0x00, 0x03, n_active_cells, 0x00, 0x00 };
- 8001c08:	23d0      	movs	r3, #208	@ 0xd0
- 8001c0a:	723b      	strb	r3, [r7, #8]
- 8001c0c:	2300      	movs	r3, #0
- 8001c0e:	727b      	strb	r3, [r7, #9]
- 8001c10:	2303      	movs	r3, #3
- 8001c12:	72bb      	strb	r3, [r7, #10]
- 8001c14:	78fb      	ldrb	r3, [r7, #3]
- 8001c16:	72fb      	strb	r3, [r7, #11]
- 8001c18:	2300      	movs	r3, #0
- 8001c1a:	733b      	strb	r3, [r7, #12]
- 8001c1c:	2300      	movs	r3, #0
- 8001c1e:	737b      	strb	r3, [r7, #13]
+ 8001c10:	23d0      	movs	r3, #208	@ 0xd0
+ 8001c12:	723b      	strb	r3, [r7, #8]
+ 8001c14:	2300      	movs	r3, #0
+ 8001c16:	727b      	strb	r3, [r7, #9]
+ 8001c18:	2303      	movs	r3, #3
+ 8001c1a:	72bb      	strb	r3, [r7, #10]
+ 8001c1c:	78fb      	ldrb	r3, [r7, #3]
+ 8001c1e:	72fb      	strb	r3, [r7, #11]
+ 8001c20:	2300      	movs	r3, #0
+ 8001c22:	733b      	strb	r3, [r7, #12]
+ 8001c24:	2300      	movs	r3, #0
+ 8001c26:	737b      	strb	r3, [r7, #13]
 
     SendStackFrameSetCrc(ctx, frame_set_active_cell, sizeof(frame_set_active_cell));
- 8001c20:	f107 0308 	add.w	r3, r7, #8
- 8001c24:	2206      	movs	r2, #6
- 8001c26:	4619      	mov	r1, r3
- 8001c28:	6878      	ldr	r0, [r7, #4]
- 8001c2a:	f7ff fdd4 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001c28:	f107 0308 	add.w	r3, r7, #8
+ 8001c2c:	2206      	movs	r2, #6
+ 8001c2e:	4619      	mov	r1, r3
+ 8001c30:	6878      	ldr	r0, [r7, #4]
+ 8001c32:	f7ff fdd4 	bl	80017de <SendStackFrameSetCrc>
 }
- 8001c2e:	bf00      	nop
- 8001c30:	3710      	adds	r7, #16
- 8001c32:	46bd      	mov	sp, r7
- 8001c34:	bd80      	pop	{r7, pc}
+ 8001c36:	bf00      	nop
+ 8001c38:	3710      	adds	r7, #16
+ 8001c3a:	46bd      	mov	sp, r7
+ 8001c3c:	bd80      	pop	{r7, pc}
 	...
 
-08001c38 <StackSetupGpio>:
+08001c40 <StackSetupGpio>:
 
 void StackSetupGpio(DbmsCtx* ctx)
 {
- 8001c38:	b580      	push	{r7, lr}
- 8001c3a:	b088      	sub	sp, #32
- 8001c3c:	af00      	add	r7, sp, #0
- 8001c3e:	6078      	str	r0, [r7, #4]
+ 8001c40:	b580      	push	{r7, lr}
+ 8001c42:	b088      	sub	sp, #32
+ 8001c44:	af00      	add	r7, sp, #0
+ 8001c46:	6078      	str	r0, [r7, #4]
     // TODO: implement
     // Configures all GPIOs to be ADC and OTUT input
     // Note: Can be made more effecient by using NVM
     // Note 2: Also configures GPIO8 even though we dont need to, hence just setting GPIO8 to output low
     uint8_t frame_gpio_configs[] = {0xB3, 0x00, 0x0E, 0x09, 0x09, 0x09, 0x21, 0x00, 0x00};
- 8001c40:	4a11      	ldr	r2, [pc, #68]	@ (8001c88 <StackSetupGpio+0x50>)
- 8001c42:	f107 0314 	add.w	r3, r7, #20
- 8001c46:	ca07      	ldmia	r2, {r0, r1, r2}
- 8001c48:	c303      	stmia	r3!, {r0, r1}
- 8001c4a:	701a      	strb	r2, [r3, #0]
+ 8001c48:	4a11      	ldr	r2, [pc, #68]	@ (8001c90 <StackSetupGpio+0x50>)
+ 8001c4a:	f107 0314 	add.w	r3, r7, #20
+ 8001c4e:	ca07      	ldmia	r2, {r0, r1, r2}
+ 8001c50:	c303      	stmia	r3!, {r0, r1}
+ 8001c52:	701a      	strb	r2, [r3, #0]
     SendStackFrameSetCrc(ctx, frame_gpio_configs, sizeof(frame_gpio_configs));
- 8001c4c:	f107 0314 	add.w	r3, r7, #20
- 8001c50:	2209      	movs	r2, #9
- 8001c52:	4619      	mov	r1, r3
- 8001c54:	6878      	ldr	r0, [r7, #4]
- 8001c56:	f7ff fdbe 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001c54:	f107 0314 	add.w	r3, r7, #20
+ 8001c58:	2209      	movs	r2, #9
+ 8001c5a:	4619      	mov	r1, r3
+ 8001c5c:	6878      	ldr	r0, [r7, #4]
+ 8001c5e:	f7ff fdbe 	bl	80017de <SendStackFrameSetCrc>
 
     // Setting up TSREF to active
     uint8_t frame_tsref_setup[] = {0xB0, 0x03, 0x0A, 0x01, 0x00, 0x00};
- 8001c5a:	4a0c      	ldr	r2, [pc, #48]	@ (8001c8c <StackSetupGpio+0x54>)
- 8001c5c:	f107 030c 	add.w	r3, r7, #12
- 8001c60:	e892 0003 	ldmia.w	r2, {r0, r1}
- 8001c64:	6018      	str	r0, [r3, #0]
- 8001c66:	3304      	adds	r3, #4
- 8001c68:	8019      	strh	r1, [r3, #0]
+ 8001c62:	4a0c      	ldr	r2, [pc, #48]	@ (8001c94 <StackSetupGpio+0x54>)
+ 8001c64:	f107 030c 	add.w	r3, r7, #12
+ 8001c68:	e892 0003 	ldmia.w	r2, {r0, r1}
+ 8001c6c:	6018      	str	r0, [r3, #0]
+ 8001c6e:	3304      	adds	r3, #4
+ 8001c70:	8019      	strh	r1, [r3, #0]
     SendStackFrameSetCrc(ctx, frame_tsref_setup, sizeof(frame_tsref_setup));
- 8001c6a:	f107 030c 	add.w	r3, r7, #12
- 8001c6e:	2206      	movs	r2, #6
- 8001c70:	4619      	mov	r1, r3
- 8001c72:	6878      	ldr	r0, [r7, #4]
- 8001c74:	f7ff fdaf 	bl	80017d6 <SendStackFrameSetCrc>
-    DelayUs(ctx, 10);
- 8001c78:	210a      	movs	r1, #10
+ 8001c72:	f107 030c 	add.w	r3, r7, #12
+ 8001c76:	2206      	movs	r2, #6
+ 8001c78:	4619      	mov	r1, r3
  8001c7a:	6878      	ldr	r0, [r7, #4]
- 8001c7c:	f7ff fc60 	bl	8001540 <DelayUs>
+ 8001c7c:	f7ff fdaf 	bl	80017de <SendStackFrameSetCrc>
+    DelayUs(ctx, 10);
+ 8001c80:	210a      	movs	r1, #10
+ 8001c82:	6878      	ldr	r0, [r7, #4]
+ 8001c84:	f7ff fc60 	bl	8001548 <DelayUs>
 }
- 8001c80:	bf00      	nop
- 8001c82:	3720      	adds	r7, #32
- 8001c84:	46bd      	mov	sp, r7
- 8001c86:	bd80      	pop	{r7, pc}
- 8001c88:	08008bc8 	.word	0x08008bc8
- 8001c8c:	08008bd4 	.word	0x08008bd4
+ 8001c88:	bf00      	nop
+ 8001c8a:	3720      	adds	r7, #32
+ 8001c8c:	46bd      	mov	sp, r7
+ 8001c8e:	bd80      	pop	{r7, pc}
+ 8001c90:	08008bc8 	.word	0x08008bc8
+ 8001c94:	08008bd4 	.word	0x08008bd4
 
-08001c90 <StackSetupVoltReadings>:
+08001c98 <StackSetupVoltReadings>:
 
 /**
  * Tells all battery monitoring chips to start measuring the voltage of each cell
  */
 void StackSetupVoltReadings(DbmsCtx* ctx)
 {
- 8001c90:	b580      	push	{r7, lr}
- 8001c92:	b082      	sub	sp, #8
- 8001c94:	af00      	add	r7, sp, #0
- 8001c96:	6078      	str	r0, [r7, #4]
+ 8001c98:	b580      	push	{r7, lr}
+ 8001c9a:	b082      	sub	sp, #8
+ 8001c9c:	af00      	add	r7, sp, #0
+ 8001c9e:	6078      	str	r0, [r7, #4]
     static uint8_t FRAME_SET_ADC_CONT_RUN[] = {0xD0, 0x03, 0x0D, 0x06, 0x00, 0x00 };
     SendStackFrameSetCrc(ctx, FRAME_SET_ADC_CONT_RUN, sizeof(FRAME_SET_ADC_CONT_RUN));
- 8001c98:	2206      	movs	r2, #6
- 8001c9a:	4904      	ldr	r1, [pc, #16]	@ (8001cac <StackSetupVoltReadings+0x1c>)
- 8001c9c:	6878      	ldr	r0, [r7, #4]
- 8001c9e:	f7ff fd9a 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001ca0:	2206      	movs	r2, #6
+ 8001ca2:	4904      	ldr	r1, [pc, #16]	@ (8001cb4 <StackSetupVoltReadings+0x1c>)
+ 8001ca4:	6878      	ldr	r0, [r7, #4]
+ 8001ca6:	f7ff fd9a 	bl	80017de <SendStackFrameSetCrc>
 }
- 8001ca2:	bf00      	nop
- 8001ca4:	3708      	adds	r7, #8
- 8001ca6:	46bd      	mov	sp, r7
- 8001ca8:	bd80      	pop	{r7, pc}
  8001caa:	bf00      	nop
- 8001cac:	20000020 	.word	0x20000020
+ 8001cac:	3708      	adds	r7, #8
+ 8001cae:	46bd      	mov	sp, r7
+ 8001cb0:	bd80      	pop	{r7, pc}
+ 8001cb2:	bf00      	nop
+ 8001cb4:	20000020 	.word	0x20000020
 
-08001cb0 <CalcStackFrameCrc>:
+08001cb8 <CalcStackFrameCrc>:
 
 uint16_t CalcStackFrameCrc(RxStackFrame* rx_frame)
 {   
- 8001cb0:	b580      	push	{r7, lr}
- 8001cb2:	b082      	sub	sp, #8
- 8001cb4:	af00      	add	r7, sp, #0
- 8001cb6:	6078      	str	r0, [r7, #4]
+ 8001cb8:	b580      	push	{r7, lr}
+ 8001cba:	b082      	sub	sp, #8
+ 8001cbc:	af00      	add	r7, sp, #0
+ 8001cbe:	6078      	str	r0, [r7, #4]
     // TODO: this data-4 is a STUPID decision but will fix once reg_addr endian is validated
     return CalcCrc16(rx_frame->data-4, 4+rx_frame->size);
- 8001cb8:	687b      	ldr	r3, [r7, #4]
- 8001cba:	681b      	ldr	r3, [r3, #0]
- 8001cbc:	1f1a      	subs	r2, r3, #4
- 8001cbe:	687b      	ldr	r3, [r7, #4]
- 8001cc0:	685b      	ldr	r3, [r3, #4]
- 8001cc2:	3304      	adds	r3, #4
- 8001cc4:	4619      	mov	r1, r3
- 8001cc6:	4610      	mov	r0, r2
- 8001cc8:	f001 f832 	bl	8002d30 <CalcCrc16>
- 8001ccc:	4603      	mov	r3, r0
+ 8001cc0:	687b      	ldr	r3, [r7, #4]
+ 8001cc2:	681b      	ldr	r3, [r3, #0]
+ 8001cc4:	1f1a      	subs	r2, r3, #4
+ 8001cc6:	687b      	ldr	r3, [r7, #4]
+ 8001cc8:	685b      	ldr	r3, [r3, #4]
+ 8001cca:	3304      	adds	r3, #4
+ 8001ccc:	4619      	mov	r1, r3
+ 8001cce:	4610      	mov	r0, r2
+ 8001cd0:	f001 f82e 	bl	8002d30 <CalcCrc16>
+ 8001cd4:	4603      	mov	r3, r0
 }
- 8001cce:	4618      	mov	r0, r3
- 8001cd0:	3708      	adds	r7, #8
- 8001cd2:	46bd      	mov	sp, r7
- 8001cd4:	bd80      	pop	{r7, pc}
+ 8001cd6:	4618      	mov	r0, r3
+ 8001cd8:	3708      	adds	r7, #8
+ 8001cda:	46bd      	mov	sp, r7
+ 8001cdc:	bd80      	pop	{r7, pc}
 
-08001cd6 <FillStackFrame>:
+08001cde <FillStackFrame>:
 
 void FillStackFrame(RxStackFrame* rx_frame, uint8_t* buffer, size_t size)
 {
- 8001cd6:	b480      	push	{r7}
- 8001cd8:	b085      	sub	sp, #20
- 8001cda:	af00      	add	r7, sp, #0
- 8001cdc:	60f8      	str	r0, [r7, #12]
- 8001cde:	60b9      	str	r1, [r7, #8]
- 8001ce0:	607a      	str	r2, [r7, #4]
+ 8001cde:	b480      	push	{r7}
+ 8001ce0:	b085      	sub	sp, #20
+ 8001ce2:	af00      	add	r7, sp, #0
+ 8001ce4:	60f8      	str	r0, [r7, #12]
+ 8001ce6:	60b9      	str	r1, [r7, #8]
+ 8001ce8:	607a      	str	r2, [r7, #4]
     rx_frame->init_field = buffer[0];
- 8001ce2:	68bb      	ldr	r3, [r7, #8]
- 8001ce4:	781a      	ldrb	r2, [r3, #0]
- 8001ce6:	68fb      	ldr	r3, [r7, #12]
- 8001ce8:	731a      	strb	r2, [r3, #12]
-    rx_frame->dev_addr = buffer[1];
  8001cea:	68bb      	ldr	r3, [r7, #8]
- 8001cec:	785a      	ldrb	r2, [r3, #1]
+ 8001cec:	781a      	ldrb	r2, [r3, #0]
  8001cee:	68fb      	ldr	r3, [r7, #12]
- 8001cf0:	735a      	strb	r2, [r3, #13]
-    rx_frame->reg_addr = (buffer[2] << 8) + buffer[3];
+ 8001cf0:	731a      	strb	r2, [r3, #12]
+    rx_frame->dev_addr = buffer[1];
  8001cf2:	68bb      	ldr	r3, [r7, #8]
- 8001cf4:	3302      	adds	r3, #2
- 8001cf6:	781b      	ldrb	r3, [r3, #0]
- 8001cf8:	021b      	lsls	r3, r3, #8
- 8001cfa:	b29b      	uxth	r3, r3
- 8001cfc:	68ba      	ldr	r2, [r7, #8]
- 8001cfe:	3203      	adds	r2, #3
- 8001d00:	7812      	ldrb	r2, [r2, #0]
- 8001d02:	4413      	add	r3, r2
- 8001d04:	b29a      	uxth	r2, r3
- 8001d06:	68fb      	ldr	r3, [r7, #12]
- 8001d08:	811a      	strh	r2, [r3, #8]
-    rx_frame->data = buffer + 4;
- 8001d0a:	68bb      	ldr	r3, [r7, #8]
- 8001d0c:	1d1a      	adds	r2, r3, #4
+ 8001cf4:	785a      	ldrb	r2, [r3, #1]
+ 8001cf6:	68fb      	ldr	r3, [r7, #12]
+ 8001cf8:	735a      	strb	r2, [r3, #13]
+    rx_frame->reg_addr = (buffer[2] << 8) + buffer[3];
+ 8001cfa:	68bb      	ldr	r3, [r7, #8]
+ 8001cfc:	3302      	adds	r3, #2
+ 8001cfe:	781b      	ldrb	r3, [r3, #0]
+ 8001d00:	021b      	lsls	r3, r3, #8
+ 8001d02:	b29b      	uxth	r3, r3
+ 8001d04:	68ba      	ldr	r2, [r7, #8]
+ 8001d06:	3203      	adds	r2, #3
+ 8001d08:	7812      	ldrb	r2, [r2, #0]
+ 8001d0a:	4413      	add	r3, r2
+ 8001d0c:	b29a      	uxth	r2, r3
  8001d0e:	68fb      	ldr	r3, [r7, #12]
- 8001d10:	601a      	str	r2, [r3, #0]
+ 8001d10:	811a      	strh	r2, [r3, #8]
+    rx_frame->data = buffer + 4;
+ 8001d12:	68bb      	ldr	r3, [r7, #8]
+ 8001d14:	1d1a      	adds	r2, r3, #4
+ 8001d16:	68fb      	ldr	r3, [r7, #12]
+ 8001d18:	601a      	str	r2, [r3, #0]
     rx_frame->size = size;
- 8001d12:	68fb      	ldr	r3, [r7, #12]
- 8001d14:	687a      	ldr	r2, [r7, #4]
- 8001d16:	605a      	str	r2, [r3, #4]
+ 8001d1a:	68fb      	ldr	r3, [r7, #12]
+ 8001d1c:	687a      	ldr	r2, [r7, #4]
+ 8001d1e:	605a      	str	r2, [r3, #4]
     rx_frame->crc = (buffer[4+size+1] << 8) + buffer[4+size];
- 8001d18:	687b      	ldr	r3, [r7, #4]
- 8001d1a:	3305      	adds	r3, #5
- 8001d1c:	68ba      	ldr	r2, [r7, #8]
- 8001d1e:	4413      	add	r3, r2
- 8001d20:	781b      	ldrb	r3, [r3, #0]
- 8001d22:	021b      	lsls	r3, r3, #8
- 8001d24:	b29b      	uxth	r3, r3
- 8001d26:	687a      	ldr	r2, [r7, #4]
- 8001d28:	3204      	adds	r2, #4
- 8001d2a:	68b9      	ldr	r1, [r7, #8]
- 8001d2c:	440a      	add	r2, r1
- 8001d2e:	7812      	ldrb	r2, [r2, #0]
- 8001d30:	4413      	add	r3, r2
- 8001d32:	b29a      	uxth	r2, r3
- 8001d34:	68fb      	ldr	r3, [r7, #12]
- 8001d36:	815a      	strh	r2, [r3, #10]
+ 8001d20:	687b      	ldr	r3, [r7, #4]
+ 8001d22:	3305      	adds	r3, #5
+ 8001d24:	68ba      	ldr	r2, [r7, #8]
+ 8001d26:	4413      	add	r3, r2
+ 8001d28:	781b      	ldrb	r3, [r3, #0]
+ 8001d2a:	021b      	lsls	r3, r3, #8
+ 8001d2c:	b29b      	uxth	r3, r3
+ 8001d2e:	687a      	ldr	r2, [r7, #4]
+ 8001d30:	3204      	adds	r2, #4
+ 8001d32:	68b9      	ldr	r1, [r7, #8]
+ 8001d34:	440a      	add	r2, r1
+ 8001d36:	7812      	ldrb	r2, [r2, #0]
+ 8001d38:	4413      	add	r3, r2
+ 8001d3a:	b29a      	uxth	r2, r3
+ 8001d3c:	68fb      	ldr	r3, [r7, #12]
+ 8001d3e:	815a      	strh	r2, [r3, #10]
 }
- 8001d38:	bf00      	nop
- 8001d3a:	3714      	adds	r7, #20
- 8001d3c:	46bd      	mov	sp, r7
- 8001d3e:	f85d 7b04 	ldr.w	r7, [sp], #4
- 8001d42:	4770      	bx	lr
+ 8001d40:	bf00      	nop
+ 8001d42:	3714      	adds	r7, #20
+ 8001d44:	46bd      	mov	sp, r7
+ 8001d46:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8001d4a:	4770      	bx	lr
 
-08001d44 <FillStackFrames>:
+08001d4c <FillStackFrames>:
 
 void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames)
 {
- 8001d44:	b580      	push	{r7, lr}
- 8001d46:	b086      	sub	sp, #24
- 8001d48:	af00      	add	r7, sp, #0
- 8001d4a:	60f8      	str	r0, [r7, #12]
- 8001d4c:	60b9      	str	r1, [r7, #8]
- 8001d4e:	607a      	str	r2, [r7, #4]
- 8001d50:	603b      	str	r3, [r7, #0]
+ 8001d4c:	b580      	push	{r7, lr}
+ 8001d4e:	b086      	sub	sp, #24
+ 8001d50:	af00      	add	r7, sp, #0
+ 8001d52:	60f8      	str	r0, [r7, #12]
+ 8001d54:	60b9      	str	r1, [r7, #8]
+ 8001d56:	607a      	str	r2, [r7, #4]
+ 8001d58:	603b      	str	r3, [r7, #0]
     for (size_t i = 0; i < n_frames; i++)
- 8001d52:	2300      	movs	r3, #0
- 8001d54:	617b      	str	r3, [r7, #20]
- 8001d56:	e011      	b.n	8001d7c <FillStackFrames+0x38>
+ 8001d5a:	2300      	movs	r3, #0
+ 8001d5c:	617b      	str	r3, [r7, #20]
+ 8001d5e:	e011      	b.n	8001d84 <FillStackFrames+0x38>
     {
         FillStackFrame(rx_frames + i, buffer + (i * RX_FRAME_SIZE(size)), size);
- 8001d58:	697b      	ldr	r3, [r7, #20]
- 8001d5a:	011b      	lsls	r3, r3, #4
- 8001d5c:	68fa      	ldr	r2, [r7, #12]
- 8001d5e:	18d0      	adds	r0, r2, r3
- 8001d60:	687b      	ldr	r3, [r7, #4]
- 8001d62:	3306      	adds	r3, #6
- 8001d64:	697a      	ldr	r2, [r7, #20]
- 8001d66:	fb02 f303 	mul.w	r3, r2, r3
- 8001d6a:	68ba      	ldr	r2, [r7, #8]
- 8001d6c:	4413      	add	r3, r2
- 8001d6e:	687a      	ldr	r2, [r7, #4]
- 8001d70:	4619      	mov	r1, r3
- 8001d72:	f7ff ffb0 	bl	8001cd6 <FillStackFrame>
+ 8001d60:	697b      	ldr	r3, [r7, #20]
+ 8001d62:	011b      	lsls	r3, r3, #4
+ 8001d64:	68fa      	ldr	r2, [r7, #12]
+ 8001d66:	18d0      	adds	r0, r2, r3
+ 8001d68:	687b      	ldr	r3, [r7, #4]
+ 8001d6a:	3306      	adds	r3, #6
+ 8001d6c:	697a      	ldr	r2, [r7, #20]
+ 8001d6e:	fb02 f303 	mul.w	r3, r2, r3
+ 8001d72:	68ba      	ldr	r2, [r7, #8]
+ 8001d74:	4413      	add	r3, r2
+ 8001d76:	687a      	ldr	r2, [r7, #4]
+ 8001d78:	4619      	mov	r1, r3
+ 8001d7a:	f7ff ffb0 	bl	8001cde <FillStackFrame>
     for (size_t i = 0; i < n_frames; i++)
- 8001d76:	697b      	ldr	r3, [r7, #20]
- 8001d78:	3301      	adds	r3, #1
- 8001d7a:	617b      	str	r3, [r7, #20]
- 8001d7c:	697a      	ldr	r2, [r7, #20]
- 8001d7e:	683b      	ldr	r3, [r7, #0]
- 8001d80:	429a      	cmp	r2, r3
- 8001d82:	d3e9      	bcc.n	8001d58 <FillStackFrames+0x14>
+ 8001d7e:	697b      	ldr	r3, [r7, #20]
+ 8001d80:	3301      	adds	r3, #1
+ 8001d82:	617b      	str	r3, [r7, #20]
+ 8001d84:	697a      	ldr	r2, [r7, #20]
+ 8001d86:	683b      	ldr	r3, [r7, #0]
+ 8001d88:	429a      	cmp	r2, r3
+ 8001d8a:	d3e9      	bcc.n	8001d60 <FillStackFrames+0x14>
     }
 }
- 8001d84:	bf00      	nop
- 8001d86:	bf00      	nop
- 8001d88:	3718      	adds	r7, #24
- 8001d8a:	46bd      	mov	sp, r7
- 8001d8c:	bd80      	pop	{r7, pc}
+ 8001d8c:	bf00      	nop
+ 8001d8e:	bf00      	nop
+ 8001d90:	3718      	adds	r7, #24
+ 8001d92:	46bd      	mov	sp, r7
+ 8001d94:	bd80      	pop	{r7, pc}
 	...
 
-08001d90 <StackUpdateVoltReadings>:
+08001d98 <StackUpdateVoltReadings>:
 
 void StackUpdateVoltReadings(DbmsCtx* ctx)
 {
- 8001d90:	b590      	push	{r4, r7, lr}
- 8001d92:	b0bf      	sub	sp, #252	@ 0xfc
- 8001d94:	af00      	add	r7, sp, #0
- 8001d96:	6078      	str	r0, [r7, #4]
+ 8001d98:	b590      	push	{r4, r7, lr}
+ 8001d9a:	b0af      	sub	sp, #188	@ 0xbc
+ 8001d9c:	af00      	add	r7, sp, #0
+ 8001d9e:	6078      	str	r0, [r7, #4]
     static uint8_t rx_buffer_volt_readings[1024*4];
 
     int status = 0;
- 8001d98:	2300      	movs	r3, #0
- 8001d9a:	f8c7 30ec 	str.w	r3, [r7, #236]	@ 0xec
+ 8001da0:	2300      	movs	r3, #0
+ 8001da2:	f8c7 30ac 	str.w	r3, [r7, #172]	@ 0xac
     uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xA0, 0x05, 0x68 + 2*(16-N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE*2-1, 0x00, 0x00 };
- 8001d9e:	4a80      	ldr	r2, [pc, #512]	@ (8001fa0 <StackUpdateVoltReadings+0x210>)
- 8001da0:	f107 03d8 	add.w	r3, r7, #216	@ 0xd8
- 8001da4:	e892 0003 	ldmia.w	r2, {r0, r1}
- 8001da8:	6018      	str	r0, [r3, #0]
- 8001daa:	3304      	adds	r3, #4
- 8001dac:	8019      	strh	r1, [r3, #0]
+ 8001da6:	4a7e      	ldr	r2, [pc, #504]	@ (8001fa0 <StackUpdateVoltReadings+0x208>)
+ 8001da8:	f107 0398 	add.w	r3, r7, #152	@ 0x98
+ 8001dac:	e892 0003 	ldmia.w	r2, {r0, r1}
+ 8001db0:	6018      	str	r0, [r3, #0]
+ 8001db2:	3304      	adds	r3, #4
+ 8001db4:	8019      	strh	r1, [r3, #0]
 
     if ((status = SendStackFrameSetCrc(ctx, FRAME_ADC_MEASUREMENTS, sizeof(FRAME_ADC_MEASUREMENTS))) != 0)
- 8001dae:	f107 03d8 	add.w	r3, r7, #216	@ 0xd8
- 8001db2:	2206      	movs	r2, #6
- 8001db4:	4619      	mov	r1, r3
- 8001db6:	6878      	ldr	r0, [r7, #4]
- 8001db8:	f7ff fd0d 	bl	80017d6 <SendStackFrameSetCrc>
- 8001dbc:	f8c7 00ec 	str.w	r0, [r7, #236]	@ 0xec
- 8001dc0:	f8d7 30ec 	ldr.w	r3, [r7, #236]	@ 0xec
- 8001dc4:	2b00      	cmp	r3, #0
- 8001dc6:	d007      	beq.n	8001dd8 <StackUpdateVoltReadings+0x48>
+ 8001db6:	f107 0398 	add.w	r3, r7, #152	@ 0x98
+ 8001dba:	2206      	movs	r2, #6
+ 8001dbc:	4619      	mov	r1, r3
+ 8001dbe:	6878      	ldr	r0, [r7, #4]
+ 8001dc0:	f7ff fd0d 	bl	80017de <SendStackFrameSetCrc>
+ 8001dc4:	f8c7 00ac 	str.w	r0, [r7, #172]	@ 0xac
+ 8001dc8:	f8d7 30ac 	ldr.w	r3, [r7, #172]	@ 0xac
+ 8001dcc:	2b00      	cmp	r3, #0
+ 8001dce:	d007      	beq.n	8001de0 <StackUpdateVoltReadings+0x48>
     {
         CAN_REPORT_FAULT(ctx, status);
- 8001dc8:	f8d7 30ec 	ldr.w	r3, [r7, #236]	@ 0xec
- 8001dcc:	f44f 72a6 	mov.w	r2, #332	@ 0x14c
- 8001dd0:	4974      	ldr	r1, [pc, #464]	@ (8001fa4 <StackUpdateVoltReadings+0x214>)
- 8001dd2:	6878      	ldr	r0, [r7, #4]
- 8001dd4:	f000 fd1a 	bl	800280c <CanReportFault>
+ 8001dd0:	f8d7 30ac 	ldr.w	r3, [r7, #172]	@ 0xac
+ 8001dd4:	f44f 72a6 	mov.w	r2, #332	@ 0x14c
+ 8001dd8:	4972      	ldr	r1, [pc, #456]	@ (8001fa4 <StackUpdateVoltReadings+0x20c>)
+ 8001dda:	6878      	ldr	r0, [r7, #4]
+ 8001ddc:	f000 fd16 	bl	800280c <CanReportFault>
     }
 
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
- 8001dd8:	231c      	movs	r3, #28
- 8001dda:	f8c7 30e8 	str.w	r3, [r7, #232]	@ 0xe8
+ 8001de0:	231c      	movs	r3, #28
+ 8001de2:	f8c7 30a8 	str.w	r3, [r7, #168]	@ 0xa8
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
- 8001dde:	f8d7 20e8 	ldr.w	r2, [r7, #232]	@ 0xe8
- 8001de2:	4613      	mov	r3, r2
- 8001de4:	005b      	lsls	r3, r3, #1
- 8001de6:	4413      	add	r3, r2
- 8001de8:	009b      	lsls	r3, r3, #2
- 8001dea:	4413      	add	r3, r2
- 8001dec:	334e      	adds	r3, #78	@ 0x4e
- 8001dee:	f8c7 30e4 	str.w	r3, [r7, #228]	@ 0xe4
+ 8001de6:	f8d7 20a8 	ldr.w	r2, [r7, #168]	@ 0xa8
+ 8001dea:	4613      	mov	r3, r2
+ 8001dec:	00db      	lsls	r3, r3, #3
+ 8001dee:	4413      	add	r3, r2
+ 8001df0:	3336      	adds	r3, #54	@ 0x36
+ 8001df2:	f8c7 30a4 	str.w	r3, [r7, #164]	@ 0xa4
     //                 header+crc ^         ^ readings * 2 bytes each    
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_volt_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
- 8001df2:	687b      	ldr	r3, [r7, #4]
- 8001df4:	6898      	ldr	r0, [r3, #8]
- 8001df6:	f8d7 30e4 	ldr.w	r3, [r7, #228]	@ 0xe4
- 8001dfa:	b29a      	uxth	r2, r3
- 8001dfc:	2332      	movs	r3, #50	@ 0x32
- 8001dfe:	496a      	ldr	r1, [pc, #424]	@ (8001fa8 <StackUpdateVoltReadings+0x218>)
- 8001e00:	f005 fb49 	bl	8007496 <HAL_UART_Receive>
- 8001e04:	4603      	mov	r3, r0
- 8001e06:	f8c7 30ec 	str.w	r3, [r7, #236]	@ 0xec
+ 8001df6:	687b      	ldr	r3, [r7, #4]
+ 8001df8:	6898      	ldr	r0, [r3, #8]
+ 8001dfa:	f8d7 30a4 	ldr.w	r3, [r7, #164]	@ 0xa4
+ 8001dfe:	b29a      	uxth	r2, r3
+ 8001e00:	2332      	movs	r3, #50	@ 0x32
+ 8001e02:	4969      	ldr	r1, [pc, #420]	@ (8001fa8 <StackUpdateVoltReadings+0x210>)
+ 8001e04:	f005 fb47 	bl	8007496 <HAL_UART_Receive>
+ 8001e08:	4603      	mov	r3, r0
+ 8001e0a:	f8c7 30ac 	str.w	r3, [r7, #172]	@ 0xac
         // return;
         // CanLog(ctx, "BadV %d\n", status);
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
     FillStackFrames(rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS);
- 8001e0a:	f107 0008 	add.w	r0, r7, #8
- 8001e0e:	230d      	movs	r3, #13
- 8001e10:	f8d7 20e8 	ldr.w	r2, [r7, #232]	@ 0xe8
- 8001e14:	4964      	ldr	r1, [pc, #400]	@ (8001fa8 <StackUpdateVoltReadings+0x218>)
- 8001e16:	f7ff ff95 	bl	8001d44 <FillStackFrames>
+ 8001e0e:	f107 0008 	add.w	r0, r7, #8
+ 8001e12:	2309      	movs	r3, #9
+ 8001e14:	f8d7 20a8 	ldr.w	r2, [r7, #168]	@ 0xa8
+ 8001e18:	4963      	ldr	r1, [pc, #396]	@ (8001fa8 <StackUpdateVoltReadings+0x210>)
+ 8001e1a:	f7ff ff97 	bl	8001d4c <FillStackFrames>
     uint8_t addr;
     uint16_t kcrc;
 
     for (size_t i = 0; i < N_STACKDEVS; i++)
- 8001e1a:	2300      	movs	r3, #0
- 8001e1c:	f8c7 30f4 	str.w	r3, [r7, #244]	@ 0xf4
- 8001e20:	e0ae      	b.n	8001f80 <StackUpdateVoltReadings+0x1f0>
+ 8001e1e:	2300      	movs	r3, #0
+ 8001e20:	f8c7 30b4 	str.w	r3, [r7, #180]	@ 0xb4
+ 8001e24:	e0ae      	b.n	8001f84 <StackUpdateVoltReadings+0x1ec>
     {
         ctx->stats.n_rx_stack_frames++;
- 8001e22:	687b      	ldr	r3, [r7, #4]
- 8001e24:	f8d3 332c 	ldr.w	r3, [r3, #812]	@ 0x32c
- 8001e28:	1c5a      	adds	r2, r3, #1
- 8001e2a:	687b      	ldr	r3, [r7, #4]
- 8001e2c:	f8c3 232c 	str.w	r2, [r3, #812]	@ 0x32c
+ 8001e26:	687b      	ldr	r3, [r7, #4]
+ 8001e28:	f8d3 324c 	ldr.w	r3, [r3, #588]	@ 0x24c
+ 8001e2c:	1c5a      	adds	r2, r3, #1
+ 8001e2e:	687b      	ldr	r3, [r7, #4]
+ 8001e30:	f8c3 224c 	str.w	r2, [r3, #588]	@ 0x24c
 
         if (rx_frames[i].dev_addr == 0) continue;   // this is myself
- 8001e30:	f8d7 30f4 	ldr.w	r3, [r7, #244]	@ 0xf4
- 8001e34:	011b      	lsls	r3, r3, #4
- 8001e36:	33f8      	adds	r3, #248	@ 0xf8
- 8001e38:	443b      	add	r3, r7
- 8001e3a:	3be3      	subs	r3, #227	@ 0xe3
- 8001e3c:	781b      	ldrb	r3, [r3, #0]
- 8001e3e:	2b00      	cmp	r3, #0
- 8001e40:	f000 8092 	beq.w	8001f68 <StackUpdateVoltReadings+0x1d8>
+ 8001e34:	f8d7 30b4 	ldr.w	r3, [r7, #180]	@ 0xb4
+ 8001e38:	011b      	lsls	r3, r3, #4
+ 8001e3a:	33b8      	adds	r3, #184	@ 0xb8
+ 8001e3c:	443b      	add	r3, r7
+ 8001e3e:	3ba3      	subs	r3, #163	@ 0xa3
+ 8001e40:	781b      	ldrb	r3, [r3, #0]
+ 8001e42:	2b00      	cmp	r3, #0
+ 8001e44:	f000 8092 	beq.w	8001f6c <StackUpdateVoltReadings+0x1d4>
         addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast   
- 8001e44:	f8d7 30f4 	ldr.w	r3, [r7, #244]	@ 0xf4
- 8001e48:	011b      	lsls	r3, r3, #4
- 8001e4a:	33f8      	adds	r3, #248	@ 0xf8
- 8001e4c:	443b      	add	r3, r7
- 8001e4e:	3be3      	subs	r3, #227	@ 0xe3
- 8001e50:	781b      	ldrb	r3, [r3, #0]
- 8001e52:	3b01      	subs	r3, #1
- 8001e54:	f887 30e3 	strb.w	r3, [r7, #227]	@ 0xe3
+ 8001e48:	f8d7 30b4 	ldr.w	r3, [r7, #180]	@ 0xb4
+ 8001e4c:	011b      	lsls	r3, r3, #4
+ 8001e4e:	33b8      	adds	r3, #184	@ 0xb8
+ 8001e50:	443b      	add	r3, r7
+ 8001e52:	3ba3      	subs	r3, #163	@ 0xa3
+ 8001e54:	781b      	ldrb	r3, [r3, #0]
+ 8001e56:	3b01      	subs	r3, #1
+ 8001e58:	f887 30a3 	strb.w	r3, [r7, #163]	@ 0xa3
         if (addr >= N_MONITORS) continue;            // throw some error here
- 8001e58:	f897 30e3 	ldrb.w	r3, [r7, #227]	@ 0xe3
- 8001e5c:	2b0b      	cmp	r3, #11
- 8001e5e:	f200 8085 	bhi.w	8001f6c <StackUpdateVoltReadings+0x1dc>
+ 8001e5c:	f897 30a3 	ldrb.w	r3, [r7, #163]	@ 0xa3
+ 8001e60:	2b07      	cmp	r3, #7
+ 8001e62:	f200 8085 	bhi.w	8001f70 <StackUpdateVoltReadings+0x1d8>
         if (addr % 2 == 1) continue;                // skip the odds
- 8001e62:	f897 30e3 	ldrb.w	r3, [r7, #227]	@ 0xe3
- 8001e66:	f003 0301 	and.w	r3, r3, #1
- 8001e6a:	b2db      	uxtb	r3, r3
- 8001e6c:	2b00      	cmp	r3, #0
- 8001e6e:	d17f      	bne.n	8001f70 <StackUpdateVoltReadings+0x1e0>
+ 8001e66:	f897 30a3 	ldrb.w	r3, [r7, #163]	@ 0xa3
+ 8001e6a:	f003 0301 	and.w	r3, r3, #1
+ 8001e6e:	b2db      	uxtb	r3, r3
+ 8001e70:	2b00      	cmp	r3, #0
+ 8001e72:	d17f      	bne.n	8001f74 <StackUpdateVoltReadings+0x1dc>
         addr /= 2;                                  // addr now in side space
- 8001e70:	f897 30e3 	ldrb.w	r3, [r7, #227]	@ 0xe3
- 8001e74:	085b      	lsrs	r3, r3, #1
- 8001e76:	f887 30e3 	strb.w	r3, [r7, #227]	@ 0xe3
+ 8001e74:	f897 30a3 	ldrb.w	r3, [r7, #163]	@ 0xa3
+ 8001e78:	085b      	lsrs	r3, r3, #1
+ 8001e7a:	f887 30a3 	strb.w	r3, [r7, #163]	@ 0xa3
         if (addr >= N_SIDES) continue;              // throw some error here
- 8001e7a:	f897 30e3 	ldrb.w	r3, [r7, #227]	@ 0xe3
- 8001e7e:	2b05      	cmp	r3, #5
- 8001e80:	d878      	bhi.n	8001f74 <StackUpdateVoltReadings+0x1e4>
+ 8001e7e:	f897 30a3 	ldrb.w	r3, [r7, #163]	@ 0xa3
+ 8001e82:	2b03      	cmp	r3, #3
+ 8001e84:	d878      	bhi.n	8001f78 <StackUpdateVoltReadings+0x1e0>
 
         if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
- 8001e82:	f8d7 30f4 	ldr.w	r3, [r7, #244]	@ 0xf4
- 8001e86:	011b      	lsls	r3, r3, #4
- 8001e88:	33f8      	adds	r3, #248	@ 0xf8
- 8001e8a:	443b      	add	r3, r7
- 8001e8c:	3be6      	subs	r3, #230	@ 0xe6
- 8001e8e:	881c      	ldrh	r4, [r3, #0]
- 8001e90:	f107 0208 	add.w	r2, r7, #8
- 8001e94:	f8d7 30f4 	ldr.w	r3, [r7, #244]	@ 0xf4
- 8001e98:	011b      	lsls	r3, r3, #4
- 8001e9a:	4413      	add	r3, r2
- 8001e9c:	4618      	mov	r0, r3
- 8001e9e:	f7ff ff07 	bl	8001cb0 <CalcStackFrameCrc>
- 8001ea2:	4603      	mov	r3, r0
- 8001ea4:	f8a7 30e0 	strh.w	r3, [r7, #224]	@ 0xe0
- 8001ea8:	f8b7 30e0 	ldrh.w	r3, [r7, #224]	@ 0xe0
- 8001eac:	42a3      	cmp	r3, r4
- 8001eae:	d153      	bne.n	8001f58 <StackUpdateVoltReadings+0x1c8>
+ 8001e86:	f8d7 30b4 	ldr.w	r3, [r7, #180]	@ 0xb4
+ 8001e8a:	011b      	lsls	r3, r3, #4
+ 8001e8c:	33b8      	adds	r3, #184	@ 0xb8
+ 8001e8e:	443b      	add	r3, r7
+ 8001e90:	3ba6      	subs	r3, #166	@ 0xa6
+ 8001e92:	881c      	ldrh	r4, [r3, #0]
+ 8001e94:	f107 0208 	add.w	r2, r7, #8
+ 8001e98:	f8d7 30b4 	ldr.w	r3, [r7, #180]	@ 0xb4
+ 8001e9c:	011b      	lsls	r3, r3, #4
+ 8001e9e:	4413      	add	r3, r2
+ 8001ea0:	4618      	mov	r0, r3
+ 8001ea2:	f7ff ff09 	bl	8001cb8 <CalcStackFrameCrc>
+ 8001ea6:	4603      	mov	r3, r0
+ 8001ea8:	f8a7 30a0 	strh.w	r3, [r7, #160]	@ 0xa0
+ 8001eac:	f8b7 30a0 	ldrh.w	r3, [r7, #160]	@ 0xa0
+ 8001eb0:	42a3      	cmp	r3, r4
+ 8001eb2:	d153      	bne.n	8001f5c <StackUpdateVoltReadings+0x1c4>
           	// CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
         	for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
- 8001eb0:	2300      	movs	r3, #0
- 8001eb2:	f8c7 30f0 	str.w	r3, [r7, #240]	@ 0xf0
- 8001eb6:	e04a      	b.n	8001f4e <StackUpdateVoltReadings+0x1be>
+ 8001eb4:	2300      	movs	r3, #0
+ 8001eb6:	f8c7 30b0 	str.w	r3, [r7, #176]	@ 0xb0
+ 8001eba:	e04a      	b.n	8001f52 <StackUpdateVoltReadings+0x1ba>
 			{
 				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
- 8001eb8:	f8d7 30f4 	ldr.w	r3, [r7, #244]	@ 0xf4
- 8001ebc:	011b      	lsls	r3, r3, #4
- 8001ebe:	33f8      	adds	r3, #248	@ 0xf8
- 8001ec0:	443b      	add	r3, r7
- 8001ec2:	3bf0      	subs	r3, #240	@ 0xf0
- 8001ec4:	681a      	ldr	r2, [r3, #0]
- 8001ec6:	f8d7 30f0 	ldr.w	r3, [r7, #240]	@ 0xf0
- 8001eca:	005b      	lsls	r3, r3, #1
- 8001ecc:	4413      	add	r3, r2
- 8001ece:	781b      	ldrb	r3, [r3, #0]
- 8001ed0:	021b      	lsls	r3, r3, #8
- 8001ed2:	b29b      	uxth	r3, r3
+ 8001ebc:	f8d7 30b4 	ldr.w	r3, [r7, #180]	@ 0xb4
+ 8001ec0:	011b      	lsls	r3, r3, #4
+ 8001ec2:	33b8      	adds	r3, #184	@ 0xb8
+ 8001ec4:	443b      	add	r3, r7
+ 8001ec6:	3bb0      	subs	r3, #176	@ 0xb0
+ 8001ec8:	681a      	ldr	r2, [r3, #0]
+ 8001eca:	f8d7 30b0 	ldr.w	r3, [r7, #176]	@ 0xb0
+ 8001ece:	005b      	lsls	r3, r3, #1
+ 8001ed0:	4413      	add	r3, r2
+ 8001ed2:	781b      	ldrb	r3, [r3, #0]
+ 8001ed4:	021b      	lsls	r3, r3, #8
+ 8001ed6:	b29b      	uxth	r3, r3
 							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
- 8001ed4:	f8d7 20f4 	ldr.w	r2, [r7, #244]	@ 0xf4
- 8001ed8:	0112      	lsls	r2, r2, #4
- 8001eda:	32f8      	adds	r2, #248	@ 0xf8
- 8001edc:	443a      	add	r2, r7
- 8001ede:	3af0      	subs	r2, #240	@ 0xf0
- 8001ee0:	6811      	ldr	r1, [r2, #0]
- 8001ee2:	f8d7 20f0 	ldr.w	r2, [r7, #240]	@ 0xf0
- 8001ee6:	0052      	lsls	r2, r2, #1
- 8001ee8:	3201      	adds	r2, #1
- 8001eea:	440a      	add	r2, r1
- 8001eec:	7812      	ldrb	r2, [r2, #0]
+ 8001ed8:	f8d7 20b4 	ldr.w	r2, [r7, #180]	@ 0xb4
+ 8001edc:	0112      	lsls	r2, r2, #4
+ 8001ede:	32b8      	adds	r2, #184	@ 0xb8
+ 8001ee0:	443a      	add	r2, r7
+ 8001ee2:	3ab0      	subs	r2, #176	@ 0xb0
+ 8001ee4:	6811      	ldr	r1, [r2, #0]
+ 8001ee6:	f8d7 20b0 	ldr.w	r2, [r7, #176]	@ 0xb0
+ 8001eea:	0052      	lsls	r2, r2, #1
+ 8001eec:	3201      	adds	r2, #1
+ 8001eee:	440a      	add	r2, r1
+ 8001ef0:	7812      	ldrb	r2, [r2, #0]
 				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
- 8001eee:	4413      	add	r3, r2
- 8001ef0:	f8a7 30de 	strh.w	r3, [r7, #222]	@ 0xde
+ 8001ef2:	4413      	add	r3, r2
+ 8001ef4:	f8a7 309e 	strh.w	r3, [r7, #158]	@ 0x9e
 
 				ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0;    // floating mV
- 8001ef4:	f8b7 30de 	ldrh.w	r3, [r7, #222]	@ 0xde
- 8001ef8:	4618      	mov	r0, r3
- 8001efa:	f7fe fb2b 	bl	8000554 <__aeabi_i2d>
- 8001efe:	a326      	add	r3, pc, #152	@ (adr r3, 8001f98 <StackUpdateVoltReadings+0x208>)
- 8001f00:	e9d3 2300 	ldrd	r2, r3, [r3]
- 8001f04:	f7fe fb90 	bl	8000628 <__aeabi_dmul>
- 8001f08:	4602      	mov	r2, r0
- 8001f0a:	460b      	mov	r3, r1
- 8001f0c:	4610      	mov	r0, r2
- 8001f0e:	4619      	mov	r1, r3
- 8001f10:	f04f 0200 	mov.w	r2, #0
- 8001f14:	4b25      	ldr	r3, [pc, #148]	@ (8001fac <StackUpdateVoltReadings+0x21c>)
- 8001f16:	f7fe fcb1 	bl	800087c <__aeabi_ddiv>
- 8001f1a:	4602      	mov	r2, r0
- 8001f1c:	460b      	mov	r3, r1
- 8001f1e:	f897 40e3 	ldrb.w	r4, [r7, #227]	@ 0xe3
- 8001f22:	4610      	mov	r0, r2
- 8001f24:	4619      	mov	r1, r3
- 8001f26:	f7fe fd91 	bl	8000a4c <__aeabi_d2f>
- 8001f2a:	687a      	ldr	r2, [r7, #4]
- 8001f2c:	4623      	mov	r3, r4
- 8001f2e:	00db      	lsls	r3, r3, #3
- 8001f30:	1b1b      	subs	r3, r3, r4
- 8001f32:	009b      	lsls	r3, r3, #2
- 8001f34:	f8d7 10f0 	ldr.w	r1, [r7, #240]	@ 0xf0
- 8001f38:	440b      	add	r3, r1
- 8001f3a:	330e      	adds	r3, #14
- 8001f3c:	009b      	lsls	r3, r3, #2
- 8001f3e:	4413      	add	r3, r2
- 8001f40:	3304      	adds	r3, #4
- 8001f42:	6018      	str	r0, [r3, #0]
+ 8001ef8:	f8b7 309e 	ldrh.w	r3, [r7, #158]	@ 0x9e
+ 8001efc:	4618      	mov	r0, r3
+ 8001efe:	f7fe fb29 	bl	8000554 <__aeabi_i2d>
+ 8001f02:	a325      	add	r3, pc, #148	@ (adr r3, 8001f98 <StackUpdateVoltReadings+0x200>)
+ 8001f04:	e9d3 2300 	ldrd	r2, r3, [r3]
+ 8001f08:	f7fe fb8e 	bl	8000628 <__aeabi_dmul>
+ 8001f0c:	4602      	mov	r2, r0
+ 8001f0e:	460b      	mov	r3, r1
+ 8001f10:	4610      	mov	r0, r2
+ 8001f12:	4619      	mov	r1, r3
+ 8001f14:	f04f 0200 	mov.w	r2, #0
+ 8001f18:	4b24      	ldr	r3, [pc, #144]	@ (8001fac <StackUpdateVoltReadings+0x214>)
+ 8001f1a:	f7fe fcaf 	bl	800087c <__aeabi_ddiv>
+ 8001f1e:	4602      	mov	r2, r0
+ 8001f20:	460b      	mov	r3, r1
+ 8001f22:	f897 40a3 	ldrb.w	r4, [r7, #163]	@ 0xa3
+ 8001f26:	4610      	mov	r0, r2
+ 8001f28:	4619      	mov	r1, r3
+ 8001f2a:	f7fe fd8f 	bl	8000a4c <__aeabi_d2f>
+ 8001f2e:	687a      	ldr	r2, [r7, #4]
+ 8001f30:	4623      	mov	r3, r4
+ 8001f32:	00db      	lsls	r3, r3, #3
+ 8001f34:	1b1b      	subs	r3, r3, r4
+ 8001f36:	009b      	lsls	r3, r3, #2
+ 8001f38:	f8d7 10b0 	ldr.w	r1, [r7, #176]	@ 0xb0
+ 8001f3c:	440b      	add	r3, r1
+ 8001f3e:	330e      	adds	r3, #14
+ 8001f40:	009b      	lsls	r3, r3, #2
+ 8001f42:	4413      	add	r3, r2
+ 8001f44:	3304      	adds	r3, #4
+ 8001f46:	6018      	str	r0, [r3, #0]
         	for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
- 8001f44:	f8d7 30f0 	ldr.w	r3, [r7, #240]	@ 0xf0
- 8001f48:	3301      	adds	r3, #1
- 8001f4a:	f8c7 30f0 	str.w	r3, [r7, #240]	@ 0xf0
- 8001f4e:	f8d7 30f0 	ldr.w	r3, [r7, #240]	@ 0xf0
- 8001f52:	2b0d      	cmp	r3, #13
- 8001f54:	d9b0      	bls.n	8001eb8 <StackUpdateVoltReadings+0x128>
- 8001f56:	e00e      	b.n	8001f76 <StackUpdateVoltReadings+0x1e6>
+ 8001f48:	f8d7 30b0 	ldr.w	r3, [r7, #176]	@ 0xb0
+ 8001f4c:	3301      	adds	r3, #1
+ 8001f4e:	f8c7 30b0 	str.w	r3, [r7, #176]	@ 0xb0
+ 8001f52:	f8d7 30b0 	ldr.w	r3, [r7, #176]	@ 0xb0
+ 8001f56:	2b0d      	cmp	r3, #13
+ 8001f58:	d9b0      	bls.n	8001ebc <StackUpdateVoltReadings+0x124>
+ 8001f5a:	e00e      	b.n	8001f7a <StackUpdateVoltReadings+0x1e2>
 
 			}
         }
         else {
            // CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
             ctx->stats.n_rx_stack_bad_crcs++;
- 8001f58:	687b      	ldr	r3, [r7, #4]
- 8001f5a:	f8d3 3330 	ldr.w	r3, [r3, #816]	@ 0x330
- 8001f5e:	1c5a      	adds	r2, r3, #1
- 8001f60:	687b      	ldr	r3, [r7, #4]
- 8001f62:	f8c3 2330 	str.w	r2, [r3, #816]	@ 0x330
- 8001f66:	e006      	b.n	8001f76 <StackUpdateVoltReadings+0x1e6>
+ 8001f5c:	687b      	ldr	r3, [r7, #4]
+ 8001f5e:	f8d3 3250 	ldr.w	r3, [r3, #592]	@ 0x250
+ 8001f62:	1c5a      	adds	r2, r3, #1
+ 8001f64:	687b      	ldr	r3, [r7, #4]
+ 8001f66:	f8c3 2250 	str.w	r2, [r3, #592]	@ 0x250
+ 8001f6a:	e006      	b.n	8001f7a <StackUpdateVoltReadings+0x1e2>
         if (rx_frames[i].dev_addr == 0) continue;   // this is myself
- 8001f68:	bf00      	nop
- 8001f6a:	e004      	b.n	8001f76 <StackUpdateVoltReadings+0x1e6>
-        if (addr >= N_MONITORS) continue;            // throw some error here
  8001f6c:	bf00      	nop
- 8001f6e:	e002      	b.n	8001f76 <StackUpdateVoltReadings+0x1e6>
-        if (addr % 2 == 1) continue;                // skip the odds
+ 8001f6e:	e004      	b.n	8001f7a <StackUpdateVoltReadings+0x1e2>
+        if (addr >= N_MONITORS) continue;            // throw some error here
  8001f70:	bf00      	nop
- 8001f72:	e000      	b.n	8001f76 <StackUpdateVoltReadings+0x1e6>
-        if (addr >= N_SIDES) continue;              // throw some error here
+ 8001f72:	e002      	b.n	8001f7a <StackUpdateVoltReadings+0x1e2>
+        if (addr % 2 == 1) continue;                // skip the odds
  8001f74:	bf00      	nop
+ 8001f76:	e000      	b.n	8001f7a <StackUpdateVoltReadings+0x1e2>
+        if (addr >= N_SIDES) continue;              // throw some error here
+ 8001f78:	bf00      	nop
     for (size_t i = 0; i < N_STACKDEVS; i++)
- 8001f76:	f8d7 30f4 	ldr.w	r3, [r7, #244]	@ 0xf4
- 8001f7a:	3301      	adds	r3, #1
- 8001f7c:	f8c7 30f4 	str.w	r3, [r7, #244]	@ 0xf4
- 8001f80:	f8d7 30f4 	ldr.w	r3, [r7, #244]	@ 0xf4
- 8001f84:	2b0c      	cmp	r3, #12
- 8001f86:	f67f af4c 	bls.w	8001e22 <StackUpdateVoltReadings+0x92>
+ 8001f7a:	f8d7 30b4 	ldr.w	r3, [r7, #180]	@ 0xb4
+ 8001f7e:	3301      	adds	r3, #1
+ 8001f80:	f8c7 30b4 	str.w	r3, [r7, #180]	@ 0xb4
+ 8001f84:	f8d7 30b4 	ldr.w	r3, [r7, #180]	@ 0xb4
+ 8001f88:	2b08      	cmp	r3, #8
+ 8001f8a:	f67f af4c 	bls.w	8001e26 <StackUpdateVoltReadings+0x8e>
         }
     }
 }
- 8001f8a:	bf00      	nop
- 8001f8c:	bf00      	nop
- 8001f8e:	37fc      	adds	r7, #252	@ 0xfc
- 8001f90:	46bd      	mov	sp, r7
- 8001f92:	bd90      	pop	{r4, r7, pc}
- 8001f94:	f3af 8000 	nop.w
+ 8001f8e:	bf00      	nop
+ 8001f90:	bf00      	nop
+ 8001f92:	37bc      	adds	r7, #188	@ 0xbc
+ 8001f94:	46bd      	mov	sp, r7
+ 8001f96:	bd90      	pop	{r4, r7, pc}
  8001f98:	28f5c28f 	.word	0x28f5c28f
  8001f9c:	4067d75c 	.word	0x4067d75c
  8001fa0:	08008bdc 	.word	0x08008bdc
@@ -3890,7 +3892,7 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on){
  8001fea:	2206      	movs	r2, #6
  8001fec:	4619      	mov	r1, r3
  8001fee:	6878      	ldr	r0, [r7, #4]
- 8001ff0:	f7ff fbf1 	bl	80017d6 <SendStackFrameSetCrc>
+ 8001ff0:	f7ff fbf5 	bl	80017de <SendStackFrameSetCrc>
  8001ff4:	6138      	str	r0, [r7, #16]
  8001ff6:	693b      	ldr	r3, [r7, #16]
  8001ff8:	2b00      	cmp	r3, #0
@@ -3920,9 +3922,9 @@ void MonitorLedBlink(DbmsCtx* ctx){
 
     uint64_t curr_ts = GetUs(ctx) - ctx->M_LED_BLINK_TS;
  8002014:	6878      	ldr	r0, [r7, #4]
- 8002016:	f7ff fab7 	bl	8001588 <GetUs>
+ 8002016:	f7ff fabb 	bl	8001590 <GetUs>
  800201a:	687b      	ldr	r3, [r7, #4]
- 800201c:	e9d3 23be 	ldrd	r2, r3, [r3, #760]	@ 0x2f8
+ 800201c:	e9d3 2386 	ldrd	r2, r3, [r3, #536]	@ 0x218
  8002020:	1a84      	subs	r4, r0, r2
  8002022:	eb61 0503 	sbc.w	r5, r1, r3
  8002026:	e9c7 4502 	strd	r4, r5, [r7, #8]
@@ -3930,7 +3932,7 @@ void MonitorLedBlink(DbmsCtx* ctx){
 
     if (ctx->M_LED_ON){
  800202a:	687b      	ldr	r3, [r7, #4]
- 800202c:	f893 3354 	ldrb.w	r3, [r3, #852]	@ 0x354
+ 800202c:	f893 3274 	ldrb.w	r3, [r3, #628]	@ 0x274
  8002030:	2b00      	cmp	r3, #0
  8002032:	d017      	beq.n	8002064 <MonitorLedBlink+0x58>
         if (curr_ts > 100000){
@@ -3946,14 +3948,14 @@ void MonitorLedBlink(DbmsCtx* ctx){
             ctx->M_LED_ON = false;
  800204a:	687b      	ldr	r3, [r7, #4]
  800204c:	2200      	movs	r2, #0
- 800204e:	f883 2354 	strb.w	r2, [r3, #852]	@ 0x354
+ 800204e:	f883 2274 	strb.w	r2, [r3, #628]	@ 0x274
             ctx->M_LED_BLINK_TS = GetUs(ctx);
  8002052:	6878      	ldr	r0, [r7, #4]
- 8002054:	f7ff fa98 	bl	8001588 <GetUs>
+ 8002054:	f7ff fa9c 	bl	8001590 <GetUs>
  8002058:	4602      	mov	r2, r0
  800205a:	460b      	mov	r3, r1
  800205c:	6879      	ldr	r1, [r7, #4]
- 800205e:	e9c1 23be 	strd	r2, r3, [r1, #760]	@ 0x2f8
+ 800205e:	e9c1 2386 	strd	r2, r3, [r1, #536]	@ 0x218
             ctx->M_LED_ON = true;
             ctx->M_LED_BLINK_TS = GetUs(ctx);
         }
@@ -3974,14 +3976,14 @@ void MonitorLedBlink(DbmsCtx* ctx){
             ctx->M_LED_ON = true;
  800207a:	687b      	ldr	r3, [r7, #4]
  800207c:	2201      	movs	r2, #1
- 800207e:	f883 2354 	strb.w	r2, [r3, #852]	@ 0x354
+ 800207e:	f883 2274 	strb.w	r2, [r3, #628]	@ 0x274
             ctx->M_LED_BLINK_TS = GetUs(ctx);
  8002082:	6878      	ldr	r0, [r7, #4]
- 8002084:	f7ff fa80 	bl	8001588 <GetUs>
+ 8002084:	f7ff fa84 	bl	8001590 <GetUs>
  8002088:	4602      	mov	r2, r0
  800208a:	460b      	mov	r3, r1
  800208c:	6879      	ldr	r1, [r7, #4]
- 800208e:	e9c1 23be 	strd	r2, r3, [r1, #760]	@ 0x2f8
+ 800208e:	e9c1 2386 	strd	r2, r3, [r1, #536]	@ 0x218
 }
  8002092:	bf00      	nop
  8002094:	3710      	adds	r7, #16
@@ -4591,10 +4593,10 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
  80024de:	d908      	bls.n	80024f2 <CanTransmit+0x3a>
             ctx->stats.n_tx_can_drop_timeout++;
  80024e0:	68fb      	ldr	r3, [r7, #12]
- 80024e2:	f8d3 331c 	ldr.w	r3, [r3, #796]	@ 0x31c
+ 80024e2:	f8d3 323c 	ldr.w	r3, [r3, #572]	@ 0x23c
  80024e6:	1c5a      	adds	r2, r3, #1
  80024e8:	68fb      	ldr	r3, [r7, #12]
- 80024ea:	f8c3 231c 	str.w	r2, [r3, #796]	@ 0x31c
+ 80024ea:	f8c3 223c 	str.w	r2, [r3, #572]	@ 0x23c
             // ctx->led_state = LED_COMM_ERROR; // not worth a locking error 
             return HAL_TIMEOUT;
  80024ee:	2303      	movs	r3, #3
@@ -4603,7 +4605,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
         DelayUs(ctx, CAN_TX_WAIT_US);
  80024f2:	21c8      	movs	r1, #200	@ 0xc8
  80024f4:	68f8      	ldr	r0, [r7, #12]
- 80024f6:	f7ff f823 	bl	8001540 <DelayUs>
+ 80024f6:	f7ff f827 	bl	8001548 <DelayUs>
         waited += CAN_TX_WAIT_US;
  80024fa:	69fb      	ldr	r3, [r7, #28]
  80024fc:	33c8      	adds	r3, #200	@ 0xc8
@@ -4635,10 +4637,10 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
  8002528:	d014      	beq.n	8002554 <CanTransmit+0x9c>
         ctx->stats.n_tx_can_fail++;
  800252a:	68fb      	ldr	r3, [r7, #12]
- 800252c:	f8d3 3320 	ldr.w	r3, [r3, #800]	@ 0x320
+ 800252c:	f8d3 3240 	ldr.w	r3, [r3, #576]	@ 0x240
  8002530:	1c5a      	adds	r2, r3, #1
  8002532:	68fb      	ldr	r3, [r7, #12]
- 8002534:	f8c3 2320 	str.w	r2, [r3, #800]	@ 0x320
+ 8002534:	f8c3 2240 	str.w	r2, [r3, #576]	@ 0x240
         ctx->led_state = LED_COMM_ERROR;
  8002538:	68fb      	ldr	r3, [r7, #12]
  800253a:	2203      	movs	r2, #3
@@ -4651,15 +4653,15 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
  8002548:	4603      	mov	r3, r0
  800254a:	b2da      	uxtb	r2, r3
  800254c:	68fb      	ldr	r3, [r7, #12]
- 800254e:	f883 2352 	strb.w	r2, [r3, #850]	@ 0x352
+ 800254e:	f883 2272 	strb.w	r2, [r3, #626]	@ 0x272
  8002552:	e006      	b.n	8002562 <CanTransmit+0xaa>
     } else {
         ctx->stats.n_tx_can_frames++;
  8002554:	68fb      	ldr	r3, [r7, #12]
- 8002556:	f8d3 3310 	ldr.w	r3, [r3, #784]	@ 0x310
+ 8002556:	f8d3 3230 	ldr.w	r3, [r3, #560]	@ 0x230
  800255a:	1c5a      	adds	r2, r3, #1
  800255c:	68fb      	ldr	r3, [r7, #12]
- 800255e:	f8c3 2310 	str.w	r2, [r3, #784]	@ 0x310
+ 800255e:	f8c3 2230 	str.w	r2, [r3, #560]	@ 0x230
     }
     return result;
  8002562:	697b      	ldr	r3, [r7, #20]
@@ -4831,7 +4833,7 @@ int SendCellVoltages(DbmsCtx* ctx)
  80026a2:	3301      	adds	r3, #1
  80026a4:	63fb      	str	r3, [r7, #60]	@ 0x3c
  80026a6:	6bfb      	ldr	r3, [r7, #60]	@ 0x3c
- 80026a8:	2b05      	cmp	r3, #5
+ 80026a8:	2b03      	cmp	r3, #3
  80026aa:	f67f af6f 	bls.w	800258c <SendCellVoltages+0x20>
         }
     }
@@ -4953,7 +4955,7 @@ int SendCellTemps(DbmsCtx* ctx)
  8002774:	3301      	adds	r3, #1
  8002776:	63fb      	str	r3, [r7, #60]	@ 0x3c
  8002778:	6bfb      	ldr	r3, [r7, #60]	@ 0x3c
- 800277a:	2b05      	cmp	r3, #5
+ 800277a:	2b03      	cmp	r3, #3
  800277c:	d9ac      	bls.n	80026d8 <SendCellTemps+0x20>
         }
     }
@@ -5208,7 +5210,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
  80028f2:	f897 3027 	ldrb.w	r3, [r7, #39]	@ 0x27
  80028f6:	4619      	mov	r1, r3
  80028f8:	68f8      	ldr	r0, [r7, #12]
- 80028fa:	f7fe fef7 	bl	80016ec <IsValidSettingIndex>
+ 80028fa:	f7fe fefb 	bl	80016f4 <IsValidSettingIndex>
  80028fe:	4603      	mov	r3, r0
  8002900:	f083 0301 	eor.w	r3, r3, #1
  8002904:	b2db      	uxtb	r3, r3
@@ -5228,11 +5230,11 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
  8002916:	f897 3027 	ldrb.w	r3, [r7, #39]	@ 0x27
  800291a:	4619      	mov	r1, r3
  800291c:	68f8      	ldr	r0, [r7, #12]
- 800291e:	f7fe fed2 	bl	80016c6 <SetSetting>
+ 800291e:	f7fe fed6 	bl	80016ce <SetSetting>
         ctx->need_to_sync_settings = true;
  8002922:	68fb      	ldr	r3, [r7, #12]
  8002924:	2201      	movs	r2, #1
- 8002926:	f883 2353 	strb.w	r2, [r3, #851]	@ 0x353
+ 8002926:	f883 2273 	strb.w	r2, [r3, #627]	@ 0x273
  800292a:	e026      	b.n	800297a <HandleCanConfig+0xde>
     }
     else 
@@ -5241,7 +5243,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
  800292c:	f897 3027 	ldrb.w	r3, [r7, #39]	@ 0x27
  8002930:	4619      	mov	r1, r3
  8002932:	68f8      	ldr	r0, [r7, #12]
- 8002934:	f7fe feb6 	bl	80016a4 <GetSetting>
+ 8002934:	f7fe feba 	bl	80016ac <GetSetting>
  8002938:	4603      	mov	r3, r0
  800293a:	61fb      	str	r3, [r7, #28]
         uint8_t frame[] = { cfg_id, 0, 0, 0, 0, 0, 0, 0 };
@@ -5349,7 +5351,7 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 0, ctx->stats.iters);
  80029e0:	687b      	ldr	r3, [r7, #4]
- 80029e2:	e9d3 23c2 	ldrd	r2, r3, [r3, #776]	@ 0x308
+ 80029e2:	e9d3 238a 	ldrd	r2, r3, [r3, #552]	@ 0x228
  80029e6:	4613      	mov	r3, r2
  80029e8:	461a      	mov	r2, r3
  80029ea:	2100      	movs	r1, #0
@@ -5358,21 +5360,21 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 1, ctx->stats.n_tx_can_frames);
  80029f2:	687b      	ldr	r3, [r7, #4]
- 80029f4:	f8d3 3310 	ldr.w	r3, [r3, #784]	@ 0x310
+ 80029f4:	f8d3 3230 	ldr.w	r3, [r3, #560]	@ 0x230
  80029f8:	461a      	mov	r2, r3
  80029fa:	2101      	movs	r1, #1
  80029fc:	6878      	ldr	r0, [r7, #4]
  80029fe:	f7ff ffc1 	bl	8002984 <SendMetric>
     SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
  8002a02:	687b      	ldr	r3, [r7, #4]
- 8002a04:	f8d3 3314 	ldr.w	r3, [r3, #788]	@ 0x314
+ 8002a04:	f8d3 3234 	ldr.w	r3, [r3, #564]	@ 0x234
  8002a08:	461a      	mov	r2, r3
  8002a0a:	2102      	movs	r1, #2
  8002a0c:	6878      	ldr	r0, [r7, #4]
  8002a0e:	f7ff ffb9 	bl	8002984 <SendMetric>
     SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
  8002a12:	687b      	ldr	r3, [r7, #4]
- 8002a14:	f8d3 3318 	ldr.w	r3, [r3, #792]	@ 0x318
+ 8002a14:	f8d3 3238 	ldr.w	r3, [r3, #568]	@ 0x238
  8002a18:	461a      	mov	r2, r3
  8002a1a:	2103      	movs	r1, #3
  8002a1c:	6878      	ldr	r0, [r7, #4]
@@ -5380,14 +5382,14 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 4, ctx->isense.current_ma);
  8002a22:	687b      	ldr	r3, [r7, #4]
- 8002a24:	f8d3 3338 	ldr.w	r3, [r3, #824]	@ 0x338
+ 8002a24:	f8d3 3258 	ldr.w	r3, [r3, #600]	@ 0x258
  8002a28:	461a      	mov	r2, r3
  8002a2a:	2104      	movs	r1, #4
  8002a2c:	6878      	ldr	r0, [r7, #4]
  8002a2e:	f7ff ffa9 	bl	8002984 <SendMetric>
     SendMetric(ctx, 5, ctx->isense.voltage1_mv);
  8002a32:	687b      	ldr	r3, [r7, #4]
- 8002a34:	f8d3 333c 	ldr.w	r3, [r3, #828]	@ 0x33c
+ 8002a34:	f8d3 325c 	ldr.w	r3, [r3, #604]	@ 0x25c
  8002a38:	461a      	mov	r2, r3
  8002a3a:	2105      	movs	r1, #5
  8002a3c:	6878      	ldr	r0, [r7, #4]
@@ -5397,21 +5399,21 @@ int SendMetrics(DbmsCtx* ctx)
     // SendMetric(ctx, 7, 0);
     SendMetric(ctx, 8, ctx->isense.power_w);
  8002a42:	687b      	ldr	r3, [r7, #4]
- 8002a44:	f8d3 3340 	ldr.w	r3, [r3, #832]	@ 0x340
+ 8002a44:	f8d3 3260 	ldr.w	r3, [r3, #608]	@ 0x260
  8002a48:	461a      	mov	r2, r3
  8002a4a:	2108      	movs	r1, #8
  8002a4c:	6878      	ldr	r0, [r7, #4]
  8002a4e:	f7ff ff99 	bl	8002984 <SendMetric>
     SendMetric(ctx, 9, ctx->isense.charge_as);
  8002a52:	687b      	ldr	r3, [r7, #4]
- 8002a54:	f8d3 3344 	ldr.w	r3, [r3, #836]	@ 0x344
+ 8002a54:	f8d3 3264 	ldr.w	r3, [r3, #612]	@ 0x264
  8002a58:	461a      	mov	r2, r3
  8002a5a:	2109      	movs	r1, #9
  8002a5c:	6878      	ldr	r0, [r7, #4]
  8002a5e:	f7ff ff91 	bl	8002984 <SendMetric>
     SendMetric(ctx, 10, ctx->isense.energy_wh);
  8002a62:	687b      	ldr	r3, [r7, #4]
- 8002a64:	f8d3 3348 	ldr.w	r3, [r3, #840]	@ 0x348
+ 8002a64:	f8d3 3268 	ldr.w	r3, [r3, #616]	@ 0x268
  8002a68:	461a      	mov	r2, r3
  8002a6a:	210a      	movs	r1, #10
  8002a6c:	6878      	ldr	r0, [r7, #4]
@@ -5419,14 +5421,14 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 11, ctx->stats.n_tx_can_fail);
  8002a72:	687b      	ldr	r3, [r7, #4]
- 8002a74:	f8d3 3320 	ldr.w	r3, [r3, #800]	@ 0x320
+ 8002a74:	f8d3 3240 	ldr.w	r3, [r3, #576]	@ 0x240
  8002a78:	461a      	mov	r2, r3
  8002a7a:	210b      	movs	r1, #11
  8002a7c:	6878      	ldr	r0, [r7, #4]
  8002a7e:	f7ff ff81 	bl	8002984 <SendMetric>
     SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_timeout);
  8002a82:	687b      	ldr	r3, [r7, #4]
- 8002a84:	f8d3 331c 	ldr.w	r3, [r3, #796]	@ 0x31c
+ 8002a84:	f8d3 323c 	ldr.w	r3, [r3, #572]	@ 0x23c
  8002a88:	461a      	mov	r2, r3
  8002a8a:	210c      	movs	r1, #12
  8002a8c:	6878      	ldr	r0, [r7, #4]
@@ -5434,14 +5436,14 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 13, ctx->stats.looptime);
  8002a92:	687b      	ldr	r3, [r7, #4]
- 8002a94:	f8d3 3324 	ldr.w	r3, [r3, #804]	@ 0x324
+ 8002a94:	f8d3 3244 	ldr.w	r3, [r3, #580]	@ 0x244
  8002a98:	461a      	mov	r2, r3
  8002a9a:	210d      	movs	r1, #13
  8002a9c:	6878      	ldr	r0, [r7, #4]
  8002a9e:	f7ff ff71 	bl	8002984 <SendMetric>
     SendMetric(ctx, 14, ctx->stats.end_delay);
  8002aa2:	687b      	ldr	r3, [r7, #4]
- 8002aa4:	f8d3 3328 	ldr.w	r3, [r3, #808]	@ 0x328
+ 8002aa4:	f8d3 3248 	ldr.w	r3, [r3, #584]	@ 0x248
  8002aa8:	461a      	mov	r2, r3
  8002aaa:	210e      	movs	r1, #14
  8002aac:	6878      	ldr	r0, [r7, #4]
@@ -5449,7 +5451,7 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 15, ctx->fault_mask);
  8002ab2:	687b      	ldr	r3, [r7, #4]
- 8002ab4:	f8d3 334c 	ldr.w	r3, [r3, #844]	@ 0x34c
+ 8002ab4:	f8d3 326c 	ldr.w	r3, [r3, #620]	@ 0x26c
  8002ab8:	461a      	mov	r2, r3
  8002aba:	210f      	movs	r1, #15
  8002abc:	6878      	ldr	r0, [r7, #4]
@@ -5457,14 +5459,14 @@ int SendMetrics(DbmsCtx* ctx)
     
     SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
  8002ac2:	687b      	ldr	r3, [r7, #4]
- 8002ac4:	f8d3 332c 	ldr.w	r3, [r3, #812]	@ 0x32c
+ 8002ac4:	f8d3 324c 	ldr.w	r3, [r3, #588]	@ 0x24c
  8002ac8:	461a      	mov	r2, r3
  8002aca:	2110      	movs	r1, #16
  8002acc:	6878      	ldr	r0, [r7, #4]
  8002ace:	f7ff ff59 	bl	8002984 <SendMetric>
     SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
  8002ad2:	687b      	ldr	r3, [r7, #4]
- 8002ad4:	f8d3 3330 	ldr.w	r3, [r3, #816]	@ 0x330
+ 8002ad4:	f8d3 3250 	ldr.w	r3, [r3, #592]	@ 0x250
  8002ad8:	461a      	mov	r2, r3
  8002ada:	2111      	movs	r1, #17
  8002adc:	6878      	ldr	r0, [r7, #4]
@@ -6744,7 +6746,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
  80032da:	cb0c      	ldmia	r3, {r2, r3}
  80032dc:	2100      	movs	r1, #0
  80032de:	4803      	ldr	r0, [pc, #12]	@ (80032ec <HAL_CAN_RxFifo0MsgPendingCallback+0x48>)
- 80032e0:	f7fd ff1c 	bl	800111c <DbmsCanRx>
+ 80032e0:	f7fd ff20 	bl	8001124 <DbmsCanRx>
     }
 }
  80032e4:	bf00      	nop
@@ -6788,7 +6790,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
  8003326:	cb0c      	ldmia	r3, {r2, r3}
  8003328:	2101      	movs	r1, #1
  800332a:	4803      	ldr	r0, [pc, #12]	@ (8003338 <HAL_CAN_RxFifo1MsgPendingCallback+0x48>)
- 800332c:	f7fd fef6 	bl	800111c <DbmsCanRx>
+ 800332c:	f7fd fefa 	bl	8001124 <DbmsCanRx>
     }
 }
  8003330:	bf00      	nop
@@ -6821,7 +6823,7 @@ __STATIC_FORCEINLINE void __disable_irq(void)
 
   DbmsErr(&dbms_ctx);
  8003344:	4802      	ldr	r0, [pc, #8]	@ (8003350 <Error_Handler+0x14>)
- 8003346:	f7fd ffa1 	bl	800128c <DbmsErr>
+ 8003346:	f7fd ffa5 	bl	8001294 <DbmsErr>
 
   while (1)
  800334a:	bf00      	nop
@@ -7839,8 +7841,8 @@ void *_sbrk(ptrdiff_t incr)
  800385e:	bd80      	pop	{r7, pc}
  8003860:	20020000 	.word	0x20020000
  8003864:	00000400 	.word	0x00000400
- 8003868:	200017c8 	.word	0x200017c8
- 800386c:	20001920 	.word	0x20001920
+ 8003868:	200016e8 	.word	0x200016e8
+ 800386c:	20001840 	.word	0x20001840
 
 08003870 <SystemInit>:
   *         configuration.
@@ -7962,7 +7964,7 @@ LoopFillZerobss:
   ldr r2, =_sbss
  80038dc:	200002b0 	.word	0x200002b0
   ldr r4, =_ebss
- 80038e0:	2000191c 	.word	0x2000191c
+ 80038e0:	2000183c 	.word	0x2000183c
 
 080038e4 <ADC_IRQHandler>:
  * @retval None       
@@ -8125,7 +8127,7 @@ __weak void HAL_IncTick(void)
  80039a8:	4770      	bx	lr
  80039aa:	bf00      	nop
  80039ac:	20000250 	.word	0x20000250
- 80039b0:	200017cc 	.word	0x200017cc
+ 80039b0:	200016ec 	.word	0x200016ec
 
 080039b4 <HAL_GetTick>:
   * @note This function is declared as __weak to be overwritten in case of other 
@@ -8145,7 +8147,7 @@ __weak uint32_t HAL_GetTick(void)
  80039c0:	f85d 7b04 	ldr.w	r7, [sp], #4
  80039c4:	4770      	bx	lr
  80039c6:	bf00      	nop
- 80039c8:	200017cc 	.word	0x200017cc
+ 80039c8:	200016ec 	.word	0x200016ec
 
 080039cc <HAL_Delay>:
   *       implementations in user file.
@@ -19410,7 +19412,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8007c5e:	d1f2      	bne.n	8007c46 <sbrk_aligned+0x22>
  8007c60:	e7ef      	b.n	8007c42 <sbrk_aligned+0x1e>
  8007c62:	bf00      	nop
- 8007c64:	200017d0 	.word	0x200017d0
+ 8007c64:	200016f0 	.word	0x200016f0
 
 08007c68 <_malloc_r>:
  8007c68:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
@@ -19520,19 +19522,19 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8007d5e:	6005      	str	r5, [r0, #0]
  8007d60:	e7d6      	b.n	8007d10 <_malloc_r+0xa8>
  8007d62:	bf00      	nop
- 8007d64:	200017d4 	.word	0x200017d4
+ 8007d64:	200016f4 	.word	0x200016f4
 
 08007d68 <__malloc_lock>:
  8007d68:	4801      	ldr	r0, [pc, #4]	@ (8007d70 <__malloc_lock+0x8>)
  8007d6a:	f000 b9aa 	b.w	80080c2 <__retarget_lock_acquire_recursive>
  8007d6e:	bf00      	nop
- 8007d70:	20001918 	.word	0x20001918
+ 8007d70:	20001838 	.word	0x20001838
 
 08007d74 <__malloc_unlock>:
  8007d74:	4801      	ldr	r0, [pc, #4]	@ (8007d7c <__malloc_unlock+0x8>)
  8007d76:	f000 b9a5 	b.w	80080c4 <__retarget_lock_release_recursive>
  8007d7a:	bf00      	nop
- 8007d7c:	20001918 	.word	0x20001918
+ 8007d7c:	20001838 	.word	0x20001838
 
 08007d80 <std>:
  8007d80:	2300      	movs	r3, #0
@@ -19576,7 +19578,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8007ddc:	08007f4b 	.word	0x08007f4b
  8007de0:	08007f83 	.word	0x08007f83
  8007de4:	08007fa7 	.word	0x08007fa7
- 8007de8:	200017d8 	.word	0x200017d8
+ 8007de8:	200016f8 	.word	0x200016f8
 
 08007dec <stdio_exit_handler>:
  8007dec:	4a02      	ldr	r2, [pc, #8]	@ (8007df8 <stdio_exit_handler+0xc>)
@@ -19611,9 +19613,9 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8007e30:	f000 bcf6 	b.w	8008820 <_fflush_r>
  8007e34:	bd10      	pop	{r4, pc}
  8007e36:	bf00      	nop
- 8007e38:	200017d8 	.word	0x200017d8
- 8007e3c:	20001840 	.word	0x20001840
- 8007e40:	200018a8 	.word	0x200018a8
+ 8007e38:	200016f8 	.word	0x200016f8
+ 8007e3c:	20001760 	.word	0x20001760
+ 8007e40:	200017c8 	.word	0x200017c8
 
 08007e44 <global_stdio_init.part.0>:
  8007e44:	b510      	push	{r4, lr}
@@ -19634,21 +19636,21 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8007e6a:	e8bd 4010 	ldmia.w	sp!, {r4, lr}
  8007e6e:	2112      	movs	r1, #18
  8007e70:	f7ff bf86 	b.w	8007d80 <std>
- 8007e74:	20001910 	.word	0x20001910
- 8007e78:	200017d8 	.word	0x200017d8
+ 8007e74:	20001830 	.word	0x20001830
+ 8007e78:	200016f8 	.word	0x200016f8
  8007e7c:	08007ded 	.word	0x08007ded
 
 08007e80 <__sfp_lock_acquire>:
  8007e80:	4801      	ldr	r0, [pc, #4]	@ (8007e88 <__sfp_lock_acquire+0x8>)
  8007e82:	f000 b91e 	b.w	80080c2 <__retarget_lock_acquire_recursive>
  8007e86:	bf00      	nop
- 8007e88:	20001919 	.word	0x20001919
+ 8007e88:	20001839 	.word	0x20001839
 
 08007e8c <__sfp_lock_release>:
  8007e8c:	4801      	ldr	r0, [pc, #4]	@ (8007e94 <__sfp_lock_release+0x8>)
  8007e8e:	f000 b919 	b.w	80080c4 <__retarget_lock_release_recursive>
  8007e92:	bf00      	nop
- 8007e94:	20001919 	.word	0x20001919
+ 8007e94:	20001839 	.word	0x20001839
 
 08007e98 <__sinit>:
  8007e98:	b510      	push	{r4, lr}
@@ -19668,7 +19670,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8007ebc:	e7f2      	b.n	8007ea4 <__sinit+0xc>
  8007ebe:	bf00      	nop
  8007ec0:	08007e05 	.word	0x08007e05
- 8007ec4:	20001910 	.word	0x20001910
+ 8007ec4:	20001830 	.word	0x20001830
 
 08007ec8 <_fwalk_sglue>:
  8007ec8:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
@@ -19796,7 +19798,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8007fd6:	b103      	cbz	r3, 8007fda <_close_r+0x1a>
  8007fd8:	6023      	str	r3, [r4, #0]
  8007fda:	bd38      	pop	{r3, r4, r5, pc}
- 8007fdc:	20001914 	.word	0x20001914
+ 8007fdc:	20001834 	.word	0x20001834
 
 08007fe0 <_lseek_r>:
  8007fe0:	b538      	push	{r3, r4, r5, lr}
@@ -19814,7 +19816,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8007ffa:	b103      	cbz	r3, 8007ffe <_lseek_r+0x1e>
  8007ffc:	6023      	str	r3, [r4, #0]
  8007ffe:	bd38      	pop	{r3, r4, r5, pc}
- 8008000:	20001914 	.word	0x20001914
+ 8008000:	20001834 	.word	0x20001834
 
 08008004 <_read_r>:
  8008004:	b538      	push	{r3, r4, r5, lr}
@@ -19832,7 +19834,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  800801e:	b103      	cbz	r3, 8008022 <_read_r+0x1e>
  8008020:	6023      	str	r3, [r4, #0]
  8008022:	bd38      	pop	{r3, r4, r5, pc}
- 8008024:	20001914 	.word	0x20001914
+ 8008024:	20001834 	.word	0x20001834
 
 08008028 <_sbrk_r>:
  8008028:	b538      	push	{r3, r4, r5, lr}
@@ -19848,7 +19850,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  800803e:	b103      	cbz	r3, 8008042 <_sbrk_r+0x1a>
  8008040:	6023      	str	r3, [r4, #0]
  8008042:	bd38      	pop	{r3, r4, r5, pc}
- 8008044:	20001914 	.word	0x20001914
+ 8008044:	20001834 	.word	0x20001834
 
 08008048 <_write_r>:
  8008048:	b538      	push	{r3, r4, r5, lr}
@@ -19866,7 +19868,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8008062:	b103      	cbz	r3, 8008066 <_write_r+0x1e>
  8008064:	6023      	str	r3, [r4, #0]
  8008066:	bd38      	pop	{r3, r4, r5, pc}
- 8008068:	20001914 	.word	0x20001914
+ 8008068:	20001834 	.word	0x20001834
 
 0800806c <__errno>:
  800806c:	4b01      	ldr	r3, [pc, #4]	@ (8008074 <__errno+0x8>)
@@ -19998,7 +20000,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  800816e:	e7ca      	b.n	8008106 <_free_r+0x22>
  8008170:	bd38      	pop	{r3, r4, r5, pc}
  8008172:	bf00      	nop
- 8008174:	200017d4 	.word	0x200017d4
+ 8008174:	200016f4 	.word	0x200016f4
 
 08008178 <__sfputc_r>:
  8008178:	6893      	ldr	r3, [r2, #8]
@@ -20989,7 +20991,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8008a76:	6023      	str	r3, [r4, #0]
  8008a78:	bd38      	pop	{r3, r4, r5, pc}
  8008a7a:	bf00      	nop
- 8008a7c:	20001914 	.word	0x20001914
+ 8008a7c:	20001834 	.word	0x20001834
 
 08008a80 <_isatty_r>:
  8008a80:	b538      	push	{r3, r4, r5, lr}
@@ -21005,7 +21007,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8008a96:	b103      	cbz	r3, 8008a9a <_isatty_r+0x1a>
  8008a98:	6023      	str	r3, [r4, #0]
  8008a9a:	bd38      	pop	{r3, r4, r5, pc}
- 8008a9c:	20001914 	.word	0x20001914
+ 8008a9c:	20001834 	.word	0x20001834
 
 08008aa0 <lroundf>:
  8008aa0:	ee10 1a10 	vmov	r1, s0

@@ -1194,7 +1194,7 @@ Discarded input sections
  .text.__PrintStackRxFrame
                 0x00000000       0x68 ./Core/Src/dbms/stack_controller.o
  .text.StackUpdateTempReadings
-                0x00000000      0x1d0 ./Core/Src/dbms/stack_controller.o
+                0x00000000      0x1cc ./Core/Src/dbms/stack_controller.o
  .text.ToggleMonitorChipLed
                 0x00000000       0x62 ./Core/Src/dbms/stack_controller.o
  .bss.rx_frame.0
@@ -6072,112 +6072,112 @@ LOAD C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                 0x08000f0c       0x54 ./Core/Src/dbms/dbms.o
                 0x08000f0c                DbmsPerformShutdown
  .text.DbmsIter
-                0x08000f60      0x1bc ./Core/Src/dbms/dbms.o
+                0x08000f60      0x1c4 ./Core/Src/dbms/dbms.o
                 0x08000f60                DbmsIter
  .text.DbmsCanRx
-                0x0800111c      0x170 ./Core/Src/dbms/dbms.o
-                0x0800111c                DbmsCanRx
- .text.DbmsErr  0x0800128c       0x22 ./Core/Src/dbms/dbms.o
-                0x0800128c                DbmsErr
+                0x08001124      0x170 ./Core/Src/dbms/dbms.o
+                0x08001124                DbmsCanRx
+ .text.DbmsErr  0x08001294       0x22 ./Core/Src/dbms/dbms.o
+                0x08001294                DbmsErr
  .text.SetFault
-                0x080012ae       0x36 ./Core/Src/dbms/fault_handler.o
-                0x080012ae                SetFault
+                0x080012b6       0x36 ./Core/Src/dbms/fault_handler.o
+                0x080012b6                SetFault
  .text.CheckVoltageFaults
-                0x080012e4       0xba ./Core/Src/dbms/fault_handler.o
-                0x080012e4                CheckVoltageFaults
+                0x080012ec       0xba ./Core/Src/dbms/fault_handler.o
+                0x080012ec                CheckVoltageFaults
  .text.CheckCurrentFaults
-                0x0800139e       0x2e ./Core/Src/dbms/fault_handler.o
-                0x0800139e                CheckCurrentFaults
+                0x080013a6       0x2e ./Core/Src/dbms/fault_handler.o
+                0x080013a6                CheckCurrentFaults
  .text.ProcessLedAction
-                0x080013cc      0x10c ./Core/Src/dbms/led_controller.o
-                0x080013cc                ProcessLedAction
- .text.LedSet   0x080014d8       0x68 ./Core/Src/dbms/led_controller.o
-                0x080014d8                LedSet
- .text.DelayUs  0x08001540       0x46 ./Core/Src/dbms/sched.o
-                0x08001540                DelayUs
- *fill*         0x08001586        0x2 
- .text.GetUs    0x08001588       0x98 ./Core/Src/dbms/sched.o
-                0x08001588                GetUs
+                0x080013d4      0x10c ./Core/Src/dbms/led_controller.o
+                0x080013d4                ProcessLedAction
+ .text.LedSet   0x080014e0       0x68 ./Core/Src/dbms/led_controller.o
+                0x080014e0                LedSet
+ .text.DelayUs  0x08001548       0x46 ./Core/Src/dbms/sched.o
+                0x08001548                DelayUs
+ *fill*         0x0800158e        0x2 
+ .text.GetUs    0x08001590       0x98 ./Core/Src/dbms/sched.o
+                0x08001590                GetUs
  .text.CalcIterDelay
-                0x08001620       0x84 ./Core/Src/dbms/sched.o
-                0x08001620                CalcIterDelay
+                0x08001628       0x84 ./Core/Src/dbms/sched.o
+                0x08001628                CalcIterDelay
  .text.GetSetting
-                0x080016a4       0x22 ./Core/Src/dbms/settings.o
-                0x080016a4                GetSetting
+                0x080016ac       0x22 ./Core/Src/dbms/settings.o
+                0x080016ac                GetSetting
  .text.SetSetting
-                0x080016c6       0x26 ./Core/Src/dbms/settings.o
-                0x080016c6                SetSetting
+                0x080016ce       0x26 ./Core/Src/dbms/settings.o
+                0x080016ce                SetSetting
  .text.IsValidSettingIndex
-                0x080016ec       0x22 ./Core/Src/dbms/settings.o
-                0x080016ec                IsValidSettingIndex
+                0x080016f4       0x22 ./Core/Src/dbms/settings.o
+                0x080016f4                IsValidSettingIndex
  .text.LoadSettings
-                0x0800170e       0x20 ./Core/Src/dbms/settings.o
-                0x0800170e                LoadSettings
+                0x08001716       0x20 ./Core/Src/dbms/settings.o
+                0x08001716                LoadSettings
  .text.SaveSettings
-                0x0800172e       0x20 ./Core/Src/dbms/settings.o
-                0x0800172e                SaveSettings
- *fill*         0x0800174e        0x2 
+                0x08001736       0x20 ./Core/Src/dbms/settings.o
+                0x08001736                SaveSettings
+ *fill*         0x08001756        0x2 
  .text.LoadFallbackSettings
-                0x08001750       0x60 ./Core/Src/dbms/settings.o
-                0x08001750                LoadFallbackSettings
+                0x08001758       0x60 ./Core/Src/dbms/settings.o
+                0x08001758                LoadFallbackSettings
  .text.SendStackFrame
-                0x080017b0       0x26 ./Core/Src/dbms/stack_controller.o
-                0x080017b0                SendStackFrame
+                0x080017b8       0x26 ./Core/Src/dbms/stack_controller.o
+                0x080017b8                SendStackFrame
  .text.SendStackFrameSetCrc
-                0x080017d6       0x76 ./Core/Src/dbms/stack_controller.o
-                0x080017d6                SendStackFrameSetCrc
- .text.SetBrr   0x0800184c       0x38 ./Core/Src/dbms/stack_controller.o
-                0x0800184c                SetBrr
+                0x080017de       0x76 ./Core/Src/dbms/stack_controller.o
+                0x080017de                SendStackFrameSetCrc
+ .text.SetBrr   0x08001854       0x38 ./Core/Src/dbms/stack_controller.o
+                0x08001854                SetBrr
  .text.SendStackWakeBlip
-                0x08001884       0x68 ./Core/Src/dbms/stack_controller.o
-                0x08001884                SendStackWakeBlip
+                0x0800188c       0x68 ./Core/Src/dbms/stack_controller.o
+                0x0800188c                SendStackWakeBlip
  .text.SendStackShutdownBlip
-                0x080018ec       0x68 ./Core/Src/dbms/stack_controller.o
-                0x080018ec                SendStackShutdownBlip
+                0x080018f4       0x68 ./Core/Src/dbms/stack_controller.o
+                0x080018f4                SendStackShutdownBlip
  .text.StackWake
-                0x08001954       0x78 ./Core/Src/dbms/stack_controller.o
-                0x08001954                StackWake
+                0x0800195c       0x78 ./Core/Src/dbms/stack_controller.o
+                0x0800195c                StackWake
  .text.StackShutdown
-                0x080019cc       0x78 ./Core/Src/dbms/stack_controller.o
-                0x080019cc                StackShutdown
+                0x080019d4       0x78 ./Core/Src/dbms/stack_controller.o
+                0x080019d4                StackShutdown
  .text.SendOtpEccDatain
-                0x08001a44       0x50 ./Core/Src/dbms/stack_controller.o
-                0x08001a44                SendOtpEccDatain
+                0x08001a4c       0x50 ./Core/Src/dbms/stack_controller.o
+                0x08001a4c                SendOtpEccDatain
  .text.SendAutoAddr
-                0x08001a94       0x50 ./Core/Src/dbms/stack_controller.o
-                0x08001a94                SendAutoAddr
+                0x08001a9c       0x50 ./Core/Src/dbms/stack_controller.o
+                0x08001a9c                SendAutoAddr
  .text.SendSetStackTop
-                0x08001ae4       0x84 ./Core/Src/dbms/stack_controller.o
-                0x08001ae4                SendSetStackTop
+                0x08001aec       0x84 ./Core/Src/dbms/stack_controller.o
+                0x08001aec                SendSetStackTop
  .text.ReadOtpEccDatain
-                0x08001b68       0x50 ./Core/Src/dbms/stack_controller.o
-                0x08001b68                ReadOtpEccDatain
+                0x08001b70       0x50 ./Core/Src/dbms/stack_controller.o
+                0x08001b70                ReadOtpEccDatain
  .text.StackAutoAddr
-                0x08001bb8       0x44 ./Core/Src/dbms/stack_controller.o
-                0x08001bb8                StackAutoAddr
+                0x08001bc0       0x44 ./Core/Src/dbms/stack_controller.o
+                0x08001bc0                StackAutoAddr
  .text.StackSetNumActiveCells
-                0x08001bfc       0x3a ./Core/Src/dbms/stack_controller.o
-                0x08001bfc                StackSetNumActiveCells
- *fill*         0x08001c36        0x2 
+                0x08001c04       0x3a ./Core/Src/dbms/stack_controller.o
+                0x08001c04                StackSetNumActiveCells
+ *fill*         0x08001c3e        0x2 
  .text.StackSetupGpio
-                0x08001c38       0x58 ./Core/Src/dbms/stack_controller.o
-                0x08001c38                StackSetupGpio
+                0x08001c40       0x58 ./Core/Src/dbms/stack_controller.o
+                0x08001c40                StackSetupGpio
  .text.StackSetupVoltReadings
-                0x08001c90       0x20 ./Core/Src/dbms/stack_controller.o
-                0x08001c90                StackSetupVoltReadings
+                0x08001c98       0x20 ./Core/Src/dbms/stack_controller.o
+                0x08001c98                StackSetupVoltReadings
  .text.CalcStackFrameCrc
-                0x08001cb0       0x26 ./Core/Src/dbms/stack_controller.o
-                0x08001cb0                CalcStackFrameCrc
+                0x08001cb8       0x26 ./Core/Src/dbms/stack_controller.o
+                0x08001cb8                CalcStackFrameCrc
  .text.FillStackFrame
-                0x08001cd6       0x6e ./Core/Src/dbms/stack_controller.o
-                0x08001cd6                FillStackFrame
+                0x08001cde       0x6e ./Core/Src/dbms/stack_controller.o
+                0x08001cde                FillStackFrame
  .text.FillStackFrames
-                0x08001d44       0x4a ./Core/Src/dbms/stack_controller.o
-                0x08001d44                FillStackFrames
- *fill*         0x08001d8e        0x2 
+                0x08001d4c       0x4a ./Core/Src/dbms/stack_controller.o
+                0x08001d4c                FillStackFrames
+ *fill*         0x08001d96        0x2 
  .text.StackUpdateVoltReadings
-                0x08001d90      0x220 ./Core/Src/dbms/stack_controller.o
-                0x08001d90                StackUpdateVoltReadings
+                0x08001d98      0x218 ./Core/Src/dbms/stack_controller.o
+                0x08001d98                StackUpdateVoltReadings
  .text.ToggleAllMonitorChipLeds
                 0x08001fb0       0x5a ./Core/Src/dbms/stack_controller.o
                 0x08001fb0                ToggleAllMonitorChipLeds
@@ -6902,7 +6902,7 @@ LOAD C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .igot.plt      0x200002b0        0x0 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
                 0x200002b0                        . = ALIGN (0x4)
 
-.bss            0x200002b0     0x166c load address 0x08008f60
+.bss            0x200002b0     0x158c load address 0x08008f60
                 0x200002b0                        _sbss = .
                 0x200002b0                        __bss_start__ = _sbss
  *(.bss)
@@ -6937,47 +6937,47 @@ LOAD C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .bss.huart4    0x20001424       0x48 ./Core/Src/main.o
                 0x20001424                huart4
  *fill*         0x2000146c        0x4 
- .bss.dbms_ctx  0x20001470      0x358 ./Core/Src/main.o
+ .bss.dbms_ctx  0x20001470      0x278 ./Core/Src/main.o
  .bss.__sbrk_heap_end
-                0x200017c8        0x4 ./Core/Src/sysmem.o
- .bss.uwTick    0x200017cc        0x4 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
-                0x200017cc                uwTick
+                0x200016e8        0x4 ./Core/Src/sysmem.o
+ .bss.uwTick    0x200016ec        0x4 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
+                0x200016ec                uwTick
  .bss.__malloc_sbrk_start
-                0x200017d0        0x4 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mallocr.o)
-                0x200017d0                __malloc_sbrk_start
+                0x200016f0        0x4 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mallocr.o)
+                0x200016f0                __malloc_sbrk_start
  .bss.__malloc_free_list
-                0x200017d4        0x4 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mallocr.o)
-                0x200017d4                __malloc_free_list
- .bss.__sf      0x200017d8      0x138 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-findfp.o)
-                0x200017d8                __sf
+                0x200016f4        0x4 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mallocr.o)
+                0x200016f4                __malloc_free_list
+ .bss.__sf      0x200016f8      0x138 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-findfp.o)
+                0x200016f8                __sf
  .bss.__stdio_exit_handler
-                0x20001910        0x4 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-findfp.o)
-                0x20001910                __stdio_exit_handler
- .bss.errno     0x20001914        0x4 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-reent.o)
-                0x20001914                errno
+                0x20001830        0x4 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-findfp.o)
+                0x20001830                __stdio_exit_handler
+ .bss.errno     0x20001834        0x4 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-reent.o)
+                0x20001834                errno
  .bss.__lock___malloc_recursive_mutex
-                0x20001918        0x1 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-lock.o)
-                0x20001918                __lock___malloc_recursive_mutex
+                0x20001838        0x1 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-lock.o)
+                0x20001838                __lock___malloc_recursive_mutex
  .bss.__lock___sfp_recursive_mutex
-                0x20001919        0x1 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-lock.o)
-                0x20001919                __lock___sfp_recursive_mutex
+                0x20001839        0x1 C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-lock.o)
+                0x20001839                __lock___sfp_recursive_mutex
  *(COMMON)
-                0x2000191c                        . = ALIGN (0x4)
- *fill*         0x2000191a        0x2 
-                0x2000191c                        _ebss = .
-                0x2000191c                        __bss_end__ = _ebss
+                0x2000183c                        . = ALIGN (0x4)
+ *fill*         0x2000183a        0x2 
+                0x2000183c                        _ebss = .
+                0x2000183c                        __bss_end__ = _ebss
 
 ._user_heap_stack
-                0x2000191c      0x604 load address 0x08008f60
-                0x20001920                        . = ALIGN (0x8)
- *fill*         0x2000191c        0x4 
+                0x2000183c      0x604 load address 0x08008f60
+                0x20001840                        . = ALIGN (0x8)
+ *fill*         0x2000183c        0x4 
                 [!provide]                        PROVIDE (end = .)
-                0x20001920                        PROVIDE (_end = .)
-                0x20001b20                        . = (. + _Min_Heap_Size)
- *fill*         0x20001920      0x200 
-                0x20001f20                        . = (. + _Min_Stack_Size)
- *fill*         0x20001b20      0x400 
-                0x20001f20                        . = ALIGN (0x8)
+                0x20001840                        PROVIDE (_end = .)
+                0x20001a40                        . = (. + _Min_Heap_Size)
+ *fill*         0x20001840      0x200 
+                0x20001e40                        . = (. + _Min_Stack_Size)
+ *fill*         0x20001a40      0x400 
+                0x20001e40                        . = ALIGN (0x8)
 
 /DISCARD/
  libc.a(*)
@@ -7366,12 +7366,12 @@ LOAD C:/ST/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .debug_macro   0x000057cd      0x21a ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
 .debug_line     0x00000000    0x1cd85
- .debug_line    0x00000000      0xc95 ./Core/Src/dbms/dbms.o
- .debug_line    0x00000c95      0xb67 ./Core/Src/dbms/fault_handler.o
- .debug_line    0x000017fc      0xb0b ./Core/Src/dbms/led_controller.o
- .debug_line    0x00002307      0xabb ./Core/Src/dbms/sched.o
- .debug_line    0x00002dc2      0xad6 ./Core/Src/dbms/settings.o
- .debug_line    0x00003898     0x10e2 ./Core/Src/dbms/stack_controller.o
+ .debug_line    0x00000000      0xc96 ./Core/Src/dbms/dbms.o
+ .debug_line    0x00000c96      0xb67 ./Core/Src/dbms/fault_handler.o
+ .debug_line    0x000017fd      0xb0b ./Core/Src/dbms/led_controller.o
+ .debug_line    0x00002308      0xabb ./Core/Src/dbms/sched.o
+ .debug_line    0x00002dc3      0xad6 ./Core/Src/dbms/settings.o
+ .debug_line    0x00003899     0x10e1 ./Core/Src/dbms/stack_controller.o
  .debug_line    0x0000497a      0xb29 ./Core/Src/dbms/storage.o
  .debug_line    0x000054a3      0xeec ./Core/Src/dbms/vehicle_interface.o
  .debug_line    0x0000638f      0x64e ./Core/Src/lib/crc.o
