@@ -106,7 +106,11 @@ typedef struct _DbmsCtx {
         int32_t energy_wh;
     } isense; // current = I, sense = sensor?
 
-    uint32_t    fault_mask;
+    struct {
+        uint32_t    controller_mask;
+        uint32_t    monitor_masks[N_MONITORS];
+    } faults;
+
     uint16_t    can_log_ordering_index;
     uint8_t     last_can_err;
     bool        need_to_sync_settings;

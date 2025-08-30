@@ -1,23 +1,66 @@
 #include "fault_handler.h"
 #include "settings.h"
 
-void SetFault(DbmsCtx* ctx, FaultType fault) 
+void ControllerSetFault(DbmsCtx* ctx, ControllerFaultType fault) 
 {
-    if (fault >= FAULT_TYPE_COUNT) return;
-    ctx->fault_mask |= (1U << fault);
+    if (fault >= CTRL_FAULT_TYPE_COUNT) return;
+    ctx->faults.controller_mask |= (1U << fault);
 }
 
-void ClearFault(DbmsCtx* ctx, FaultType fault)
+void ControllerClearFault(DbmsCtx* ctx, ControllerFaultType fault)
 {
-    if (fault >= FAULT_TYPE_COUNT) return;
-    ctx->fault_mask &= ~(1U << fault);
+    if (fault >= CTRL_FAULT_TYPE_COUNT) return;
+    ctx->faults.controller_mask &= ~(1U << fault);
 }
 
-bool HasFault(DbmsCtx* ctx, FaultType fault)
+bool ControllerHasFault(DbmsCtx* ctx, ControllerFaultType fault)
 {
-    if (fault >= FAULT_TYPE_COUNT) return false;
-    return (ctx->fault_mask & (1U << fault)) != 0;
+    if (fault >= CTRL_FAULT_TYPE_COUNT) return false;
+    return (ctx->faults.controller_mask & (1U << fault)) != 0;
 }
+
+
+void StackSetFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
+{
+    if (addr >= N_MONITORS) return;
+    if (fault >= STACK_FAULT_TYPE_COUNT) return;
+    ctx->faults.monitor_masks[addr] |= (1U << fault);
+}
+
+void StackClearFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
+{
+    if (addr >= N_MONITORS) return;
+    if (fault >= STACK_FAULT_TYPE_COUNT) return;
+    ctx->faults.monitor_masks[addr] &= ~(1U << fault);
+}
+
+// TODO: make a version over all addr?
+bool StackHasFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
+{
+    if (addr >= N_MONITORS) return false;
+    if (fault >= STACK_FAULT_TYPE_COUNT) return false;
+    return (ctx->faults.monitor_masks[addr] & (1U << fault)) != 0;
+}
+
+bool HasAnyFaults(DbmsCtx* ctx)
+{
+    if (ctx->faults.controller_mask != 0) return true;
+    for (int i = 0; i < N_MONITORS; i++)
+    {
+        if (ctx->faults.monitor_masks[i] != 0) return true;
+    }
+    return false;
+}
+
+void ClearAllFaults(DbmsCtx* ctx)
+{
+    ctx->faults.controller_mask = 0;
+    for (int i = 0; i < N_MONITORS; i++)
+    {
+        ctx->faults.monitor_masks[i] = 0;
+    }
+}
+
 
 void CheckVoltageFaults(DbmsCtx* ctx)
 {
@@ -30,11 +73,11 @@ void CheckVoltageFaults(DbmsCtx* ctx)
         {
             if (ctx->cell_states[i].voltages[j] > max_group_v)
             {
-                SetFault(ctx, FAULT_VOLTAGE_OVER);
+                ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
             }
             if (ctx->cell_states[i].voltages[j] < min_group_v)
             {
-                SetFault(ctx, FAULT_VOLTAGE_UNDER);
+                ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
             }
         }
     }
@@ -42,11 +85,11 @@ void CheckVoltageFaults(DbmsCtx* ctx)
     /*
     if (ctx->isense.voltage1_mv > GetSetting(ctx, MAX_PACK_VOLTAGE))
     {
-        SetFault(ctx, FAULT_PACK_VOLTAGE_OVER);
+        ControllerSetFault(ctx, CTRL_FAULT_PACK_VOLTAGE_OVER);
     }
     if (ctx->isense.voltage1_mv < GetSetting(ctx, MIN_PACK_VOLTAGE))
     {
-        SetFault(ctx, FAULT_PACK_VOLTAGE_UNDER);
+        ControllerSetFault(ctx, CTRL_FAULT_PACK_VOLTAGE_UNDER);
     }
     */
 }
@@ -59,7 +102,7 @@ void CheckTemperatureFaults(DbmsCtx* ctx)
         {
             if (ctx->cell_states[i].temps[j] > GetSetting(ctx, MAX_THERMISTOR_TEMP))
             {
-                SetFault(ctx, FAULT_TEMP_OVER);
+                ControllerSetFault(ctx, CTRL_FAULT_TEMP_OVER);
             }
         }
     }
@@ -69,14 +112,13 @@ void CheckCurrentFaults(DbmsCtx* ctx)
 {
     if (ctx->isense.current_ma > GetSetting(ctx, MAX_CURRENT))
     {
-        SetFault(ctx, FAULT_CURRENT_OVER);
+        ControllerSetFault(ctx, CTRL_FAULT_CURRENT_OVER);
     }
 }
 
-
 void ThrowHardFault(DbmsCtx* ctx)
 {
-    if (HAS_ANY_FAULTS(ctx)) 
+    if (HasAnyFaults(ctx)) 
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
     else 
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);

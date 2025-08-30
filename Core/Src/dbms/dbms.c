@@ -25,7 +25,7 @@ void DbmsInit(DbmsCtx* ctx)
 
     // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
-    if ((status = LoadStoredObject(ctx, EEPROM_FAULT_MASK_ADDR, &ctx->fault_mask, sizeof(ctx->fault_mask))))
+    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
     {
         // todo: check an error here
     }
@@ -81,7 +81,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx);     // todo: rn start
 
-   if ((status = LoadStoredObject(ctx, EEPROM_FAULT_MASK_ADDR, &ctx->fault_mask, sizeof(ctx->fault_mask))))
+   if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
     {
         // todo: check an error here
     }
@@ -194,7 +194,7 @@ void DbmsIter(DbmsCtx* ctx)
     //  If there is a hard fault we are shutting off the car
     //
     ThrowHardFault(ctx);
-    SaveStoredObject(ctx, EEPROM_FAULT_MASK_ADDR, &ctx->fault_mask, sizeof(ctx->fault_mask));
+    SaveStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults));
 
     //
     //  Transmit important telemetry 
@@ -265,7 +265,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
             break;
         case CANID_RX_CLEAR_FAULTS:
-            CLEAR_ALL_FAULTS(ctx);
+            ClearAllFaults(ctx);
             break;
         default:
             ctx->stats.n_unmatched_can_frames++;

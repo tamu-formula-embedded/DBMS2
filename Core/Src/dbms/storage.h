@@ -16,7 +16,7 @@
 #define EEPROM_PAGE_SIZE        256
 
 #define EEPROM_SETTINGS_ADDR      0x0000
-#define EEPROM_FAULT_MASK_ADDR    0x0400 
+#define EEPROM_CTRL_FAULT_MASK_ADDR    0x0400 
 
 #define ERR_CRC_MISMATCH        24
 

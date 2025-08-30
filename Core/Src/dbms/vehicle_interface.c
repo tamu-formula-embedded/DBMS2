@@ -314,10 +314,13 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 13, ctx->stats.looptime);
     SendMetric(ctx, 14, ctx->stats.end_delay);
 
-    SendMetric(ctx, 15, ctx->fault_mask);
+    SendMetric(ctx, 15, ctx->faults.controller_mask);
     
     SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
     SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
+
+    // TODO: perm sol.
+    SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
 
     return 0;
 }
