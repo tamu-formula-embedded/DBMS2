@@ -442,7 +442,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
     }
 
     size_t data_size = N_TEMPS_PER_MONITOR * sizeof(int16_t);
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS; // <- num frames
     //                 header+crc ^         ^ readings * 2 bytes each    
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_temp_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
@@ -451,13 +451,13 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
         // ^ throwing all the time in simulator
     }
 
-    RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_frames, rx_buffer_temp_readings, data_size, N_STACKDEVS);
+    RxStackFrame rx_frames[N_MONITORS];
+    FillStackFrames(rx_frames, rx_buffer_temp_readings, data_size, N_MONITORS);
     
     uint8_t addr, offset;
     uint16_t kcrc;
 
-    for (size_t i = 0; i < N_STACKDEVS; i++)
+    for (size_t i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
         if (rx_frames[i].dev_addr == 0) continue;   // this is myself
@@ -474,7 +474,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
 				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
 							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
 
-				ctx->cell_states[addr].temps[j+offset] = (float) raw / 1000.0;    // floating mV conversion 152.59 uV/LSB
+				ctx->cell_states[addr].temps[j+offset] = ((float) raw * 152.59) / 1000.0 / 1000.0;    // floating mV conversion 152.59 uV/LSB
 			}
         }
         else {
