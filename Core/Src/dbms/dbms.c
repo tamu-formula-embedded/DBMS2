@@ -25,9 +25,9 @@ void DbmsInit(DbmsCtx* ctx)
 
     // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
-    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
+    if ((status = LoadFaultState(ctx)) != 0)
     {
-        // todo: check an error here
+        // todo: check error 
     }
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
@@ -82,6 +82,10 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     StackSetupVoltReadings(ctx);     // todo: rn start
 
    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
+    {
+        // todo: check an error here
+    }
+    if ((status = LoadFaultState(ctx)) != 0)
     {
         // todo: check an error here
     }

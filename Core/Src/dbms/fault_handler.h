@@ -74,4 +74,7 @@ void ClearAllFaults(DbmsCtx* ctx);
 // Comm to the GPIO
 void ThrowHardFault(DbmsCtx* ctx);
 
+int LoadFaultState(DbmsCtx* ctx);
+int SaveFaultState(DbmsCtx* ctx);
+
 #endif 
