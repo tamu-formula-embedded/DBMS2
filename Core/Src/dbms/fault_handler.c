@@ -118,9 +118,16 @@ void CheckCurrentFaults(DbmsCtx* ctx)
 
 void ThrowHardFault(DbmsCtx* ctx)
 {
-    if (HasAnyFaults(ctx)) 
+    if (HasAnyFaults(ctx))  
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
     else 
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+
+    uint16_t faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
+    if (ctx->faults_crc != faults_crc) 
+    {
+        ctx->faults_crc = faults_crc;
+        SaveStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults));
+    }
 }
 
