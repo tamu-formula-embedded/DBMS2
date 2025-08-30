@@ -25,10 +25,7 @@ void DbmsInit(DbmsCtx* ctx)
 
     // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
-    if ((status = LoadFaultState(ctx)) != 0)
-    {
-        // todo: check error 
-    }
+    
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
     {
@@ -44,6 +41,10 @@ void DbmsInit(DbmsCtx* ctx)
         else    {}  // fatal error
     }
 
+    if ((status = LoadFaultState(ctx)) != 0)
+    {
+        // todo: check error 
+    }
 
     HAL_TIM_Base_Start(ctx->hw.timer);
 
@@ -56,6 +57,8 @@ void DbmsInit(DbmsCtx* ctx)
 
     HAL_Delay(10);
     ConfigCurrentSensor(ctx, 10);
+
+    ConfigPwmLines(ctx);
 
     // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
     ctx->led_state = LED_IDLE;
@@ -209,9 +212,12 @@ void DbmsIter(DbmsCtx* ctx)
         SendCellTemps(ctx);
     }
 
+    ctx->model.soc = (ctx->stats.iters % 100) / 100.0;
+
     //
-	//  Update the LEDs. Led state should be set every time the cur_state changes
+	//  Update the LEDs (etc.). Led state should be set every time the cur_state changes
 	//
+    SetPwmStates(ctx);
     ProcessLedAction(ctx);
     MonitorLedBlink(ctx);
 
