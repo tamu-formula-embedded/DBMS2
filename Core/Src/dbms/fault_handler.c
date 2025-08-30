@@ -123,11 +123,28 @@ void ThrowHardFault(DbmsCtx* ctx)
     else 
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
 
+   
+    SaveFaultState(ctx);
+}
+
+int SaveFaultState(DbmsCtx* ctx)
+{
     uint16_t faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
     if (ctx->faults_crc != faults_crc) 
     {
         ctx->faults_crc = faults_crc;
         SaveStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults));
     }
+    return 0;
 }
 
+int LoadFaultState(DbmsCtx* ctx)
+{
+    int status;
+    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
+    {
+        // todo: check an error here
+    }
+    ctx->faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
+    return status;
+}

@@ -112,7 +112,7 @@ typedef struct _DbmsCtx {
         uint32_t    controller_mask;
         uint32_t    monitor_masks[N_MONITORS];
     } faults;
-    uint8_t faults_crc;
+    uint16_t faults_crc;
 
     uint16_t    can_log_ordering_index;
     uint8_t     last_can_err;
