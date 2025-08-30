@@ -533,8 +533,8 @@ int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs)
         if (addr >= N_MONITORS) continue;            // throw some error here
 
         if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
-            CanLog(ctx, "F %d->%d\n", addr, *rx_frames[i].data);
-            DelayUs(ctx, 50);
+            // CanLog(ctx, "F %d->%d\n", addr, *rx_frames[i].data);
+            // DelayUs(ctx, 50);
             fault_regs[addr] = (*rx_frames[i].data);
         }
         else {
@@ -550,6 +550,6 @@ void StackUpdateFaultReadings(DbmsCtx* ctx)
 {
     uint8_t fault_summaries[N_MONITORS];
     PollFaultRegisters(ctx, 0x00, fault_summaries);
-    
+
 
 }

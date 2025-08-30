@@ -96,6 +96,8 @@ typedef struct _DbmsCtx {
         uint32_t n_rx_stack_frames;
         uint32_t n_rx_stack_bad_crcs;
         // uint32_t n_overruns;
+
+        uint32_t n_eeprom_writes;
     } stats;
 
      struct {
