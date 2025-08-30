@@ -189,12 +189,10 @@ void DbmsIter(DbmsCtx* ctx)
         CheckCurrentFaults(ctx);
     }
 
-
     // 
     //  If there is a hard fault we are shutting off the car
     //
     ThrowHardFault(ctx);
-    SaveStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults));
 
     //
     //  Transmit important telemetry 
