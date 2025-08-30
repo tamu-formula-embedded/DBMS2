@@ -319,8 +319,10 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
     SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
 
+    SendMetric(ctx, 18, ctx->stats.n_eeprom_writes);
+
     // TODO: perm sol.
-    SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
+    // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
 
     return 0;
 }

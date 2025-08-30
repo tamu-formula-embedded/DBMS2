@@ -33,6 +33,8 @@ int WriteEEPROM(DbmsCtx* ctx, uint32_t addr, uint8_t* data, uint16_t len)
         remaining -= write_size;
     }
 
+    ctx->stats.n_eeprom_writes++;
+
     return HAL_OK;
 }
 
