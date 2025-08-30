@@ -38,6 +38,7 @@ typedef struct _PerfCounters PerfCounters;
 typedef struct _HwCtx {
     ADC_HandleTypeDef* adc;
     TIM_HandleTypeDef* timer;
+    TIM_HandleTypeDef* timer_pwm_1;
     UART_HandleTypeDef* uart;
     I2C_HandleTypeDef* i2c;
 
@@ -74,7 +75,7 @@ typedef struct _DbmsCtx {
     uint64_t    last_rx_heartbeat;
     uint64_t    iter_start_us;
     uint64_t    iter_end_us;
-    uint64_t    M_LED_BLINK_TS;
+    uint64_t    m_led_blink_ts;
     uint64_t    batch_telem_ts;
 
     struct {
@@ -114,10 +115,14 @@ typedef struct _DbmsCtx {
     } faults;
     uint16_t faults_crc;
 
+    struct {
+        float soc;
+    } model;
+
     uint16_t    can_log_ordering_index;
     uint8_t     last_can_err;
     bool        need_to_sync_settings;
-    bool        M_LED_ON;
+    bool        m_led_on;
 
 } DbmsCtx;
 

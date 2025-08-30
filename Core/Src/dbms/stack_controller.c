@@ -478,21 +478,21 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on){
 
 void MonitorLedBlink(DbmsCtx* ctx){
 
-    uint64_t curr_ts = GetUs(ctx) - ctx->M_LED_BLINK_TS;
+    uint64_t curr_ts = GetUs(ctx) - ctx->m_led_blink_ts;
 //    CanLog(ctx, "%d \n", curr_ts);
 
-    if (ctx->M_LED_ON){
+    if (ctx->m_led_on){
         if (curr_ts > 100000){
             ToggleAllMonitorChipLeds(ctx, false);
-            ctx->M_LED_ON = false;
-            ctx->M_LED_BLINK_TS = GetUs(ctx);
+            ctx->m_led_on = false;
+            ctx->m_led_blink_ts = GetUs(ctx);
         }
     }
     else{
         if (curr_ts > 1000000){
             ToggleAllMonitorChipLeds(ctx, true);
-            ctx->M_LED_ON = true;
-            ctx->M_LED_BLINK_TS = GetUs(ctx);
+            ctx->m_led_on = true;
+            ctx->m_led_blink_ts = GetUs(ctx);
         }
     }
 

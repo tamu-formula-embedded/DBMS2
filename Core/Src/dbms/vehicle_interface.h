@@ -78,4 +78,8 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action);
 void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time);
 int64_t UnpackCurrentSensorData(uint8_t* data);
 
+int ConfigPwmLines(DbmsCtx* ctx);
+int SetPwmStates(DbmsCtx* ctx);
+
+
 #endif

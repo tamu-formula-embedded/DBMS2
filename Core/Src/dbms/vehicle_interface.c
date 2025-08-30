@@ -60,6 +60,25 @@ int ConfigCan(DbmsCtx* ctx)
     return status;
 }
 
+int ConfigPwmLines(DbmsCtx* ctx)
+{
+    HAL_TIM_PWM_Start(ctx->hw.timer_pwm_1, TIM_CHANNEL_4);
+    return 0;
+}
+
+
+int SetPwmStates(DbmsCtx* ctx)
+{
+    if (ctx->model.soc < 0.0f)   ctx->model.soc = 0.0f;
+    if (ctx->model.soc > 100.0f) ctx->model.soc = 100.0f;
+
+    uint32_t arr = __HAL_TIM_GET_AUTORELOAD(ctx->hw.timer_pwm_1);   
+    uint32_t ccr = (uint32_t)((ctx->model.soc / 100.0f) * (arr + 1));
+
+    __HAL_TIM_SET_COMPARE(ctx->hw.timer_pwm_1, TIM_CHANNEL_4, ccr);
+
+    return 0;
+}
 
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
