@@ -166,8 +166,8 @@ void DbmsIter(DbmsCtx* ctx)
         // Need to look into this
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
-        StackUpdateVoltReadings(ctx);
-        DelayUs(ctx, 20000);
+//        StackUpdateVoltReadings(ctx);
+//        DelayUs(ctx, 20000);
         StackUpdateTempReadings(ctx);
         DelayUs(ctx, 20000);
     }
