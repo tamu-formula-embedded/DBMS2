@@ -19,6 +19,7 @@ enum _LedState {
     LED_IDLE,
     LED_COMM_ERROR,
     LED_INIT,
+    LED_CHARGING,
     // ...
     LED_STATE_COUNT
 };
