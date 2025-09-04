@@ -3,6 +3,7 @@
 //  
 #include "dbms.h"
 #include "context.h"
+#include "led_controller.h"
 
 static DbmsSettings mem_settings;
 
@@ -198,6 +199,9 @@ void DbmsIter(DbmsCtx* ctx)
             if(StackNeedsBalancing(ctx)){
                 // pause charger via can, enter balancing mode
                 ctx->charging.state = CHARGING_PAUSED_FOR_BALANCING;
+                ctx->led_state = LED_BALANCING;
+                StackUpdateBalancing(ctx);
+                HAL_Delay(8);
             }
         }
         else if(ctx->charging.state == CHARGING_PAUSED_FOR_BALANCING){
@@ -205,14 +209,12 @@ void DbmsIter(DbmsCtx* ctx)
             if(StackBalancingAbortedByFault(ctx)){
                 ctx->charging.state = CHARGING_ERROR;
                 ctx->led_state = LED_ERROR;
-
-                HAL_Delay(100);
                 DbmsPerformShutdown(ctx);
-                
             }
             if(StackBalancingComplete(ctx)){
                 // resume charger via can, exit balancing mode
                 ctx->charging.state = CHARGING_ACTIVE;
+                ctx->led_state = LED_CHARGING;
             }
         }
 
