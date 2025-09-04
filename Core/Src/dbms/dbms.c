@@ -2,6 +2,7 @@
 //  Copyright (c) Texas A&M University.
 //  
 #include "dbms.h"
+#include "context.h"
 
 static DbmsSettings mem_settings;
 
@@ -22,6 +23,7 @@ void DbmsInit(DbmsCtx* ctx)
     int status = 0;
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_INIT;
+    ctx->charging.state = NOT_CHARGING;
 
     // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
@@ -92,6 +94,9 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     {
         // todo: check an error here
     }
+
+    ctx->charging.state = CHARGING_ACTIVE;
+    ctx->led_state = LED_CHARGING;
     return status;
 }
 
@@ -187,6 +192,19 @@ void DbmsIter(DbmsCtx* ctx)
         // StackUpdateTempReadings(ctx);
         HAL_Delay(8);
         StackUpdateFaultReadings(ctx);
+
+        if(ctx->charging.state == CHARGING_ACTIVE){
+            if(StackNeedsBalancing(ctx)){
+                // pause charger via can, enter balancing mode
+                ctx->charging.state = CHARGING_PAUSED_FOR_BALANCING;
+            }
+        }
+        else if(ctx->charging.state == CHARGING_PAUSED_FOR_BALANCING){
+            if(StackBalancingComplete(ctx)){
+                // resume charger via can, exit balancing mode
+                ctx->charging.state = CHARGING_ACTIVE;
+            }
+        }
 
         //
         //  Check fault conditions

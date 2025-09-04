@@ -56,6 +56,10 @@ void StackUpdateVoltReadings(DbmsCtx* ctx);
 
 int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on);
 
+void FillStackFrame(RxStackFrame* rx_frame, uint8_t* buffer, size_t size);
+
+void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames);
+
 void MonitorLedBlink(DbmsCtx* ctx);
 
 void StackUpdateFaultReadings(DbmsCtx* ctx);
