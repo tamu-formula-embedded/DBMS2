@@ -26,6 +26,9 @@ static const uint16_t CB_CELL_CTRL_REGS[14] = {
 #define TIMER_VALUE 0x02 // 30 seconds - page 157
 
 #define CB_RUN_BIT_MASK 0x08
+#define BAL_STAT_ABORT_MASK 0x04
+#define BAL_CTRL2_BAL_GO_MASK 0x02
+#define BAL_CTRL2_CONFIG 0x31 // auto_bal = 1, otcb_en = 1, flt_stop = 1
 
 /**
 *  max(v) - min(v) > balance_limit -> we need to balance
@@ -97,8 +100,7 @@ void StackSetCellBalanceTimer(DbmsCtx* ctx, uint8_t monitor_addr, bool cells_to_
 void StackStartBalancing(DbmsCtx* ctx)
 {
     // this is the final trigger - balancing doesn't start until bal_ctrl2 is set
-    uint8_t bal_ctrl2_value = 0x13; // binary: 00010011 (AUTO_BAL = 1, BAL_GO = 1, OTCB_EN = 1)
-    uint8_t bal_ctrl2_frame[] = {0xB1, 0x03, 0x2F, bal_ctrl2_value, 0x00, 0x00};
+    uint8_t bal_ctrl2_frame[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_BAL_GO_MASK, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, bal_ctrl2_frame, sizeof(bal_ctrl2_frame));
 }
 
@@ -124,15 +126,42 @@ void StackUpdateBalancing(DbmsCtx* ctx)
 
 bool StackBalancingComplete(DbmsCtx* ctx)
 {
+
+    uint8_t bal_stat_frame[] = {0xA0, 0x05, 0x2B, 0x00, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, bal_stat_frame, sizeof(bal_stat_frame));
+
+    uint8_t rx_buffer[RX_FRAME_SIZE(N_MONITORS)];
+
+    if(HAL_UART_Receive(ctx->hw.uart, rx_buffer, sizeof(rx_buffer), STACK_RECV_TIMEOUT) != HAL_OK){
+        // throw error
+        return false;
+    }
+
+    RxStackFrame rx_frames[N_MONITORS];
+    FillStackFrames(rx_frames, rx_buffer, sizeof(rx_buffer), N_MONITORS);
+
+    for(size_t i = 0; i < N_MONITORS; ++i){
+        uint8_t bal_stat_value = rx_frames[i].data[0];
+        bool cb_run = (bal_stat_value & CB_RUN_BIT_MASK) != 0;
+
+        if(cb_run){
+            return false; // Still balancing
+        }
+    }
+
+    return true;
+
+/*
+
     // read bal_stat register from each active monitor chip
     // return true when CB_RUN = 0 for all monitors that were balancing
     for(size_t segment = 0; segment < N_SEGMENTS; ++segment){
         for(size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg){
-            size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
-            uint8_t monitor_addr = (side_index * 2) + 1;
+            //size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
+            //uint8_t monitor_addr = (side_index * 2) + 1;
 
             // bal_stat register is 52B
-            uint8_t bal_stat_frame[] = {0xA0, monitor_addr, 0x05, 0x2B, 0x00, 0x00, 0x00};
+            uint8_t bal_stat_frame[] = {0xA0, 0x05, 0x2B, 0x00, 0x00, 0x00};
 
             SendStackFrameSetCrc(ctx, bal_stat_frame, sizeof(bal_stat_frame));
 
@@ -156,4 +185,38 @@ bool StackBalancingComplete(DbmsCtx* ctx)
         }
     }
     return true;
+
+    */
+}
+
+bool StackBalancingAbortedByFault(DbmsCtx* ctx)
+{
+    // page 42
+    uint8_t bal_stat_frame[] = {0xA0, 0x05, 0x2B, 0x00, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, bal_stat_frame, sizeof(bal_stat_frame));
+
+    // recieve response
+    uint8_t rx_buffer[RX_FRAME_SIZE(1)];
+    if(HAL_UART_Receive(ctx->hw.uart, rx_buffer, sizeof(rx_buffer), STACK_RECV_TIMEOUT) != HAL_OK){
+        // throw error
+        return false;
+    }
+
+    RxStackFrame rx_frame;
+    FillStackFrame(&rx_frame, rx_buffer, 1); // 1 byte of data expected
+
+    // check if abort bit is set
+    uint8_t bal_stat_value = rx_frame.data[0];
+    bool abort = (bal_stat_value & BAL_STAT_ABORT_MASK) != 0;
+
+    if(abort){
+        return true; // Balancing aborted
+    }
+    return false;
+}
+
+void StackBalancingConfig(DbmsCtx* ctx){
+    // Setting balancing method to auto balancing and to stop at fault
+    uint8_t frame_cb_config[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_CONFIG, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, frame_cb_config, sizeof(frame_cb_config));
 }
