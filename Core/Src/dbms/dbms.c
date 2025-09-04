@@ -85,6 +85,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     StackSetNumActiveCells(ctx, 0x0A);
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx);     // todo: rn start
+    StackBalancingConfig(ctx);
 
    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
     {
@@ -200,6 +201,15 @@ void DbmsIter(DbmsCtx* ctx)
             }
         }
         else if(ctx->charging.state == CHARGING_PAUSED_FOR_BALANCING){
+
+            if(StackBalancingAbortedByFault(ctx)){
+                ctx->charging.state = CHARGING_ERROR;
+                ctx->led_state = LED_ERROR;
+
+                HAL_Delay(100);
+                DbmsPerformShutdown(ctx);
+                
+            }
             if(StackBalancingComplete(ctx)){
                 // resume charger via can, exit balancing mode
                 ctx->charging.state = CHARGING_ACTIVE;
