@@ -20,6 +20,7 @@ enum _LedState {
     LED_COMM_ERROR,
     LED_INIT,
     LED_CHARGING,
+    LED_BALANCING,
     // ...
     LED_STATE_COUNT
 };
