@@ -75,7 +75,7 @@ bool StackNeedsBalancing(DbmsCtx* ctx)
 }
 
 
-void StackSetCellBalanceTimer(DbmsCtx* ctx, uint8_t monitor_addr, bool cells_to_balance[N_GROUPS_PER_SIDE], uint8_t timer_value)
+void StackSetCellBalanceTimer(DbmsCtx* ctx, bool cells_to_balance[N_GROUPS_PER_SIDE])
 {
     // no need for lookup table because of contiguous register memory addresses
     uint16_t start_reg = CB_CELL1_CTRL_REG;
@@ -83,12 +83,11 @@ void StackSetCellBalanceTimer(DbmsCtx* ctx, uint8_t monitor_addr, bool cells_to_
     uint8_t cb_bulk_frame[20] = {0}; // 4 header + 14 data + 2 crc = 20 bytes max
 
     cb_bulk_frame[0] = 0xBE - 1;
-    cb_bulk_frame[1] = monitor_addr;
-    cb_bulk_frame[2] = start_reg >> 8;
-    cb_bulk_frame[3] = start_reg & 0xFF;
+    cb_bulk_frame[1] = start_reg >> 8;
+    cb_bulk_frame[2] = start_reg & 0xFF;
 
     for(size_t i = 0; i < N_GROUPS_PER_SIDE; ++i){
-        cb_bulk_frame[4 + i] = cells_to_balance[i] ? timer_value : 0;
+        cb_bulk_frame[3 + i] = cells_to_balance[i] ? TIMER_VALUE : 0;
     }
 
     cb_bulk_frame[frame_size - 2] = 0x00;
@@ -116,9 +115,7 @@ void StackUpdateBalancing(DbmsCtx* ctx)
         for(size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg){
             size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
 
-            uint8_t monitor_addr = (side_index * 2) + 1;
-
-            StackSetCellBalanceTimer(ctx, monitor_addr, ctx->cell_states[side_index].cells_to_balance, TIMER_VALUE);
+            StackSetCellBalanceTimer(ctx, ctx->cell_states[side_index].cells_to_balance);
         }
     }
     StackStartBalancing(ctx);
