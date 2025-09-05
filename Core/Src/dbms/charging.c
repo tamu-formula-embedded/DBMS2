@@ -127,7 +127,7 @@ bool StackBalancingComplete(DbmsCtx* ctx)
     uint8_t bal_stat_frame[] = {0xA0, 0x05, 0x2B, 0x00, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, bal_stat_frame, sizeof(bal_stat_frame));
 
-    uint8_t rx_buffer[RX_FRAME_SIZE(N_MONITORS)];
+    uint8_t rx_buffer[RX_FRAME_SIZE(1) * N_MONITORS];
 
     if(HAL_UART_Receive(ctx->hw.uart, rx_buffer, sizeof(rx_buffer), STACK_RECV_TIMEOUT) != HAL_OK){
         // throw error
@@ -136,12 +136,11 @@ bool StackBalancingComplete(DbmsCtx* ctx)
 
     RxStackFrame rx_frames[N_MONITORS];
     FillStackFrames(rx_frames, rx_buffer, sizeof(rx_buffer), N_MONITORS);
-
+    uint8_t bal_stat_value = 0;
     for(size_t i = 0; i < N_MONITORS; ++i){
-        uint8_t bal_stat_value = rx_frames[i].data[0];
-        bool cb_run = (bal_stat_value & CB_RUN_BIT_MASK) != 0;
+        bal_stat_value = rx_frames[i].data[0];
 
-        if(cb_run){
+        if((bal_stat_value & CB_RUN_BIT_MASK) != 0){
             return false; // Still balancing
         }
     }
@@ -193,22 +192,24 @@ bool StackBalancingAbortedByFault(DbmsCtx* ctx)
     SendStackFrameSetCrc(ctx, bal_stat_frame, sizeof(bal_stat_frame));
 
     // recieve response
-    uint8_t rx_buffer[RX_FRAME_SIZE(1)];
+    uint8_t rx_buffer[RX_FRAME_SIZE(1) * N_MONITORS];
     if(HAL_UART_Receive(ctx->hw.uart, rx_buffer, sizeof(rx_buffer), STACK_RECV_TIMEOUT) != HAL_OK){
         // throw error
-        return false;
+        return true;
     }
 
-    RxStackFrame rx_frame;
-    FillStackFrame(&rx_frame, rx_buffer, 1); // 1 byte of data expected
+    RxStackFrame rx_frames[N_MONITORS];
+    FillStackFrames(&rx_frames, rx_buffer, 1, N_MONITORS); // 1 byte of data expected
 
     // check if abort bit is set
-    uint8_t bal_stat_value = rx_frame.data[0];
-    bool abort = (bal_stat_value & BAL_STAT_ABORT_MASK) != 0;
-
-    if(abort){
-        return true; // Balancing aborted
+    uint8_t bal_stat_value = 0;
+    for (size_t monitor = 0; monitor < N_MONITORS; monitor++){ // TODO: Need to change this to iterate by side instead of by monitor
+        bal_stat_value = rx_frames[monitor].data;
+        if ((bal_stat_value & BAL_STAT_ABORT_MASK) != 0){
+            return true; // Balancing aborted
+        }
     }
+    
     return false;
 }
 
