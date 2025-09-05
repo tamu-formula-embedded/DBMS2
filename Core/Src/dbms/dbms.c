@@ -96,8 +96,6 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
         // todo: check an error here
     }
 
-    ctx->charging.state = CHARGING_ACTIVE;
-    ctx->led_state = LED_CHARGING;
     return status;
 }
 
