@@ -1,0 +1,14 @@
+../Core/Src/dbms/fault_handler.c:4:6:ControllerSetFault	2
+../Core/Src/dbms/fault_handler.c:10:6:ControllerClearFault	2
+../Core/Src/dbms/fault_handler.c:16:6:ControllerHasFault	2
+../Core/Src/dbms/fault_handler.c:23:6:StackSetFault	3
+../Core/Src/dbms/fault_handler.c:30:6:StackClearFault	3
+../Core/Src/dbms/fault_handler.c:38:6:StackHasFault	3
+../Core/Src/dbms/fault_handler.c:45:6:HasAnyFaults	4
+../Core/Src/dbms/fault_handler.c:55:6:ClearAllFaults	2
+../Core/Src/dbms/fault_handler.c:65:6:CheckVoltageFaults	5
+../Core/Src/dbms/fault_handler.c:97:6:CheckTemperatureFaults	4
+../Core/Src/dbms/fault_handler.c:111:6:CheckCurrentFaults	2
+../Core/Src/dbms/fault_handler.c:119:6:ThrowHardFault	2
+../Core/Src/dbms/fault_handler.c:130:5:SaveFaultState	2
+../Core/Src/dbms/fault_handler.c:141:5:LoadFaultState	1

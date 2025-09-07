@@ -25,6 +25,8 @@ void DbmsInit(DbmsCtx* ctx)
 
     // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
+    
+
     if ((status = LoadSettings(ctx)) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
@@ -39,6 +41,10 @@ void DbmsInit(DbmsCtx* ctx)
         else    {}  // fatal error
     }
 
+    if ((status = LoadFaultState(ctx)) != 0)
+    {
+        // todo: check error 
+    }
 
     HAL_TIM_Base_Start(ctx->hw.timer);
 
@@ -51,6 +57,8 @@ void DbmsInit(DbmsCtx* ctx)
 
     HAL_Delay(10);
     ConfigCurrentSensor(ctx, 10);
+
+    ConfigPwmLines(ctx);
 
     // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
     ctx->led_state = LED_IDLE;
@@ -76,6 +84,14 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx);     // todo: rn start
 
+   if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
+    {
+        // todo: check an error here
+    }
+    if ((status = LoadFaultState(ctx)) != 0)
+    {
+        // todo: check an error here
+    }
     return status;
 }
 
@@ -103,12 +119,12 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
     // CanLog(ctx, "%d\n", GetSetting(ctx, MAX_GROUP_VOLTAGE));
+	// if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
+    // {
+	// 	ctx->led_state = LED_INIT;
+	// 	ProcessLedAction(ctx);
+	// }
 
-	if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
-    {
-		ctx->led_state = LED_INIT;
-		ProcessLedAction(ctx);
-	}
     //
     //  Store the settings when required
     //
@@ -129,7 +145,6 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Let everybody know that we are alive
     //
-    
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
 
     //
@@ -155,45 +170,65 @@ void DbmsIter(DbmsCtx* ctx)
     else if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
     {
         // on these states -- probably need to write to disk too
+        ctx->led_state = LED_INIT;
+		ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
     }
 
     //
-    //  Read information from the stack
+    //   Main State Dispatch
     //
     if (ctx->cur_state == DBMS_ACTIVE)
     {
-        // Need to look into this
-        // todo: will time out a few times before stack is 
-        //       correctly configed, fix this
+        //
+        //  Communicate with the stack
+        //
         StackUpdateVoltReadings(ctx);
-//       StackUpdateTempReadings(ctx);
+        // StackUpdateTempReadings(ctx);
+        HAL_Delay(8);
+        StackUpdateFaultReadings(ctx);
+
+        //
+        //  Check fault conditions
+        //
+        CheckVoltageFaults(ctx);
+        // CheckTemperatureFaults(ctx);
+        CheckCurrentFaults(ctx);
     }
 
-    // if (PERIOD(ctx->stats.iters, 1, 0)) //todo: fix ts
-    SendCellVoltages(ctx);
-    // SendCellTemps(ctx);
+    // 
+    //  If there is a hard fault we are shutting off the car
+    //
+    ThrowHardFault(ctx);
+
+    //
+    //  Transmit important telemetry 
+    //
     SendMetrics(ctx);
+    if (ctx->iter_start_us - ctx->batch_telem_ts > 10000) 
+    {
+        ctx->batch_telem_ts = ctx->iter_start_us;
+        SendCellVoltages(ctx);
+        SendCellTemps(ctx);
+    }
+
+    ctx->model.soc = (ctx->stats.iters % 100) / 100.0;
 
     //
-    //  Example usage: Turn off monitor chip
-    //
-    // ToggleAllMonitorChipLeds(ctx, false);
-
-    //
-	//  Update the LEDs. Led state should be set every time the cur_state changes
+	//  Update the LEDs (etc.). Led state should be set every time the cur_state changes
 	//
+    SetPwmStates(ctx);
     ProcessLedAction(ctx);
+    MonitorLedBlink(ctx);
 
+    //
+    //  Schedule the next loop
+    //
     ctx->iter_end_us = GetUs(ctx);
-
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
-
-    MonitorLedBlink(ctx);
-    // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
     // DelayUs(ctx, end_delay);
-    HAL_Delay(20);  // ^ todo: fix all this
+    HAL_Delay(8);  // ^ todo: fix all ts
 }
 
 
@@ -236,6 +271,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             break;
         case CANID_ISENSE_ENERGY:
             ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
+            break;
+        case CANID_RX_CLEAR_FAULTS:
+            ClearAllFaults(ctx);
             break;
         default:
             ctx->stats.n_unmatched_can_frames++;

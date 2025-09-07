@@ -11,6 +11,7 @@
 #include "settings.h"
 #include "sched.h"
 
+
 #define CANID_ISENSE_COMMAND        0x411
 
 #define CANID_TX_HEARTBEAT          0x501
@@ -36,6 +37,7 @@
 #define CANID_RX_HEARTBEAT          0x541
 #define CANID_RX_SET_CONFIG         0x542
 #define CANID_RX_GET_CONFIG         0x543
+#define CANID_RX_CLEAR_FAULTS       0x544
 
 #define ERR_CFGID_NOT_FOUND         54
 
@@ -75,5 +77,9 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action);
 
 void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time);
 int64_t UnpackCurrentSensorData(uint8_t* data);
+
+int ConfigPwmLines(DbmsCtx* ctx);
+int SetPwmStates(DbmsCtx* ctx);
+
 
 #endif

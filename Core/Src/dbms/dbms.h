@@ -20,6 +20,7 @@
 #include "led_controller.h"
 #include "stack_controller.h"
 #include "storage.h"
+#include "fault_handler.h"
 
 // Called before the main loop but strictly used for memory allocation
 void DbmsAlloc(DbmsCtx* ctx);
