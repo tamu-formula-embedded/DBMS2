@@ -166,15 +166,17 @@ void DbmsIter(DbmsCtx* ctx)
         // Need to look into this
         // todo: will time out a few times before stack is 
         //       correctly configed, fix this
-//        StackUpdateVoltReadings(ctx);
-//        DelayUs(ctx, 20000);
+        StackUpdateVoltReadings(ctx);
+        HAL_Delay(8);
         StackUpdateTempReadings(ctx);
-        DelayUs(ctx, 20000);
+        HAL_Delay(8);
     }
 
     // if (PERIOD(ctx->stats.iters, 1, 0)) //todo: fix ts
     SendCellVoltages(ctx);
+    HAL_Delay(8);
     SendCellTemps(ctx);
+    HAL_Delay(8);
     SendMetrics(ctx);
 
     //
@@ -192,7 +194,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
 
-//    MonitorLedBlink(ctx);
+   MonitorLedBlink(ctx);
     // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
     // DelayUs(ctx, end_delay);
     HAL_Delay(20);  // ^ todo: fix all this
