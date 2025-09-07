@@ -74,6 +74,16 @@ static const InternalLedState system_led_patterns[LED_STATE_COUNT][NUM_LEDS] = {
         { LED_GREEN, BLINK_TYPE_OFF,  false },
         { LED_GREEN, BLINK_TYPE_OFF,  false },
         { LED_YELLOW, BLINK_TYPE_OFF, false }
+    },
+    [LED_CHARGING] = {
+        { LED_GREEN, BLINK_TYPE_FAST, false },
+        { LED_GREEN, BLINK_TYPE_FAST, false },
+        { LED_GREEN, BLINK_TYPE_FAST, false }
+    },
+    [LED_BALANCING] = {
+        { LED_YELLOW, BLINK_TYPE_FAST, false },
+        { LED_YELLOW, BLINK_TYPE_FAST, false },
+        { LED_YELLOW, BLINK_TYPE_FAST, false }
     }
 };
 

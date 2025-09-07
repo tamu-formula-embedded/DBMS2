@@ -11,8 +11,8 @@
 
 #include "vehicle_interface.h"
 
-#define STACK_SEND_TIMEOUT          100
-#define STACK_RECV_TIMEOUT          100
+#define STACK_SEND_TIMEOUT          50
+#define STACK_RECV_TIMEOUT          50
 #define STACK_RX_BUFFER_SIZE        1024    //N_STACKDEVS * 6 + N_GROUPS_PER_SIDE
 
 #define STACK_V_UV_PER_BIT      190.73
@@ -57,6 +57,12 @@ void StackUpdateVoltReadings(DbmsCtx* ctx);
 
 int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on);
 
+void FillStackFrame(RxStackFrame* rx_frame, uint8_t* buffer, size_t size);
+
+void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames);
+
 void MonitorLedBlink(DbmsCtx* ctx);
+
+void StackUpdateFaultReadings(DbmsCtx* ctx);
 
 #endif

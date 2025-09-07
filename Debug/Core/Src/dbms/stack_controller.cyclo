@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ../Core/Src/dbms/stack_controller.c:13:6:__PrintStackRxFrame	2
 ../Core/Src/dbms/stack_controller.c:27:5:SendStackFrame	1
 ../Core/Src/dbms/stack_controller.c:36:5:SendStackFrameSetCrc	1
@@ -22,3 +23,31 @@
 ../Core/Src/dbms/stack_controller.c:488:5:ToggleMonitorChipLed	3
 ../Core/Src/dbms/stack_controller.c:503:5:ToggleAllMonitorChipLeds	3
 ../Core/Src/dbms/stack_controller.c:520:6:MonitorLedBlink	4
+=======
+../Core/Src/dbms/stack_controller.c:13:6:__PrintStackRxFrame	2
+../Core/Src/dbms/stack_controller.c:27:5:SendStackFrame	1
+../Core/Src/dbms/stack_controller.c:36:5:SendStackFrameSetCrc	1
+../Core/Src/dbms/stack_controller.c:57:6:SetBrr	1
+../Core/Src/dbms/stack_controller.c:69:5:SendStackWakeBlip	2
+../Core/Src/dbms/stack_controller.c:98:5:SendStackShutdownBlip	2
+../Core/Src/dbms/stack_controller.c:119:5:StackWake	4
+../Core/Src/dbms/stack_controller.c:144:5:StackShutdown	4
+../Core/Src/dbms/stack_controller.c:168:6:SendOtpEccDatain	2
+../Core/Src/dbms/stack_controller.c:185:6:SendAutoAddr	2
+../Core/Src/dbms/stack_controller.c:199:6:SendSetStackTop	1
+../Core/Src/dbms/stack_controller.c:221:6:ReadOtpEccDatain	2
+../Core/Src/dbms/stack_controller.c:237:6:StackAutoAddr	1
+../Core/Src/dbms/stack_controller.c:264:6:StackSetNumActiveCells	1
+../Core/Src/dbms/stack_controller.c:273:6:StackSetupGpio	1
+../Core/Src/dbms/stack_controller.c:293:6:StackSetupVoltReadings	1
+../Core/Src/dbms/stack_controller.c:299:10:CalcStackFrameCrc	1
+../Core/Src/dbms/stack_controller.c:305:6:FillStackFrame	1
+../Core/Src/dbms/stack_controller.c:315:6:FillStackFrames	2
+../Core/Src/dbms/stack_controller.c:323:6:StackUpdateVoltReadings	9
+../Core/Src/dbms/stack_controller.c:391:6:StackUpdateTempReadings	8
+../Core/Src/dbms/stack_controller.c:447:5:ToggleMonitorChipLed	3
+../Core/Src/dbms/stack_controller.c:462:5:ToggleAllMonitorChipLeds	3
+../Core/Src/dbms/stack_controller.c:479:6:MonitorLedBlink	4
+../Core/Src/dbms/stack_controller.c:502:5:PollFaultRegisters	6
+../Core/Src/dbms/stack_controller.c:549:6:StackUpdateFaultReadings	1
+>>>>>>> 67bff1685d60060e2c3aa87d26b49caa77b2f8bf
