@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ../Core/Src/dbms/vehicle_interface.c:6:5:ConfigCan	64	static
 ../Core/Src/dbms/vehicle_interface.c:65:5:CanTransmit	40	static
 ../Core/Src/dbms/vehicle_interface.c:96:6:CanLog	556	static
@@ -11,3 +12,20 @@
 ../Core/Src/dbms/vehicle_interface.c:297:5:SendMetrics	16	static
 ../Core/Src/dbms/vehicle_interface.c:327:6:ConfigCurrentSensor	16	static
 ../Core/Src/dbms/vehicle_interface.c:354:9:UnpackCurrentSensorData	144	static
+=======
+../Core/Src/dbms/vehicle_interface.c:6:5:ConfigCan	64	static
+../Core/Src/dbms/vehicle_interface.c:63:5:ConfigPwmLines	16	static
+../Core/Src/dbms/vehicle_interface.c:70:5:SetPwmStates	32	static
+../Core/Src/dbms/vehicle_interface.c:83:5:CanTransmit	40	static
+../Core/Src/dbms/vehicle_interface.c:114:6:CanLog	556	static
+../Core/Src/dbms/vehicle_interface.c:137:5:SendCellVoltages	72	static
+../Core/Src/dbms/vehicle_interface.c:166:5:SendCellTemps	72	static
+../Core/Src/dbms/vehicle_interface.c:193:6:FillShortModuleName	40	static
+../Core/Src/dbms/vehicle_interface.c:209:5:CanReportFault	24	static
+../Core/Src/dbms/vehicle_interface.c:251:5:CanTxHeartbeat	16	static
+../Core/Src/dbms/vehicle_interface.c:260:5:HandleCanConfig	48	static
+../Core/Src/dbms/vehicle_interface.c:300:5:SendMetric	24	static
+../Core/Src/dbms/vehicle_interface.c:311:5:SendMetrics	16	static
+../Core/Src/dbms/vehicle_interface.c:349:6:ConfigCurrentSensor	16	static
+../Core/Src/dbms/vehicle_interface.c:376:9:UnpackCurrentSensorData	144	static
+>>>>>>> 67bff1685d60060e2c3aa87d26b49caa77b2f8bf

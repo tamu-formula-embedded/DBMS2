@@ -340,6 +340,8 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     {
         // CAN_REPORT_FAULT(ctx, status);
         // ^ throwing all the time in simulator
+        // return;
+        // CanLog(ctx, "BadV %d\n", status);
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
@@ -388,6 +390,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
 
 void StackUpdateTempReadings(DbmsCtx* ctx)
 {
+<<<<<<< HEAD
 //    // Retreives GPIO1 through GPIO7 values and stores them into the cell_states->temps array
 //    int status = 0;
 //    // Send read command to read GPIO1..7

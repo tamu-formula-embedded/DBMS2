@@ -33,11 +33,21 @@ typedef enum _DbmsState {
 // fwd definition -- perf_counters.h
 typedef struct _PerfCounters PerfCounters;  
 
+typedef enum {
+    NOT_CHARGING = 0,
+    CHARGING_ACTIVE,
+    CHARGING_PAUSED_FOR_BALANCING,
+    CHARGING_COMPLETE,
+    CHARGING_ERROR
+} ChargingState;
+
+
 // Hardware context stores prts 
 // to peripheral interfaces
 typedef struct _HwCtx {
     ADC_HandleTypeDef* adc;
     TIM_HandleTypeDef* timer;
+    TIM_HandleTypeDef* timer_pwm_1;
     UART_HandleTypeDef* uart;
     I2C_HandleTypeDef* i2c;
 
@@ -50,14 +60,15 @@ typedef struct _HwCtx {
 typedef struct _CellMonitorState {
     float voltages[N_GROUPS_PER_SIDE];
     float temps[N_TEMPS_PER_SIDE];
+    bool cells_to_balance[N_GROUPS_PER_SIDE];
 } CellMonitorState;
 
 // fwd definition -- settings.h
-typedef enum _UserSettingIndex UserSettingIndex; 
+typedef enum _UserSettingIndex UserSettingIndex;
 typedef struct _DbmsSettings DbmsSettings;
 
 // fwd definition for enum -- led_controller.h
-typedef int32_t LedState;   
+typedef int32_t LedState;
 
 typedef struct _DbmsCtx {
 
@@ -74,7 +85,8 @@ typedef struct _DbmsCtx {
     uint64_t    last_rx_heartbeat;
     uint64_t    iter_start_us;
     uint64_t    iter_end_us;
-    uint64_t    M_LED_BLINK_TS;
+    uint64_t    m_led_blink_ts;
+    uint64_t    batch_telem_ts;
 
     struct {
         uint64_t iters;
@@ -95,9 +107,16 @@ typedef struct _DbmsCtx {
         uint32_t n_rx_stack_frames;
         uint32_t n_rx_stack_bad_crcs;
         // uint32_t n_overruns;
+
+        uint32_t n_eeprom_writes;
     } stats;
 
-     struct {
+    struct {
+        ChargingState state;
+        bool balancing_requested;
+    } charging;
+
+    struct {
         int32_t current_ma;
         int32_t voltage1_mv;
         int32_t power_w;
@@ -105,9 +124,20 @@ typedef struct _DbmsCtx {
         int32_t energy_wh;
     } isense; // current = I, sense = sensor?
 
+    struct {
+        uint32_t    controller_mask;
+        uint32_t    monitor_masks[N_MONITORS];
+    } faults;
+    uint16_t faults_crc;
+
+    struct {
+        float soc;
+    } model;
+
+    uint16_t    can_log_ordering_index;
     uint8_t     last_can_err;
     bool        need_to_sync_settings;
-    bool        M_LED_ON;
+    bool        m_led_on;
 
 } DbmsCtx;
 
