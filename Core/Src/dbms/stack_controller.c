@@ -488,8 +488,8 @@ int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
 {   
     // Turns on or off LED connected to GPIO8 on the specified monitor chip
     int status = 0;
-    uint8_t on_off_value = 0x28; // On = 0x20, Off = 0x28
-    if (on) on_off_value = 0x20;
+    uint8_t on_off_value = 0x29; // On = 0x20, Off = 0x28
+    if (on) on_off_value = 0x21;
     uint8_t led_change_write_com[] = {0x90, dev_number, 0x00, 0x11, on_off_value, 0x00, 0x00};
 
     // Send single device write command frame
@@ -503,8 +503,8 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on){
     // Turns on or off LED connected to GPIO8 on all monitor chips
     // Note for future: 
     int status = 0;
-    uint8_t on_off_value = 0x28; // On = 0x20, Off = 0x28
-    if (on) on_off_value = 0x20;
+    uint8_t on_off_value = 0x29; // On = 0x20, Off = 0x28
+    if (on) on_off_value = 0x21;
     uint8_t leds_change_write_com[] = {0xB0, 0x00, 0x11, on_off_value, 0x00, 0x00};
 
     // Send stack device write command frame
@@ -535,5 +535,4 @@ void MonitorLedBlink(DbmsCtx* ctx){
             ctx->M_LED_BLINK_TS = GetUs(ctx);
         }
     }
-
 }
