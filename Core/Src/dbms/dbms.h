@@ -21,6 +21,7 @@
 #include "stack_controller.h"
 #include "storage.h"
 #include "fault_handler.h"
+#include "charging.h"
 
 // Called before the main loop but strictly used for memory allocation
 void DbmsAlloc(DbmsCtx* ctx);

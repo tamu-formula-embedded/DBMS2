@@ -2,6 +2,8 @@
 //  Copyright (c) Texas A&M University.
 //  
 #include "dbms.h"
+#include "context.h"
+#include "led_controller.h"
 
 static DbmsSettings mem_settings;
 
@@ -22,6 +24,7 @@ void DbmsInit(DbmsCtx* ctx)
     int status = 0;
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_INIT;
+    ctx->charging.state = NOT_CHARGING;
 
     // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
 
@@ -83,6 +86,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     StackSetNumActiveCells(ctx, 0x0A);
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx);     // todo: rn start
+    StackBalancingConfig(ctx);
 
    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
     {
@@ -92,6 +96,9 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     {
         // todo: check an error here
     }
+
+    //StackStartCharging(ctx);
+
     return status;
 }
 
@@ -187,6 +194,31 @@ void DbmsIter(DbmsCtx* ctx)
         // StackUpdateTempReadings(ctx);
         HAL_Delay(8);
         StackUpdateFaultReadings(ctx);
+
+        if(ctx->charging.state == CHARGING_ACTIVE){
+            
+            if(StackNeedsBalancing(ctx)){
+                // pause charger via can, enter balancing mode
+                ctx->charging.state = CHARGING_PAUSED_FOR_BALANCING;
+                ctx->led_state = LED_BALANCING;
+                StackUpdateBalancing(ctx);
+                //HAL_Delay(8);
+            }
+            
+        }
+        else if(ctx->charging.state == CHARGING_PAUSED_FOR_BALANCING){
+
+            if(StackBalancingAbortedByFault(ctx)){
+                ctx->charging.state = CHARGING_ERROR;
+                ctx->led_state = LED_ERROR;
+                DbmsPerformShutdown(ctx);
+            }
+            if(StackBalancingComplete(ctx)){
+                // resume charger via can, exit balancing mode
+                ctx->charging.state = NOT_CHARGING; // for now exiting charging mode after we complete a balancing cycle
+                ctx->led_state = LED_CHARGING;
+            }
+        }
 
         //
         //  Check fault conditions
