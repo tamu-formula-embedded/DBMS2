@@ -372,7 +372,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
 			}
         }
         else {
-            CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+           // CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
             ctx->stats.n_rx_stack_bad_crcs++;
         }
     }
