@@ -475,7 +475,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
 							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
                 CanLog(ctx, "raw: %d", raw);
 
-				ctx->cell_states[addr].temps[j+offset] = (raw * STACK_) / 1000.0;    // floating mV conversion 152.59 uV/LSB
+				ctx->cell_states[addr].temps[j+offset] = (raw * STACK_T_UV_PER_BIT) / 1000.0;    // floating mV conversion 152.59 uV/LSB
 			}
         }
         else {

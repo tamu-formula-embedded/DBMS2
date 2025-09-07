@@ -165,7 +165,7 @@ int SendCellTemps(DbmsCtx* ctx)
             frame[0] = (uint8_t)i;        // monitor id
             frame[1] = (uint8_t)j;        // group index (in uint16_t units)
 
-            memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
+            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
 
             status = CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame);
             if (status != 0) return status;
