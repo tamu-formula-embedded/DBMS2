@@ -79,8 +79,9 @@ void StackSetCellBalanceTimer(DbmsCtx* ctx, bool cells_to_balance[N_GROUPS_PER_S
 {
     // no need for lookup table because of contiguous register memory addresses
     uint16_t start_reg = CB_CELL1_CTRL_REG;
-    uint8_t frame_size = 4 + N_GROUPS_PER_SIDE + 2;
-    uint8_t cb_bulk_frame[20] = {0}; // 4 header + 14 data + 2 crc = 20 bytes max
+    uint8_t frame_size = N_GROUPS_PER_SIDE + 5;
+   // uint8_t frame_size = 4 + N_GROUPS_PER_SIDE + 2;
+    uint8_t cb_bulk_frame[frame_size]; // 20 bytes max
 
     cb_bulk_frame[0] = 0xBE - 1;
     cb_bulk_frame[1] = start_reg >> 8;
@@ -94,6 +95,7 @@ void StackSetCellBalanceTimer(DbmsCtx* ctx, bool cells_to_balance[N_GROUPS_PER_S
     cb_bulk_frame[frame_size - 1] = 0x00;
     
     SendStackFrameSetCrc(ctx, cb_bulk_frame, frame_size);
+    HAL_Delay(8);
 }
 
 void StackStartBalancing(DbmsCtx* ctx)
@@ -101,6 +103,7 @@ void StackStartBalancing(DbmsCtx* ctx)
     // this is the final trigger - balancing doesn't start until bal_ctrl2 is set
     uint8_t bal_ctrl2_frame[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_BAL_GO_MASK, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, bal_ctrl2_frame, sizeof(bal_ctrl2_frame));
+    HAL_Delay(8);
 }
 
 /**
@@ -118,7 +121,7 @@ void StackUpdateBalancing(DbmsCtx* ctx)
             StackSetCellBalanceTimer(ctx, ctx->cell_states[side_index].cells_to_balance);
         }
     }
-    StackStartBalancing(ctx);
+    //StackStartBalancing(ctx);
 }
 
 bool StackBalancingComplete(DbmsCtx* ctx)
@@ -199,12 +202,12 @@ bool StackBalancingAbortedByFault(DbmsCtx* ctx)
     }
 
     RxStackFrame rx_frames[N_MONITORS];
-    FillStackFrames(&rx_frames, rx_buffer, 1, N_MONITORS); // 1 byte of data expected
+    FillStackFrames(rx_frames, rx_buffer, 1, N_MONITORS); // 1 byte of data expected
 
     // check if abort bit is set
     uint8_t bal_stat_value = 0;
     for (size_t monitor = 0; monitor < N_MONITORS; monitor++){ // TODO: Need to change this to iterate by side instead of by monitor
-        bal_stat_value = rx_frames[monitor].data;
+        bal_stat_value = rx_frames[monitor].data[0];
         if ((bal_stat_value & BAL_STAT_ABORT_MASK) != 0){
             return true; // Balancing aborted
         }
@@ -213,8 +216,20 @@ bool StackBalancingAbortedByFault(DbmsCtx* ctx)
     return false;
 }
 
-void StackBalancingConfig(DbmsCtx* ctx){
+void StackBalancingConfig(DbmsCtx* ctx)
+{
     // Setting balancing method to auto balancing and to stop at fault
     uint8_t frame_cb_config[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_CONFIG, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_cb_config, sizeof(frame_cb_config));
+}
+
+void StackStartCharging(DbmsCtx* ctx)
+{
+    // begin charging if:
+        // hearbeat from car not detected
+        // heartbeat from charger detected
+        // shutdown circuit active
+
+    ctx->charging.state = CHARGING_ACTIVE;
+    ctx->led_state = LED_CHARGING;    
 }
