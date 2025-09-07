@@ -35,17 +35,17 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  15 .debug_rnglists 0000102c  00000000  00000000  0002e600  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  000055b9  00000000  00000000  0002f62c  2**0
+ 16 .debug_macro  000055ed  00000000  00000000  0002f62c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0001bd7e  00000000  00000000  00034be5  2**0
+ 17 .debug_line   0001bd7e  00000000  00000000  00034c19  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000e69fa  00000000  00000000  00050963  2**0
+ 18 .debug_str    000e6a14  00000000  00000000  00050997  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  0013735d  2**0
+ 19 .comment      00000043  00000000  00000000  001373ab  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00006210  00000000  00000000  001373a0  2**2
+ 20 .debug_frame  00006210  00000000  00000000  001373f0  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000058  00000000  00000000  0013d5b0  2**0
+ 21 .debug_line_str 00000058  00000000  00000000  0013d600  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -3888,7 +3888,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
  8002044:	6878      	ldr	r0, [r7, #4]
  8002046:	f000 fb43 	bl	80026d0 <CanLog>
 
-				ctx->cell_states[addr].temps[j+offset] = ((float) raw * 152.59) / 1000.0;    // floating mV conversion 152.59 uV/LSB
+				ctx->cell_states[addr].temps[j+offset] = (raw * STACK_T_UV_PER_BIT) / 1000.0;    // floating mV conversion 152.59 uV/LSB
  800204a:	f8b7 308e 	ldrh.w	r3, [r7, #142]	@ 0x8e
  800204e:	ee07 3a90 	vmov	s15, r3
  8002052:	eef8 7a67 	vcvt.f32.u32	s15, s15
@@ -5138,7 +5138,7 @@ int SendCellTemps(DbmsCtx* ctx)
  800295a:	b2db      	uxtb	r3, r3
  800295c:	f887 3029 	strb.w	r3, [r7, #41]	@ 0x29
 
-            memcpy(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
+            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
  8002960:	f107 0328 	add.w	r3, r7, #40	@ 0x28
  8002964:	3302      	adds	r3, #2
  8002966:	6b7a      	ldr	r2, [r7, #52]	@ 0x34
