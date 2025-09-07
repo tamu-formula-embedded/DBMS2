@@ -33,6 +33,15 @@ typedef enum _DbmsState {
 // fwd definition -- perf_counters.h
 typedef struct _PerfCounters PerfCounters;  
 
+typedef enum {
+    NOT_CHARGING = 0,
+    CHARGING_ACTIVE,
+    CHARGING_PAUSED_FOR_BALANCING,
+    CHARGING_COMPLETE,
+    CHARGING_ERROR
+} ChargingState;
+
+
 // Hardware context stores prts 
 // to peripheral interfaces
 typedef struct _HwCtx {
@@ -51,6 +60,7 @@ typedef struct _HwCtx {
 typedef struct _CellMonitorState {
     float voltages[N_GROUPS_PER_SIDE];
     float temps[N_TEMPS_PER_SIDE];
+    bool cells_to_balance[N_GROUPS_PER_SIDE];
 } CellMonitorState;
 
 // fwd definition -- settings.h
@@ -101,7 +111,12 @@ typedef struct _DbmsCtx {
         uint32_t n_eeprom_writes;
     } stats;
 
-     struct {
+    struct {
+        ChargingState state;
+        bool balancing_requested;
+    } charging;
+
+    struct {
         int32_t current_ma;
         int32_t voltage1_mv;
         int32_t power_w;
