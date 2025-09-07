@@ -20,4 +20,6 @@ bool StackBalancingAbortedByFault(DbmsCtx* ctx);
 
 void StackBalancingConfig(DbmsCtx* ctx);
 
+void StackStartCharging(DbmsCtx* ctx);
+
 #endif

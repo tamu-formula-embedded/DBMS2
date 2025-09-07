@@ -1,7 +1,8 @@
-../Core/Src/dbms/charging.c:35:6:StackNeedsBalancing	72	static
-../Core/Src/dbms/charging.c:77:6:StackSetCellBalanceTimer	56	static
-../Core/Src/dbms/charging.c:99:6:StackStartBalancing	24	static
-../Core/Src/dbms/charging.c:113:6:StackUpdateBalancing	32	static
-../Core/Src/dbms/charging.c:127:6:StackBalancingComplete	64	static
-../Core/Src/dbms/charging.c:163:6:StackBalancingAbortedByFault	48	static
-../Core/Src/dbms/charging.c:189:6:StackBalancingConfig	24	static
+../Core/Src/dbms/charging.c:36:6:StackNeedsBalancing	72	static
+../Core/Src/dbms/charging.c:78:6:StackSetCellBalanceTimer	56	dynamic
+../Core/Src/dbms/charging.c:101:6:StackStartBalancing	24	static
+../Core/Src/dbms/charging.c:115:6:StackUpdateBalancing	32	static
+../Core/Src/dbms/charging.c:127:6:StackBalancingComplete	216	static
+../Core/Src/dbms/charging.c:191:6:StackBalancingAbortedByFault	216	static
+../Core/Src/dbms/charging.c:219:6:StackBalancingConfig	24	static
+../Core/Src/dbms/charging.c:226:6:StackStartCharging	16	static

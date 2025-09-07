@@ -448,8 +448,8 @@ int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
 {   
     // Turns on or off LED connected to GPIO8 on the specified monitor chip
     int status = 0;
-    uint8_t on_off_value = 0x28; // On = 0x20, Off = 0x28
-    if (on) on_off_value = 0x20;
+    uint8_t on_off_value = 0x2A; // On = 0x20, Off = 0x28
+    if (on) on_off_value = 0x22;
     uint8_t led_change_write_com[] = {0x90, dev_number, 0x00, 0x11, on_off_value, 0x00, 0x00};
 
     // Send single device write command frame

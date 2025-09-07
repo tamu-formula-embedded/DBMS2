@@ -97,6 +97,8 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
         // todo: check an error here
     }
 
+    //StackStartCharging(ctx);
+
     return status;
 }
 
@@ -194,13 +196,15 @@ void DbmsIter(DbmsCtx* ctx)
         StackUpdateFaultReadings(ctx);
 
         if(ctx->charging.state == CHARGING_ACTIVE){
+            
             if(StackNeedsBalancing(ctx)){
                 // pause charger via can, enter balancing mode
                 ctx->charging.state = CHARGING_PAUSED_FOR_BALANCING;
                 ctx->led_state = LED_BALANCING;
                 StackUpdateBalancing(ctx);
-                HAL_Delay(8);
+                //HAL_Delay(8);
             }
+            
         }
         else if(ctx->charging.state == CHARGING_PAUSED_FOR_BALANCING){
 
@@ -211,7 +215,7 @@ void DbmsIter(DbmsCtx* ctx)
             }
             if(StackBalancingComplete(ctx)){
                 // resume charger via can, exit balancing mode
-                ctx->charging.state = CHARGING_ACTIVE;
+                ctx->charging.state = NOT_CHARGING; // for now exiting charging mode after we complete a balancing cycle
                 ctx->led_state = LED_CHARGING;
             }
         }
