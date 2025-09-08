@@ -136,11 +136,12 @@ typedef struct _DbmsCtx {
         float soc;
     } model;
 
+    LTE         voltage_to_temps[N_VOLTAGE_TO_TEMP_ENTRIES];
+
     uint16_t    can_log_ordering_index;
     uint8_t     last_can_err;
     bool        need_to_sync_settings;
     bool        m_led_on;
-    LTE         voltage_to_temps[N_VOLTAGE_TO_TEMP_ENTRIES];
 
 } DbmsCtx;
 
