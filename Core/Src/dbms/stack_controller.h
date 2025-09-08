@@ -11,11 +11,14 @@
 
 #include "vehicle_interface.h"
 
+#include "data.h"
+
 #define STACK_SEND_TIMEOUT          50
 #define STACK_RECV_TIMEOUT          50
 #define STACK_RX_BUFFER_SIZE        1024    //N_STACKDEVS * 6 + N_GROUPS_PER_SIDE
 
 #define STACK_V_UV_PER_BIT      190.73
+#define STACK_T_UV_PER_BIT      152.59
 
 #define RX_FRAME_SIZE(DATA_SIZE)    (DATA_SIZE + 6)
 

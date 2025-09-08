@@ -173,7 +173,8 @@ int SendCellTemps(DbmsCtx* ctx)
     {
         for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++) 
         {
-            buffer[j] = ctx->cell_states[i].temps[j];   // TODO: add anti-conversion
+            #define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
+            buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].temps[j] * 1000.0f));
         }
 
         for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS_PER_SIDE); j += 3)
@@ -181,7 +182,7 @@ int SendCellTemps(DbmsCtx* ctx)
             frame[0] = (uint8_t)i;        // monitor id
             frame[1] = (uint8_t)j;        // group index (in uint16_t units)
 
-            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t));
+            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t));  // <-- fixed
 
             status = CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame);
             if (status != 0) return status;

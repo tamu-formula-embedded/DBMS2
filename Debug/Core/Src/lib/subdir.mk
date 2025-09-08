@@ -8,18 +8,21 @@ C_SRCS += \
 ../Core/Src/lib/crc.c \
 ../Core/Src/lib/exp_arr.c \
 ../Core/Src/lib/lib.c \
+../Core/Src/lib/lookup_table.c \
 ../Core/Src/lib/wrap_q.c 
 
 OBJS += \
 ./Core/Src/lib/crc.o \
 ./Core/Src/lib/exp_arr.o \
 ./Core/Src/lib/lib.o \
+./Core/Src/lib/lookup_table.o \
 ./Core/Src/lib/wrap_q.o 
 
 C_DEPS += \
 ./Core/Src/lib/crc.d \
 ./Core/Src/lib/exp_arr.d \
 ./Core/Src/lib/lib.d \
+./Core/Src/lib/lookup_table.d \
 ./Core/Src/lib/wrap_q.d 
 
 
@@ -30,7 +33,7 @@ Core/Src/lib/%.o Core/Src/lib/%.su Core/Src/lib/%.cyclo: ../Core/Src/lib/%.c Cor
 clean: clean-Core-2f-Src-2f-lib
 
 clean-Core-2f-Src-2f-lib:
-	-$(RM) ./Core/Src/lib/crc.cyclo ./Core/Src/lib/crc.d ./Core/Src/lib/crc.o ./Core/Src/lib/crc.su ./Core/Src/lib/exp_arr.cyclo ./Core/Src/lib/exp_arr.d ./Core/Src/lib/exp_arr.o ./Core/Src/lib/exp_arr.su ./Core/Src/lib/lib.cyclo ./Core/Src/lib/lib.d ./Core/Src/lib/lib.o ./Core/Src/lib/lib.su ./Core/Src/lib/wrap_q.cyclo ./Core/Src/lib/wrap_q.d ./Core/Src/lib/wrap_q.o ./Core/Src/lib/wrap_q.su
+	-$(RM) ./Core/Src/lib/crc.cyclo ./Core/Src/lib/crc.d ./Core/Src/lib/crc.o ./Core/Src/lib/crc.su ./Core/Src/lib/exp_arr.cyclo ./Core/Src/lib/exp_arr.d ./Core/Src/lib/exp_arr.o ./Core/Src/lib/exp_arr.su ./Core/Src/lib/lib.cyclo ./Core/Src/lib/lib.d ./Core/Src/lib/lib.o ./Core/Src/lib/lib.su ./Core/Src/lib/lookup_table.cyclo ./Core/Src/lib/lookup_table.d ./Core/Src/lib/lookup_table.o ./Core/Src/lib/lookup_table.su ./Core/Src/lib/wrap_q.cyclo ./Core/Src/lib/wrap_q.d ./Core/Src/lib/wrap_q.o ./Core/Src/lib/wrap_q.su
 
 .PHONY: clean-Core-2f-Src-2f-lib
 
