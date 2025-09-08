@@ -4,6 +4,7 @@
 #include "dbms.h"
 #include "context.h"
 #include "led_controller.h"
+#include "data.h"
 
 static DbmsSettings mem_settings;
 
@@ -60,6 +61,7 @@ void DbmsInit(DbmsCtx* ctx)
 
     HAL_Delay(10);
     ConfigCurrentSensor(ctx, 10);
+    DataInit(ctx);    
 
     ConfigPwmLines(ctx);
 

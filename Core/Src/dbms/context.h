@@ -24,6 +24,7 @@
 #define ADDR_BCAST_TO_STACK(BCAST_ADDR) (BCAST_ADDR - 1)
 #define ADDR_STACK_TO_BCAST(STACK_ADDR) (STACK_ADDR + 1)
 
+#define N_VOLTAGE_TO_TEMP_ENTRIES 121
 
 typedef enum _DbmsState {
     DBMS_ACTIVE = 0,
@@ -32,6 +33,7 @@ typedef enum _DbmsState {
 
 // fwd definition -- perf_counters.h
 typedef struct _PerfCounters PerfCounters;  
+
 
 typedef enum {
     NOT_CHARGING = 0,
@@ -138,6 +140,7 @@ typedef struct _DbmsCtx {
     uint8_t     last_can_err;
     bool        need_to_sync_settings;
     bool        m_led_on;
+    LTE         voltage_to_temps[N_VOLTAGE_TO_TEMP_ENTRIES];
 
 } DbmsCtx;
 
