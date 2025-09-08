@@ -22,6 +22,7 @@
 #include "crc.h"
 // #include "exp_arr.h" // uses dynamic memory: illegal
 #include "wrap_q.h"
+#include "lookup_table.h"
 
 typedef struct exp_arr ExpArr;
 
