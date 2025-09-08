@@ -4,6 +4,7 @@
 #include "dbms.h"
 #include "context.h"
 #include "led_controller.h"
+#include "data.h"
 
 static DbmsSettings mem_settings;
 
@@ -25,10 +26,6 @@ void DbmsInit(DbmsCtx* ctx)
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_INIT;
     ctx->charging.state = NOT_CHARGING;
-
-    // wrap_queue_init(&ctx->stats.looptimes_q, ctx->stats.looptimes_d, N_HISTORIC_LOOPTIMES, sizeof(*ctx->stats.looptimes_d));
-
-    
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
     {
@@ -60,6 +57,7 @@ void DbmsInit(DbmsCtx* ctx)
 
     HAL_Delay(10);
     ConfigCurrentSensor(ctx, 10);
+    DataInit(ctx);    
 
     ConfigPwmLines(ctx);
 
@@ -125,12 +123,6 @@ void DbmsIter(DbmsCtx* ctx)
 	int status = 0;
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
-    // CanLog(ctx, "%d\n", GetSetting(ctx, MAX_GROUP_VOLTAGE));
-	// if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
-    // {
-	// 	ctx->led_state = LED_INIT;
-	// 	ProcessLedAction(ctx);
-	// }
 
     //
     //  Store the settings when required
@@ -187,63 +179,26 @@ void DbmsIter(DbmsCtx* ctx)
     //
     if (ctx->cur_state == DBMS_ACTIVE)
     {
-        //
-        //  Communicate with the stack
-        //
         StackUpdateVoltReadings(ctx);
-        // StackUpdateTempReadings(ctx);
         HAL_Delay(8);
-        StackUpdateFaultReadings(ctx);
+        StackUpdateTempReadings(ctx);
+        // HAL_Delay(8);
+        // StackUpdateFaultReadings(ctx);  // todo: put this first?
 
-        if(ctx->charging.state == CHARGING_ACTIVE){
-            
-            if(StackNeedsBalancing(ctx)){
-                // pause charger via can, enter balancing mode
-                ctx->charging.state = CHARGING_PAUSED_FOR_BALANCING;
-                ctx->led_state = LED_BALANCING;
-                StackUpdateBalancing(ctx);
-                //HAL_Delay(8);
-            }
-            
-        }
-        else if(ctx->charging.state == CHARGING_PAUSED_FOR_BALANCING){
-
-            if(StackBalancingAbortedByFault(ctx)){
-                ctx->charging.state = CHARGING_ERROR;
-                ctx->led_state = LED_ERROR;
-                DbmsPerformShutdown(ctx);
-            }
-            if(StackBalancingComplete(ctx)){
-                // resume charger via can, exit balancing mode
-                ctx->charging.state = NOT_CHARGING; // for now exiting charging mode after we complete a balancing cycle
-                ctx->led_state = LED_CHARGING;
-            }
-        }
-
-        //
-        //  Check fault conditions
-        //
-        CheckVoltageFaults(ctx);
-        // CheckTemperatureFaults(ctx);
-        CheckCurrentFaults(ctx);
     }
-
-    // 
-    //  If there is a hard fault we are shutting off the car
-    //
-    ThrowHardFault(ctx);
 
     //
     //  Transmit important telemetry 
     //
     SendMetrics(ctx);
-    if (ctx->iter_start_us - ctx->batch_telem_ts > 10000) 
+    if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000) 
     {
         ctx->batch_telem_ts = ctx->iter_start_us;
         SendCellVoltages(ctx);
         SendCellTemps(ctx);
     }
 
+    // this is temporary  
     ctx->model.soc = (ctx->stats.iters % 100) / 100.0;
 
     //
@@ -259,8 +214,11 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->iter_end_us = GetUs(ctx);
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
+
+    // MonitorLedBlink(ctx);
+    // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
     // DelayUs(ctx, end_delay);
-    HAL_Delay(8);  // ^ todo: fix all ts
+    HAL_Delay(20);  // ^ todo: fix all this
 }
 
 

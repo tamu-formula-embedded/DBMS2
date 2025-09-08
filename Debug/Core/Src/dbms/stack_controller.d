@@ -2,6 +2,7 @@ Core/Src/dbms/stack_controller.o: ../Core/Src/dbms/stack_controller.c \
  ../Core/Src/dbms/stack_controller.h ../Core/Src/dbms/common.h \
  ../Core/Src/dbms/../lib/lib.h ../Core/Src/dbms/../lib/crc.h \
  ../Core/Src/dbms/../lib/lib.h ../Core/Src/dbms/../lib/wrap_q.h \
+ ../Core/Src/dbms/../lib/lookup_table.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -38,13 +39,15 @@ Core/Src/dbms/stack_controller.o: ../Core/Src/dbms/stack_controller.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  ../Core/Src/dbms/context.h ../Core/Src/dbms/sched.h \
  ../Core/Src/dbms/storage.h ../Core/Src/dbms/vehicle_interface.h \
- ../Core/Src/dbms/led_controller.h ../Core/Src/dbms/settings.h
+ ../Core/Src/dbms/led_controller.h ../Core/Src/dbms/settings.h \
+ ../Core/Src/dbms/data.h
 ../Core/Src/dbms/stack_controller.h:
 ../Core/Src/dbms/common.h:
 ../Core/Src/dbms/../lib/lib.h:
 ../Core/Src/dbms/../lib/crc.h:
 ../Core/Src/dbms/../lib/lib.h:
 ../Core/Src/dbms/../lib/wrap_q.h:
+../Core/Src/dbms/../lib/lookup_table.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
@@ -85,3 +88,4 @@ Core/Src/dbms/stack_controller.o: ../Core/Src/dbms/stack_controller.c \
 ../Core/Src/dbms/vehicle_interface.h:
 ../Core/Src/dbms/led_controller.h:
 ../Core/Src/dbms/settings.h:
+../Core/Src/dbms/data.h:
