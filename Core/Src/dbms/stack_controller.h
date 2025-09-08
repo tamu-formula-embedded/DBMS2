@@ -11,6 +11,8 @@
 
 #include "vehicle_interface.h"
 
+#include "data.h"
+
 #define STACK_SEND_TIMEOUT          50
 #define STACK_RECV_TIMEOUT          50
 #define STACK_RX_BUFFER_SIZE        1024    //N_STACKDEVS * 6 + N_GROUPS_PER_SIDE

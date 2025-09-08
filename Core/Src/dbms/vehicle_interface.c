@@ -173,8 +173,8 @@ int SendCellTemps(DbmsCtx* ctx)
     {
         for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++) 
         {
-            // buffer[j] = ctx->cell_states[i].temps[j];   // TODO: add anti-conversion
-            buffer[j] = ctx->cell_states->temps[j];
+            #define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
+            buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].temps[j] * 1000.0f));
         }
 
         for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS_PER_SIDE); j += 3)

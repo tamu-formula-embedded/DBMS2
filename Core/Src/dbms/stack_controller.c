@@ -431,8 +431,10 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
 			{
 				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
 							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
-
-				ctx->cell_states[addr].temps[j+offset] = (raw * STACK_T_UV_PER_BIT) / 1000.0;    // floating mV
+                
+				ctx->cell_states[addr].temps[j+offset] = VoltageToTemperature(ctx, (raw * STACK_T_UV_PER_BIT) / 1000000.0);   
+                // 1000000 for uV to V
+                
 			}
        }
        else {
