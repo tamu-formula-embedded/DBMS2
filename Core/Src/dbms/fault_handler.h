@@ -1,6 +1,6 @@
-//  
+//
 //  Copyright (c) Texas A&M University.
-//  
+//
 #ifndef _CTRL_FAULT_HANDLER_H_
 #define _CTRL_FAULT_HANDLER_H_
 
@@ -10,19 +10,21 @@
 /*
  *  Fault types, ordinal determines position in bitmask
  */
-typedef enum {
-    CTRL_FAULT_VOLTAGE_OVER = 0,      
-    CTRL_FAULT_VOLTAGE_UNDER = 1,     
-    CTRL_FAULT_TEMP_OVER = 2,         
-    CTRL_FAULT_TEMP_UNDER = 3,        
-    CTRL_FAULT_CURRENT_OVER = 4,      
-    CTRL_FAULT_CURRENT_UNDER = 5,     
-    CTRL_FAULT_PACK_VOLTAGE_OVER = 6, 
+typedef enum
+{
+    CTRL_FAULT_VOLTAGE_OVER = 0,
+    CTRL_FAULT_VOLTAGE_UNDER = 1,
+    CTRL_FAULT_TEMP_OVER = 2,
+    CTRL_FAULT_TEMP_UNDER = 3,
+    CTRL_FAULT_CURRENT_OVER = 4,
+    CTRL_FAULT_CURRENT_UNDER = 5,
+    CTRL_FAULT_PACK_VOLTAGE_OVER = 6,
     CTRL_FAULT_PACK_VOLTAGE_UNDER = 7,
-    CTRL_FAULT_TYPE_COUNT             // Total number of fault types -- should be last
+    CTRL_FAULT_TYPE_COUNT // Total number of fault types -- should be last
 } ControllerFaultType;
 
-typedef enum {
+typedef enum
+{
     STACK_FAULT_CONF_MON_ERR = 0,
     STACK_FAULT_FACTLDERR,
     STACK_FAULT_FACT_CRC,
@@ -52,9 +54,8 @@ typedef enum {
     STACK_FAULT_COML_PHY,
     STACK_FAULT_COMH_FRAME,
     STACK_FAULT_COMH_PHY,
-    STACK_FAULT_TYPE_COUNT             // Total number of fault types -- should be last
+    STACK_FAULT_TYPE_COUNT // Total number of fault types -- should be last
 } StackFaultType;
-
 
 void ControllerSetFault(DbmsCtx* ctx, ControllerFaultType fault);
 void ControllerClearFault(DbmsCtx* ctx, ControllerFaultType fault);
@@ -77,4 +78,4 @@ void ThrowHardFault(DbmsCtx* ctx);
 int LoadFaultState(DbmsCtx* ctx);
 int SaveFaultState(DbmsCtx* ctx);
 
-#endif 
+#endif

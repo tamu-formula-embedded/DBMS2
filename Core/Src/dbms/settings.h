@@ -1,6 +1,6 @@
-//  
+//
 //  Copyright (c) Texas A&M University.
-//  
+//
 #ifndef _H_SETTINGS_H
 #define _H_SETTINGS_H
 
@@ -10,7 +10,8 @@
 
 // these objects are fwd declared
 
-enum _UserSettingIndex {
+enum _UserSettingIndex
+{
     __UNUSED = 0,
 
     QUIET_MS_BEFORE_SHUTDOWN,
@@ -22,18 +23,18 @@ enum _UserSettingIndex {
     MAX_THERMISTOR_TEMP,
     MAX_CURRENT,
 
-    __NUM_USER_DEFINED_SETTINGS     // ALWAYS LAST
-}; 
+    __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
+};
 
 /**
  * This struct is legacy -- the settings used to be items in
- * the struct, but user defined settings were changed to 
+ * the struct, but user defined settings were changed to
  * use an array
  */
-struct _DbmsSettings {
+struct _DbmsSettings
+{
 
     uint32_t user_defined[__NUM_USER_DEFINED_SETTINGS];
-
 };
 
 uint32_t GetSetting(DbmsCtx* ctx, UserSettingIndex index);

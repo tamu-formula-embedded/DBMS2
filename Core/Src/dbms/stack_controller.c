@@ -1,19 +1,18 @@
-//  
+//
 //  Copyright (c) Texas A&M University.
-//  
+//
 #include "stack_controller.h"
 
-
-static uint8_t FRAME_WAKE_STACK[] = { 0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95 };
-static uint8_t FRAME_SHUTDOWN_STACK[] = { 0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00 };
+static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
+static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
 
 /**
  * Prints the contents of a received RxStackFrame for debugging
  */
 void __PrintStackRxFrame(RxStackFrame* f)
 {
-    printf("RxStackFrame:\n\tinit=%d dev_addr=%d reg_addr=%d size=%d\n\tdata=",
-        f->init_field, f->dev_addr, f->reg_addr, f->size);
+    printf("RxStackFrame:\n\tinit=%d dev_addr=%d reg_addr=%d size=%d\n\tdata=", f->init_field, f->dev_addr, f->reg_addr,
+           f->size);
     for (size_t i = 0; i < f->size; i++)
     {
         printf("%02x ", f->data[i]);
@@ -29,7 +28,6 @@ int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len)
     return HAL_UART_Transmit(ctx->hw.uart, buf, len, STACK_SEND_TIMEOUT);
 }
 
-
 /**
  * Sends a data frame to the battery stack via UART with a CRC appended to the end for verification
  */
@@ -37,7 +35,7 @@ int SendStackFrameSetCrc(DbmsCtx* ctx, uint8_t* buf, size_t len)
 {
     int status = 0;
     // Calculate the CRC on the payload
-	uint16_t crc = CalcCrc16(buf, len - 2);
+    uint16_t crc = CalcCrc16(buf, len - 2);
     // Tape the CRC to the end of the frame
     buf[len - 2] = crc & 0xFF;
     buf[len - 1] = (crc >> 8) & 0xFF;
@@ -48,7 +46,6 @@ int SendStackFrameSetCrc(DbmsCtx* ctx, uint8_t* buf, size_t len)
     buf[len - 1] = 0;
     return status;
 }
-
 
 /**
  * Utility function to set the baud rate of the UART
@@ -73,11 +70,11 @@ int SendStackWakeBlip(DbmsCtx* ctx)
 
     // 1. Switch to a very slow baud rate. receiving chips will see this
     //    as a weird, long and continuous low signal
-    SetBrr(25700/2); // ?
+    SetBrr(25700 / 2); // ?
 
     // 2. Send a single byte at this slow speed
     uint8_t wake_frame[] = {0x00};
-    if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0) 
+    if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
         return status;
@@ -119,7 +116,7 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
 int StackWake(DbmsCtx* ctx)
 {
     int status = HAL_OK;
-    for (int i = 0; i < 2; i++) 
+    for (int i = 0; i < 2; i++)
     {
         if ((status = SendStackWakeBlip(ctx)) != HAL_OK)
         {
@@ -131,7 +128,7 @@ int StackWake(DbmsCtx* ctx)
             CAN_REPORT_FAULT(ctx, status);
             return status;
         }
-        HAL_Delay(15 + 12 * N_STACKDEVS);   // wtf  -- microseconds dumbass
+        HAL_Delay(15 + 12 * N_STACKDEVS); // wtf  -- microseconds dumbass
     }
     return status;
 }
@@ -144,14 +141,14 @@ int StackWake(DbmsCtx* ctx)
 int StackShutdown(DbmsCtx* ctx)
 {
     int status = HAL_OK;
-    for (int i = 0; i < 2; i++) 
+    for (int i = 0; i < 2; i++)
     {
-    	if ((status = SendStackFrameSetCrc(ctx, FRAME_SHUTDOWN_STACK, sizeof(FRAME_SHUTDOWN_STACK))) != HAL_OK)
+        if ((status = SendStackFrameSetCrc(ctx, FRAME_SHUTDOWN_STACK, sizeof(FRAME_SHUTDOWN_STACK))) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
             return status;
         }
-    	if ((status = SendStackShutdownBlip(ctx)) != HAL_OK)
+        if ((status = SendStackShutdownBlip(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
             return status;
@@ -165,11 +162,11 @@ int StackShutdown(DbmsCtx* ctx)
  * Sends the OTP (one-time programmable) ECC (error correction code)
  * Used to initalize the stack
  */
-void SendOtpEccDatain(DbmsCtx* ctx)  
+void SendOtpEccDatain(DbmsCtx* ctx)
 {
-    uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x43, 0x00, 0x00, 0x00 };
+    uint8_t frame_otp_ecc_datain[] = {0xD0, 0x03, 0x43, 0x00, 0x00, 0x00};
     // uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x4C, 0x00, 0x00, 0x00 };
-    for (int i = 0; i < 8; i++) 
+    for (int i = 0; i < 8; i++)
     {
         SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
         frame_otp_ecc_datain[2]++;
@@ -182,13 +179,14 @@ void SendOtpEccDatain(DbmsCtx* ctx)
  * of them chip #5, another chip #6, and so on
  * Used to initalize the stack
  */
-void SendAutoAddr(DbmsCtx* ctx) 
+void SendAutoAddr(DbmsCtx* ctx)
 {
     // 0xB0 at first
-    uint8_t frame_addr_dev[] = { 0xD0, 0x03, 0x06, 0x00, 0x00, 0x00 };
-    for (int i = 0; i <= N_STACKDEVS; i++) {
+    uint8_t frame_addr_dev[] = {0xD0, 0x03, 0x06, 0x00, 0x00, 0x00};
+    for (int i = 0; i <= N_STACKDEVS; i++)
+    {
         SendStackFrameSetCrc(ctx, frame_addr_dev, sizeof(frame_addr_dev));
-        frame_addr_dev[3]++;   
+        frame_addr_dev[3]++;
     }
 }
 
@@ -196,32 +194,31 @@ void SendAutoAddr(DbmsCtx* ctx)
  * Tells the chips who is at the bottom and top of the stack
  * Used to initalize the stack
  */
-void SendSetStackTop(DbmsCtx* ctx) 
+void SendSetStackTop(DbmsCtx* ctx)
 {
     // 2nd byte replaced with id (num of stack devs), last 2 bytes for crc
 
     // Sets all devices as stack devices
-    uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08 , 0x02, 0x00, 0x00};
+    uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08, 0x02, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_set_stack_devices, sizeof(frame_set_stack_devices));
 
     // Sets bridge device as non-stack device and bottom of stack
-    uint8_t frame_set_stack_base[] = { 0x90, 0x00, 0x03, 0x08, 0x00, 0x00, 0x00 }; 
+    uint8_t frame_set_stack_base[] = {0x90, 0x00, 0x03, 0x08, 0x00, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_set_stack_base, sizeof(frame_set_stack_base));
 
     // Sets top of stack
-    uint8_t frame_set_stack_top[] = { 0x90, N_STACKDEVS-1, 0x03, 0x08, 0x03, 0x00, 0x00 }; 
+    uint8_t frame_set_stack_top[] = {0x90, N_STACKDEVS - 1, 0x03, 0x08, 0x03, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_set_stack_top, sizeof(frame_set_stack_top));
-
 }
 
 /**
  * Reads the OTP (one-time programmable) ECC (error correction code)
  * Used to initalize the stack
  */
-void ReadOtpEccDatain(DbmsCtx* ctx)  
+void ReadOtpEccDatain(DbmsCtx* ctx)
 {
     // uint8_t frame_otp_ecc_datain[] = { 0xA0, 0x03, 0x43, 0x00, 0x00, 0x00};
-    uint8_t frame_otp_ecc_datain[] = { 0xC0, 0x03, 0x4C, 0x00, 0x00, 0x00};
+    uint8_t frame_otp_ecc_datain[] = {0xC0, 0x03, 0x4C, 0x00, 0x00, 0x00};
     for (int i = 0; i < 8; i++)
     {
         SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
@@ -238,12 +235,12 @@ void StackAutoAddr(DbmsCtx* ctx)
 {
     SendOtpEccDatain(ctx); // step 1
 
-    static uint8_t FRAME_ENABLE_AUTO_ADDR[] = { 0xD0, 0x03, 0x09, 0x01, 0x0F, 0x74 };
+    static uint8_t FRAME_ENABLE_AUTO_ADDR[] = {0xD0, 0x03, 0x09, 0x01, 0x0F, 0x74};
     SendStackFrameSetCrc(ctx, FRAME_ENABLE_AUTO_ADDR, sizeof(FRAME_ENABLE_AUTO_ADDR)); // step 2
 
     SendAutoAddr(ctx); // step 3
 
-    static uint8_t FRAME_SET_ALL_STACK[] = { 0xD0, 0x03, 0x08, 0x02, 0x0, 0x0 };
+    static uint8_t FRAME_SET_ALL_STACK[] = {0xD0, 0x03, 0x08, 0x02, 0x0, 0x0};
     SendStackFrameSetCrc(ctx, FRAME_SET_ALL_STACK, sizeof(FRAME_SET_ALL_STACK)); // step 4
 
     SendSetStackTop(ctx); // step 5
@@ -265,7 +262,7 @@ void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
     // possible sw guide error 0xB0 (stack write) --> 0xD0 (broadcast write)
     // uint8_t frame_set_active_cell[] =  { 0xD0, 0x00, N_STACKDEVS, n_active_cells, 0x00, 0x00 };
-    uint8_t frame_set_active_cell[] =  { 0xD0, 0x00, 0x03, n_active_cells, 0x00, 0x00 };
+    uint8_t frame_set_active_cell[] = {0xD0, 0x00, 0x03, n_active_cells, 0x00, 0x00};
 
     SendStackFrameSetCrc(ctx, frame_set_active_cell, sizeof(frame_set_active_cell));
 }
@@ -285,21 +282,19 @@ void StackSetupGpio(DbmsCtx* ctx)
     DelayUs(ctx, 10);
 }
 
-
-
 /**
  * Tells all battery monitoring chips to start measuring the voltage of each cell
  */
 void StackSetupVoltReadings(DbmsCtx* ctx)
 {
-    static uint8_t FRAME_SET_ADC_CONT_RUN[] = {0xD0, 0x03, 0x0D, 0x06, 0x00, 0x00 };
+    static uint8_t FRAME_SET_ADC_CONT_RUN[] = {0xD0, 0x03, 0x0D, 0x06, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, FRAME_SET_ADC_CONT_RUN, sizeof(FRAME_SET_ADC_CONT_RUN));
 }
 
 uint16_t CalcStackFrameCrc(RxStackFrame* rx_frame)
-{   
+{
     // TODO: this data-4 is a STUPID decision but will fix once reg_addr endian is validated
-    return CalcCrc16(rx_frame->data-4, 4+rx_frame->size);
+    return CalcCrc16(rx_frame->data - 4, 4 + rx_frame->size);
 }
 
 void FillStackFrame(RxStackFrame* rx_frame, uint8_t* buffer, size_t size)
@@ -309,7 +304,7 @@ void FillStackFrame(RxStackFrame* rx_frame, uint8_t* buffer, size_t size)
     rx_frame->reg_addr = (buffer[2] << 8) + buffer[3];
     rx_frame->data = buffer + 4;
     rx_frame->size = size;
-    rx_frame->crc = (buffer[4+size+1] << 8) + buffer[4+size];
+    rx_frame->crc = (buffer[4 + size + 1] << 8) + buffer[4 + size];
 }
 
 void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size_t n_frames)
@@ -322,10 +317,11 @@ void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size
 
 void StackUpdateVoltReadings(DbmsCtx* ctx)
 {
-    static uint8_t rx_buffer_volt_readings[1024*4];
+    static uint8_t rx_buffer_volt_readings[1024 * 4];
 
     int status = 0;
-    uint8_t FRAME_ADC_MEASUREMENTS[] = { 0xA0, 0x05, 0x68 + 2*(16-N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE*2-1, 0x00, 0x00 };
+    uint8_t FRAME_ADC_MEASUREMENTS[] = {0xA0, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1,
+                                        0x00, 0x00};
 
     if ((status = SendStackFrameSetCrc(ctx, FRAME_ADC_MEASUREMENTS, sizeof(FRAME_ADC_MEASUREMENTS))) != 0)
     {
@@ -334,7 +330,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
 
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
-    //                 header+crc ^         ^ readings * 2 bytes each    
+    //                 header+crc ^         ^ readings * 2 bytes each
 
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_volt_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
     {
@@ -353,25 +349,26 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     {
         ctx->stats.n_rx_stack_frames++;
 
-        if (rx_frames[i].dev_addr == 0) continue;   // this is myself
-        addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast   
-        if (addr >= N_MONITORS) continue;            // throw some error here
-        if (addr % 2 == 1) continue;                // skip the odds
-        addr /= 2;                                  // addr now in side space
-        if (addr >= N_SIDES) continue;              // throw some error here
+        if (rx_frames[i].dev_addr == 0) continue; // this is myself
+        addr = rx_frames[i].dev_addr - 1;         // ignore the controller from a broadcast
+        if (addr >= N_MONITORS) continue;         // throw some error here
+        if (addr % 2 == 1) continue;              // skip the odds
+        addr /= 2;                                // addr now in side space
+        if (addr >= N_SIDES) continue;            // throw some error here
 
-        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
-          	// CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
-        	for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
-			{
-				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
-							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
+        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
+        {
+            // CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+            for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+            {
+                uint16_t raw =
+                        (rx_frames[i].data[j * sizeof(int16_t)] << 8) + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
 
-				ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0;    // floating mV
-
-			}
+                ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+            }
         }
-        else {
+        else
+        {
             CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
             ctx->stats.n_rx_stack_bad_crcs++;
         }
@@ -382,7 +379,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
 //                  monitor id = addr / 2
 //                  write(0...N_GROUPS_PER_SIDE)
 
-// temps ->     monitor id = addr / 2 
+// temps ->     monitor id = addr / 2
 //              if (addr % 2 == 0)
 //                  write(0...N_TEMPS_PER_SIDE)
 //              else
@@ -390,62 +387,67 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
 
 void StackUpdateTempReadings(DbmsCtx* ctx)
 {
-   // Retreives GPIO1 through GPIO7 values and stores them into the cell_states->temps array
-   int status = 0;
-   // Send read command to read GPIO1..7
-   uint8_t frame_read_gpio[] = {0xA0, 0x05, 0x8E, 0x0D, 0x00, 0x00}; // Reading 14 bytes
-   SendStackFrameSetCrc(ctx, frame_read_gpio, sizeof(frame_read_gpio));
+    // Retreives GPIO1 through GPIO7 values and stores them into the cell_states->temps array
+    int status = 0;
+    // Send read command to read GPIO1..7
+    uint8_t frame_read_gpio[] = {0xA0, 0x05, 0x8E, 0x0D, 0x00, 0x00}; // Reading 14 bytes
+    SendStackFrameSetCrc(ctx, frame_read_gpio, sizeof(frame_read_gpio));
 
-   // Receive response frame
-   size_t data_size = N_TEMPS_PER_MONITOR * sizeof(uint16_t);
-   size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
-   static uint8_t rx_frame[1024*4];
+    // Receive response frame
+    size_t data_size = N_TEMPS_PER_MONITOR * sizeof(uint16_t);
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
+    static uint8_t rx_frame[1024 * 4];
 
-   if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, expected_rx_size, expected_rx_size)) != 0)
-   {
-    //    CAN_REPORT_FAULT(ctx, status);
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, expected_rx_size, expected_rx_size)) != 0)
+    {
+        //    CAN_REPORT_FAULT(ctx, status);
         // CanLog(ctx, "Wtf %d\n", status);
         // return;
-   }
-   RxStackFrame rx_frames[N_MONITORS];
-   FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
-   // Store data into cell_states->temps
-   uint8_t addr, offset;
-   uint16_t kcrc;
-   for (int i = 0; i < N_MONITORS; i++)
-   {
-       if (rx_frames[i].dev_addr <= 0) {
+    }
+    RxStackFrame rx_frames[N_MONITORS];
+    FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
+    // Store data into cell_states->temps
+    uint8_t addr, offset;
+    uint16_t kcrc;
+    for (int i = 0; i < N_MONITORS; i++)
+    {
+        if (rx_frames[i].dev_addr <= 0)
+        {
             continue;
-       };               // this is myself
-       addr = rx_frames[i].dev_addr - 1;                       // ignore the controller from a broadcast
-       if (addr >= N_MONITORS) continue;                       // throw some error here
-       if (addr >= N_SIDES) continue;                          // throw some error here
-       offset = addr % 2 == 0 ? 0 : (N_TEMPS_PER_MONITOR);    // what the fuckkk
-       addr /= 2;                                              // addr is halfed
+        }; // this is myself
+        addr = rx_frames[i].dev_addr - 1;                   // ignore the controller from a broadcast
+        if (addr >= N_MONITORS) continue;                   // throw some error here
+        if (addr >= N_SIDES) continue;                      // throw some error here
+        offset = addr % 2 == 0 ? 0 : (N_TEMPS_PER_MONITOR); // what the fuckkk
+        addr /= 2;                                          // addr is halfed
 
-    //    CanLog(ctx, "Temp da=%d a=%d o=%d\n", rx_frames[i].dev_addr, addr, offset);
+        //    CanLog(ctx, "Temp da=%d a=%d o=%d\n", rx_frames[i].dev_addr, addr, offset);
 
-       if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
-//          	 CanLog(ctx, "Temps Matched %X != %X Addr %d, %d and %X\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr, rx_frames[i].data[0]);
-       	for (size_t j = 0; j < N_TEMPS_PER_MONITOR; j++)
-			{
-				uint16_t raw = (rx_frames[i].data[j * sizeof(int16_t)] << 8)
-							 + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
-                
-				ctx->cell_states[addr].temps[j+offset] = VoltageToTemperature(ctx, (raw * STACK_T_UV_PER_BIT) / 1000000.0);   
+        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
+        {
+            //          	 CanLog(ctx, "Temps Matched %X != %X Addr %d, %d and %X\n", kcrc, rx_frames[i].crc,
+            //          rx_frames[i].dev_addr, addr, rx_frames[i].data[0]);
+            for (size_t j = 0; j < N_TEMPS_PER_MONITOR; j++)
+            {
+                uint16_t raw =
+                        (rx_frames[i].data[j * sizeof(int16_t)] << 8) + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
+
+                ctx->cell_states[addr].temps[j + offset] =
+                        VoltageToTemperature(ctx, (raw * STACK_T_UV_PER_BIT) / 1000000.0);
                 // 1000000 for uV to V
-                
-			}
-       }
-       else {
-        //    CanLog(ctx, "Temps Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
-           ctx->stats.n_rx_stack_bad_crcs++;
-       }
-   }
+            }
+        }
+        else
+        {
+            //    CanLog(ctx, "Temps Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr,
+            //    addr);
+            ctx->stats.n_rx_stack_bad_crcs++;
+        }
+    }
 }
 
 int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
-{   
+{
     // Turns on or off LED connected to GPIO8 on the specified monitor chip
     int status = 0;
     uint8_t on_off_value = 0x29; // On = 0x20, Off = 0x28
@@ -453,43 +455,49 @@ int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
     uint8_t led_change_write_com[] = {0x90, dev_number, 0x00, 0x11, on_off_value, 0x00, 0x00};
 
     // Send single device write command frame
-    if ((status = SendStackFrameSetCrc(ctx, led_change_write_com, sizeof(led_change_write_com))) != 0){
+    if ((status = SendStackFrameSetCrc(ctx, led_change_write_com, sizeof(led_change_write_com))) != 0)
+    {
         return status;
     }
     return status;
 }
 
-int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on){
+int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on)
+{
     // Turns on or off LED connected to GPIO8 on all monitor chips
-    // Note for future: 
+    // Note for future:
     int status = 0;
     uint8_t on_off_value = 0x29; // On = 0x20, Off = 0x28
     if (on) on_off_value = 0x21;
     uint8_t leds_change_write_com[] = {0xB0, 0x00, 0x11, on_off_value, 0x00, 0x00};
 
     // Send stack device write command frame
-    if ((status = SendStackFrameSetCrc(ctx, leds_change_write_com, sizeof(leds_change_write_com))) != 0){
+    if ((status = SendStackFrameSetCrc(ctx, leds_change_write_com, sizeof(leds_change_write_com))) != 0)
+    {
         return status;
     }
     return status;
 }
 
-
-
-void MonitorLedBlink(DbmsCtx* ctx){
+void MonitorLedBlink(DbmsCtx* ctx)
+{
 
     uint64_t curr_ts = GetUs(ctx) - ctx->m_led_blink_ts;
-//    CanLog(ctx, "%d \n", curr_ts);
+    //    CanLog(ctx, "%d \n", curr_ts);
 
-    if (ctx->m_led_on){
-        if (curr_ts > 100000){
+    if (ctx->m_led_on)
+    {
+        if (curr_ts > 100000)
+        {
             ToggleAllMonitorChipLeds(ctx, false);
             ctx->m_led_on = false;
             ctx->m_led_blink_ts = GetUs(ctx);
         }
     }
-    else{
-        if (curr_ts > 1000000){
+    else
+    {
+        if (curr_ts > 1000000)
+        {
             ToggleAllMonitorChipLeds(ctx, true);
             ctx->m_led_on = true;
             ctx->m_led_blink_ts = GetUs(ctx);
@@ -498,13 +506,13 @@ void MonitorLedBlink(DbmsCtx* ctx){
 }
 
 // sizeof(fault_regs) >= N_MONITORS
-int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs) 
+int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs)
 {
-    static uint8_t rx_fault_readings[1024*4];
-    int status = 0; 
+    static uint8_t rx_fault_readings[1024 * 4];
+    int status = 0;
     size_t data_size = 1 * sizeof(uint8_t);
 
-    uint8_t FRAME_POLL_CTRL_FAULT_SUMMARY[] = { 0xA0, 0x21, fault_reg_n, data_size-1, 0x00, 0x00 };
+    uint8_t FRAME_POLL_CTRL_FAULT_SUMMARY[] = {0xA0, 0x21, fault_reg_n, data_size - 1, 0x00, 0x00};
 
     if ((status = SendStackFrameSetCrc(ctx, FRAME_POLL_CTRL_FAULT_SUMMARY, sizeof(FRAME_POLL_CTRL_FAULT_SUMMARY))) != 0)
     {
@@ -527,16 +535,18 @@ int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs)
     {
         ctx->stats.n_rx_stack_frames++;
 
-        if (rx_frames[i].dev_addr == 0) continue;   // this is myself
-        addr = rx_frames[i].dev_addr - 1;           // ignore the controller from a broadcast   
-        if (addr >= N_MONITORS) continue;            // throw some error here
+        if (rx_frames[i].dev_addr == 0) continue; // this is myself
+        addr = rx_frames[i].dev_addr - 1;         // ignore the controller from a broadcast
+        if (addr >= N_MONITORS) continue;         // throw some error here
 
-        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i])))) {
+        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
+        {
             // CanLog(ctx, "F %d->%d\n", addr, *rx_frames[i].data);
             // DelayUs(ctx, 50);
             fault_regs[addr] = (*rx_frames[i].data);
         }
-        else {
+        else
+        {
             ctx->stats.n_rx_stack_bad_crcs++;
         }
     }
@@ -544,11 +554,8 @@ int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs)
     return status;
 }
 
-
 void StackUpdateFaultReadings(DbmsCtx* ctx)
 {
     uint8_t fault_summaries[N_MONITORS];
     PollFaultRegisters(ctx, 0x00, fault_summaries);
-
-
 }

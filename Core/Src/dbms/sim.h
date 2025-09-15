@@ -1,31 +1,30 @@
-//  
+//
 //  Copyright (c) Texas A&M University.
-//  
+//
 #ifndef _SIM_H_
 #define _SIM_H_
 
 #ifdef SIM
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <stdint.h>
 
 // DO NOT INCLUDE CONTEXT OR COMMON HERE
 
-
 //---------------------------------------------------
-//            Simulation & IPC 
+//            Simulation & IPC
 //---------------------------------------------------
 
-typedef struct {
+typedef struct
+{
     int ipc_fd_can;
     int ipc_fd_uart;
     bool can_started;
@@ -35,8 +34,6 @@ void __SimEnter(char* ipc_path_can, char* ipc_path_uart);
 void __SimExit();
 
 int __SimIpcSend(int fd, const unsigned char* data, int size);
-
-
 
 // // Poll the CAN socket and enqueue any complete frames found (non-blocking)
 // void __SimCanPoll(void);
@@ -62,41 +59,48 @@ int __SimIpcSend(int fd, const unsigned char* data, int size);
 #define CAN_IT_RX_FIFO1_MSG_PENDING 0
 #define CAN_FILTER_FIFO0 0
 
-
 #undef CR1
-struct {
+struct
+{
     int CR1;
     int BRR;
 }* UART4;
 
-typedef enum {
+typedef enum
+{
     HAL_OK = 0x00U,
     HAL_ERROR = 0x01U,
     HAL_BUSY = 0x02U,
     HAL_TIMEOUT = 0x03U
 } HAL_StatusTypeDef;
 
-typedef struct {
+typedef struct
+{
     int _;
 } ADC_HandleTypeDef;
-typedef struct {
+typedef struct
+{
     int _;
 } TIM_HandleTypeDef;
-typedef struct {
+typedef struct
+{
     int _;
 } UART_HandleTypeDef;
-typedef struct {
+typedef struct
+{
     int _;
 } CAN_HandleTypeDef;
-typedef struct {
+typedef struct
+{
     int _;
 } GPIO_TypeDef;
-typedef struct {
+typedef struct
+{
     int _;
 } I2C_HandleTypeDef;
 
-#define GPIOC  NULL
-#define GPIOA  NULL
+#define GPIOC NULL
+#define GPIOA NULL
 #define GPIO_PIN_6 6
 #define GPIO_PIN_7 7
 #define GPIO_PIN_8 8
@@ -104,7 +108,8 @@ typedef struct {
 
 HAL_StatusTypeDef HAL_GPIO_WritePin(GPIO_TypeDef* x, int p, int a);
 
-typedef struct {
+typedef struct
+{
     uint32_t StdId;
     uint32_t ExtId;
     uint32_t IDE;
@@ -113,7 +118,8 @@ typedef struct {
     uint32_t TransmitGlobalTime;
 } CAN_TxHeaderTypeDef;
 
-typedef struct {
+typedef struct
+{
     uint32_t FilterIdHigh;
     uint32_t FilterIdLow;
     uint32_t FilterMaskIdHigh;
@@ -126,57 +132,53 @@ typedef struct {
     uint32_t SlaveStartFilterBank;
 } CAN_FilterTypeDef;
 
-HAL_StatusTypeDef HAL_CAN_ConfigFilter(CAN_HandleTypeDef *hcan,
-                                       const CAN_FilterTypeDef *sFilterConfig);
+HAL_StatusTypeDef HAL_CAN_ConfigFilter(CAN_HandleTypeDef* hcan, const CAN_FilterTypeDef* sFilterConfig);
 
-HAL_StatusTypeDef HAL_CAN_Start(CAN_HandleTypeDef *hcan);
+HAL_StatusTypeDef HAL_CAN_Start(CAN_HandleTypeDef* hcan);
 
-uint32_t HAL_CAN_GetTxMailboxesFreeLevel(const CAN_HandleTypeDef *hcan);
+uint32_t HAL_CAN_GetTxMailboxesFreeLevel(const CAN_HandleTypeDef* hcan);
 
-HAL_StatusTypeDef HAL_CAN_AddTxMessage(CAN_HandleTypeDef *hcan,
-                                       const CAN_TxHeaderTypeDef *pHeader,
-                                       const uint8_t aData[],
-                                       uint32_t *pTxMailbox);
+HAL_StatusTypeDef HAL_CAN_AddTxMessage(CAN_HandleTypeDef* hcan, const CAN_TxHeaderTypeDef* pHeader,
+                                       const uint8_t aData[], uint32_t* pTxMailbox);
 
-HAL_StatusTypeDef HAL_ADC_Start(ADC_HandleTypeDef *hadc);
+HAL_StatusTypeDef HAL_ADC_Start(ADC_HandleTypeDef* hadc);
 
-HAL_StatusTypeDef HAL_ADC_PollForConversion(ADC_HandleTypeDef *hadc,
-                                            uint32_t Timeout);
+HAL_StatusTypeDef HAL_ADC_PollForConversion(ADC_HandleTypeDef* hadc, uint32_t Timeout);
 
-uint32_t HAL_ADC_GetValue(ADC_HandleTypeDef *hadc);
+uint32_t HAL_ADC_GetValue(ADC_HandleTypeDef* hadc);
 
-HAL_StatusTypeDef HAL_ADC_Stop(ADC_HandleTypeDef *hadc);
+HAL_StatusTypeDef HAL_ADC_Stop(ADC_HandleTypeDef* hadc);
 
 void HAL_Delay(uint32_t Delay);
 
-HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
-HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef* huart, const uint8_t* pData, uint16_t Size, uint32_t Timeout);
+HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef* huart, const uint8_t* pData, uint16_t Size, uint32_t Timeout);
 
-void HAL_TIM_Base_Start(TIM_HandleTypeDef *huart);
+void HAL_TIM_Base_Start(TIM_HandleTypeDef* huart);
 
 typedef struct
 {
-  uint32_t StdId;    /*!< Specifies the standard identifier.
-                          This parameter must be a number between Min_Data = 0 and Max_Data = 0x7FF. */
+    uint32_t StdId; /*!< Specifies the standard identifier.
+                         This parameter must be a number between Min_Data = 0 and Max_Data = 0x7FF. */
 
-  uint32_t ExtId;    /*!< Specifies the extended identifier.
-                          This parameter must be a number between Min_Data = 0 and Max_Data = 0x1FFFFFFF. */
+    uint32_t ExtId; /*!< Specifies the extended identifier.
+                         This parameter must be a number between Min_Data = 0 and Max_Data = 0x1FFFFFFF. */
 
-  uint32_t IDE;      /*!< Specifies the type of identifier for the message that will be transmitted.
-                          This parameter can be a value of @ref CAN_identifier_type */
+    uint32_t IDE; /*!< Specifies the type of identifier for the message that will be transmitted.
+                       This parameter can be a value of @ref CAN_identifier_type */
 
-  uint32_t RTR;      /*!< Specifies the type of frame for the message that will be transmitted.
-                          This parameter can be a value of @ref CAN_remote_transmission_request */
+    uint32_t RTR; /*!< Specifies the type of frame for the message that will be transmitted.
+                       This parameter can be a value of @ref CAN_remote_transmission_request */
 
-  uint32_t DLC;      /*!< Specifies the length of the frame that will be transmitted.
-                          This parameter must be a number between Min_Data = 0 and Max_Data = 8. */
+    uint32_t DLC; /*!< Specifies the length of the frame that will be transmitted.
+                       This parameter must be a number between Min_Data = 0 and Max_Data = 8. */
 
-  uint32_t Timestamp; /*!< Specifies the timestamp counter value captured on start of frame reception.
-                          @note: Time Triggered Communication Mode must be enabled.
-                          This parameter must be a number between Min_Data = 0 and Max_Data = 0xFFFF. */
+    uint32_t Timestamp; /*!< Specifies the timestamp counter value captured on start of frame reception.
+                            @note: Time Triggered Communication Mode must be enabled.
+                            This parameter must be a number between Min_Data = 0 and Max_Data = 0xFFFF. */
 
-  uint32_t FilterMatchIndex; /*!< Specifies the index of matching acceptance filter element.
-                          This parameter must be a number between Min_Data = 0 and Max_Data = 0xFF. */
+    uint32_t FilterMatchIndex; /*!< Specifies the index of matching acceptance filter element.
+                            This parameter must be a number between Min_Data = 0 and Max_Data = 0xFF. */
 
 } CAN_RxHeaderTypeDef;
 

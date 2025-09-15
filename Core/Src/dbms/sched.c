@@ -9,7 +9,8 @@ void DelayUs(DbmsCtx* ctx, uint32_t us)
     usleep(us);
 #else
     uint64_t start = GetUs(ctx);
-    while ((GetUs(ctx) - start) < (uint64_t)us) {
+    while ((GetUs(ctx) - start) < (uint64_t)us)
+    {
         __NOP(); // optional: gives the pipeline a breather
     }
 #endif
@@ -29,23 +30,25 @@ uint64_t GetUs(DbmsCtx* ctx)
     TIM_HandleTypeDef* h = ctx->hw.timer;
     // Persist across calls (one instance per process; if you have multiple timers,
     // consider keying these by 'h' or storing in ctx).
-    static uint32_t    last_cnt = 0;
-    static uint64_t    high_us  = 0;
-    static uint32_t    rollover = 0;
+    static uint32_t last_cnt = 0;
+    static uint64_t high_us = 0;
+    static uint32_t rollover = 0;
 
     // Read current counter first
     uint32_t now = __HAL_TIM_GET_COUNTER(h);
 
     // Lazy-initialize rollover on first call
-    if (rollover == 0) {
+    if (rollover == 0)
+    {
         // ARR is inclusive; rollover span is ARR+1 counts
         rollover = __HAL_TIM_GET_AUTORELOAD(h) + 1u;
         last_cnt = now;
     }
 
     // Detect wrap: counter went from near ARR back to 0
-    if (now < last_cnt) {
-        high_us += (uint64_t)rollover;   // add one full period (in microseconds)
+    if (now < last_cnt)
+    {
+        high_us += (uint64_t)rollover; // add one full period (in microseconds)
     }
 
     last_cnt = now;

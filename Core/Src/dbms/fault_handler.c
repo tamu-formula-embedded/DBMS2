@@ -1,7 +1,7 @@
 #include "fault_handler.h"
 #include "settings.h"
 
-void ControllerSetFault(DbmsCtx* ctx, ControllerFaultType fault) 
+void ControllerSetFault(DbmsCtx* ctx, ControllerFaultType fault)
 {
     if (fault >= CTRL_FAULT_TYPE_COUNT) return;
     ctx->faults.controller_mask |= (1U << fault);
@@ -18,7 +18,6 @@ bool ControllerHasFault(DbmsCtx* ctx, ControllerFaultType fault)
     if (fault >= CTRL_FAULT_TYPE_COUNT) return false;
     return (ctx->faults.controller_mask & (1U << fault)) != 0;
 }
-
 
 void StackSetFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
 {
@@ -61,7 +60,6 @@ void ClearAllFaults(DbmsCtx* ctx)
     }
 }
 
-
 void CheckVoltageFaults(DbmsCtx* ctx)
 {
     uint32_t max_group_v = GetSetting(ctx, MAX_GROUP_VOLTAGE);
@@ -81,7 +79,7 @@ void CheckVoltageFaults(DbmsCtx* ctx)
             }
         }
     }
-    
+
     /*
     if (ctx->isense.voltage1_mv > GetSetting(ctx, MAX_PACK_VOLTAGE))
     {
@@ -118,19 +116,16 @@ void CheckCurrentFaults(DbmsCtx* ctx)
 
 void ThrowHardFault(DbmsCtx* ctx)
 {
-    if (HasAnyFaults(ctx))  
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
-    else 
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+    if (HasAnyFaults(ctx)) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+    else HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
 
-   
     SaveFaultState(ctx);
 }
 
 int SaveFaultState(DbmsCtx* ctx)
 {
     uint16_t faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
-    if (ctx->faults_crc != faults_crc) 
+    if (ctx->faults_crc != faults_crc)
     {
         ctx->faults_crc = faults_crc;
         SaveStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults));

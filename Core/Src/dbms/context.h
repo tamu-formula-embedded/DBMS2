@@ -1,6 +1,6 @@
-//  
+//
 //  Copyright (c) Texas A&M University.
-//  
+//
 #ifndef _H_CTX_
 #define _H_CTX_
 
@@ -19,23 +19,24 @@
 #define N_TEMPS_PER_SIDE (N_MONITORS_PER_SIDE * N_TEMPS_PER_MONITOR)
 #define N_SIDES (N_SEGMENTS * N_SIDES_PER_SEG)
 #define N_MONITORS (N_SEGMENTS * N_SIDES_PER_SEG * N_MONITORS_PER_SIDE)
-#define N_STACKDEVS (N_MONITORS + 1)    // technically "bus devs"
+#define N_STACKDEVS (N_MONITORS + 1) // technically "bus devs"
 
 #define ADDR_BCAST_TO_STACK(BCAST_ADDR) (BCAST_ADDR - 1)
 #define ADDR_STACK_TO_BCAST(STACK_ADDR) (STACK_ADDR + 1)
 
 #define N_VOLTAGE_TO_TEMP_ENTRIES 121
 
-typedef enum _DbmsState {
+typedef enum _DbmsState
+{
     DBMS_ACTIVE = 0,
     DBMS_SHUTDOWN,
 } DbmsState;
 
 // fwd definition -- perf_counters.h
-typedef struct _PerfCounters PerfCounters;  
+typedef struct _PerfCounters PerfCounters;
 
-
-typedef enum {
+typedef enum
+{
     NOT_CHARGING = 0,
     CHARGING_ACTIVE,
     CHARGING_PAUSED_FOR_BALANCING,
@@ -43,10 +44,10 @@ typedef enum {
     CHARGING_ERROR
 } ChargingState;
 
-
-// Hardware context stores prts 
+// Hardware context stores prts
 // to peripheral interfaces
-typedef struct _HwCtx {
+typedef struct _HwCtx
+{
     ADC_HandleTypeDef* adc;
     TIM_HandleTypeDef* timer;
     TIM_HandleTypeDef* timer_pwm_1;
@@ -58,8 +59,8 @@ typedef struct _HwCtx {
     uint32_t can_tx_mailbox;
 } HwCtx;
 
-
-typedef struct _CellMonitorState {
+typedef struct _CellMonitorState
+{
     float voltages[N_GROUPS_PER_SIDE];
     float temps[N_TEMPS_PER_SIDE];
     bool cells_to_balance[N_GROUPS_PER_SIDE];
@@ -72,30 +73,32 @@ typedef struct _DbmsSettings DbmsSettings;
 // fwd definition for enum -- led_controller.h
 typedef int32_t LedState;
 
-typedef struct _DbmsCtx {
+typedef struct _DbmsCtx
+{
 
-    HwCtx hw;                   // Holds points to hardware peripherals
+    HwCtx hw; // Holds points to hardware peripherals
 
-    DbmsState       req_state;        // the state we want
-    DbmsState       cur_state;        // the state we are in
-    LedState        led_state;        // the state of the LEDs
+    DbmsState req_state; // the state we want
+    DbmsState cur_state; // the state we are in
+    LedState led_state;  // the state of the LEDs
 
-    DbmsSettings*   settings;         // struct fwd defs has to be a ptr
+    DbmsSettings* settings; // struct fwd defs has to be a ptr
 
     CellMonitorState cell_states[N_SIDES];
 
-    uint64_t    last_rx_heartbeat;
-    uint64_t    iter_start_us;
-    uint64_t    iter_end_us;
-    uint64_t    m_led_blink_ts;
-    uint64_t    batch_telem_ts;
+    uint64_t last_rx_heartbeat;
+    uint64_t iter_start_us;
+    uint64_t iter_end_us;
+    uint64_t m_led_blink_ts;
+    uint64_t batch_telem_ts;
 
-    struct {
+    struct
+    {
         uint64_t iters;
 
-// #define N_HISTORIC_LOOPTIMES 16
-//         wrap_queue_t looptimes_q;
-//         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
+        // #define N_HISTORIC_LOOPTIMES 16
+        //         wrap_queue_t looptimes_q;
+        //         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
 
         uint32_t n_tx_can_frames;
         uint32_t n_rx_can_frames;
@@ -113,12 +116,14 @@ typedef struct _DbmsCtx {
         uint32_t n_eeprom_writes;
     } stats;
 
-    struct {
+    struct
+    {
         ChargingState state;
         bool balancing_requested;
     } charging;
 
-    struct {
+    struct
+    {
         int32_t current_ma;
         int32_t voltage1_mv;
         int32_t power_w;
@@ -126,24 +131,25 @@ typedef struct _DbmsCtx {
         int32_t energy_wh;
     } isense; // current = I, sense = sensor?
 
-    struct {
-        uint32_t    controller_mask;
-        uint32_t    monitor_masks[N_MONITORS];
+    struct
+    {
+        uint32_t controller_mask;
+        uint32_t monitor_masks[N_MONITORS];
     } faults;
     uint16_t faults_crc;
 
-    struct {
+    struct
+    {
         float soc;
     } model;
 
-    LTE         voltage_to_temps[N_VOLTAGE_TO_TEMP_ENTRIES];
+    LTE voltage_to_temps[N_VOLTAGE_TO_TEMP_ENTRIES];
 
-    uint16_t    can_log_ordering_index;
-    uint8_t     last_can_err;
-    bool        need_to_sync_settings;
-    bool        m_led_on;
+    uint16_t can_log_ordering_index;
+    uint8_t last_can_err;
+    bool need_to_sync_settings;
+    bool m_led_on;
 
 } DbmsCtx;
-
 
 #endif

@@ -1,6 +1,6 @@
-//  
+//
 //  Copyright (c) Texas A&M University.
-//  
+//
 #ifndef _STACKCTL_H_
 #define _STACKCTL_H_
 
@@ -13,16 +13,17 @@
 
 #include "data.h"
 
-#define STACK_SEND_TIMEOUT          50
-#define STACK_RECV_TIMEOUT          50
-#define STACK_RX_BUFFER_SIZE        1024    //N_STACKDEVS * 6 + N_GROUPS_PER_SIDE
+#define STACK_SEND_TIMEOUT 50
+#define STACK_RECV_TIMEOUT 50
+#define STACK_RX_BUFFER_SIZE 1024 // N_STACKDEVS * 6 + N_GROUPS_PER_SIDE
 
-#define STACK_V_UV_PER_BIT      190.73
-#define STACK_T_UV_PER_BIT      152.59
+#define STACK_V_UV_PER_BIT 190.73
+#define STACK_T_UV_PER_BIT 152.59
 
-#define RX_FRAME_SIZE(DATA_SIZE)    (DATA_SIZE + 6)
+#define RX_FRAME_SIZE(DATA_SIZE) (DATA_SIZE + 6)
 
-typedef struct {            // ordering packed
+typedef struct
+{ // ordering packed
     uint8_t* data;
     size_t size;
     uint16_t reg_addr;
@@ -33,11 +34,11 @@ typedef struct {            // ordering packed
 
 void __PrintStackRxFrame(RxStackFrame* f);
 
-#define APBxCLK 42000000    // TODO: fix legacy name
+#define APBxCLK 42000000 // TODO: fix legacy name
 
 void SetBrr(uint64_t brr);
 
-uint16_t CalcCrc16(uint8_t *buf, size_t len);
+uint16_t CalcCrc16(uint8_t* buf, size_t len);
 
 int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len);
 
