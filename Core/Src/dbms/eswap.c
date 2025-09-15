@@ -1,4 +1,4 @@
-#include "lib.h"
+#include "eswap.h"
 
 void memcpy_eswap2(void* dst, void* src, size_t n)
 {

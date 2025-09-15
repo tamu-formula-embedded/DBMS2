@@ -1,5 +1,4 @@
-# Standard .clang-format for C++ and Java.
-# Official formatting configuration for Texas Torque.
+# .clang-format for C, C++ and Java.
 # Copyright (C) Justus Languell 2020.
 BasedOnStyle: LLVM    
 IndentWidth: 4
@@ -11,16 +10,16 @@ DerivePointerAlignment: false
 PointerAlignment: Left    
 ColumnLimit: 120
 ContinuationIndentWidth: 8    
-AllowShortBlocksOnASingleLine: true    
-AllowShortCaseLabelsOnASingleLine: true    
+AllowShortBlocksOnASingleLine: false    
+AllowShortCaseLabelsOnASingleLine: false    
 AllowShortEnumsOnASingleLine: true    
 AllowShortFunctionsOnASingleLine: false    
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse    
 AllowShortLoopsOnASingleLine: true    
 IndentRequires: true    
 SpaceAfterTemplateKeyword: false    
-BreakBeforeBraces: Stroustrup
-# BreakBeforeBraces: Allman
+# BreakBeforeBraces: Stroustrup
+BreakBeforeBraces: Allman
 UseTab: Never
 AlignOperands: true
 AlignTrailingComments: true

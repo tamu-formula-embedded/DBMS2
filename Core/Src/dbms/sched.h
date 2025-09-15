@@ -1,6 +1,6 @@
-//  
+//
 //  Copyright (c) Texas A&M University.
-//  
+//
 #ifndef _H_SCHED_H
 #define _H_SCHED_H
 
@@ -9,13 +9,12 @@
 #include "storage.h"
 
 #ifdef SIM
-    #include "time.h"
+#include "time.h"
 #endif
 
 //
 //  Timer and scheduler related functions and objects
 //
-
 
 /**
  * Blocking delay in microseconds using the free-running timer.

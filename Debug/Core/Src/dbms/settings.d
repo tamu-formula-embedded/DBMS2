@@ -1,8 +1,6 @@
 Core/Src/dbms/settings.o: ../Core/Src/dbms/settings.c \
  ../Core/Src/dbms/settings.h ../Core/Src/dbms/common.h \
- ../Core/Src/dbms/../lib/lib.h ../Core/Src/dbms/../lib/crc.h \
- ../Core/Src/dbms/../lib/lib.h ../Core/Src/dbms/../lib/wrap_q.h \
- ../Core/Src/dbms/../lib/lookup_table.h \
+ ../Core/Src/dbms/lut.h ../Core/Src/dbms/crc.h ../Core/Src/dbms/eswap.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -42,11 +40,9 @@ Core/Src/dbms/settings.o: ../Core/Src/dbms/settings.c \
  ../Core/Src/dbms/sched.h
 ../Core/Src/dbms/settings.h:
 ../Core/Src/dbms/common.h:
-../Core/Src/dbms/../lib/lib.h:
-../Core/Src/dbms/../lib/crc.h:
-../Core/Src/dbms/../lib/lib.h:
-../Core/Src/dbms/../lib/wrap_q.h:
-../Core/Src/dbms/../lib/lookup_table.h:
+../Core/Src/dbms/lut.h:
+../Core/Src/dbms/crc.h:
+../Core/Src/dbms/eswap.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
