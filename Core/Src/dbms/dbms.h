@@ -13,6 +13,8 @@
 #include "common.h"
 #include "context.h"
 
+#include "data.h"
+#include "lut.h"
 #include "charging.h"
 #include "current_meter.h"
 #include "fault_handler.h"

@@ -69,7 +69,7 @@ int ConfigPwmLines(DbmsCtx* ctx)
 
 int SetPwmStates(DbmsCtx* ctx)
 {
-    float soc = MAX(MIN(ctx->model.soc, 100.0f), 0.0f);
+    float soc = ctx->model.z_oc;
 
     uint32_t arr = __HAL_TIM_GET_AUTORELOAD(ctx->hw.timer_pwm_1);
     uint32_t ccr = (uint32_t)((soc / 100.0f) * (arr + 1));
@@ -312,6 +312,9 @@ int SendMetric(DbmsCtx* ctx, uint8_t id, uint32_t value)
     return CanTransmit(ctx, CANID_METRIC, data);
 }
 
+#define F2I_K(F, K) ((int)(F * K))
+#define F2I_RAW(F)  (*((int*)&F))
+
 int SendMetrics(DbmsCtx* ctx)
 {
 
@@ -344,9 +347,23 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 18, ctx->stats.n_eeprom_writes);
     SendMetric(ctx, 19, ctx->faults_crc);
 
+    SendMetric(ctx, 20, F2I_K(ctx->initial_charge, 1e6));
+    SendMetric(ctx, 21, F2I_K(ctx->accumulated_lost_charge, 1e6));
+    SendMetric(ctx, 22, F2I_K(ctx->model.Q, 1e6));
+    SendMetric(ctx, 23, F2I_K(ctx->model.z_oc, 1e6));
+    SendMetric(ctx, 24, F2I_K(ctx->model.V_oc, 1e6));
+    SendMetric(ctx, 25, F2I_K(ctx->model.R_oc, 1e6));
+    SendMetric(ctx, 26, F2I_K(ctx->model.z_rc, 1e6));
+    SendMetric(ctx, 27, F2I_K(ctx->model.R0, 1e6));
+    SendMetric(ctx, 28, F2I_K(ctx->model.R1, 1e6));
+    SendMetric(ctx, 29, F2I_K(ctx->model.R2, 1e6));
+    SendMetric(ctx, 30, F2I_K(ctx->model.R_rc, 1e6));
+    SendMetric(ctx, 31, F2I_K(ctx->model.R_pack, 1e6));
+    SendMetric(ctx, 32, F2I_K(ctx->model.I_lim, 1e6));
+
     // TODO: perm sol.
     // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
-
+    
     return 0;
 }
 

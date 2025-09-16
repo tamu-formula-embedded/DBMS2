@@ -2,9 +2,7 @@
 //  Copyright (c) Texas A&M University.
 //
 #include "dbms.h"
-#include "context.h"
-#include "data.h"
-#include "led_controller.h"
+
 
 static DbmsSettings mem_settings;
 
@@ -15,6 +13,8 @@ void DbmsAlloc(DbmsCtx* ctx)
 {
     ctx->settings = &mem_settings;
     memset(&ctx->stats, 0, sizeof(ctx->stats));
+
+    MakeLutThermistors();   // create the therm LUT in pre-init
 }
 
 //
@@ -59,7 +59,6 @@ void DbmsInit(DbmsCtx* ctx)
 
     HAL_Delay(10);
     ConfigCurrentSensor(ctx, 10);
-    DataInit(ctx);
 
     ConfigPwmLines(ctx);
 
@@ -183,10 +182,18 @@ void DbmsIter(DbmsCtx* ctx)
     {
         StackUpdateVoltReadings(ctx);
         HAL_Delay(8);
+
         StackUpdateTempReadings(ctx);
-        // HAL_Delay(8);
+        FillMissingTempReadings(ctx);
+        HAL_Delay(8);
+
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
     }
+
+    //
+    //  Update the state of charge model
+    //
+    UpdateModel(ctx);   // TODO: add condition for when we update this
 
     //
     //  Transmit important telemetry
@@ -198,9 +205,6 @@ void DbmsIter(DbmsCtx* ctx)
         SendCellVoltages(ctx);
         SendCellTemps(ctx);
     }
-
-    // this is temporary
-    ctx->model.soc = (ctx->stats.iters % 100) / 100.0;
 
     //
     //  Update the LEDs (etc.). Led state should be set every time the cur_state changes
