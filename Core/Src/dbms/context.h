@@ -63,7 +63,7 @@ typedef struct _CellMonitorState
 {
     float voltages[N_GROUPS_PER_SIDE];
     float temps[N_TEMPS_PER_SIDE];
-    bool cells_to_balance[N_GROUPS_PER_SIDE];
+    bool cells_to_balance[N_GROUPS_PER_SIDE];   // TODO: change to bitmask? prob not
 } CellMonitorState;
 
 // fwd definition -- settings.h
@@ -72,6 +72,47 @@ typedef struct _DbmsSettings DbmsSettings;
 
 // fwd definition for enum -- led_controller.h
 typedef int32_t LedState;
+
+typedef struct _Stats
+{
+    uint64_t iters;
+
+    // #define N_HISTORIC_LOOPTIMES 16
+    //         wrap_queue_t looptimes_q;
+    //         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
+
+    uint32_t n_tx_can_frames;
+    uint32_t n_rx_can_frames;
+    uint32_t n_unmatched_can_frames;
+    uint32_t n_tx_can_drop_timeout;
+    uint32_t n_tx_can_fail;
+
+    uint32_t looptime;
+    uint32_t end_delay;
+
+    uint32_t n_rx_stack_frames;
+    uint32_t n_rx_stack_bad_crcs;
+    // uint32_t n_overruns;
+
+    uint32_t n_eeprom_writes;
+} Stats;
+
+typedef struct _Model   // Outputs from the ECM model
+{
+    float Q;            // Charge 
+    float z_oc;         // % Charge (OC path)
+    float z_rc;         // % Charge (RC path)
+    float V_oc;         // Open Circuit Voltage
+    float R_oc;
+
+    float R0;
+    float R1;
+    float R2;
+    float R_rc;
+
+    float R_pack;
+    float I_lim;
+} Model;
 
 typedef struct _DbmsCtx
 {
@@ -92,29 +133,7 @@ typedef struct _DbmsCtx
     uint64_t m_led_blink_ts;
     uint64_t batch_telem_ts;
 
-    struct
-    {
-        uint64_t iters;
-
-        // #define N_HISTORIC_LOOPTIMES 16
-        //         wrap_queue_t looptimes_q;
-        //         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
-
-        uint32_t n_tx_can_frames;
-        uint32_t n_rx_can_frames;
-        uint32_t n_unmatched_can_frames;
-        uint32_t n_tx_can_drop_timeout;
-        uint32_t n_tx_can_fail;
-
-        uint32_t looptime;
-        uint32_t end_delay;
-
-        uint32_t n_rx_stack_frames;
-        uint32_t n_rx_stack_bad_crcs;
-        // uint32_t n_overruns;
-
-        uint32_t n_eeprom_writes;
-    } stats;
+    Stats stats;
 
     struct
     {
@@ -129,7 +148,10 @@ typedef struct _DbmsCtx
         int32_t power_w;
         int32_t charge_as;
         int32_t energy_wh;
-    } isense; // current = I, sense = sensor?
+    } isense; // current = I, sense = sensor
+
+    float initial_charge;               // Q0
+    float accumulated_lost_charge;      // Qd
 
     struct
     {
@@ -138,12 +160,7 @@ typedef struct _DbmsCtx
     } faults;
     uint16_t faults_crc;
 
-    struct
-    {
-        float soc;
-    } model;
-
-    LTE voltage_to_temps[N_VOLTAGE_TO_TEMP_ENTRIES];
+    Model model;
 
     uint16_t can_log_ordering_index;
     uint8_t last_can_err;

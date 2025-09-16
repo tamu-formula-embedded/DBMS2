@@ -432,8 +432,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
                 uint16_t raw =
                         (rx_frames[i].data[j * sizeof(int16_t)] << 8) + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
 
-                ctx->cell_states[addr].temps[j + offset] =
-                        VoltageToTemperature(ctx, (raw * STACK_T_UV_PER_BIT) / 1000000.0);
+                ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp((raw * STACK_T_UV_PER_BIT) / 1000000.0);
                 // 1000000 for uV to V
             }
         }
@@ -445,6 +444,32 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
         }
     }
 }
+
+void FillMissingTempReadings(DbmsCtx* ctx)
+{
+    static bool missing_mask[N_TEMPS_PER_SIDE] = { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    float sum = 0;
+    for (int i = 0; i < N_SIDES; i++)
+    {
+        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
+        {
+            if (!missing_mask[j])
+                sum += ctx->cell_states[i].temps[j];
+        }
+    }
+
+    float avg = sum / (N_SIDES * N_TEMPS_PER_SIDE);
+    for (int i = 0; i < N_SIDES; i++)
+    {
+        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
+        {
+            if (missing_mask[j])
+                ctx->cell_states[i].temps[j] = avg;
+        }
+    }
+}
+
 
 int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
 {
