@@ -447,7 +447,8 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
 
 void FillMissingTempReadings(DbmsCtx* ctx)
 {
-    static bool missing_mask[N_TEMPS_PER_SIDE] = { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    static bool missing_mask[N_TEMPS_PER_SIDE] = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1 };
+
 
     float sum = 0;
     for (int i = 0; i < N_SIDES; i++)
