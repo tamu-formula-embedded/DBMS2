@@ -114,8 +114,12 @@ void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_mi
     float Q_max_oc = F_Q_max(T_bar, Q_BOUND_H_OC, Q_BOUND_L_OC);
     m->z_oc = F_Z(m->Q, Q_max_oc);
     m->V_oc = F_OCV(m->z_oc, T_bar);
-    m->R_oc = F_DCIR(m->V_oc, I);
-
+    if (I > 0) 
+    {
+        m->R_oc = F_DCIR(m->V_oc, I);
+    }
+    else m->R_oc = 0;
+    
     // RC/ECM Path
     float Q_max_rc = F_Q_max(T_bar, Q_BOUND_H_RC, Q_BOUND_L_RC);
     m->z_rc = F_Z(m->Q, Q_max_rc);
@@ -149,7 +153,7 @@ float CalcMinVoltage(DbmsCtx* ctx)
     {
         for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
-            v_min = MIN(v_min, ctx->cell_states[i].temps[j]);
+            v_min = MIN(v_min, ctx->cell_states[i].voltages[j]);
         }
     }
     return v_min;
