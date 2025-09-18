@@ -423,7 +423,6 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
         addr /= 2;                                          // addr is halfed
         if (addr >= N_SIDES) continue;                      // throw some error here
 
-
         //    CanLog(ctx, "Temp da=%d a=%d o=%d\n", rx_frames[i].dev_addr, addr, offset);
 
         if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
@@ -435,7 +434,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
                 uint16_t raw =
                         (rx_frames[i].data[j * sizeof(int16_t)] << 8) + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
 
-                //CanLog(ctx, "A %d\n", addr);
+                // CanLog(ctx, "A %d\n", addr);
                 ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp(ctx, (raw * STACK_T_UV_PER_BIT) / 1000000.0);
                 // 1000000 for uV to V
             }
@@ -451,9 +450,12 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
 
 void FillMissingTempReadings(DbmsCtx* ctx)
 {
-    static bool missing_mask[N_TEMPS_PER_SIDE] = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1 };
-
-    static const int n_missing = 5;
+    static bool missing_mask[4][N_TEMPS_PER_SIDE] = {
+            {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, 
+            {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0}  
+    };
 
     float sum = 0;
     for (int i = 0; i < N_SIDES; i++)
@@ -462,24 +464,21 @@ void FillMissingTempReadings(DbmsCtx* ctx)
         {
             int k = i % 2 == 0 ? j : N_TEMPS_PER_SIDE - j;
 
-            if (!missing_mask[k])
-                sum += ctx->cell_states[i].temps[j];
+            if (!missing_mask[k]) sum += ctx->cell_states[i].temps[j];
         }
     }
 
-    float avg = sum / (N_SIDES * (N_TEMPS_PER_SIDE - n_missing));
+    float avg = sum / (N_SIDES * N_TEMPS_PER_SIDE - 21);
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
             int k = i % 2 == 0 ? j : N_TEMPS_PER_SIDE - j;
 
-            if (missing_mask[k])
-                ctx->cell_states[i].temps[j] = avg;
+            if (missing_mask[k]) ctx->cell_states[i].temps[j] = avg;
         }
     }
 }
-
 
 int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
 {
