@@ -165,6 +165,12 @@ void UpdateModel(DbmsCtx* ctx)
     ctx->accumulated_lost_charge = ctx->isense.charge_as * 3600.0;    // convert to Ah
     // ^ this should probably be asserted as positive
 
+    //temp 
+    ctx->accumulated_lost_charge = 0;
+    ctx->initial_charge = 3.9;
+
+    CanLog(ctx, "Avg T: %d\n",(int)(avg_t * 1000.0));
+
     ComputeModel(&ctx->model, avg_t, current, ctx->initial_charge, ctx->accumulated_lost_charge, min_v);
 }
 
