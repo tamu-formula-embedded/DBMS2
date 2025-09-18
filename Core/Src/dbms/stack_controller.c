@@ -462,9 +462,7 @@ void FillMissingTempReadings(DbmsCtx* ctx)
     {
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
-            int k = i % 2 == 0 ? j : N_TEMPS_PER_SIDE - j;
-
-            if (!missing_mask[k]) sum += ctx->cell_states[i].temps[j];
+            if (!missing_mask[i][j]) sum += ctx->cell_states[i].temps[j];
         }
     }
 
@@ -473,9 +471,7 @@ void FillMissingTempReadings(DbmsCtx* ctx)
     {
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
-            int k = i % 2 == 0 ? j : N_TEMPS_PER_SIDE - j;
-
-            if (missing_mask[k]) ctx->cell_states[i].temps[j] = avg;
+            if (missing_mask[i][j]) ctx->cell_states[i].temps[j] = avg;
         }
     }
 }
