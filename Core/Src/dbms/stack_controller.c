@@ -536,13 +536,13 @@ void MonitorLedBlink(DbmsCtx* ctx)
 }
 
 // sizeof(fault_regs) >= N_MONITORS
-int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs)
+int PollFaultSummary(DbmsCtx* ctx, uint8_t* fault_regs)
 {
-    static uint8_t rx_fault_readings[1024 * 4];
+    static uint8_t rx_fault_readings[1024];
     int status = 0;
-    size_t data_size = 1 * sizeof(uint8_t);
-
-    uint8_t FRAME_POLL_CTRL_FAULT_SUMMARY[] = {0xA0, 0x21, fault_reg_n, data_size - 1, 0x00, 0x00};
+    size_t data_size = 1 * (uint8_t);
+    // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
+    uint8_t FRAME_POLL_CTRL_FAULT_SUMMARY[] = {0xC0, 0x05, 0x2D, 0x00, 0x00, 0x00};
 
     if ((status = SendStackFrameSetCrc(ctx, FRAME_POLL_CTRL_FAULT_SUMMARY, sizeof(FRAME_POLL_CTRL_FAULT_SUMMARY))) != 0)
     {
@@ -558,13 +558,14 @@ int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs)
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_frames, rx_fault_readings, data_size, N_STACKDEVS);
+    FillStackFrames(rx_frames, rx_fault_readings, data_size, N_MONITORS);
     uint16_t addr, kcrc;
 
     for (size_t i = 0; i < N_STACKDEVS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
 
+        // Excluding this since bridge device can also have faults that 
         if (rx_frames[i].dev_addr == 0) continue; // this is myself
         addr = rx_frames[i].dev_addr - 1;         // ignore the controller from a broadcast
         if (addr >= N_MONITORS) continue;         // throw some error here
@@ -587,5 +588,22 @@ int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs)
 void StackUpdateFaultReadings(DbmsCtx* ctx)
 {
     uint8_t fault_summaries[N_MONITORS];
-    PollFaultRegisters(ctx, 0x00, fault_summaries);
+    PollFaultSummary(ctx, fault_summaries);
+
+
+    // for (int i = 0; i < N_MONITORS; i++){
+    //     if (fault_summaries[i] != 0x00){
+    //         CanLog(ctx, "monitor: %d, Faults: %X", i, fault_summaries[i]);
+            
+    //         switch (fault_summaries[i])
+    //         {
+    //         case constant expression:
+    //             /* code */
+    //             break;
+            
+    //         default:
+    //             break;
+    //         }
+    //     }
+    // }
 }

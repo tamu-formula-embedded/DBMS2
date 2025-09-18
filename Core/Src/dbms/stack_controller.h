@@ -21,6 +21,8 @@
 #define STACK_V_UV_PER_BIT 190.73
 #define STACK_T_UV_PER_BIT 152.59
 
+#define STACK_FAULT_REG_N   27
+
 #define RX_FRAME_SIZE(DATA_SIZE) (DATA_SIZE + 6)
 
 typedef struct
