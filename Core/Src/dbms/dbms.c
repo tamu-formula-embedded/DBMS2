@@ -186,7 +186,7 @@ void DbmsIter(DbmsCtx* ctx)
 
         StackUpdateTempReadings(ctx);
         
-        // FillMissingTempReadings(ctx);
+        FillMissingTempReadings(ctx);
         // CanLog(ctx, "T%d\n", CLAMP_U16((long)lroundf(ctx->cell_states[0].temps[6] * 1000.0f)));
         HAL_Delay(8);
 
