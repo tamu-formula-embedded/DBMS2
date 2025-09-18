@@ -17,6 +17,7 @@ void DbmsAlloc(DbmsCtx* ctx)
     memset(&ctx->stats, 0, sizeof(ctx->stats));
 
     MakeLutThermistors();   // create the therm LUT in pre-init
+
 }
 
 //
@@ -186,9 +187,12 @@ void DbmsIter(DbmsCtx* ctx)
         HAL_Delay(8);
 
         StackUpdateTempReadings(ctx);
+        
         // FillMissingTempReadings(ctx);
         CanLog(ctx, "T%d\n", CLAMP_U16((long)lroundf(ctx->cell_states[0].temps[6] * 1000.0f)));
         HAL_Delay(8);
+
+        CanLog(ctx, "first: %d\n", (int)(lut_therm_v_to_t[0].value));
 
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
     }

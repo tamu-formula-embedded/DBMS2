@@ -2,6 +2,7 @@
 //  Copyright (c) Texas A&M University.
 //
 #include "stack_controller.h"
+#include "data.h"
 
 static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
 static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
@@ -431,6 +432,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
             {
                 uint16_t raw =
                         (rx_frames[i].data[j * sizeof(int16_t)] << 8) + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
+
 
                 ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp((raw * STACK_T_UV_PER_BIT) / 1000000.0);
                 // 1000000 for uV to V
