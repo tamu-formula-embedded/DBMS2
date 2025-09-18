@@ -2,6 +2,7 @@
 //  Copyright (c) Texas A&M University.
 //
 #include "dbms.h"
+#include "led_controller.h"
 #include "vehicle_interface.h"
 #include <math.h>
 
@@ -193,6 +194,9 @@ void DbmsIter(DbmsCtx* ctx)
         // CanLog(ctx, "first: %d\n", (int)(ctx->data.lut_therm_v_to_t[0].value));
 
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
+        CheckCurrentFaults(ctx);
+        CheckTemperatureFaults(ctx);
+        CheckVoltageFaults(ctx);
     }
 
     //
@@ -241,6 +245,12 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     {
     case CANID_RX_HEARTBEAT:
         ctx->last_rx_heartbeat = HAL_GetTick();
+        
+        if (ctx->led_state == LED_COMM_ERROR)
+        {
+            ctx->led_state = LED_ACTIVE;
+        }
+
         break;
 
     case CANID_RX_SET_CONFIG:
