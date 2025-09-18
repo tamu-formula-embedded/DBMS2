@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
+
 #define MIN(a, b) \
     ({ __typeof__(a) _a = (a); \
        __typeof__(b) _b = (b); \
