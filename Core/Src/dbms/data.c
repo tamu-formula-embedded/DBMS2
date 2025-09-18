@@ -1,14 +1,10 @@
 #include "data.h"
 
-const LTE lut_therm_v_to_t[N_THERM_V_TO_T_ENTRIES];
-
-void MakeLutThermistors() 
-{
   // By putting these array in the context of a method
   // we use 2 * N_THERM_V_TO_T_ENTRIES * sizeof(float)
   // bytes instead of 4 * N_THERM_V_TO_T_ENTRIES * sizeof(float)
 
-   static float therm_voltages[N_THERM_V_TO_T_ENTRIES] = {
+static const float therm_voltages[N_THERM_V_TO_T_ENTRIES] = {
       3.557959921f, 3.517925037f, 3.477021106f, 3.435266642f, 3.392697552f,
       3.349339584f, 3.305226119f, 3.260393254f, 3.214876396f, 3.168723682f,
       3.12196619f,  3.074648328f, 3.026821818f, 2.978530286f, 2.929825441f,
@@ -35,7 +31,7 @@ void MakeLutThermistors()
       0.207658951f, 0.202279055f, 0.19706884f,  0.19198371f,  0.187070558f,
       0.182330587f};
 
-   static float therm_temps[N_THERM_V_TO_T_ENTRIES] = {
+static const float therm_temps[N_THERM_V_TO_T_ENTRIES] = {
       0.0f,   1.0f,   2.0f,   3.0f,   4.0f,   5.0f,   6.0f,   7.0f,   8.0f,
       9.0f,   10.0f,  11.0f,  12.0f,  13.0f,  14.0f,  15.0f,  16.0f,  17.0f,
       18.0f,  19.0f,  20.0f,  21.0f,  22.0f,  23.0f,  24.0f,  25.0f,  26.0f,
@@ -51,8 +47,15 @@ void MakeLutThermistors()
       108.0f, 109.0f, 110.0f, 111.0f, 112.0f, 113.0f, 114.0f, 115.0f, 116.0f,
       117.0f, 118.0f, 119.0f, 120.0f};
 
-  lut_build((LTE*)lut_therm_v_to_t, therm_voltages, therm_temps,
-            N_THERM_V_TO_T_ENTRIES);
+
+void DataInit(DbmsCtx* ctx)
+{
+    lut_build(ctx->data.lut_therm_v_to_t, therm_voltages, therm_temps, N_THERM_V_TO_T_ENTRIES);
+}
+
+float ThermVoltToTemp(DbmsCtx* ctx, float V) 
+{
+    return lut_interpolate(ctx->data.lut_therm_v_to_t, N_THERM_V_TO_T_ENTRIES, V);
 }
 
 const float ocv_t_low[] = {

@@ -24,7 +24,11 @@
 #define ADDR_BCAST_TO_STACK(BCAST_ADDR) (BCAST_ADDR - 1)
 #define ADDR_STACK_TO_BCAST(STACK_ADDR) (STACK_ADDR + 1)
 
-#define N_VOLTAGE_TO_TEMP_ENTRIES 121
+#define N_THERM_V_TO_T_ENTRIES      121
+#define N_OCV_ENTRIES               201
+#define N_RC_ENTRIES                101
+#define N_C_ENTRIES                 101
+
 
 typedef enum _DbmsState
 {
@@ -118,6 +122,10 @@ typedef struct _DbmsCtx
 {
 
     HwCtx hw; // Holds points to hardware peripherals
+
+    struct {
+        LTE lut_therm_v_to_t[N_THERM_V_TO_T_ENTRIES];
+    } data;
 
     DbmsState req_state; // the state we want
     DbmsState cur_state; // the state we are in

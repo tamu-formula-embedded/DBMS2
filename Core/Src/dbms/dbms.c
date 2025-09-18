@@ -15,9 +15,6 @@ void DbmsAlloc(DbmsCtx* ctx)
 {
     ctx->settings = &mem_settings;
     memset(&ctx->stats, 0, sizeof(ctx->stats));
-
-    MakeLutThermistors();   // create the therm LUT in pre-init
-
 }
 
 //
@@ -64,6 +61,7 @@ void DbmsInit(DbmsCtx* ctx)
     ConfigCurrentSensor(ctx, 10);
 
     ConfigPwmLines(ctx);
+    DataInit(ctx);
 
     // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
     ctx->led_state = LED_IDLE;
@@ -192,7 +190,7 @@ void DbmsIter(DbmsCtx* ctx)
         CanLog(ctx, "T%d\n", CLAMP_U16((long)lroundf(ctx->cell_states[0].temps[6] * 1000.0f)));
         HAL_Delay(8);
 
-        CanLog(ctx, "first: %d\n", (int)(lut_therm_v_to_t[0].value));
+        CanLog(ctx, "first: %d\n", (int)(ctx->data.lut_therm_v_to_t[0].value));
 
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
     }

@@ -13,8 +13,6 @@
 #define T_H_PT          45
 #define T_L_PT          25
 
-float ThermVoltToTemp(float V);
-
 void UpdateModel(DbmsCtx* ctx);
 
 int LoadInitialCharge(DbmsCtx* ctx);

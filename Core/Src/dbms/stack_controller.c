@@ -434,7 +434,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
                         (rx_frames[i].data[j * sizeof(int16_t)] << 8) + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
 
 
-                ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp((raw * STACK_T_UV_PER_BIT) / 1000000.0);
+                ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp(ctx, (raw * STACK_T_UV_PER_BIT) / 1000000.0);
                 // 1000000 for uV to V
             }
         }

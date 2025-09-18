@@ -1,9 +1,6 @@
 #include "model.h"
 
-float ThermVoltToTemp(float V) 
-{
-    return lut_interpolate(lut_therm_v_to_t, N_THERM_V_TO_T_ENTRIES, V);
-}
+
 
 float Temp_C_to_K(float T_C)
 {
