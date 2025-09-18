@@ -231,8 +231,9 @@ void DbmsIter(DbmsCtx* ctx)
 
     // MonitorLedBlink(ctx);
     // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
-    // DelayUs(ctx, end_delay);
-    HAL_Delay(20); // ^ todo: fix all this
+    
+    HAL_Delay(ctx->stats.end_delay / 1000);
+    DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
