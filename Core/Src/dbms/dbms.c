@@ -2,6 +2,8 @@
 //  Copyright (c) Texas A&M University.
 //
 #include "dbms.h"
+#include "vehicle_interface.h"
+#include <math.h>
 
 
 static DbmsSettings mem_settings;
@@ -184,7 +186,8 @@ void DbmsIter(DbmsCtx* ctx)
         HAL_Delay(8);
 
         StackUpdateTempReadings(ctx);
-        FillMissingTempReadings(ctx);
+        // FillMissingTempReadings(ctx);
+        CanLog(ctx, "T%d\n", CLAMP_U16((long)lroundf(ctx->cell_states[0].temps[6] * 1000.0f)));
         HAL_Delay(8);
 
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
