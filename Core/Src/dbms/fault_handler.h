@@ -26,6 +26,14 @@ typedef enum
 typedef enum
 {
     STACK_FAULT_CONF_MON_ERR = 0, //could not find
+    STACK_FAULT_PWR,
+    STACK_FAULT_SYS,
+    STACK_FAULT_OVUV,
+    STACK_FAULT_OTUT,
+    STACK_FAULT_COMM,
+    STACK_FAULT_OTP,
+    STACK_FAULT_COMP_ADC,
+    STACK_FAULT_PROT,
     STACK_FAULT_FACTLDERR,
     STACK_FAULT_FACT_CRC,
     STACK_FAULT_VALIDATE_DET, //could not find
@@ -48,8 +56,6 @@ typedef enum
     STACK_FAULT_COMMCRL_DET, // could not find
     STACK_FAULT_STOP_DET,
     STACK_FAULT_AVAO_SW_FAIL, // could not find
-    STACK_FAULT_SPI_FRAME, // ignore
-    STACK_FAULT_SPI_PHY, // ignore
     STACK_FAULT_COML_FRAME, //by bit
     STACK_FAULT_COML_PHY, //PHY?
     STACK_FAULT_COMH_FRAME, // by bit
