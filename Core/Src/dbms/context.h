@@ -135,6 +135,11 @@ typedef struct _DbmsCtx
 
     CellMonitorState cell_states[N_SIDES];
 
+    struct {
+        uint64_t global_ts;
+        uint64_t local_ts;
+    } realtime;
+
     uint64_t last_rx_heartbeat;
     uint64_t iter_start_us;
     uint64_t iter_end_us;
@@ -158,8 +163,12 @@ typedef struct _DbmsCtx
         int32_t energy_wh;
     } isense; // current = I, sense = sensor
 
-    float initial_charge;               // Q0
-    float accumulated_lost_charge;      // Qd
+    struct {
+        float initial;              // Q0
+        float accumulated_loss;     // Qd
+        uint32_t initial_set_ts;
+        bool need_to_save;
+    } qstats;                       // charge stats
 
     struct
     {

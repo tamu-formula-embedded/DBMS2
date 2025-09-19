@@ -49,6 +49,11 @@ void DbmsInit(DbmsCtx* ctx)
         // todo: check error
     }
 
+    if ((status = LoadInitialCharge(ctx)) != 0)
+    {
+
+    }
+
     HAL_TIM_Base_Start(ctx->hw.timer);
 
     if ((status = ConfigCan(ctx)) != HAL_OK)
@@ -144,6 +149,19 @@ void DbmsIter(DbmsCtx* ctx)
     }
 
     //
+    //  Store the Q0 value when required
+    //
+    if (ctx->qstats.need_to_save)
+    {
+        if ((status = SaveInitialCharge(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+            ctx->led_state = LED_ERROR;
+        }
+        ctx->qstats.need_to_save = false;
+    }
+
+    //
     //  Let everybody know that we are alive
     //
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
@@ -188,10 +206,7 @@ void DbmsIter(DbmsCtx* ctx)
         StackUpdateTempReadings(ctx);
         
         FillMissingTempReadings(ctx);
-        // CanLog(ctx, "T%d\n", CLAMP_U16((long)lroundf(ctx->cell_states[0].temps[6] * 1000.0f)));
         HAL_Delay(8);
-
-        // CanLog(ctx, "first: %d\n", (int)(ctx->data.lut_therm_v_to_t[0].value));
 
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
         CheckCurrentFaults(ctx);
@@ -249,6 +264,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             ctx->led_state = LED_ACTIVE;
         }
 
+        uint64_t remote_ts = be64_to_u64(rx_data);
+        SyncRealTime(ctx, remote_ts);
+
         break;
 
     case CANID_RX_SET_CONFIG:
@@ -284,6 +302,11 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
     case CANID_RX_CLEAR_FAULTS:
         ClearAllFaults(ctx);
+        break;
+    case CANID_RX_SET_INITIAL_CHARGE:
+        ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;
+        ctx->qstats.initial_set_ts = (int32_t)(GetRealTime(ctx) / 1000);
+        ctx->qstats.need_to_save = true;
         break;
     default:
         ctx->stats.n_unmatched_can_frames++;
