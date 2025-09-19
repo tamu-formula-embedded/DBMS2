@@ -4,6 +4,7 @@
 #include "stack_controller.h"
 #include "context.h"
 #include "data.h"
+#include "fault_handler.h"
 
 static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
 static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
@@ -590,34 +591,42 @@ void StackUpdateFaultReadings(DbmsCtx* ctx)
     uint8_t fault_summaries[N_MONITORS];
     PollFaultSummary(ctx, fault_summaries);
 
-
     for (int i = 0; i < N_MONITORS; i++){
         if (fault_summaries[i] != 0x00){
             CanLog(ctx, "monitor: %d, Faults: %X", i, fault_summaries[i]);
             
             if (fault_summaries[i] % 2 == 1){
                 // TODO FAULT_PWR handling and throw hard fault
+                StackSetFault(ctx, i, STACK_FAULT_PWR);
+                ThrowHardFault(ctx);
             }
             if ((fault_summaries[i] >> 1) % 2 == 1){
                 // TODO FAULT_SYS handling and throw hard fault
+                StackSetFault(ctx, i, STACK_FAULT_SYS);
             }
             if ((fault_summaries[i] >> 2) % 2 == 1){
                 // TODO FAULT_OVUV handling and throw hard fault
+                StackSetFault(ctx, i, STACK_FAULT_OVUV);
             }
             if ((fault_summaries[i] >> 3) % 2 == 1){
                 // TODO FAULT_OTUT handling and throw hard fault
+                StackSetFault(ctx, i, STACK_FAULT_OTUT);
             }
             if ((fault_summaries[i] >> 4) % 2 == 1){
                 // TODO FAULT_COMM handling and throw soft fault
+                StackSetFault(ctx, i, STACK_FAULT_COMM);
             }
             if ((fault_summaries[i] >> 5) % 2 == 1){
                 // TODO FAULT_OTP handling and throw soft fault
+                StackSetFault(ctx, i, STACK_FAULT_OTP);
             }
             if ((fault_summaries[i] >> 6) == 1){
                 // TODO FAULT_COMP_ADC handling and throw hard fault
+                StackSetFault(ctx, i, STACK_FAULT_COMP_ADC);
             }
             if ((fault_summaries[i] >> 7) % 2 == 1){
                 // TODO FAULT_PROT handling and throw hard fault
+                StackSetFault(ctx, i, STACK_FAULT_PROT);
             }
         }
     }
