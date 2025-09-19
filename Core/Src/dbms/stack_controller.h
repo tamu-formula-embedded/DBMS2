@@ -12,6 +12,7 @@
 #include "vehicle_interface.h"
 
 #include "data.h"
+#include "model.h"
 
 #define STACK_SEND_TIMEOUT 50
 #define STACK_RECV_TIMEOUT 50
@@ -67,5 +68,7 @@ void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size
 void MonitorLedBlink(DbmsCtx* ctx);
 
 void StackUpdateFaultReadings(DbmsCtx* ctx);
+
+void FillMissingTempReadings(DbmsCtx* ctx);
 
 #endif

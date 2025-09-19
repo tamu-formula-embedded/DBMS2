@@ -38,7 +38,8 @@ Core/Src/dbms/charging.o: ../Core/Src/dbms/charging.c \
  ../Core/Src/dbms/context.h ../Core/Src/dbms/led_controller.h \
  ../Core/Src/dbms/stack_controller.h ../Core/Src/dbms/sched.h \
  ../Core/Src/dbms/storage.h ../Core/Src/dbms/vehicle_interface.h \
- ../Core/Src/dbms/settings.h ../Core/Src/dbms/data.h
+ ../Core/Src/dbms/settings.h ../Core/Src/dbms/data.h \
+ ../Core/Src/dbms/model.h
 ../Core/Src/dbms/charging.h:
 ../Core/Src/dbms/common.h:
 ../Core/Src/dbms/lut.h:
@@ -86,3 +87,4 @@ Core/Src/dbms/charging.o: ../Core/Src/dbms/charging.c \
 ../Core/Src/dbms/vehicle_interface.h:
 ../Core/Src/dbms/settings.h:
 ../Core/Src/dbms/data.h:
+../Core/Src/dbms/model.h:

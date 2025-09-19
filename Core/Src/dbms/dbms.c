@@ -2,9 +2,10 @@
 //  Copyright (c) Texas A&M University.
 //
 #include "dbms.h"
-#include "context.h"
-#include "data.h"
 #include "led_controller.h"
+#include "vehicle_interface.h"
+#include <math.h>
+
 
 static DbmsSettings mem_settings;
 
@@ -59,9 +60,9 @@ void DbmsInit(DbmsCtx* ctx)
 
     HAL_Delay(10);
     ConfigCurrentSensor(ctx, 10);
-    DataInit(ctx);
 
     ConfigPwmLines(ctx);
+    DataInit(ctx);
 
     // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
     ctx->led_state = LED_IDLE;
@@ -183,10 +184,25 @@ void DbmsIter(DbmsCtx* ctx)
     {
         StackUpdateVoltReadings(ctx);
         HAL_Delay(8);
+
         StackUpdateTempReadings(ctx);
-        // HAL_Delay(8);
+        
+        FillMissingTempReadings(ctx);
+        // CanLog(ctx, "T%d\n", CLAMP_U16((long)lroundf(ctx->cell_states[0].temps[6] * 1000.0f)));
+        HAL_Delay(8);
+
+        // CanLog(ctx, "first: %d\n", (int)(ctx->data.lut_therm_v_to_t[0].value));
+
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
+        CheckCurrentFaults(ctx);
+        CheckTemperatureFaults(ctx);
+        CheckVoltageFaults(ctx);
     }
+
+    //
+    //  Update the state of charge model
+    //
+    UpdateModel(ctx);   // TODO: add condition for when we update this
 
     //
     //  Transmit important telemetry
@@ -198,9 +214,6 @@ void DbmsIter(DbmsCtx* ctx)
         SendCellVoltages(ctx);
         SendCellTemps(ctx);
     }
-
-    // this is temporary
-    ctx->model.soc = (ctx->stats.iters % 100) / 100.0;
 
     //
     //  Update the LEDs (etc.). Led state should be set every time the cur_state changes
@@ -215,11 +228,9 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->iter_end_us = GetUs(ctx);
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
-
-    // MonitorLedBlink(ctx);
-    // *((uint32_t*)wrap_queue_push(&ctx->stats.looptimes_q)) = ctx->iter_end_us - ctx->iter_start_us;
-    // DelayUs(ctx, end_delay);
-    HAL_Delay(20); // ^ todo: fix all this
+    
+    HAL_Delay(ctx->stats.end_delay / 1000);
+    DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
@@ -232,6 +243,12 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     {
     case CANID_RX_HEARTBEAT:
         ctx->last_rx_heartbeat = HAL_GetTick();
+        
+        if (ctx->led_state == LED_COMM_ERROR)
+        {
+            ctx->led_state = LED_ACTIVE;
+        }
+
         break;
 
     case CANID_RX_SET_CONFIG:
