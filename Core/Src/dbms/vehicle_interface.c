@@ -347,8 +347,8 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 18, ctx->stats.n_eeprom_writes);
     SendMetric(ctx, 19, ctx->faults_crc);
 
-    SendMetric(ctx, 20, F2I_K(ctx->initial_charge, 1e6));
-    SendMetric(ctx, 21, F2I_K(ctx->accumulated_lost_charge, 1e6));
+    SendMetric(ctx, 20, F2I_K(ctx->qstats.initial, 1e6));
+    SendMetric(ctx, 21, F2I_K(ctx->qstats.accumulated_loss, 1e6));
     SendMetric(ctx, 22, F2I_K(ctx->model.Q, 1e6));
     SendMetric(ctx, 23, F2I_K(ctx->model.z_oc, 1e6));
     SendMetric(ctx, 24, F2I_K(ctx->model.V_oc, 1e6));
@@ -360,6 +360,9 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 30, F2I_K(ctx->model.R_rc, 1e6));
     SendMetric(ctx, 31, F2I_K(ctx->model.R_pack, 1e6));
     SendMetric(ctx, 32, F2I_K(ctx->model.I_lim, 1e6));
+
+    SendMetric(ctx, 33, ctx->qstats.initial_set_ts);
+    SendMetric(ctx, 34, (uint32_t)(GetRealTime(ctx) / 1000));   // conv to S
 
     // TODO: perm sol.
     // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);

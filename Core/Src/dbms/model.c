@@ -162,32 +162,40 @@ void UpdateModel(DbmsCtx* ctx)
     float avg_t = CalcAvgTemp(ctx);
 
     float current = ctx->isense.current_ma / 1000.0;
-    ctx->accumulated_lost_charge = ctx->isense.charge_as * 3600.0;    // convert to Ah
+    ctx->qstats.accumulated_loss = ctx->isense.charge_as * 3600.0;    // convert to Ah
     // ^ this should probably be asserted as positive
 
     //temp 
-    ctx->accumulated_lost_charge = 0;
-    ctx->initial_charge = 3.9;
+    ctx->qstats.accumulated_loss = 0;
+    ctx->qstats.initial = 3.9;
 
     CanLog(ctx, "Avg T: %d\n",(int)(avg_t * 1000.0));
 
-    ComputeModel(&ctx->model, avg_t, current, ctx->initial_charge, ctx->accumulated_lost_charge, min_v);
+    ComputeModel(&ctx->model, avg_t, current, ctx->qstats.initial, ctx->qstats.accumulated_loss, min_v);
 }
+
+typedef struct {
+    uint64_t q0;
+    uint32_t set_at;
+} InitialChargeBuffer;
 
 int LoadInitialCharge(DbmsCtx* ctx)
 {
     int status;
-    uint64_t buffer;    
+    InitialChargeBuffer buffer;    
     if ((status = LoadStoredObject(ctx, EEPROM_INITIAL_CHARGE, &buffer, sizeof(buffer))) != 0)
     {
         return status;
     }
-    ctx->initial_charge = (float)buffer / 1e6;
+    ctx->qstats.initial = (float)(buffer.q0 / 1e6);
+    ctx->qstats.initial_set_ts = buffer.set_at;
     return 0;
 }
 
 int SaveInitialCharge(DbmsCtx* ctx)
 {
-    uint64_t buffer = (uint64_t)(ctx->initial_charge * 1e6);
+    InitialChargeBuffer buffer;
+    buffer.q0 = (uint64_t)(ctx->qstats.initial * 1e6);
+    buffer.set_at = ctx->qstats.initial_set_ts;
     return SaveStoredObject(ctx, EEPROM_INITIAL_CHARGE, &buffer, sizeof(buffer));
 }
