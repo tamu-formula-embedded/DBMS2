@@ -9,7 +9,7 @@
 #define ITER_TARGET_HZ 10
 
 // USER DEFINED UNIQUE TO EACH BATTERY
-#define N_SEGMENTS 1
+#define N_SEGMENTS 5
 #define N_SIDES_PER_SEG 2
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
@@ -182,6 +182,7 @@ typedef struct _DbmsCtx
         uint32_t controller_mask;
         uint32_t monitor_masks[N_MONITORS];
     } faults;
+    bool need_to_save_faults;
     uint16_t faults_crc;
 
     Model model;
