@@ -2,6 +2,7 @@
 //  Copyright (c) Texas A&M University.
 //
 #include "dbms.h"
+#include "fault_handler.h"
 #include "led_controller.h"
 #include "vehicle_interface.h"
 #include <math.h>
@@ -44,16 +45,6 @@ void DbmsInit(DbmsCtx* ctx)
         } // fatal error
     }
 
-    if ((status = LoadFaultState(ctx)) != 0)
-    {
-        // todo: check error
-    }
-
-    if ((status = LoadInitialCharge(ctx)) != 0)
-    {
-
-    }
-
     HAL_TIM_Base_Start(ctx->hw.timer);
 
     if ((status = ConfigCan(ctx)) != HAL_OK)
@@ -62,6 +53,19 @@ void DbmsInit(DbmsCtx* ctx)
         ctx->led_state = LED_ERROR;
         return;
     }
+
+    if ((status = LoadFaultState(ctx)) != 0)
+    {
+        CanLog(ctx, "fault st %d\n", status);
+    }
+
+    if ((status = LoadInitialCharge(ctx)) != 0)
+    {
+        // CanLog(ctx, "error loading initial charge %d\n", status);
+    }
+    SaveInitialCharge(ctx);
+
+    //CanLog(ctx, "initial charge %d\n", ctx->qstats.initial);
 
     HAL_Delay(10);
     ConfigCurrentSensor(ctx, 10);
@@ -214,6 +218,20 @@ void DbmsIter(DbmsCtx* ctx)
         CheckVoltageFaults(ctx);
     }
 
+    
+    //
+    //  save faults
+    //
+    if (ctx->need_to_save_faults)
+    {
+        if ((status = SaveFaultState(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+            ctx->led_state = LED_ERROR;
+        }
+        ctx->need_to_save_faults = false;
+    }
+    
     //
     //  Update the state of charge model
     //
