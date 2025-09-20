@@ -243,11 +243,11 @@ int LoadInitialCharge(DbmsCtx* ctx)
     InitialChargeBuffer buffer;    
     if ((status = LoadStoredObject(ctx, EEPROM_INITIAL_CHARGE, &buffer, sizeof(buffer))) != 0)
     {
-        return status;
+        // crc mismatch
     }
     ctx->qstats.initial = (float)(buffer.q0 / 1e6);
     ctx->qstats.initial_set_ts = buffer.set_at;
-    return 0;
+    return status;
 }
 
 int SaveInitialCharge(DbmsCtx* ctx)
