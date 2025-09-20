@@ -221,7 +221,7 @@ void UpdateModel(DbmsCtx* ctx)
 
     float v_pack = ctx->isense.voltage1_mv / 1e3f;
     float current = ctx->isense.current_ma / 1000.0;
-    ctx->qstats.accumulated_loss = ctx->isense.charge_as * 3600.0;    // convert to Ah
+    ctx->qstats.accumulated_loss = ctx->isense.charge_as / 3600.0;    // convert to Ah
     // ^ this should probably be asserted as positive
     //temp 
     // ctx->qstats.accumulated_loss = 0;
