@@ -31,6 +31,7 @@ void StackClearFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
     if (addr >= N_MONITORS) return;
     if (fault >= STACK_FAULT_TYPE_COUNT) return;
     ctx->faults.monitor_masks[addr] &= ~(1U << fault);
+    ctx->need_to_save_faults = true;
 }
 
 // TODO: make a version over all addr?
@@ -58,6 +59,7 @@ void ClearAllFaults(DbmsCtx* ctx)
     {
         ctx->faults.monitor_masks[i] = 0;
     }
+    ctx->need_to_save_faults = true;
 }
 
 void CheckVoltageFaults(DbmsCtx* ctx)
@@ -140,7 +142,7 @@ void ThrowHardFault(DbmsCtx* ctx)
     if (HasAnyFaults(ctx)) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
     else HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
 
-    SaveFaultState(ctx);
+    ctx->need_to_save_faults = true;
 }
 
 int SaveFaultState(DbmsCtx* ctx)
