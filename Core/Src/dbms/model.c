@@ -211,13 +211,13 @@ float CalcAvgVoltage(DbmsCtx* ctx)
 
 void UpdateModel(DbmsCtx* ctx)
 {
-    ctx->model.min_v = CalcMinVoltage(ctx);
-    ctx->model.max_v = CalcMaxVoltage(ctx);
-    ctx->model.avg_v = CalcAvgTemp(ctx);
+    ctx->stats.min_v = CalcMinVoltage(ctx);
+    ctx->stats.max_v = CalcMaxVoltage(ctx);
+    ctx->stats.avg_v = CalcAvgTemp(ctx);
 
-    ctx->model.min_t = CalcMinTemp(ctx);
-    ctx->model.max_t = CalcMaxTemp(ctx);
-    ctx->model.avg_t = CalcAvgTemp(ctx);
+    ctx->stats.min_t = CalcMinTemp(ctx);
+    ctx->stats.max_t = CalcMaxTemp(ctx);
+    ctx->stats.avg_t = CalcAvgTemp(ctx);
 
     float v_pack = ctx->isense.voltage1_mv / 1e3f;
     float current = ctx->isense.current_ma / 1000.0;
@@ -229,7 +229,7 @@ void UpdateModel(DbmsCtx* ctx)
 
     // CanLog(ctx, "Avg T: %d\n",(int)(avg_t * 1000.0));
 
-    ComputeModel(&ctx->model, ctx->model.avg_t, current, ctx->qstats.initial, ctx->qstats.accumulated_loss, v_pack, ctx->model.min_v);
+    ComputeModel(&ctx->model, ctx->stats.avg_t, current, ctx->qstats.initial, ctx->qstats.accumulated_loss, v_pack, ctx->stats.min_v);
 }
 
 typedef struct {
