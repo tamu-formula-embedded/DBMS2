@@ -116,6 +116,13 @@ typedef struct _Model   // Outputs from the ECM model
 
     float R_pack;
     float I_lim;
+
+    float min_v;
+    float max_v;
+    float avg_v;
+    float min_t;
+    float max_t;
+    float avg_t;
 } Model;
 
 typedef struct _DbmsCtx
