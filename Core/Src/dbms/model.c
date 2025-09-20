@@ -88,10 +88,10 @@ float F_RC_R(float z, float T_bar, int r_n)
 //
 //  Calc DCIR Resistance
 //
-float F_DCIR(float V_oc, float I)
+float F_DCIR(float V_oc, float V_pack, float I)
 {
     // TOOD: clamp I (>0)
-    return V_oc / I;
+    return (V_oc - V_pack) / I;
 }
 
 // 
@@ -103,7 +103,7 @@ float F_I_Limit(float V_min, float R_pack)
     return V_min / R_pack;
 }
 
-void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_min)
+void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_pack, float V_min)
 {
     m->Q = F_Q(Q0, Qd);
     
@@ -113,7 +113,7 @@ void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_mi
     m->V_oc = F_OCV(m->z_oc, T_bar);
     if (I > 0) 
     {
-        m->R_oc = F_DCIR(m->V_oc, I);
+        m->R_oc = F_DCIR(m->V_oc, V_pack, I);
     }
     else m->R_oc = 0;
     
@@ -129,6 +129,33 @@ void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_mi
 
     m->I_lim = F_I_Limit(V_min, m->R_pack);
 }
+
+float CalcMinTemp(DbmsCtx* ctx)
+{
+    float t_min = 0;
+    for (int i = 0; i < N_SIDES; i++)
+    {
+        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
+        {
+            t_min = MIN(t_min, ctx->cell_states[i].temps[j]);
+        }
+    }
+    return t_min;
+}
+
+float CalcMaxTemp(DbmsCtx* ctx)
+{
+    float t_max = 0;
+    for (int i = 0; i < N_SIDES; i++)
+    {
+        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
+        {
+            t_max = MAX(t_max, ctx->cell_states[i].temps[j]);
+        }
+    }
+    return t_max;
+}
+
 
 float CalcAvgTemp(DbmsCtx* ctx)
 {
@@ -156,37 +183,53 @@ float CalcMinVoltage(DbmsCtx* ctx)
     return v_min;
 }
 
-
-float CalcMaxTemp(DbmsCtx* ctx)
+float CalcMaxVoltage(DbmsCtx* ctx)
 {
-    float t_max = 0;
+    float v_max = 0;
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
-            t_max = MAX(t_max, ctx->cell_states[i].temps[j]);
+            v_max = MAX(v_max, ctx->cell_states[i].voltages[j]);
         }
     }
-    return t_max;
+    return v_max;
+}
+
+float CalcAvgVoltage(DbmsCtx* ctx)
+{
+    float sum = 0;
+    for (int i = 0; i < N_SIDES; i++)
+    {
+        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
+        {
+            sum += ctx->cell_states[i].voltages[j];
+        }
+    }
+    return sum / (N_SIDES * N_GROUPS_PER_SIDE);
 }
 
 void UpdateModel(DbmsCtx* ctx)
 {
-    float min_v = CalcMinVoltage(ctx);
-    float max_t = CalcMaxTemp(ctx);
-    float avg_t = CalcAvgTemp(ctx);
+    ctx->model.min_v = CalcMinVoltage(ctx);
+    ctx->model.max_v = CalcMaxVoltage(ctx);
+    ctx->model.avg_v = CalcAvgTemp(ctx);
 
+    ctx->model.min_t = CalcMinTemp(ctx);
+    ctx->model.max_t = CalcMaxTemp(ctx);
+    ctx->model.avg_t = CalcAvgTemp(ctx);
+
+    float v_pack = ctx->isense.voltage1_mv / 1e3f;
     float current = ctx->isense.current_ma / 1000.0;
     ctx->qstats.accumulated_loss = ctx->isense.charge_as * 3600.0;    // convert to Ah
     // ^ this should probably be asserted as positive
-    CanLog(ctx, "mv: %d\n", (int) (max_t * 1000));
     //temp 
     // ctx->qstats.accumulated_loss = 0;
     // ctx->qstats.initial = 3.9;
 
     // CanLog(ctx, "Avg T: %d\n",(int)(avg_t * 1000.0));
 
-    ComputeModel(&ctx->model, avg_t, current, ctx->qstats.initial, ctx->qstats.accumulated_loss, min_v);
+    ComputeModel(&ctx->model, ctx->model.avg_t, current, ctx->qstats.initial, ctx->qstats.accumulated_loss, v_pack, ctx->model.min_v);
 }
 
 typedef struct {
