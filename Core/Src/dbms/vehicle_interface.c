@@ -364,12 +364,12 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 33, ctx->qstats.initial_set_ts);
     SendMetric(ctx, 34, (uint32_t)(GetRealTime(ctx) / 1000));   // conv to S
 
-    // SendMetric(ctx, 35, ctx->stats.max_t);
-    // SendMetric(ctx, 36, ctx->stats.min_t);
-    // SendMetric(ctx, 37, ctx->stats.avg_t);
-    // SendMetric(ctx, 38, ctx->stats.max_v);
-    // SendMetric(ctx, 39, ctx->stats.min_v);
-    // SendMetric(ctx, 40, ctx->stats.avg_v);
+    SendMetric(ctx, 35, F2I_K(ctx->stats.max_t, 1e3));
+    SendMetric(ctx, 36, F2I_K(ctx->stats.min_t, 1e3));
+    SendMetric(ctx, 37, F2I_K(ctx->stats.avg_t, 1e3));
+    SendMetric(ctx, 38, F2I_K(ctx->stats.max_v, 1e4));
+    SendMetric(ctx, 39, F2I_K(ctx->stats.min_v, 1e4));
+    SendMetric(ctx, 40, F2I_K(ctx->stats.avg_v, 1e4));
     // TODO: perm sol.
     // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
     
@@ -378,7 +378,7 @@ int SendMetrics(DbmsCtx* ctx)
 
 void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time)
 {
-    static uint8_t frame_set_stop_mode[8] = {0x34, 1, 0, 0, 0, 0, 0, 0};
+    static uint8_t frame_set_stop_mode[8] = {0x34, 0, 1, 0, 0, 0, 0, 0};
     static uint8_t frame_set_run_mode[8] = {0x34, 1, 1, 0, 0, 0, 0, 0};
     static uint8_t frame_set_metric_cycle[8] = {0x20, 2, 0, 0, 0, 0, 0, 0};
     frame_set_metric_cycle[2] = (cycle_time & 0xFF00) >> 8;

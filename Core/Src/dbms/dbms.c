@@ -223,10 +223,13 @@ void DbmsIter(DbmsCtx* ctx)
     //  Transmit important telemetry
     //
     SendMetrics(ctx);
-    if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000)
+    // if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000)
+    if (ctx->stats.iters % 4 == 0)
     {
-        ctx->batch_telem_ts = ctx->iter_start_us;
+        // ctx->batch_telem_ts = ctx->iter_start_us;
         SendCellVoltages(ctx);
+    }
+    if (ctx->stats.iters % 4 == 2){
         SendCellTemps(ctx);
     }
 
