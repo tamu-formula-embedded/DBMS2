@@ -14,6 +14,7 @@
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
 #define N_TEMPS_PER_MONITOR 7
+#define N_P_GROUP 3
 // DONT CHANGE AFTER THIS
 
 #define N_TEMPS_PER_SIDE (N_MONITORS_PER_SIDE * N_TEMPS_PER_MONITOR)
@@ -121,7 +122,7 @@ typedef struct _Model   // Outputs from the ECM model
     float R2;
     float R_rc;
 
-    float R_pack;
+    float R_cell;
     float I_lim;
 } Model;
 
