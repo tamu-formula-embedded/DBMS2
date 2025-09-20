@@ -68,7 +68,7 @@ void DbmsInit(DbmsCtx* ctx)
     if ((status = LoadInitialCharge(ctx)) != 0)
     {
         // CanLog(ctx, "error loading initial charge %d\n", status);
-    }
+    }   
     SaveInitialCharge(ctx);
 
     HAL_Delay(10);

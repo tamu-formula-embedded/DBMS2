@@ -358,7 +358,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 28, F2I_K(ctx->model.R1, 1e6));
     SendMetric(ctx, 29, F2I_K(ctx->model.R2, 1e6));
     SendMetric(ctx, 30, F2I_K(ctx->model.R_rc, 1e6));
-    SendMetric(ctx, 31, F2I_K(ctx->model.R_pack, 1e6));
+    SendMetric(ctx, 31, F2I_K(ctx->model.R_cell, 1e6));
     SendMetric(ctx, 32, F2I_K(ctx->model.I_lim, 1e6));
 
     SendMetric(ctx, 33, ctx->qstats.initial_set_ts);

@@ -97,13 +97,13 @@ float F_DCIR(float V_oc, float V_pack, float I)
 // 
 //  Calc I Limit
 //
-float F_I_Limit(float V_min, float R_pack)
+float F_I_Limit(float V_min, float V_dyn_min, float R_cell)
 {
     // TOOD: clamp R_pack (>0)
-    return V_min / R_pack;
+    return ((V_min - V_dyn_min) / R_cell) * N_P_GROUP;
 }
 
-void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_pack, float V_min)
+void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_pack, float V_dyn_min, float V_min)
 {
     m->Q = F_Q(Q0, Qd);
     
@@ -123,11 +123,12 @@ void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_pa
     m->R0 = F_RC_R(m->z_rc, T_bar, 0);
     m->R1 = F_RC_R(m->z_rc, T_bar, 1);
     m->R2 = F_RC_R(m->z_rc, T_bar, 2);
-    m->R_rc = m->R0 + m->R1 + m->R2;
 
-    m->R_pack = MAX(m->R_oc, m->R_rc);
+    m->R_rc = ((m->R0 + m->R1 + m->R2));
 
-    m->I_lim = F_I_Limit(V_min, m->R_pack);
+    m->R_cell = (MAX(m->R_oc, m->R_rc));
+
+    m->I_lim = F_I_Limit(V_min, V_dyn_min, m->R_cell);
 }
 
 float CalcMinTemp(DbmsCtx* ctx)
@@ -211,25 +212,28 @@ float CalcAvgVoltage(DbmsCtx* ctx)
 
 void UpdateModel(DbmsCtx* ctx)
 {
-    ctx->stats.min_v = CalcMinVoltage(ctx);
-    ctx->stats.max_v = CalcMaxVoltage(ctx);
-    ctx->stats.avg_v = CalcAvgVoltage(ctx);
+    ctx->stats.min_v = CalcMinVoltage(ctx) / 1000.0f;
+    ctx->stats.max_v = CalcMaxVoltage(ctx) / 1000.0f;
+    ctx->stats.avg_v = CalcAvgVoltage(ctx) / 1000.0f;
 
     ctx->stats.min_t = CalcMinTemp(ctx);
     ctx->stats.max_t = CalcMaxTemp(ctx);
     ctx->stats.avg_t = CalcAvgTemp(ctx);
 
-    float v_pack = ctx->isense.voltage1_mv / 1e3f;
-    float current = ctx->isense.current_ma / 1000.0;
+    float v_pack = (ctx->isense.voltage1_mv / 1e3f) / (N_SIDES * N_GROUPS_PER_SIDE);
+    float current = (ctx->isense.current_ma / 1000.0) / N_P_GROUP;
     ctx->qstats.accumulated_loss = ctx->isense.charge_as / 3600.0;    // convert to Ah
+
+    // CanLog("DY %d\n", GetSetting(ctx, DYNAMIC_V_MIN));
+    float V_dyn_min = GetSetting(ctx, DYNAMIC_V_MIN) / 1000.0f;
     // ^ this should probably be asserted as positive
     //temp 
-    // ctx->qstats.accumulated_loss = 0;
+    // ctx->qstats.accumulated_loss = 0;S
     // ctx->qstats.initial = 3.9;
 
     // CanLog(ctx, "Avg T: %d\n",(int)(avg_t * 1000.0));
 
-    ComputeModel(&ctx->model, ctx->stats.avg_t, current, ctx->qstats.initial, ctx->qstats.accumulated_loss, v_pack, ctx->stats.min_v);
+    ComputeModel(&ctx->model, ctx->stats.avg_t, current, ctx->qstats.initial, ctx->qstats.accumulated_loss, v_pack, V_dyn_min, ctx->stats.min_v);
 }
 
 typedef struct {
