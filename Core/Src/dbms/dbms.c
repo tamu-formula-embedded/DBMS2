@@ -54,18 +54,22 @@ void DbmsInit(DbmsCtx* ctx)
         return;
     }
 
+    //
+    //  Load the fault state (we know this throws CRC mismatch)
+    //
     if ((status = LoadFaultState(ctx)) != 0)
     {
-        CanLog(ctx, "fault st %d\n", status);
+        // CanLog(ctx, "fault st %d\n", status);
     }
 
+    //
+    //  Load the initial charge (we know this throws CRC mismatch)
+    //
     if ((status = LoadInitialCharge(ctx)) != 0)
     {
         // CanLog(ctx, "error loading initial charge %d\n", status);
     }
     SaveInitialCharge(ctx);
-
-    //CanLog(ctx, "initial charge %d\n", ctx->qstats.initial);
 
     HAL_Delay(10);
     ConfigCurrentSensor(ctx, 10);
