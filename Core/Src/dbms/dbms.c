@@ -72,7 +72,10 @@ void DbmsInit(DbmsCtx* ctx)
     SaveInitialCharge(ctx);
 
     HAL_Delay(10);
-    ConfigCurrentSensor(ctx, 10);
+    if (ctx->stats.iters % 10 == 0){
+        ConfigCurrentSensor(ctx, 10);
+    }
+    // ConfigCurrentSensor(ctx, 10);
 
     ConfigPwmLines(ctx);
     DataInit(ctx);
