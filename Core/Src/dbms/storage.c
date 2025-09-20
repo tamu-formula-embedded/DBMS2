@@ -64,7 +64,7 @@ int SaveStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_s
     uint16_t crc = CalcCrc16((uint8_t*)object, obj_size);
     memcpy(buf + obj_size, &crc, sizeof(crc));
 
-    return WriteEEPROM(ctx, EEPROM_SETTINGS_ADDR, buf, sizeof(buf));
+    return WriteEEPROM(ctx, mem_addr, buf, sizeof(buf));
 }
 
 int LoadStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_size)
@@ -73,7 +73,7 @@ int LoadStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_s
     int status = 0;
     uint8_t buf[obj_size + sizeof(uint16_t)];
 
-    if ((status = ReadEEPROM(ctx, EEPROM_SETTINGS_ADDR, buf, sizeof(buf))) != HAL_OK)
+    if ((status = ReadEEPROM(ctx, mem_addr, buf, sizeof(buf))) != HAL_OK)
     {
         return status;
     }
