@@ -58,7 +58,7 @@ float LookupFromZ(float z, float T_bar, float* x_t_lows, float* x_t_highs, float
 
     float a = x_t_highs[i_low];
     float b = x_t_highs[i_high];
-    float x_t_low = (b-a) * i_k + a;      // why the mistmatch?
+    float x_t_low = (b-a) * i_k + a;      // why the mismatch?
 
     a = x_t_lows[i_high];
     b = x_t_lows[i_low];
@@ -156,20 +156,35 @@ float CalcMinVoltage(DbmsCtx* ctx)
     return v_min;
 }
 
+
+float CalcMaxTemp(DbmsCtx* ctx)
+{
+    float t_max = 0;
+    for (int i = 0; i < N_SIDES; i++)
+    {
+        for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
+        {
+            t_max = MAX(t_max, ctx->cell_states[i].temps[j]);
+        }
+    }
+    return t_max;
+}
+
 void UpdateModel(DbmsCtx* ctx)
 {
     float min_v = CalcMinVoltage(ctx);
+    float max_t = CalcMaxTemp(ctx);
     float avg_t = CalcAvgTemp(ctx);
 
     float current = ctx->isense.current_ma / 1000.0;
     ctx->qstats.accumulated_loss = ctx->isense.charge_as * 3600.0;    // convert to Ah
     // ^ this should probably be asserted as positive
-
+    CanLog(ctx, "mv: %d\n", (int) (max_t * 1000));
     //temp 
-    ctx->qstats.accumulated_loss = 0;
-    ctx->qstats.initial = 3.9;
+    // ctx->qstats.accumulated_loss = 0;
+    // ctx->qstats.initial = 3.9;
 
-    CanLog(ctx, "Avg T: %d\n",(int)(avg_t * 1000.0));
+    // CanLog(ctx, "Avg T: %d\n",(int)(avg_t * 1000.0));
 
     ComputeModel(&ctx->model, avg_t, current, ctx->qstats.initial, ctx->qstats.accumulated_loss, min_v);
 }
