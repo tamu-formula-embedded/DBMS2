@@ -213,7 +213,7 @@ void UpdateModel(DbmsCtx* ctx)
 {
     ctx->stats.min_v = CalcMinVoltage(ctx);
     ctx->stats.max_v = CalcMaxVoltage(ctx);
-    ctx->stats.avg_v = CalcAvgTemp(ctx);
+    ctx->stats.avg_v = CalcAvgVoltage(ctx);
 
     ctx->stats.min_t = CalcMinTemp(ctx);
     ctx->stats.max_t = CalcMaxTemp(ctx);
