@@ -364,12 +364,12 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 33, ctx->qstats.initial_set_ts);
     SendMetric(ctx, 34, (uint32_t)(GetRealTime(ctx) / 1000));   // conv to S
 
-    SendMetric(ctx, 35, ctx->stats.max_t);
-    SendMetric(ctx, 36, ctx->stats.min_t);
-    SendMetric(ctx, 37, ctx->stats.avg_t);
-    SendMetric(ctx, 38, ctx->stats.max_v);
-    SendMetric(ctx, 39, ctx->stats.min_v);
-    SendMetric(ctx, 40, ctx->stats.avg_v);
+    // SendMetric(ctx, 35, ctx->stats.max_t);
+    // SendMetric(ctx, 36, ctx->stats.min_t);
+    // SendMetric(ctx, 37, ctx->stats.avg_t);
+    // SendMetric(ctx, 38, ctx->stats.max_v);
+    // SendMetric(ctx, 39, ctx->stats.min_v);
+    // SendMetric(ctx, 40, ctx->stats.avg_v);
     // TODO: perm sol.
     // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
     
