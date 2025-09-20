@@ -213,12 +213,14 @@ void DbmsIter(DbmsCtx* ctx)
         HAL_Delay(8);
 
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
-        CheckCurrentFaults(ctx);
-        CheckTemperatureFaults(ctx);
-        CheckVoltageFaults(ctx);
-    }
 
-    
+        if (ctx->stats.iters > 10) {
+            CheckCurrentFaults(ctx);
+            CheckTemperatureFaults(ctx);
+            CheckVoltageFaults(ctx);
+        }
+
+    }
     //
     //  save faults
     //
