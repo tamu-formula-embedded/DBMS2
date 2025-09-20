@@ -132,7 +132,7 @@ void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_pa
 
 float CalcMinTemp(DbmsCtx* ctx)
 {
-    float t_min = 0;
+    float t_min = 999;
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
@@ -172,7 +172,7 @@ float CalcAvgTemp(DbmsCtx* ctx)
 
 float CalcMinVoltage(DbmsCtx* ctx)
 {
-    float v_min = 0;
+    float v_min = 999999;
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
