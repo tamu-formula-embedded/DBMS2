@@ -594,6 +594,7 @@ void StackUpdateFaultReadings(DbmsCtx* ctx)
     for (int i = 0; i < N_MONITORS; i++){
         if (fault_summaries[i] != 0x00){
             CanLog(ctx, "monitor: %d, Faults: %X", i, fault_summaries[i]);
+            ctx->faults.monitor_fault_summary[i] = fault_summaries[i];
             
             if (fault_summaries[i] % 2 == 1){
                 // TODO FAULT_PWR handling and throw hard fault

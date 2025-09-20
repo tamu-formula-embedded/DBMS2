@@ -26,14 +26,6 @@ typedef enum
 typedef enum
 {
     STACK_FAULT_CONF_MON_ERR = 0, //could not find
-    STACK_FAULT_PWR,
-    STACK_FAULT_SYS,
-    STACK_FAULT_OVUV,
-    STACK_FAULT_OTUT,
-    STACK_FAULT_COMM,
-    STACK_FAULT_OTP,
-    STACK_FAULT_COMP_ADC,
-    STACK_FAULT_PROT,
     STACK_FAULT_FACTLDERR,
     STACK_FAULT_FACT_CRC,
     STACK_FAULT_VALIDATE_DET, //could not find
@@ -62,6 +54,19 @@ typedef enum
     STACK_FAULT_COMH_PHY, // PHY?
     STACK_FAULT_TYPE_COUNT // Total number of fault types -- should be last
 } StackFaultType;
+
+typedef enum{
+    STACK_FAULT_PWR,
+    STACK_FAULT_SYS,
+    STACK_FAULT_OVUV,
+    STACK_FAULT_OTUT,
+    STACK_FAULT_COMM,
+    STACK_FAULT_OTP,
+    STACK_FAULT_COMP_ADC,
+    STACK_FAULT_PROT
+} MonitorFaultCategory;
+
+
 
 void ControllerSetFault(DbmsCtx* ctx, ControllerFaultType fault);
 void ControllerClearFault(DbmsCtx* ctx, ControllerFaultType fault);
