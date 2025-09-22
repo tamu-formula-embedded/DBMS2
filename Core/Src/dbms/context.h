@@ -164,8 +164,10 @@ typedef struct _DbmsCtx
     struct
     {
         uint32_t controller_mask;
-        uint32_t monitor_masks[N_MONITORS];
+        uint8_t bridge_fault_summary;
+        uint32_t bridge_faults;
         uint8_t monitor_fault_summary[N_MONITORS];
+        uint16_t monitor_pwr_faults[N_MONITORS];
     } faults;
     uint16_t faults_crc;
 
