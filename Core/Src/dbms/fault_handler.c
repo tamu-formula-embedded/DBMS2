@@ -19,34 +19,51 @@ bool ControllerHasFault(DbmsCtx* ctx, ControllerFaultType fault)
     return (ctx->faults.controller_mask & (1U << fault)) != 0;
 }
 
-void StackSetFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
+void BridgeSetFaultSummary(DbmsCtx* ctx, uint8_t fault_summary_reg)
 {
-    if (addr >= N_MONITORS) return;
-    if (fault >= STACK_FAULT_TYPE_COUNT) return;
-    ctx->faults.monitor_masks[addr] |= (1U << fault);
+    ctx->faults.bridge_fault_summary = fault_summary_reg;
 }
 
-void StackClearFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
+void BridgeSetFault(DbmsCtx* ctx, BridgeFault fault)
 {
-    if (addr >= N_MONITORS) return;
-    if (fault >= STACK_FAULT_TYPE_COUNT) return;
-    ctx->faults.monitor_masks[addr] &= ~(1U << fault);
+    if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
+    ctx->faults.bridge_faults |= (1U << fault);
 }
 
-// TODO: make a version over all addr?
-bool StackHasFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
+void BridgeClearFault(DbmsCtx* ctx, BridgeFault fault)
 {
-    if (addr >= N_MONITORS) return false;
-    if (fault >= STACK_FAULT_TYPE_COUNT) return false;
-    return (ctx->faults.monitor_masks[addr] & (1U << fault)) != 0;
+    if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
+    ctx->faults.bridge_faults &= ~(1U << fault);
 }
+
+bool BridgeHasFault(DbmsCtx* ctx, BridgeFault fault)
+{
+    if (fault >= BRIDGE_FAULT_TYPE_COUNT) return false;
+    return (ctx->faults.bridge_faults & (1U << fault)) != 0;
+}
+
+// bool StackHasFault(DbmsCtx* ctx, MonitorFaultType fault)
+// {
+//     if (fault >= 8) return false;
+//     for (int i = 0; i < N_MONITORS; i++){
+//         if ((ctx->faults.monitor_fault_summary[i] & (1U << fault)) != 0) return true;
+//     }
+//     return false;
+// }
+
+// void StackSetFault(DbmsCtx* ctx, uint8_t addr, BridgeFault fault)
+// {
+//     if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
+//     ctx->faults.monitor_fault |= (1U << fault);
+// }
 
 bool HasAnyFaults(DbmsCtx* ctx)
 {
     if (ctx->faults.controller_mask != 0) return true;
+    if (ctx->faults.bridge_fault_summary != 0) return true;
     for (int i = 0; i < N_MONITORS; i++)
     {
-        if (ctx->faults.monitor_masks[i] != 0) return true;
+        if (ctx->faults.monitor_fault_summary[i] != 0) return true;
     }
     return false;
 }
@@ -54,9 +71,11 @@ bool HasAnyFaults(DbmsCtx* ctx)
 void ClearAllFaults(DbmsCtx* ctx)
 {
     ctx->faults.controller_mask = 0;
+    ctx->faults.bridge_fault_summary = 0;
+    ctx->faults.bridge_faults = 0;
     for (int i = 0; i < N_MONITORS; i++)
     {
-        ctx->faults.monitor_masks[i] = 0;
+        ctx->faults.monitor_fault_summary[i] = 0;
     }
 }
 
