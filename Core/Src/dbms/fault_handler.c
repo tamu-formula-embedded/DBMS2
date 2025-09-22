@@ -21,7 +21,7 @@ bool ControllerHasFault(DbmsCtx* ctx, ControllerFaultType fault)
 
 void BridgeSetFaultSummary(DbmsCtx* ctx, uint8_t fault_summary_reg)
 {
-    ctx->faults.bridge_fault_summary = fault_summary_reg;
+    ctx->faults.bridge_fault_summary = (fault_summary_reg & 0x0F); // Bits [5:8] are reserved
 }
 
 void BridgeSetFault(DbmsCtx* ctx, BridgeFault fault)
@@ -42,20 +42,9 @@ bool BridgeHasFault(DbmsCtx* ctx, BridgeFault fault)
     return (ctx->faults.bridge_faults & (1U << fault)) != 0;
 }
 
-// bool StackHasFault(DbmsCtx* ctx, MonitorFaultType fault)
-// {
-//     if (fault >= 8) return false;
-//     for (int i = 0; i < N_MONITORS; i++){
-//         if ((ctx->faults.monitor_fault_summary[i] & (1U << fault)) != 0) return true;
-//     }
-//     return false;
-// }
-
-// void StackSetFault(DbmsCtx* ctx, uint8_t addr, BridgeFault fault)
-// {
-//     if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
-//     ctx->faults.monitor_fault |= (1U << fault);
-// }
+void StackSetFaultSummary(DbmsCtx* ctx, uint8_t addr, uint8_t fault_summary_reg){
+    ctx->faults.monitor_fault_summary[addr] = fault_summary_reg;
+}
 
 bool HasAnyFaults(DbmsCtx* ctx)
 {

@@ -70,6 +70,10 @@ void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size
 void MonitorLedBlink(DbmsCtx* ctx);
 
 void StackUpdateFaultReadings(DbmsCtx* ctx);
+void BridgeUpdateFaultReadings(DbmsCtx* ctx);
+int PollBridgeFaultSummary(DbmsCtx* ctx);
+int PollMonitorFaultRegisters(DbmsCtx* ctx, uint16_t starting_addr, uint8_t n_regs, uint8_t* poll_result);
+int PollFaultSummary(DbmsCtx* ctx, uint8_t* fault_regs);
 
 void FillMissingTempReadings(DbmsCtx* ctx);
 
