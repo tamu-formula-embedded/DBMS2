@@ -193,6 +193,15 @@ void DbmsIter(DbmsCtx* ctx)
         // CanLog(ctx, "first: %d\n", (int)(ctx->data.lut_therm_v_to_t[0].value));
 
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
+
+        // Checking faults
+        BridgeUpdateFaultReadings(ctx);
+        HAL_Delay(8);
+        StackUpdateFaultReadings(ctx);
+        HAL_Delay(8);
+        CheckVoltageFaults(ctx);
+        CheckTemperatureFaults(ctx);
+        CheckCurrentFaults(ctx);
     }
 
     //

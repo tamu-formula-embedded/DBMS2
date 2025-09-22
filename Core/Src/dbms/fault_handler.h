@@ -60,9 +60,6 @@ typedef enum{
     BRIDGE_FAULT_REG,
     BRIDGE_FAULT_SYS,
     BRIDGE_FAULT_PWR,
-    BRIDGE_FAULT_CONF_MON_ERR,
-    BRIDGE_FAULT_FACTLDERR,
-    BRIDGE_FAULT_FACT_CRC
 } BridgeFaultType;
 
 typedef enum{
@@ -84,15 +81,15 @@ void CheckVoltageFaults(DbmsCtx* ctx);
 void CheckTemperatureFaults(DbmsCtx* ctx);
 void CheckCurrentFaults(DbmsCtx* ctx);
 
-void BridgeSetFaultSummary(DbmsCtx* ctx, uint8_t addr, uint8_t fault_summary_reg);
+void BridgeSetFaultSummary(DbmsCtx* ctx, uint8_t fault_summary_reg);
 void BridgeSetFault(DbmsCtx* ctx, BridgeFault fault);
 void BridgeClearFault(DbmsCtx* ctx, BridgeFault fault);
 bool BridgeHasFault(DbmsCtx* ctx, BridgeFault fault);
 
 void StackSetFaultSummary(DbmsCtx* ctx, uint8_t addr, uint8_t fault_summary_reg);
-// void StackSetFault(DbmsCtx* ctx, uint8_t addr, MonitorFaultType fault); // todo: make it so each category has its own fault mask
-void StackClearFault(DbmsCtx* ctx, uint8_t addr, MonitorFaultType fault);
-bool StackHasFault(DbmsCtx* ctx, uint8_t addr, MonitorFaultType fault);
+// void StackSetFault(DbmsCtx* ctx, uint8_t addr, MonitorFaultType fault); // todo: make it so each category has its own fault storage
+void StackClearFault(DbmsCtx* ctx, uint8_t addr, MonitorFaultType fault); //not implemented
+bool StackHasFault(DbmsCtx* ctx, uint8_t addr, MonitorFaultType fault); //not implemented
 
 bool HasAnyFaults(DbmsCtx* ctx);
 void ClearAllFaults(DbmsCtx* ctx);
