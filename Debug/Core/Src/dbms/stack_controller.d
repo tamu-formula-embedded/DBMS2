@@ -1,6 +1,7 @@
 Core/Src/dbms/stack_controller.o: ../Core/Src/dbms/stack_controller.c \
  ../Core/Src/dbms/stack_controller.h ../Core/Src/dbms/common.h \
- ../Core/Src/dbms/lut.h ../Core/Src/dbms/crc.h ../Core/Src/dbms/eswap.h \
+ ../Core/Src/dbms/queue.h ../Core/Src/dbms/lut.h ../Core/Src/dbms/crc.h \
+ ../Core/Src/dbms/eswap.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -41,6 +42,7 @@ Core/Src/dbms/stack_controller.o: ../Core/Src/dbms/stack_controller.c \
  ../Core/Src/dbms/data.h ../Core/Src/dbms/model.h
 ../Core/Src/dbms/stack_controller.h:
 ../Core/Src/dbms/common.h:
+../Core/Src/dbms/queue.h:
 ../Core/Src/dbms/lut.h:
 ../Core/Src/dbms/crc.h:
 ../Core/Src/dbms/eswap.h:
