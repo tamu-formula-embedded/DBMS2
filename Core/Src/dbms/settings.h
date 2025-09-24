@@ -23,6 +23,8 @@ enum _UserSettingIndex
     MAX_THERMISTOR_TEMP,
     MAX_CURRENT,
 
+    MAX_V_DELTA,
+    DYNAMIC_V_MIN,
     __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
 };
 

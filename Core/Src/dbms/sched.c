@@ -75,3 +75,25 @@ uint32_t CalcIterDelay(DbmsCtx* ctx, uint32_t hz)
     if (elapsed_us >= period_us) return 0;
     return (uint32_t)(period_us - elapsed_us);
 }
+
+/**
+ * Real Time Module
+ * ----------------
+ * Provides MS accurate "real time"
+ * based on synchronization signals 
+ * from a remote.
+ */
+
+// Register a synchronization signal
+void SyncRealTime(DbmsCtx* ctx, uint64_t remote_ts)
+{
+    ctx->realtime.global_ts = remote_ts;
+    ctx->realtime.local_ts = HAL_GetTick();
+}
+
+// Get the current global time
+uint64_t GetRealTime(DbmsCtx* ctx)
+{
+    uint64_t delta = HAL_GetTick() - ctx->realtime.local_ts;
+    return ctx->realtime.global_ts + delta;
+}

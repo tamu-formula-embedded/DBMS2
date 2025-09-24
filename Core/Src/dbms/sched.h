@@ -34,4 +34,17 @@ uint64_t GetUs(DbmsCtx* ctx);
  */
 uint32_t CalcIterDelay(DbmsCtx* ctx, uint32_t hz);
 
+/**
+ * Real Time Module
+ * ----------------
+ * Provides MS accurate "real time"
+ * based on synchronization signals 
+ * from a remote.
+ */
+
+// Register a synchronization signal
+void SyncRealTime(DbmsCtx* ctx, uint64_t remote_ts);
+// Get the current global time
+uint64_t GetRealTime(DbmsCtx* ctx);
+
 #endif

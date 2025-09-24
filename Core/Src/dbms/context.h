@@ -9,11 +9,12 @@
 #define ITER_TARGET_HZ 10
 
 // USER DEFINED UNIQUE TO EACH BATTERY
-#define N_SEGMENTS 2
+#define N_SEGMENTS 1
 #define N_SIDES_PER_SEG 2
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
 #define N_TEMPS_PER_MONITOR 7
+#define N_P_GROUP 3
 // DONT CHANGE AFTER THIS
 
 #define N_TEMPS_PER_SIDE (N_MONITORS_PER_SIDE * N_TEMPS_PER_MONITOR)
@@ -99,6 +100,13 @@ typedef struct _Stats
     // uint32_t n_overruns;
 
     uint32_t n_eeprom_writes;
+
+    float min_v;
+    float max_v;
+    float avg_v;
+    float min_t;
+    float max_t;
+    float avg_t;
 } Stats;
 
 typedef struct _Model   // Outputs from the ECM model
@@ -114,7 +122,7 @@ typedef struct _Model   // Outputs from the ECM model
     float R2;
     float R_rc;
 
-    float R_pack;
+    float R_cell;
     float I_lim;
 } Model;
 
@@ -134,6 +142,11 @@ typedef struct _DbmsCtx
     DbmsSettings* settings; // struct fwd defs has to be a ptr
 
     CellMonitorState cell_states[N_SIDES];
+
+    struct {
+        uint64_t global_ts;
+        uint64_t local_ts;
+    } realtime;
 
     uint64_t last_rx_heartbeat;
     uint64_t iter_start_us;
@@ -158,14 +171,19 @@ typedef struct _DbmsCtx
         int32_t energy_wh;
     } isense; // current = I, sense = sensor
 
-    float initial_charge;               // Q0
-    float accumulated_lost_charge;      // Qd
+    struct {
+        float initial;              // Q0
+        float accumulated_loss;     // Qd
+        uint32_t initial_set_ts;
+        bool need_to_save;
+    } qstats;                       // charge stats
 
     struct
     {
         uint32_t controller_mask;
         uint32_t monitor_masks[N_MONITORS];
     } faults;
+    bool need_to_save_faults;
     uint16_t faults_crc;
 
     Model model;

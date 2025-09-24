@@ -2,6 +2,7 @@
 //  Copyright (c) Texas A&M University.
 //
 #include "dbms.h"
+#include "fault_handler.h"
 #include "led_controller.h"
 #include "vehicle_interface.h"
 #include <math.h>
@@ -44,11 +45,6 @@ void DbmsInit(DbmsCtx* ctx)
         } // fatal error
     }
 
-    if ((status = LoadFaultState(ctx)) != 0)
-    {
-        // todo: check error
-    }
-
     HAL_TIM_Base_Start(ctx->hw.timer);
 
     if ((status = ConfigCan(ctx)) != HAL_OK)
@@ -58,8 +54,28 @@ void DbmsInit(DbmsCtx* ctx)
         return;
     }
 
+    //
+    //  Load the fault state (we know this throws CRC mismatch)
+    //
+    if ((status = LoadFaultState(ctx)) != 0)
+    {
+        // CanLog(ctx, "fault st %d\n", status);
+    }
+
+    //
+    //  Load the initial charge (we know this throws CRC mismatch)
+    //
+    if ((status = LoadInitialCharge(ctx)) != 0)
+    {
+        // CanLog(ctx, "error loading initial charge %d\n", status);
+    }   
+    SaveInitialCharge(ctx);
+
     HAL_Delay(10);
-    ConfigCurrentSensor(ctx, 10);
+    if (ctx->stats.iters % 10 == 0){
+        ConfigCurrentSensor(ctx, 10);
+    }
+    // ConfigCurrentSensor(ctx, 10);
 
     ConfigPwmLines(ctx);
     DataInit(ctx);
@@ -144,6 +160,19 @@ void DbmsIter(DbmsCtx* ctx)
     }
 
     //
+    //  Store the Q0 value when required
+    //
+    if (ctx->qstats.need_to_save)
+    {
+        if ((status = SaveInitialCharge(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+            ctx->led_state = LED_ERROR;
+        }
+        ctx->qstats.need_to_save = false;
+    }
+
+    //
     //  Let everybody know that we are alive
     //
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
@@ -188,17 +217,30 @@ void DbmsIter(DbmsCtx* ctx)
         StackUpdateTempReadings(ctx);
         
         FillMissingTempReadings(ctx);
-        // CanLog(ctx, "T%d\n", CLAMP_U16((long)lroundf(ctx->cell_states[0].temps[6] * 1000.0f)));
         HAL_Delay(8);
 
-        // CanLog(ctx, "first: %d\n", (int)(ctx->data.lut_therm_v_to_t[0].value));
-
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
-        CheckCurrentFaults(ctx);
-        CheckTemperatureFaults(ctx);
-        CheckVoltageFaults(ctx);
-    }
 
+        if (ctx->stats.iters > 10) {
+            CheckCurrentFaults(ctx);
+            CheckTemperatureFaults(ctx);
+            CheckVoltageFaults(ctx);
+        }
+
+    }
+    //
+    //  save faults
+    //
+    if (ctx->need_to_save_faults)
+    {
+        if ((status = SaveFaultState(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+            ctx->led_state = LED_ERROR;
+        }
+        ctx->need_to_save_faults = false;
+    }
+    
     //
     //  Update the state of charge model
     //
@@ -208,10 +250,13 @@ void DbmsIter(DbmsCtx* ctx)
     //  Transmit important telemetry
     //
     SendMetrics(ctx);
-    if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000)
+    // if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000)
+    if (ctx->stats.iters % 4 == 0)
     {
-        ctx->batch_telem_ts = ctx->iter_start_us;
+        // ctx->batch_telem_ts = ctx->iter_start_us;
         SendCellVoltages(ctx);
+    }
+    if (ctx->stats.iters % 4 == 2){
         SendCellTemps(ctx);
     }
 
@@ -249,6 +294,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
             ctx->led_state = LED_ACTIVE;
         }
 
+        uint64_t remote_ts = be64_to_u64(rx_data);
+        SyncRealTime(ctx, remote_ts);
+
         break;
 
     case CANID_RX_SET_CONFIG:
@@ -284,6 +332,12 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
     case CANID_RX_CLEAR_FAULTS:
         ClearAllFaults(ctx);
+        break;
+    case CANID_RX_SET_INITIAL_CHARGE:
+        ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;
+        CanLog(ctx, "Q0: %d", be32_to_u32(rx_data));
+        ctx->qstats.initial_set_ts = (int32_t)(GetRealTime(ctx) / 1000);
+        ctx->qstats.need_to_save = true;
         break;
     default:
         ctx->stats.n_unmatched_can_frames++;

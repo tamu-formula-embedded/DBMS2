@@ -31,6 +31,7 @@ void StackClearFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
     if (addr >= N_MONITORS) return;
     if (fault >= STACK_FAULT_TYPE_COUNT) return;
     ctx->faults.monitor_masks[addr] &= ~(1U << fault);
+    ctx->need_to_save_faults = true;
 }
 
 // TODO: make a version over all addr?
@@ -58,27 +59,49 @@ void ClearAllFaults(DbmsCtx* ctx)
     {
         ctx->faults.monitor_masks[i] = 0;
     }
+    ctx->need_to_save_faults = true;
 }
 
 void CheckVoltageFaults(DbmsCtx* ctx)
 {
     uint32_t max_group_v = GetSetting(ctx, MAX_GROUP_VOLTAGE);
     uint32_t min_group_v = GetSetting(ctx, MIN_GROUP_VOLTAGE);
-
+    uint32_t max_v_delta = GetSetting(ctx, MAX_V_DELTA);
+    
     for (int i = 0; i < N_SIDES; i++)
     {
-        for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
+        float lowest_v = ctx->cell_states[i].voltages[0];
+        float highest_v = ctx->cell_states[i].voltages[0];
+        for (int j = 1; j < N_GROUPS_PER_SIDE; j++)
         {
-            if (ctx->cell_states[i].voltages[j] > max_group_v)
-            {
-                ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
+            // if (ctx->cell_states[i].voltages[j] > max_group_v)
+            // {
+            //     ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
+            // }
+            // if (ctx->cell_states[i].voltages[j] < min_group_v)
+            // {
+            //     ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
+            // }
+            if (ctx->cell_states[i].voltages[j] < lowest_v){
+                lowest_v = ctx->cell_states[i].voltages[j];
             }
-            if (ctx->cell_states[i].voltages[j] < min_group_v)
-            {
-                ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
+            if (ctx->cell_states[i].voltages[j] > highest_v){
+                highest_v = ctx->cell_states[i].voltages[j];
             }
         }
+
+        if (highest_v > max_group_v){
+            ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
+        }
+        if (lowest_v < min_group_v){
+            ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
+        }
+        if (highest_v - lowest_v > max_v_delta){
+            ControllerSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
+        }
     }
+
+
 
     /*
     if (ctx->isense.voltage1_mv > GetSetting(ctx, MAX_PACK_VOLTAGE))
@@ -108,7 +131,7 @@ void CheckTemperatureFaults(DbmsCtx* ctx)
 
 void CheckCurrentFaults(DbmsCtx* ctx)
 {
-    if (ctx->isense.current_ma > GetSetting(ctx, MAX_CURRENT))
+    if (MAX(0, ctx->isense.current_ma) > GetSetting(ctx, MAX_CURRENT))
     {
         ControllerSetFault(ctx, CTRL_FAULT_CURRENT_OVER);
     }
@@ -119,7 +142,7 @@ void ThrowHardFault(DbmsCtx* ctx)
     if (HasAnyFaults(ctx)) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
     else HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
 
-    SaveFaultState(ctx);
+    ctx->need_to_save_faults = true;
 }
 
 int SaveFaultState(DbmsCtx* ctx)
