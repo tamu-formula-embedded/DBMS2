@@ -9,7 +9,7 @@
 #define ITER_TARGET_HZ 10
 
 // USER DEFINED UNIQUE TO EACH BATTERY
-#define N_SEGMENTS 1
+#define N_SEGMENTS 4
 #define N_SIDES_PER_SEG 2
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
@@ -30,6 +30,7 @@
 #define N_RC_ENTRIES                101
 #define N_C_ENTRIES                 101
 
+#define N_BLACKBOX_ENTRIES          10
 
 typedef enum _DbmsState
 {
@@ -126,6 +127,11 @@ typedef struct _Model   // Outputs from the ECM model
     float I_lim;
 } Model;
 
+typedef struct _BlackboxInfo
+{
+    size_t iter;
+} BlackboxInfo;
+
 typedef struct _DbmsCtx
 {
 
@@ -187,6 +193,8 @@ typedef struct _DbmsCtx
     uint16_t faults_crc;
 
     Model model;
+
+    queue_t blackbox;
 
     uint16_t can_log_ordering_index;
     uint8_t last_can_err;
