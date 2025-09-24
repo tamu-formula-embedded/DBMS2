@@ -636,26 +636,32 @@ void StackUpdateFaultReadings(DbmsCtx* ctx)
 {
     uint8_t fault_summaries[N_MONITORS];
     PollFaultSummary(ctx, fault_summaries);
+    // uint8_t pwr_reg[3] = {0, 0, 0};
+    // uint8_t sys_reg;
 
     for (int i = 0; i < N_MONITORS; i++){
         StackSetFaultSummary(ctx, i, fault_summaries[i]);
 
         if (fault_summaries[i] != 0x00){
-            CanLog(ctx, "monitor: %d, Faults: %X", i, fault_summaries[i]);
+            CanLog(ctx, "monitor: %d, Faults: %X\n", i, fault_summaries[i]);
             
-            // if ((fault_summaries[i] >> MONITOR_FAULT_PWR) % 2 == 1){
-            //     // TODO FAULT_PWR handling and throw hard fault
-            //     StackSetFault(ctx, i, MONITOR_FAULT_PWR);
-            //     // ThrowHardFault(ctx);
-            //     // poll PWR registers
-            //     pwr_fault = true;
-            // }
-            // if ((fault_summaries[i] >> MONITOR_FAULT_SYS) % 2 == 1){
-            //     // TODO FAULT_SYS handling and throw hard fault
-            //     StackSetFault(ctx, i, MONITOR_FAULT_SYS);
-            //     //poll sys registers
-            //     sys_fault = true;
-            // }
+            if ((fault_summaries[i] >> MONITOR_FAULT_PWR) % 2 == 1){
+                // TODO FAULT_PWR handling and throw hard fault
+                // StackSetFault(ctx, i, MONITOR_FAULT_PWR);
+                // ThrowHardFault(ctx);
+                // poll PWR registers
+                // DelayUs(ctx, 8000);
+                // PollMonitorFaultRegisters(ctx, 0x0552, 3, pwr_reg);
+                // CanLog(ctx, "pwr: %X, %X, %X\n", pwr_reg[0], pwr_reg[1], pwr_reg[2]);
+            }
+            if ((fault_summaries[i] >> MONITOR_FAULT_SYS) % 2 == 1){
+                // TODO FAULT_SYS handling and throw hard fault
+                // StackSetFault(ctx, i, MONITOR_FAULT_SYS);
+                //poll sys registers
+                // DelayUs(ctx, 8000);
+                // PollMonitorFaultRegisters(ctx, 0x0536, 1, &sys_reg);
+                // CanLog(ctx, "sys: %X\n", sys_reg);
+            }
             // if ((fault_summaries[i] >> MONITOR_FAULT_OVUV) % 2 == 1){
             //     // TODO FAULT_OVUV handling and throw hard fault
             //     StackSetFault(ctx, i, MONITOR_FAULT_OVUV);
@@ -735,7 +741,18 @@ int PollBridgeFaultSummary(DbmsCtx* ctx){
 void BridgeUpdateFaultReadings(DbmsCtx* ctx){
     PollBridgeFaultSummary(ctx);
     if (ctx->faults.bridge_fault_summary != 0){
-        CanLog(ctx, "bridge faults: %X", ctx->faults.bridge_fault_summary);
+        CanLog(ctx, "bridge faults: %X\n", ctx->faults.bridge_fault_summary);
         // TODO poll bridge for its faults and handle them
     }
+}
+
+
+int MonitorResetFaults(DbmsCtx* ctx){
+    uint8_t frame_reset_faults[] = {0xB1, 0x03, 0x31, 0x00, 0x00, 0x00, 0x00};
+    int status = 0;
+    if ((status = SendStackFrameSetCrc(ctx, frame_reset_faults, sizeof(frame_reset_faults)) != 0)){
+        //throw error
+        return status;
+    }
+    return status;
 }

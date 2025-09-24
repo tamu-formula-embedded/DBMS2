@@ -174,6 +174,7 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->led_state = LED_INIT;
         ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
+        // MonitorResetFaults(ctx);
     }
 
     //

@@ -74,6 +74,7 @@ void BridgeUpdateFaultReadings(DbmsCtx* ctx);
 int PollBridgeFaultSummary(DbmsCtx* ctx);
 int PollMonitorFaultRegisters(DbmsCtx* ctx, uint16_t starting_addr, uint8_t n_regs, uint8_t* poll_result);
 int PollFaultSummary(DbmsCtx* ctx, uint8_t* fault_regs);
+int MonitorResetFaults(DbmsCtx* ctx);
 
 void FillMissingTempReadings(DbmsCtx* ctx);
 
