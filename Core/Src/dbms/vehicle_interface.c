@@ -347,8 +347,8 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 18, ctx->stats.n_eeprom_writes);
     SendMetric(ctx, 19, ctx->faults_crc);
 
-    SendMetric(ctx, 20, F2I_K(ctx->initial_charge, 1e6));
-    SendMetric(ctx, 21, F2I_K(ctx->accumulated_lost_charge, 1e6));
+    SendMetric(ctx, 20, F2I_K(ctx->qstats.initial, 1e6));
+    SendMetric(ctx, 21, F2I_K(ctx->qstats.accumulated_loss, 1e6));
     SendMetric(ctx, 22, F2I_K(ctx->model.Q, 1e6));
     SendMetric(ctx, 23, F2I_K(ctx->model.z_oc, 1e6));
     SendMetric(ctx, 24, F2I_K(ctx->model.V_oc, 1e6));
@@ -358,9 +358,18 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 28, F2I_K(ctx->model.R1, 1e6));
     SendMetric(ctx, 29, F2I_K(ctx->model.R2, 1e6));
     SendMetric(ctx, 30, F2I_K(ctx->model.R_rc, 1e6));
-    SendMetric(ctx, 31, F2I_K(ctx->model.R_pack, 1e6));
+    SendMetric(ctx, 31, F2I_K(ctx->model.R_cell, 1e6));
     SendMetric(ctx, 32, F2I_K(ctx->model.I_lim, 1e6));
 
+    SendMetric(ctx, 33, ctx->qstats.initial_set_ts);
+    SendMetric(ctx, 34, (uint32_t)(GetRealTime(ctx) / 1000));   // conv to S
+
+    SendMetric(ctx, 35, F2I_K(ctx->stats.max_t, 1e3));
+    SendMetric(ctx, 36, F2I_K(ctx->stats.min_t, 1e3));
+    SendMetric(ctx, 37, F2I_K(ctx->stats.avg_t, 1e3));
+    SendMetric(ctx, 38, F2I_K(ctx->stats.max_v, 1e4));
+    SendMetric(ctx, 39, F2I_K(ctx->stats.min_v, 1e4));
+    SendMetric(ctx, 40, F2I_K(ctx->stats.avg_v, 1e4));
     // TODO: perm sol.
     // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
     
@@ -369,7 +378,7 @@ int SendMetrics(DbmsCtx* ctx)
 
 void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time)
 {
-    static uint8_t frame_set_stop_mode[8] = {0x34, 1, 0, 0, 0, 0, 0, 0};
+    static uint8_t frame_set_stop_mode[8] = {0x34, 0, 1, 0, 0, 0, 0, 0};
     static uint8_t frame_set_run_mode[8] = {0x34, 1, 1, 0, 0, 0, 0, 0};
     static uint8_t frame_set_metric_cycle[8] = {0x20, 2, 0, 0, 0, 0, 0, 0};
     frame_set_metric_cycle[2] = (cycle_time & 0xFF00) >> 8;

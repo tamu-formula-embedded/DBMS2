@@ -20,6 +20,7 @@ typedef enum
     CTRL_FAULT_CURRENT_UNDER = 5,
     CTRL_FAULT_PACK_VOLTAGE_OVER = 6,
     CTRL_FAULT_PACK_VOLTAGE_UNDER = 7,
+    CTRL_FAULT_MAX_DELTA_EXCEEDED = 8,
     CTRL_FAULT_TYPE_COUNT // Total number of fault types -- should be last
 } ControllerFaultType;
 

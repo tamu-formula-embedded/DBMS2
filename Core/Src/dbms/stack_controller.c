@@ -436,7 +436,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
                         (rx_frames[i].data[j * sizeof(int16_t)] << 8) + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
 
                 // CanLog(ctx, "A %d\n", addr);
-                ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp(ctx, (raw * STACK_T_UV_PER_BIT) / 1000000.0);
+                ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
                 // 1000000 for uV to V
             }
         }
@@ -451,28 +451,30 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
 
 void FillMissingTempReadings(DbmsCtx* ctx)
 {
-    static bool missing_mask[4][N_TEMPS_PER_SIDE] = {
-            {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1},
-            {1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, 
-            {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
-            {1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0}  
-    };
-
+    int n = 0;
     float sum = 0;
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
-            if (!missing_mask[i][j]) sum += ctx->cell_states[i].temps[j];
+            float t = ctx->cell_states[i].temps[j];
+            if (t >= 18 && t < 120.0f){
+                n++;
+                sum += t;
+            }
+
         }
     }
 
-    float avg = sum / (N_SIDES * N_TEMPS_PER_SIDE - 21);
+    float avg = sum / n;
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
-            if (missing_mask[i][j]) ctx->cell_states[i].temps[j] = avg;
+             float t = ctx->cell_states[i].temps[j];
+            if (t < 18 || t >= 120.0f ){
+                ctx->cell_states[i].temps[j] = avg;
+            }
         }
     }
 }
