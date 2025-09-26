@@ -202,10 +202,11 @@ void DbmsIter(DbmsCtx* ctx)
         // Checking faults
 
 
-        BridgeUpdateFaultReadings(ctx);
-        HAL_Delay(8);
-        StackUpdateFaultReadings(ctx);
-        HAL_Delay(8);
+        // BridgeUpdateFaultReadings(ctx);
+        // HAL_Delay(8);
+        // StackUpdateFaultReadings(ctx);
+        // HAL_Delay(8);
+        Read_Bridge_Fault_Comm(ctx);
         CheckVoltageFaults(ctx);
         CheckTemperatureFaults(ctx);
         CheckCurrentFaults(ctx);

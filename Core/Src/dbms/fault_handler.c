@@ -127,7 +127,7 @@ void ThrowHardFault(DbmsCtx* ctx)
     if (HasAnyFaults(ctx)) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
     else HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
 
-    SaveFaultState(ctx);
+    // SaveFaultState(ctx);
 }
 
 int SaveFaultState(DbmsCtx* ctx)
