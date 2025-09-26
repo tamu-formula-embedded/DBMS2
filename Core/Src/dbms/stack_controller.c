@@ -372,7 +372,7 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
         }
         else
         {
-            CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
+            // CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
             ctx->stats.n_rx_stack_bad_crcs++;
         }
     }
@@ -815,12 +815,19 @@ int Bridge_Dev_Conf_FAULT_EN(DbmsCtx* ctx){
 int Stack_Dev_Conf_FAULT_EN(DbmsCtx* ctx){
     int status = 0;
     // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
-    uint8_t FRAME_DEV_CONF_READ[] = {0xB0, STACK_DEV_CONF_REG >> 8, STACK_DEV_CONF_REG & 0xFF, 0x50, 0x00, 0x00};
+    uint8_t FRAME_DEV_CONF_READ[] = {0xD0, STACK_DEV_CONF_REG >> 8, STACK_DEV_CONF_REG & 0xFF, 0x50, 0x00, 0x00};
     if ((status = SendStackFrameSetCrc(ctx, FRAME_DEV_CONF_READ, sizeof(FRAME_DEV_CONF_READ))) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
     }
     return status;
+
+    uint8_t polls[N_MONITORS];
+    DelayUs(ctx, 8000);
+    PollMonitorFaultRegisters(ctx, 0x0002, 1, polls);
+    for (int i = 0; i < N_MONITORS; i++){
+        CanLog(ctx, "%d: %X\n", i, polls[i]);
+    }
 }
 
 int Read_Bridge_Fault_Comm(DbmsCtx* ctx){
@@ -850,9 +857,9 @@ int Read_Bridge_Fault_Comm(DbmsCtx* ctx){
 
     if (rx_frame.crc == (kcrc = CalcStackFrameCrc(&rx_frame)))
     {
-        if (rx_frame.data != 0){
-            CanLog(ctx, "F_COMM1: %X", rx_frame.data);
+        if (rx_frame.data == 0){
         }
+        CanLog(ctx, "F_COMM1: %X\n", *rx_frame.data);
         Parse_FAULT_COMM1(ctx, *rx_frame.data);
     }
     else

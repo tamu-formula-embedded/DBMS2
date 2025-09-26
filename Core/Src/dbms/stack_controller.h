@@ -88,5 +88,5 @@ int Bridge_Dev_Conf_FAULT_EN(DbmsCtx* ctx);
 int Stack_Dev_Conf_FAULT_EN(DbmsCtx* ctx);
 void Parse_FAULT_COMM1(DbmsCtx* ctx, uint8_t data);
 
-
+int Read_Bridge_Fault_Comm(DbmsCtx* ctx);
 #endif
