@@ -97,6 +97,10 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     }
 
     // StackStartCharging(ctx);
+    DelayUs(ctx, 5000);
+    Bridge_Dev_Conf_FAULT_EN(ctx);
+    DelayUs(ctx, 5000);
+    Stack_Dev_Conf_FAULT_EN(ctx);
 
     return status;
 }
@@ -196,6 +200,8 @@ void DbmsIter(DbmsCtx* ctx)
         // StackUpdateFaultReadings(ctx);  // todo: put this first?
 
         // Checking faults
+
+
         BridgeUpdateFaultReadings(ctx);
         HAL_Delay(8);
         StackUpdateFaultReadings(ctx);

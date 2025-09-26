@@ -23,6 +23,12 @@
 
 #define STACK_FAULT_REG_N   27
 
+#define STACK_DEV_CONF_REG  0x0002
+
+#define BRIDGE_DEV_CONF1    0x2001
+
+#define BRIDGE_FAULT_COMM1_REG  0x2104
+
 #define RX_FRAME_SIZE(DATA_SIZE) (DATA_SIZE + 6)
 
 typedef struct
@@ -77,5 +83,10 @@ int PollFaultSummary(DbmsCtx* ctx, uint8_t* fault_regs);
 int MonitorResetFaults(DbmsCtx* ctx);
 
 void FillMissingTempReadings(DbmsCtx* ctx);
+
+int Bridge_Dev_Conf_FAULT_EN(DbmsCtx* ctx);
+int Stack_Dev_Conf_FAULT_EN(DbmsCtx* ctx);
+void Parse_FAULT_COMM1(DbmsCtx* ctx, uint8_t data);
+
 
 #endif

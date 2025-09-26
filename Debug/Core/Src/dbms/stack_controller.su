@@ -25,7 +25,11 @@
 ../Core/Src/dbms/stack_controller.c:513:6:MonitorLedBlink	32	static
 ../Core/Src/dbms/stack_controller.c:540:5:PollFaultSummary	328	static
 ../Core/Src/dbms/stack_controller.c:588:5:PollMonitorFaultRegisters	336	static
-../Core/Src/dbms/stack_controller.c:635:6:StackUpdateFaultReadings	40	static
-../Core/Src/dbms/stack_controller.c:705:5:PollBridgeFaultSummary	64	static
-../Core/Src/dbms/stack_controller.c:741:6:BridgeUpdateFaultReadings	16	static
-../Core/Src/dbms/stack_controller.c:750:5:MonitorResetFaults	32	static
+../Core/Src/dbms/stack_controller.c:638:6:StackUpdateFaultReadings	104	static
+../Core/Src/dbms/stack_controller.c:717:5:PollBridgeFaultSummary	64	static
+../Core/Src/dbms/stack_controller.c:753:6:BridgeUpdateFaultReadings	16	static
+../Core/Src/dbms/stack_controller.c:762:5:MonitorResetFaults	32	static
+../Core/Src/dbms/stack_controller.c:773:5:Bridge_Dev_Conf_FAULT_EN	64	static
+../Core/Src/dbms/stack_controller.c:815:5:Stack_Dev_Conf_FAULT_EN	32	static
+../Core/Src/dbms/stack_controller.c:826:5:Read_Bridge_Fault_Comm	64	static
+../Core/Src/dbms/stack_controller.c:865:6:Parse_FAULT_COMM1	24	static
