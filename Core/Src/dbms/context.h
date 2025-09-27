@@ -126,6 +126,11 @@ typedef struct _Model   // Outputs from the ECM model
     float I_lim;
 } Model;
 
+typedef struct _BlackboxInfo
+{
+    uint64_t iter;
+} BlackboxInfo;
+
 typedef struct _DbmsCtx
 {
 
@@ -195,6 +200,10 @@ typedef struct _DbmsCtx
     uint8_t last_can_err;
     bool need_to_sync_settings;
     bool m_led_on;
+
+    // Blackbox pointers for crash analysis
+    BlackboxInfo* blackbox_old;
+    BlackboxInfo* blackbox_new;
 
 } DbmsCtx;
 
