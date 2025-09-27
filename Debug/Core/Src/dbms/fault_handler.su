@@ -1,30 +1,11 @@
 ../Core/Src/dbms/fault_handler.c:4:6:ControllerSetFault	16	static
 ../Core/Src/dbms/fault_handler.c:10:6:ControllerClearFault	16	static
 ../Core/Src/dbms/fault_handler.c:16:6:ControllerHasFault	16	static
-<<<<<<< HEAD
-../Core/Src/dbms/fault_handler.c:22:6:BridgeSetFaultSummary	16	static
-../Core/Src/dbms/fault_handler.c:27:6:BridgeSetFault	16	static
-../Core/Src/dbms/fault_handler.c:33:6:BridgeClearFault	16	static
-../Core/Src/dbms/fault_handler.c:39:6:BridgeHasFault	16	static
-../Core/Src/dbms/fault_handler.c:45:6:StackSetFaultSummary	16	static
-../Core/Src/dbms/fault_handler.c:49:6:HasAnyFaults	24	static
-../Core/Src/dbms/fault_handler.c:60:6:ClearAllFaults	24	static
-../Core/Src/dbms/fault_handler.c:71:6:CheckVoltageFaults	32	static
-../Core/Src/dbms/fault_handler.c:103:6:CheckTemperatureFaults	32	static
-../Core/Src/dbms/fault_handler.c:117:6:CheckCurrentFaults	24	static
-../Core/Src/dbms/fault_handler.c:125:6:ThrowHardFault	16	static
-../Core/Src/dbms/fault_handler.c:133:5:SaveFaultState	24	static
-../Core/Src/dbms/fault_handler.c:144:5:LoadFaultState	24	static
-=======
-../Core/Src/dbms/fault_handler.c:22:6:StackSetFault	16	static
-../Core/Src/dbms/fault_handler.c:29:6:StackClearFault	16	static
-../Core/Src/dbms/fault_handler.c:38:6:StackHasFault	16	static
-../Core/Src/dbms/fault_handler.c:45:6:HasAnyFaults	24	static
-../Core/Src/dbms/fault_handler.c:55:6:ClearAllFaults	24	static
-../Core/Src/dbms/fault_handler.c:65:6:CheckVoltageFaults	48	static
-../Core/Src/dbms/fault_handler.c:118:6:CheckTemperatureFaults	32	static
-../Core/Src/dbms/fault_handler.c:132:6:CheckCurrentFaults	32	static
-../Core/Src/dbms/fault_handler.c:140:6:ThrowHardFault	16	static
-../Core/Src/dbms/fault_handler.c:148:5:SaveFaultState	24	static
-../Core/Src/dbms/fault_handler.c:159:5:LoadFaultState	24	static
->>>>>>> master
+../Core/Src/dbms/fault_handler.c:49:6:HasAnyFaults	16	static
+../Core/Src/dbms/fault_handler.c:60:6:ClearAllFaults	16	static
+../Core/Src/dbms/fault_handler.c:72:6:CheckVoltageFaults	48	static
+../Core/Src/dbms/fault_handler.c:125:6:CheckTemperatureFaults	32	static
+../Core/Src/dbms/fault_handler.c:139:6:CheckCurrentFaults	32	static
+../Core/Src/dbms/fault_handler.c:148:6:ThrowHardFault	16	static
+../Core/Src/dbms/fault_handler.c:167:5:SaveFaultState	24	static
+../Core/Src/dbms/fault_handler.c:178:5:LoadFaultState	24	static

@@ -184,6 +184,7 @@ typedef struct _DbmsCtx
         uint8_t bridge_fault_summary;
         uint32_t bridge_faults;
         uint8_t monitor_fault_summary[N_MONITORS];
+        bool had_fault;
     } faults;
     bool need_to_save_faults;
     uint16_t faults_crc;
