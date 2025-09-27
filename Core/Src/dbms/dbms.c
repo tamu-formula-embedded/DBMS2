@@ -119,6 +119,9 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     DelayUs(ctx, 5000);
     Stack_Dev_Conf_FAULT_EN(ctx);
 
+    DelayUs(ctx, 5000);
+    SetFaultMasks(ctx);
+
     return status;
 }
 
@@ -220,7 +223,6 @@ void DbmsIter(DbmsCtx* ctx)
         HAL_Delay(8);
 
         StackUpdateTempReadings(ctx);
-        
         FillMissingTempReadings(ctx);
         HAL_Delay(8);
 
@@ -229,14 +231,22 @@ void DbmsIter(DbmsCtx* ctx)
         // HAL_Delay(8);
         // StackUpdateFaultReadings(ctx);
         // HAL_Delay(8);
-        Read_Bridge_Fault_Comm(ctx);
 
-        if (ctx->stats.iters > 10) {
+    
+        if (ctx->stats.iters > 20) 
+        {               
             CheckCurrentFaults(ctx);
             CheckTemperatureFaults(ctx);
             CheckVoltageFaults(ctx);
+
+            // Read_Bridge_Fault_Comm(ctx);
+
+            PollFaultSummary(ctx);
+            HAL_Delay(1);
         }
 
+        ThrowHardFault(ctx);
+        HAL_Delay(7);
     }
     //
     //  save faults
@@ -261,12 +271,13 @@ void DbmsIter(DbmsCtx* ctx)
     //
     SendMetrics(ctx);
     // if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000)
-    if (ctx->stats.iters % 4 == 0)
+    // if (ctx->stats.iters % 4 == 0)
     {
         // ctx->batch_telem_ts = ctx->iter_start_us;
         SendCellVoltages(ctx);
     }
-    if (ctx->stats.iters % 4 == 2){
+    // if (ctx->stats.iters % 4 == 2)
+    {
         SendCellTemps(ctx);
     }
 

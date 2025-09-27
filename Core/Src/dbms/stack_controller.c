@@ -458,7 +458,8 @@ void FillMissingTempReadings(DbmsCtx* ctx)
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
             float t = ctx->cell_states[i].temps[j];
-            if (t >= 18 && t < 120.0f){
+            if ((t >= 18 && t < 120.0f) || (i == 3 && j == 7))
+            {
                 n++;
                 sum += t;
             }
@@ -472,7 +473,8 @@ void FillMissingTempReadings(DbmsCtx* ctx)
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
              float t = ctx->cell_states[i].temps[j];
-            if (t < 18 || t >= 120.0f ){
+            if ((t < 18 || t >= 120.0f) || (i == 3 && j == 7))
+            {
                 ctx->cell_states[i].temps[j] = avg;
             }
         }
@@ -538,241 +540,8 @@ void MonitorLedBlink(DbmsCtx* ctx)
     }
 }
 
-// sizeof(fault_regs) >= N_MONITORS
-int PollFaultSummary(DbmsCtx* ctx, uint8_t* fault_regs)
+int Bridge_Dev_Conf_FAULT_EN(DbmsCtx* ctx)
 {
-    static uint8_t rx_fault_readings[1024];
-    int status = 0;
-    size_t data_size = 1 * sizeof(uint8_t);
-    // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
-    uint8_t FRAME_POLL_CTRL_FAULT_SUMMARY[] = {0xC0, 0x05, 0x2D, 0x00, 0x00, 0x00};
-
-    if ((status = SendStackFrameSetCrc(ctx, FRAME_POLL_CTRL_FAULT_SUMMARY, sizeof(FRAME_POLL_CTRL_FAULT_SUMMARY))) != 0)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-    }
-
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
-
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_fault_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
-    {
-        // CAN_REPORT_FAULT(ctx, status);
-        // ^ throwing all the time in simulator
-    }
-
-    RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_frames, rx_fault_readings, data_size, N_MONITORS);
-    uint16_t addr, kcrc;
-
-    for (size_t i = 0; i < N_STACKDEVS; i++)
-    {
-        ctx->stats.n_rx_stack_frames++;
-
-        // Excluding this since bridge device can also have faults that 
-        if (rx_frames[i].dev_addr == 0) continue; // this is myself
-        addr = rx_frames[i].dev_addr - 1;         // ignore the controller from a broadcast
-        if (addr >= N_MONITORS) continue;         // throw some error here
-
-        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
-        {
-            // CanLog(ctx, "F %d->%d\n", addr, *rx_frames[i].data);
-            // DelayUs(ctx, 50);
-            fault_regs[addr] = (*rx_frames[i].data);
-        }
-        else
-        {
-            ctx->stats.n_rx_stack_bad_crcs++;
-        }
-    }
-    return status;
-}
-
-int PollMonitorFaultRegisters(DbmsCtx* ctx, uint16_t starting_addr, uint8_t n_regs, uint8_t* poll_result){
-    static uint8_t rx_fault_readings[512];
-    int status = 0;
-    size_t data_size = n_regs * sizeof(uint8_t);
-    // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
-    uint8_t FRAME_POLL_CTRL_FAULTS[] = {0xC0, (starting_addr >> 8), starting_addr & 0xFF, n_regs - 1, 0x00, 0x00};
-
-    if ((status = SendStackFrameSetCrc(ctx, FRAME_POLL_CTRL_FAULTS, sizeof(FRAME_POLL_CTRL_FAULTS))) != 0)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-    }
-
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
-
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_fault_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
-    {
-        // CAN_REPORT_FAULT(ctx, status);
-        // ^ throwing all the time in simulator
-    }
-
-    RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_frames, rx_fault_readings, data_size, N_STACKDEVS);
-    uint16_t addr, kcrc;
-
-    for (size_t i = 0; i < N_STACKDEVS; i++)
-    {
-        ctx->stats.n_rx_stack_frames++;
-
-        // Excluding this since bridge device can also have faults that 
-        if (rx_frames[i].dev_addr == 0) continue; // this is myself
-        addr = rx_frames[i].dev_addr - 1;         // ignore the controller from a broadcast
-        if (addr >= N_MONITORS) continue;         // throw some error here
-
-        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
-        {
-            // CanLog(ctx, "F %d->%d\n", addr, *rx_frames[i].data);
-            // DelayUs(ctx, 50);
-            poll_result[addr*3] = (rx_frames[i].data[0]);
-            poll_result[addr*3 + 1] = (rx_frames[i].data[1]);
-            poll_result[addr*3 + 2] = (rx_frames[i].data[2]);
-
-        }
-        else
-        {
-            ctx->stats.n_rx_stack_bad_crcs++;
-        }
-    }
-    return status;
-}
-
-void StackUpdateFaultReadings(DbmsCtx* ctx)
-{
-    uint8_t fault_summaries[N_MONITORS];
-    PollFaultSummary(ctx, fault_summaries);
-    uint8_t pwr_reg[3 * N_MONITORS];
-    // uint8_t sys_reg[1 * N_MONITORS];
-    bool pwr_fault = false;
-    // bool sys_fault = false;
-
-    for (int i = 0; i < N_MONITORS; i++){
-        StackSetFaultSummary(ctx, i, fault_summaries[i]);
-
-        if (fault_summaries[i] != 0x00){
-            CanLog(ctx, "monitor: %d, Faults: %X\n", i, fault_summaries[i]);
-            
-            if ((fault_summaries[i] >> MONITOR_FAULT_PWR) % 2 == 1){
-                // TODO FAULT_PWR handling and throw hard fault
-                // StackSetFault(ctx, i, MONITOR_FAULT_PWR);
-                // ThrowHardFault(ctx);
-                // poll PWR registers
-                pwr_fault = true;
-            }
-            if ((fault_summaries[i] >> MONITOR_FAULT_SYS) % 2 == 1){
-                // TODO FAULT_SYS handling and throw hard fault
-                // StackSetFault(ctx, i, MONITOR_FAULT_SYS);
-                //poll sys registers
-                // DelayUs(ctx, 8000);
-                // PollMonitorFaultRegisters(ctx, 0x0536, 1, &sys_reg);
-                // CanLog(ctx, "sys: %X\n", sys_reg);
-                // sys_fault = true;
-            }
-            // if ((fault_summaries[i] >> MONITOR_FAULT_OVUV) % 2 == 1){
-            //     // TODO FAULT_OVUV handling and throw hard fault
-            //     StackSetFault(ctx, i, MONITOR_FAULT_OVUV);
-            //     // poll ovuv registers
-            //     ovuv_fault = true;
-            // }
-            // if ((fault_summaries[i] >> MONITOR_FAULT_OTUT) % 2 == 1){
-            //     // TODO FAULT_OTUT handling and throw hard fault
-            //     StackSetFault(ctx, i, MONITOR_FAULT_OTUT);
-            //     //  poll otut registers
-            //     otut_fault = true;
-            // }
-            // if ((fault_summaries[i] >> MONITOR_FAULT_COMM) % 2 == 1){
-            //     // TODO FAULT_COMM handling and throw soft fault
-            //     StackSetFault(ctx, i, MONITOR_FAULT_COMM);
-            //     //poll comm registers
-            //     comm_fault = true;
-            // }
-            // if ((fault_summaries[i] >> MONITOR_FAULT_OTP) % 2 == 1){
-            //     // TODO FAULT_OTP handling and throw soft fault
-            //     StackSetFault(ctx, i, MONITOR_FAULT_OTP);
-            //     //poll otp registers
-            //     otp_fault = true;
-            // }
-            // if ((fault_summaries[i] >> MONITOR_FAULT_COMP_ADC) == 1){
-            //     // TODO FAULT_COMP_ADC handling and throw hard fault
-            //     StackSetFault(ctx, i, MONITOR_FAULT_COMP_ADC);
-            //     //poll comp adc registers
-            //     comp_adc_fault = true;
-            // }
-            // if ((fault_summaries[i] >> MONITOR_FAULT_PROT) % 2 == 1){
-            //     // TODO FAULT_PROT handling and throw hard fault
-            //     StackSetFault(ctx, i, MONITOR_FAULT_PROT);
-            //     //poll prot registers
-            //     prot_fault = true;
-            // }
-        }
-    }
-    if (pwr_fault){
-        DelayUs(ctx, 8000);
-        PollMonitorFaultRegisters(ctx, 0x0552, 3, pwr_reg);
-        for (int i = 0; i < N_MONITORS; i++){
-            CanLog(ctx, "pwr: %X, %X, %X\n", pwr_reg[i*3], pwr_reg[i*3 + 1], pwr_reg[i*3 + 2]);
-            DelayUs(ctx, 50);
-        }
-    }
-}
-
-int PollBridgeFaultSummary(DbmsCtx* ctx){
-    static uint8_t rx_fault_reading[8];
-    int status = 0;
-    size_t data_size = 1 * sizeof(uint8_t);
-    // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
-    uint8_t FRAME_POLL_CTRL_FAULT_SUMMARY[] = {0x80, 0x00, 0x21, 0x00, 0x00, 0x00, 0x00};
-
-    if ((status = SendStackFrameSetCrc(ctx, FRAME_POLL_CTRL_FAULT_SUMMARY, sizeof(FRAME_POLL_CTRL_FAULT_SUMMARY))) != 0)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-    }
-
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * 1; // <- num frames
-
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_fault_reading, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
-    {
-        // CAN_REPORT_FAULT(ctx, status);
-        // ^ throwing all the time in simulator
-    }
-
-    RxStackFrame rx_frame;
-    FillStackFrame(&rx_frame, rx_fault_reading, sizeof(rx_fault_reading));
-    uint16_t kcrc;
-    ctx->stats.n_rx_stack_frames++;
-
-    if (rx_frame.crc == (kcrc = CalcStackFrameCrc(&rx_frame)))
-    {
-        BridgeSetFaultSummary(ctx, *rx_frame.data);
-    }
-    else
-    {
-        ctx->stats.n_rx_stack_bad_crcs++;
-    }
-    return status;
-}
-
-void BridgeUpdateFaultReadings(DbmsCtx* ctx){
-    PollBridgeFaultSummary(ctx);
-    if (ctx->faults.bridge_fault_summary != 0){
-        CanLog(ctx, "bridge faults: %X\n", ctx->faults.bridge_fault_summary);
-        // TODO poll bridge for its faults and handle them
-    }
-}
-
-
-int MonitorResetFaults(DbmsCtx* ctx){
-    uint8_t frame_reset_faults[] = {0xB1, 0x03, 0x31, 0x00, 0x00, 0x00, 0x00};
-    int status = 0;
-    if ((status = SendStackFrameSetCrc(ctx, frame_reset_faults, sizeof(frame_reset_faults)) != 0)){
-        //throw error
-        return status;
-    }
-    return status;
-}
-
-
-int Bridge_Dev_Conf_FAULT_EN(DbmsCtx* ctx){
     int status = 0;
     static uint8_t rx_reading[128];
 
@@ -814,7 +583,8 @@ int Bridge_Dev_Conf_FAULT_EN(DbmsCtx* ctx){
     return status;
 }
 
-int Stack_Dev_Conf_FAULT_EN(DbmsCtx* ctx){
+int Stack_Dev_Conf_FAULT_EN(DbmsCtx* ctx)
+{
     int status = 0;
     // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
     uint8_t FRAME_DEV_CONF_READ[] = {0xD0, STACK_DEV_CONF_REG >> 8, STACK_DEV_CONF_REG & 0xFF, 0x50, 0x00, 0x00};
@@ -823,13 +593,6 @@ int Stack_Dev_Conf_FAULT_EN(DbmsCtx* ctx){
         CAN_REPORT_FAULT(ctx, status);
     }
     return status;
-
-    uint8_t polls[N_MONITORS];
-    DelayUs(ctx, 8000);
-    PollMonitorFaultRegisters(ctx, 0x0002, 1, polls);
-    for (int i = 0; i < N_MONITORS; i++){
-        CanLog(ctx, "%d: %X\n", i, polls[i]);
-    }
 }
 
 int Read_Bridge_Fault_Comm(DbmsCtx* ctx){
@@ -859,10 +622,13 @@ int Read_Bridge_Fault_Comm(DbmsCtx* ctx){
 
     if (rx_frame.crc == (kcrc = CalcStackFrameCrc(&rx_frame)))
     {
-        if (rx_frame.data == 0){
+        // CanLog(ctx, "F_COMM1: %X\n", *rx_frame.data);
+        ctx->faults.bridge_fault_summary = rx_frame.data[0] & 0b10111111;
+        
+        if (ctx->faults.bridge_fault_summary != 0)
+        {
+            ControllerSetFault(ctx, CTRL_FAULT_STACK_FAULT);
         }
-        CanLog(ctx, "F_COMM1: %X\n", *rx_frame.data);
-        Parse_FAULT_COMM1(ctx, *rx_frame.data);
     }
     else
     {
@@ -871,10 +637,74 @@ int Read_Bridge_Fault_Comm(DbmsCtx* ctx){
     return status;
 }
 
-void Parse_FAULT_COMM1(DbmsCtx* ctx, uint8_t data){
-    for (int i = BRIDGE_FAULT_FCOMM_DET; i < BRIDGE_FAULT_STOP_DET; i++){
-        if ((data >> i) % 2 == 1){
-            BridgeSetFault(ctx, i);
+// void Parse_FAULT_COMM1(DbmsCtx* ctx, uint8_t data){
+//     for (int i = BRIDGE_FAULT_FCOMM_DET; i < BRIDGE_FAULT_STOP_DET; i++){
+//         if ((data >> i) % 2 == 1){
+//             BridgeSetFault(ctx, i);
+//         }
+//     }
+// }
+
+int SetFaultMasks(DbmsCtx* ctx){
+    int status = 0;
+
+    uint8_t FRAME_MASK_CRC[] = {0xD0, 0x00, 0x17, 0x40, 0x00, 0x00};
+
+    if ((status = SendStackFrameSetCrc(ctx, FRAME_MASK_CRC, sizeof(FRAME_MASK_CRC))) != 0)
+    {
+        CAN_REPORT_FAULT(ctx, status);
+    }
+    
+    return status;
+}
+
+int PollFaultSummary(DbmsCtx* ctx)
+{
+    static uint8_t rx_fault_readings[1024];
+    int status = 0;
+    size_t data_size = 1 * sizeof(uint8_t);
+    // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
+    uint8_t FRAME_POLL_CTRL_FAULT_SUMMARY[] = {0xC0, 0x05, 0x2D, 0x00, 0x00, 0x00};
+
+    if ((status = SendStackFrameSetCrc(ctx, FRAME_POLL_CTRL_FAULT_SUMMARY, sizeof(FRAME_POLL_CTRL_FAULT_SUMMARY))) != 0)
+    {
+        CAN_REPORT_FAULT(ctx, status);
+    }
+
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
+
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_fault_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
+    {
+        // CAN_REPORT_FAULT(ctx, status);
+        // ^ throwing all the time in simulator
+    }
+
+    RxStackFrame rx_frames[N_STACKDEVS];
+    FillStackFrames(rx_frames, rx_fault_readings, data_size, N_MONITORS);
+    uint16_t addr, kcrc;
+
+    for (size_t i = 0; i < N_STACKDEVS; i++)
+    {
+        ctx->stats.n_rx_stack_frames++;
+
+        // Excluding this since bridge device can also have faults that 
+        if (rx_frames[i].dev_addr == 0) continue; // this is myself
+        addr = rx_frames[i].dev_addr - 1;         // ignore the controller from a broadcast
+        if (addr >= N_MONITORS) continue;         // throw some error here
+
+        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
+        {
+            ctx->faults.monitor_fault_summary[i] = rx_frames[i].data[0] & FAULT_SUMM_BITMASK;
+            if (ctx->faults.monitor_fault_summary[i])
+            {
+                ControllerSetFault(ctx, CTRL_FAULT_STACK_FAULT);
+                CanLog(ctx, "F %d %x\n", addr, rx_frames[i].data[0]);
+            }
+        }
+        else
+        {
+            ctx->stats.n_rx_stack_bad_crcs++;
         }
     }
+    return status;
 }

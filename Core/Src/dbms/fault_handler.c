@@ -19,53 +19,53 @@ bool ControllerHasFault(DbmsCtx* ctx, ControllerFaultType fault)
     return (ctx->faults.controller_mask & (1U << fault)) != 0;
 }
 
-void BridgeSetFaultSummary(DbmsCtx* ctx, uint8_t fault_summary_reg)
-{
-    ctx->faults.bridge_fault_summary = (fault_summary_reg & 0x0F); // Bits [5:8] are reserved
-}
+// void BridgeSetFaultSummary(DbmsCtx* ctx, uint8_t fault_summary_reg)
+// {
+//     ctx->faults.bridge_fault_summary = (fault_summary_reg & 0x0F); // Bits [5:8] are reserved
+// }
 
-void BridgeSetFault(DbmsCtx* ctx, BridgeFault fault)
-{
-    if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
-    ctx->faults.bridge_faults |= (1U << fault);
-}
+// void BridgeSetFault(DbmsCtx* ctx, BridgeFault fault)
+// {
+//     if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
+//     ctx->faults.bridge_faults |= (1U << fault);
+// }
 
-void BridgeClearFault(DbmsCtx* ctx, BridgeFault fault)
-{
-    if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
-    ctx->faults.bridge_faults &= ~(1U << fault);
-}
+// void BridgeClearFault(DbmsCtx* ctx, BridgeFault fault)
+// {
+//     if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
+//     ctx->faults.bridge_faults &= ~(1U << fault);
+// }
 
-bool BridgeHasFault(DbmsCtx* ctx, BridgeFault fault)
-{
-    if (fault >= BRIDGE_FAULT_TYPE_COUNT) return false;
-    return (ctx->faults.bridge_faults & (1U << fault)) != 0;
-}
+// bool BridgeHasFault(DbmsCtx* ctx, BridgeFault fault)
+// {
+//     if (fault >= BRIDGE_FAULT_TYPE_COUNT) return false;
+//     return (ctx->faults.bridge_faults & (1U << fault)) != 0;
+// }
 
-void StackSetFaultSummary(DbmsCtx* ctx, uint8_t addr, uint8_t fault_summary_reg){
-    ctx->faults.monitor_fault_summary[addr] = fault_summary_reg;
-}
+// void StackSetFaultSummary(DbmsCtx* ctx, uint8_t addr, uint8_t fault_summary_reg){
+//     ctx->faults.monitor_fault_summary[addr] = fault_summary_reg;
+// }
 
 bool HasAnyFaults(DbmsCtx* ctx)
 {
     if (ctx->faults.controller_mask != 0) return true;
-    if (ctx->faults.bridge_fault_summary != 0) return true;
-    for (int i = 0; i < N_MONITORS; i++)
-    {
-        if (ctx->faults.monitor_fault_summary[i] != 0) return true;
-    }
+    // if (ctx->faults.bridge_fault_summary != 0) return true;
+    // for (int i = 0; i < N_MONITORS; i++)
+    // {
+    //     if (ctx->faults.monitor_fault_summary[i] != 0) return true;
+    // }
     return false;
 }
 
 void ClearAllFaults(DbmsCtx* ctx)
 {
     ctx->faults.controller_mask = 0;
-    ctx->faults.bridge_fault_summary = 0;
-    ctx->faults.bridge_faults = 0;
-    for (int i = 0; i < N_MONITORS; i++)
-    {
-        ctx->faults.monitor_fault_summary[i] = 0;
-    }
+    // ctx->faults.bridge_fault_summary = 0;
+    // ctx->faults.bridge_faults = 0;
+    // for (int i = 0; i < N_MONITORS; i++)
+    // {
+    //     ctx->faults.monitor_fault_summary[i] = 0;
+    // }
     ctx->need_to_save_faults = true;
 }
 
@@ -138,18 +138,30 @@ void CheckTemperatureFaults(DbmsCtx* ctx)
 
 void CheckCurrentFaults(DbmsCtx* ctx)
 {
-    if (MAX(0, ctx->isense.current_ma) > GetSetting(ctx, MAX_CURRENT))
+    // Do the comparison in ma
+    if (MAX(0, ctx->isense.current_ma) > GetSetting(ctx, MAX_CURRENT) * 1000)
     {
         ControllerSetFault(ctx, CTRL_FAULT_CURRENT_OVER);
-    }
+    }   
 }
 
 void ThrowHardFault(DbmsCtx* ctx)
 {
-    if (HasAnyFaults(ctx)) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
-    else HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
-    //todo: no excessive eeprom sched
-    ctx->need_to_save_faults = true;
+    if (HasAnyFaults(ctx)) 
+    {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+    }
+    else 
+    {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+    }
+    
+    if (!ctx->faults.had_fault && HasAnyFaults(ctx))
+    {
+        ctx->need_to_save_faults = true;
+    }
+    ctx->faults.had_fault = HasAnyFaults(ctx);
+
 }
 
 int SaveFaultState(DbmsCtx* ctx)
@@ -166,10 +178,14 @@ int SaveFaultState(DbmsCtx* ctx)
 int LoadFaultState(DbmsCtx* ctx)
 {
     int status;
-    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
+    // Right now this only references the controller mask. When "smart" / "verbose" faults 
+    // for other components on the bus are implemented, we will deal with this.
+    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, 
+            &(ctx->faults.controller_mask), sizeof(ctx->faults.controller_mask))))
     {
         // todo: check an error here
     }
     ctx->faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
+    ctx->faults.had_fault = HasAnyFaults(ctx);
     return status;
 }

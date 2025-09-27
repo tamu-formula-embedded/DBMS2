@@ -370,6 +370,8 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 38, F2I_K(ctx->stats.max_v, 1e4));
     SendMetric(ctx, 39, F2I_K(ctx->stats.min_v, 1e4));
     SendMetric(ctx, 40, F2I_K(ctx->stats.avg_v, 1e4));
+
+    SendMetric(ctx, 41, ctx->faults.bridge_fault_summary);
     // TODO: perm sol.
     // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
     

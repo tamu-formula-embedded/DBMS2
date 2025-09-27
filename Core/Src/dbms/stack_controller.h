@@ -29,6 +29,9 @@
 
 #define BRIDGE_FAULT_COMM1_REG  0x2104
 
+#define FAULT_SUMM_BITMASK 0b11101100   // DO NOT CHANGE WITHOUT TALKING 
+                                        // WITH THE TEAM FIRST PLSSS!!
+
 #define RX_FRAME_SIZE(DATA_SIZE) (DATA_SIZE + 6)
 
 typedef struct
@@ -75,18 +78,13 @@ void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size
 
 void MonitorLedBlink(DbmsCtx* ctx);
 
-void StackUpdateFaultReadings(DbmsCtx* ctx);
-void BridgeUpdateFaultReadings(DbmsCtx* ctx);
-int PollBridgeFaultSummary(DbmsCtx* ctx);
-int PollMonitorFaultRegisters(DbmsCtx* ctx, uint16_t starting_addr, uint8_t n_regs, uint8_t* poll_result);
-int PollFaultSummary(DbmsCtx* ctx, uint8_t* fault_regs);
-int MonitorResetFaults(DbmsCtx* ctx);
-
 void FillMissingTempReadings(DbmsCtx* ctx);
 
 int Bridge_Dev_Conf_FAULT_EN(DbmsCtx* ctx);
 int Stack_Dev_Conf_FAULT_EN(DbmsCtx* ctx);
-void Parse_FAULT_COMM1(DbmsCtx* ctx, uint8_t data);
+// void Parse_FAULT_COMM1(DbmsCtx* ctx, uint8_t data);
 
 int Read_Bridge_Fault_Comm(DbmsCtx* ctx);
+int SetFaultMasks(DbmsCtx* ctx);
+int PollFaultSummary(DbmsCtx* ctx);
 #endif
