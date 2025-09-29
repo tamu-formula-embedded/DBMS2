@@ -5,6 +5,7 @@
 #include "fault_handler.h"
 #include "led_controller.h"
 #include "vehicle_interface.h"
+#include "blackbox.h"
 #include <math.h>
 
 
@@ -17,6 +18,7 @@ void DbmsAlloc(DbmsCtx* ctx)
 {
     ctx->settings = &mem_settings;
     memset(&ctx->stats, 0, sizeof(ctx->stats));
+    BlackboxInit(ctx);
 }
 
 //
@@ -148,6 +150,9 @@ void DbmsIter(DbmsCtx* ctx)
     int status = 0;
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
+    
+    // Swap blackbox data and capture current state
+    BlackboxSwapAndUpdate(ctx);
 
     //
     //  Store the settings when required
