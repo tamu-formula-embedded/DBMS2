@@ -260,6 +260,8 @@ void DbmsIter(DbmsCtx* ctx)
         }
         ctx->need_to_save_faults = false;
     }
+
+    SendPlexMetrics(ctx);
     
     //
     //  Update the state of charge model
@@ -297,6 +299,20 @@ void DbmsIter(DbmsCtx* ctx)
     
     HAL_Delay(ctx->stats.end_delay / 1000);
     DelayUs(ctx, ctx->stats.end_delay % 1000);
+}
+
+void SendPlexMetrics(DbmsCtx* ctx)
+{
+    uint8_t data[8] = {0};
+    uint8_t soc = CLAMP((uint8_t)(ctx->model.z_oc * 100), 0, 100);
+    data[0] = soc;
+    CanTransmit(ctx, 0x16, data);
+
+    data[0] = (ctx->faults.controller_mask >> 3*8) & 0xff;
+    data[1] = (ctx->faults.controller_mask >> 2*8) & 0xff;
+    data[2] = (ctx->faults.controller_mask >> 1*8) & 0xff;
+    data[3] = (ctx->faults.controller_mask >> 0*8) & 0xff;
+    CanTransmit(ctx, 0x17, data);
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
