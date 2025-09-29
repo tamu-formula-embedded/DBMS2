@@ -25,6 +25,8 @@
 #include "storage.h"
 #include "vehicle_interface.h" // should go first?
 
+void SendPlexMetrics(DbmsCtx* ctx);
+
 // Called before the main loop but strictly used for memory allocation
 void DbmsAlloc(DbmsCtx* ctx);
 

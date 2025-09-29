@@ -147,7 +147,7 @@ void CheckCurrentFaults(DbmsCtx* ctx)
 
 void ThrowHardFault(DbmsCtx* ctx)
 {
-    if (ctx->cur_state == DBMS_ACTIVE || HasAnyFaults(ctx)) 
+    if (ctx->cur_state != DBMS_ACTIVE || HasAnyFaults(ctx)) 
     {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
     }
