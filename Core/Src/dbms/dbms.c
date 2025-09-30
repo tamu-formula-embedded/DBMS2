@@ -116,10 +116,10 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     }
 
     // StackStartCharging(ctx);
-    DelayUs(ctx, 5000);
-    Bridge_Dev_Conf_FAULT_EN(ctx);
-    DelayUs(ctx, 5000);
-    Stack_Dev_Conf_FAULT_EN(ctx);
+    // DelayUs(ctx, 5000);
+    // Bridge_Dev_Conf_FAULT_EN(ctx);
+    // DelayUs(ctx, 5000);
+    // Stack_Dev_Conf_FAULT_EN(ctx);
 
     DelayUs(ctx, 5000);
     SetFaultMasks(ctx);
@@ -222,7 +222,12 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //   Main State Dispatch
     //
-    if (ctx->cur_state == DBMS_ACTIVE)
+    if (ctx->cur_state != DBMS_ACTIVE)
+    {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+        ctx->need_to_save_faults = false;
+    }
+    else
     {
         StackUpdateVoltReadings(ctx);
         HAL_Delay(8);
@@ -238,7 +243,7 @@ void DbmsIter(DbmsCtx* ctx)
         // HAL_Delay(8);
 
     
-        if (ctx->stats.iters > 20) 
+        if (ctx->stats.iters > 200) 
         {               
             CheckCurrentFaults(ctx);
             CheckTemperatureFaults(ctx);
