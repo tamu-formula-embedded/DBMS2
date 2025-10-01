@@ -124,6 +124,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     DelayUs(ctx, 5000);
     SetFaultMasks(ctx);
 
+    ctx->stats.wakeup_time = HAL_GetTick();
     return status;
 }
 
@@ -243,7 +244,7 @@ void DbmsIter(DbmsCtx* ctx)
         // HAL_Delay(8);
 
     
-        if (ctx->stats.iters > 200) 
+        if (HAL_GetTick() - ctx->stats.wakeup_time > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
         {               
             CheckCurrentFaults(ctx);
             CheckTemperatureFaults(ctx);
