@@ -81,7 +81,7 @@ typedef int32_t LedState;
 typedef struct _Stats
 {
     uint64_t iters;
-
+    uint32_t wakeup_time;
     // #define N_HISTORIC_LOOPTIMES 16
     //         wrap_queue_t looptimes_q;
     //         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
