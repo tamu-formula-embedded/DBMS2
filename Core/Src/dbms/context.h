@@ -29,6 +29,7 @@
 #define N_OCV_ENTRIES               201
 #define N_RC_ENTRIES                101
 #define N_C_ENTRIES                 101
+#define N_I_MA_MEMORIZED            100
 
 
 typedef enum _DbmsState
@@ -174,6 +175,12 @@ typedef struct _DbmsCtx
         int32_t power_w;
         int32_t charge_as;
         int32_t energy_wh;
+
+        struct {
+            ma_t ma;
+            int32_t buf[N_I_MA_MEMORIZED];
+        } ima;      // charge = I, ma = moving average
+
     } isense; // current = I, sense = sensor
 
     struct {
@@ -182,6 +189,8 @@ typedef struct _DbmsCtx
         uint32_t initial_set_ts;
         bool need_to_save;
     } qstats;                       // charge stats
+
+ 
 
     struct
     {
