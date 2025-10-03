@@ -67,11 +67,11 @@ void DbmsInit(DbmsCtx* ctx)
     //
     //  Load the initial charge (we know this throws CRC mismatch)
     //
-    if ((status = LoadInitialCharge(ctx)) != 0)
+    if ((status = LoadQStats(ctx)) != 0)
     {
         // CanLog(ctx, "error loading initial charge %d\n", status);
     }   
-    SaveInitialCharge(ctx);
+    ctx->need_to_reset_qstats = false;
 
     HAL_Delay(10);
     if (ctx->stats.iters % 10 == 0){
@@ -124,7 +124,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     DelayUs(ctx, 5000);
     SetFaultMasks(ctx);
 
-    ctx->stats.wakeup_time = HAL_GetTick();
+    ctx->wakeup_ts = HAL_GetTick();
     return status;
 }
 
@@ -139,6 +139,11 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     }
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_IDLE;
+
+    ctx->qstats.historic_accumulated_loss += ctx->qstats.accumulated_loss;
+    ctx->qstats.accumulated_loss = 0;
+    CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
+    SaveQStats(ctx);
 
     HAL_Delay(200);
     return status;
@@ -175,15 +180,16 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Store the Q0 value when required
     //
-    if (ctx->qstats.need_to_save)
+    if (ctx->need_to_reset_qstats)
     {
-        if ((status = SaveInitialCharge(ctx)) != HAL_OK)
+        if ((status = SaveQStats(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
             ctx->led_state = LED_ERROR;
         }
-        ctx->qstats.need_to_save = false;
+        ctx->need_to_reset_qstats = false;
     }
+   
 
     //
     //  Let everybody know that we are alive
@@ -223,12 +229,12 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //   Main State Dispatch
     //
-    if (ctx->cur_state != DBMS_ACTIVE)
+    if (ctx->cur_state == DBMS_SHUTDOWN)
     {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
         ctx->need_to_save_faults = false;
     }
-    else
+    else if (ctx->cur_state == DBMS_ACTIVE)
     {
         StackUpdateVoltReadings(ctx);
         HAL_Delay(8);
@@ -244,7 +250,7 @@ void DbmsIter(DbmsCtx* ctx)
         // HAL_Delay(8);
 
     
-        if (HAL_GetTick() - ctx->stats.wakeup_time > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
+        if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
         {               
             CheckCurrentFaults(ctx);
             CheckTemperatureFaults(ctx);
@@ -272,6 +278,9 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->need_to_save_faults = false;
     }
 
+    //
+    //  Send plex metrics (this is kinda ugly)
+    //
     SendPlexMetrics(ctx);
     
     //
@@ -283,13 +292,15 @@ void DbmsIter(DbmsCtx* ctx)
     //  Transmit important telemetry
     //
     SendMetrics(ctx);
+
+    // This is kinda broken:
     // if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000)
-    // if (ctx->stats.iters % 4 == 0)
+    if (ctx->stats.iters % 4 == 0)
     {
         // ctx->batch_telem_ts = ctx->iter_start_us;
         SendCellVoltages(ctx);
     }
-    // if (ctx->stats.iters % 4 == 2)
+    if (ctx->stats.iters % 4 == 2)
     {
         SendCellTemps(ctx);
     }
@@ -384,8 +395,11 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_SET_INITIAL_CHARGE:
         ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;
         CanLog(ctx, "Q0: %d", be32_to_u32(rx_data));
-        ctx->qstats.initial_set_ts = (int32_t)(GetRealTime(ctx) / 1000);
-        ctx->qstats.need_to_save = true;
+        ctx->qstats.accumulated_loss = 0;
+        ctx->qstats.historic_accumulated_loss = 0;
+        // ctx->qstats.initial_set_ts = (int32_t)(GetRealTime(ctx) / 1000);
+        ctx->qstats.initial_set_ts = 0;
+        ctx->need_to_reset_qstats = true;
         break;
     default:
         ctx->stats.n_unmatched_can_frames++;

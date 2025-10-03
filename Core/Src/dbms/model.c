@@ -224,6 +224,8 @@ void UpdateModel(DbmsCtx* ctx)
     float current = (ctx->isense.current_ma / 1000.0) / N_P_GROUP;
     ctx->qstats.accumulated_loss = ctx->isense.charge_as / 3600.0;    // convert to Ah
 
+    float total_accumulated_loss = ctx->qstats.historic_accumulated_loss + ctx->qstats.accumulated_loss;
+
     // CanLog("DY %d\n", GetSetting(ctx, DYNAMIC_V_MIN));
     float V_dyn_min = GetSetting(ctx, DYNAMIC_V_MIN) / 1000.0f;
     // ^ this should probably be asserted as positive
@@ -233,31 +235,21 @@ void UpdateModel(DbmsCtx* ctx)
 
     // CanLog(ctx, "Avg T: %d\n",(int)(avg_t * 1000.0));
 
-    ComputeModel(&ctx->model, ctx->stats.avg_t, current, ctx->qstats.initial, ctx->qstats.accumulated_loss, v_pack, V_dyn_min, ctx->stats.min_v);
+    ComputeModel(&ctx->model, ctx->stats.avg_t, current, ctx->qstats.initial, total_accumulated_loss, v_pack, V_dyn_min, ctx->stats.min_v);
 }
 
-typedef struct {
-    uint64_t q0;
-    uint32_t set_at;
-} InitialChargeBuffer;
 
-int LoadInitialCharge(DbmsCtx* ctx)
+int LoadQStats(DbmsCtx* ctx)
 {
     int status;
-    InitialChargeBuffer buffer;    
-    if ((status = LoadStoredObject(ctx, EEPROM_INITIAL_CHARGE, &buffer, sizeof(buffer))) != 0)
+    if ((status = LoadStoredObject(ctx, EEPROM_INITIAL_CHARGE, &ctx->qstats, sizeof(ctx->qstats))) != 0)
     {
         // crc mismatch
     }
-    ctx->qstats.initial = (float)(buffer.q0 / 1e6);
-    ctx->qstats.initial_set_ts = buffer.set_at;
     return status;
 }
 
-int SaveInitialCharge(DbmsCtx* ctx)
+int SaveQStats(DbmsCtx* ctx)
 {
-    InitialChargeBuffer buffer;
-    buffer.q0 = (uint64_t)(ctx->qstats.initial * 1e6);
-    buffer.set_at = ctx->qstats.initial_set_ts;
-    return SaveStoredObject(ctx, EEPROM_INITIAL_CHARGE, &buffer, sizeof(buffer));
+    return SaveStoredObject(ctx, EEPROM_INITIAL_CHARGE, &ctx->qstats, sizeof(ctx->qstats));
 }

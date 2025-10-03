@@ -9,7 +9,7 @@
 #define ITER_TARGET_HZ 10
 
 // USER DEFINED UNIQUE TO EACH BATTERY
-#define N_SEGMENTS 5
+#define N_SEGMENTS 1
 #define N_SIDES_PER_SEG 2
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
@@ -82,7 +82,6 @@ typedef int32_t LedState;
 typedef struct _Stats
 {
     uint64_t iters;
-    uint32_t wakeup_time;
     // #define N_HISTORIC_LOOPTIMES 16
     //         wrap_queue_t looptimes_q;
     //         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
@@ -159,6 +158,7 @@ typedef struct _DbmsCtx
     uint64_t iter_end_us;
     uint64_t m_led_blink_ts;
     uint64_t batch_telem_ts;
+    uint64_t wakeup_ts;
 
     Stats stats;
 
@@ -184,12 +184,12 @@ typedef struct _DbmsCtx
     } isense; // current = I, sense = sensor
 
     struct {
-        float initial;              // Q0
-        float accumulated_loss;     // Qd
-        uint32_t initial_set_ts;
-        bool need_to_save;
-    } qstats;                       // charge stats
-
+        float       initial;                      // Q0
+        float       historic_accumulated_loss;    // QD
+        float       accumulated_loss;             // Qd
+        uint32_t    initial_set_ts;
+    } qstats;                                     // charge stats
+    bool need_to_reset_qstats;
  
 
     struct

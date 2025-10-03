@@ -371,7 +371,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 39, F2I_K(ctx->stats.min_v, 1e4));
     SendMetric(ctx, 40, F2I_K(ctx->stats.avg_v, 1e4));
 
-    SendMetric(ctx, 41, ctx->faults.bridge_fault_summary);
+    SendMetric(ctx, 41, F2I_K(ctx->qstats.historic_accumulated_loss, 1e6));
     // TODO: perm sol.
     // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
     
