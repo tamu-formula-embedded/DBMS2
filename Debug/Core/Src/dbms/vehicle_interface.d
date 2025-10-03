@@ -1,6 +1,7 @@
 Core/Src/dbms/vehicle_interface.o: ../Core/Src/dbms/vehicle_interface.c \
  ../Core/Src/dbms/vehicle_interface.h ../Core/Src/dbms/common.h \
  ../Core/Src/dbms/lut.h ../Core/Src/dbms/crc.h ../Core/Src/dbms/eswap.h \
+ ../Core/Src/dbms/ma.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -43,6 +44,7 @@ Core/Src/dbms/vehicle_interface.o: ../Core/Src/dbms/vehicle_interface.c \
 ../Core/Src/dbms/lut.h:
 ../Core/Src/dbms/crc.h:
 ../Core/Src/dbms/eswap.h:
+../Core/Src/dbms/ma.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
