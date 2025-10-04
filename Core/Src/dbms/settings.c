@@ -40,4 +40,7 @@ void LoadFallbackSettings(DbmsCtx* ctx)
     ctx->settings->user_defined[DYNAMIC_V_MIN] = 2600;
     ctx->settings->user_defined[MAX_V_DELTA] = 100;
     ctx->settings->user_defined[MS_BEFORE_FAULT_CHECKS] = 10000;
+
+    ctx->settings->user_defined[PULSE_LIMIT_CURRENT] = 90;
+    ctx->settings->user_defined[PULSE_LIMIT_TIME_MS] = 3000;
 }
