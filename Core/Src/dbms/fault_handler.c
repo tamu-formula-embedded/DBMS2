@@ -138,11 +138,28 @@ void CheckTemperatureFaults(DbmsCtx* ctx)
 
 void CheckCurrentFaults(DbmsCtx* ctx)
 {
+    int32_t current_ma = MAX(0, ctx->isense.current_ma);
+
     // Do the comparison in ma
-    if (MAX(0, ctx->isense.current_ma) > GetSetting(ctx, MAX_CURRENT) * 1000)
+    if (current_ma > GetSetting(ctx, MAX_CURRENT) * 1000)
     {
         ControllerSetFault(ctx, CTRL_FAULT_CURRENT_OVER);
     }   
+
+    if (current_ma > GetSetting(ctx, PULSE_LIMIT_CURRENT) * 1000)
+    {
+        ctx->pl_pulse_t = HAL_GetTick() - ctx->pl_last_ok_ts;
+        if (ctx->pl_pulse_t > GetSetting(ctx, PULSE_LIMIT_TIME_MS))
+            ControllerSetFault(ctx, CTRL_FAULT_CURRENT_PULSE);
+    }
+    else 
+    {
+        ctx->pl_pulse_t = 0;
+        ctx->pl_last_ok_ts = HAL_GetTick();
+    }
+
+    // TODO: need to make ma constructor
+    // ctx->isense.ima.current_mavg_ma = ma_calc_i32(ctx->isense.ima.ma, ctx->isense.current_ma);
 }
 
 void ThrowHardFault(DbmsCtx* ctx)

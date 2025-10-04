@@ -237,17 +237,11 @@ void DbmsIter(DbmsCtx* ctx)
     else if (ctx->cur_state == DBMS_ACTIVE)
     {
         StackUpdateVoltReadings(ctx);
-        HAL_Delay(8);
+        HAL_Delay(8*2);
 
         StackUpdateTempReadings(ctx);
         FillMissingTempReadings(ctx);
-        HAL_Delay(8);
-
-        // StackUpdateFaultReadings(ctx);  // todo: put this first?
-        // BridgeUpdateFaultReadings(ctx);
-        // HAL_Delay(8);
-        // StackUpdateFaultReadings(ctx);
-        // HAL_Delay(8);
+        HAL_Delay(8*2);
 
     
         if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
@@ -258,7 +252,7 @@ void DbmsIter(DbmsCtx* ctx)
 
             // Read_Bridge_Fault_Comm(ctx);
 
-            PollFaultSummary(ctx);
+            // PollFaultSummary(ctx);
             HAL_Delay(1);
         }
 
@@ -295,12 +289,12 @@ void DbmsIter(DbmsCtx* ctx)
 
     // This is kinda broken:
     // if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000)
-    if (ctx->stats.iters % 4 == 0)
+    // if (ctx->stats.iters % 4 == 0)
     {
         // ctx->batch_telem_ts = ctx->iter_start_us;
         SendCellVoltages(ctx);
     }
-    if (ctx->stats.iters % 4 == 2)
+    // if (ctx->stats.iters % 4 == 2)
     {
         SendCellTemps(ctx);
     }
@@ -323,6 +317,16 @@ void DbmsIter(DbmsCtx* ctx)
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
 
+void SendPlex32(DbmsCtx* ctx, uint16_t id, uint32_t m)
+{
+    uint8_t data[8] = {0};
+    data[0] = (m >> 3*8) & 0xff;
+    data[1] = (m >> 2*8) & 0xff;
+    data[2] = (m >> 1*8) & 0xff;
+    data[3] = (m >> 0*8) & 0xff;
+    CanTransmit(ctx, id, data);
+}
+
 void SendPlexMetrics(DbmsCtx* ctx)
 {
     uint8_t data[8] = {0};
@@ -330,11 +334,13 @@ void SendPlexMetrics(DbmsCtx* ctx)
     data[0] = soc;
     CanTransmit(ctx, 0x16, data);
 
-    data[0] = (ctx->faults.controller_mask >> 3*8) & 0xff;
-    data[1] = (ctx->faults.controller_mask >> 2*8) & 0xff;
-    data[2] = (ctx->faults.controller_mask >> 1*8) & 0xff;
-    data[3] = (ctx->faults.controller_mask >> 0*8) & 0xff;
-    CanTransmit(ctx, 0x17, data);
+
+    SendPlex32(ctx, 0x17, ctx->faults.controller_mask);
+    SendPlex32(ctx, 0x18, ctx->isense.current_ma / 1000);
+    SendPlex32(ctx, 0x19, ctx->isense.ima.current_mavg_ma / 1000);
+    SendPlex32(ctx, 0x1a, ctx->pl_pulse_t);
+    SendPlex32(ctx, 0x1b, ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE));
+
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])

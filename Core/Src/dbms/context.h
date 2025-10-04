@@ -9,7 +9,7 @@
 #define ITER_TARGET_HZ 10
 
 // USER DEFINED UNIQUE TO EACH BATTERY
-#define N_SEGMENTS 1
+#define N_SEGMENTS 4
 #define N_SIDES_PER_SEG 2
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
@@ -179,9 +179,13 @@ typedef struct _DbmsCtx
         struct {
             ma_t ma;
             int32_t buf[N_I_MA_MEMORIZED];
-        } ima;      // charge = I, ma = moving average
+            int32_t current_mavg_ma;
+        } ima;      // charge = I, ma = moving average (ang milliamps, so sometimes mavg)
 
     } isense; // current = I, sense = sensor
+
+    uint64_t pl_last_ok_ts;
+    uint64_t pl_pulse_t;
 
     struct {
         float       initial;                      // Q0
