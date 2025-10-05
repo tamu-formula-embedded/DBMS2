@@ -236,7 +236,6 @@ void DbmsIter(DbmsCtx* ctx)
     }
     else if (ctx->cur_state == DBMS_ACTIVE)
     {
-        StackUpdateVoltReadings(ctx);
         for (int i = 0; i < N_SIDES; i++)
         {
             StackUpdateVoltReadingSingle(ctx, i);   
