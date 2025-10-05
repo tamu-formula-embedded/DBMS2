@@ -97,13 +97,13 @@ void CheckVoltageFaults(DbmsCtx* ctx)
             }
         }
 
-        if (highest_v > max_group_v){
+        if (highest_v > max_group_v) {
             ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
         }
-        if (lowest_v < min_group_v){
+        if (lowest_v < min_group_v) {
             ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
         }
-        if (highest_v - lowest_v > max_v_delta){
+        if (highest_v - lowest_v > max_v_delta) {
             ControllerSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
         }
     }
@@ -124,15 +124,24 @@ void CheckVoltageFaults(DbmsCtx* ctx)
 
 void CheckTemperatureFaults(DbmsCtx* ctx)
 {
+    bool has_over_temp = false;
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
             if (ctx->cell_states[i].temps[j] > GetSetting(ctx, MAX_THERMISTOR_TEMP))
             {
-                ControllerSetFault(ctx, CTRL_FAULT_TEMP_OVER);
+                has_over_temp = true;
             }
         }
+    }
+    if (!has_over_temp)
+    {
+        ctx->overtemp_last_ok_ts = HAL_GetTick();
+    }
+    else {
+        if (HAL_GetTick() - ctx->overtemp_last_ok_ts > GetSetting(ctx, OVERTEMP_MS))
+            ControllerSetFault(ctx, CTRL_FAULT_TEMP_OVER);
     }
 }
 

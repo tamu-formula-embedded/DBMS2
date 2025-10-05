@@ -43,4 +43,6 @@ void LoadFallbackSettings(DbmsCtx* ctx)
 
     ctx->settings->user_defined[PULSE_LIMIT_CURRENT] = 90;
     ctx->settings->user_defined[PULSE_LIMIT_TIME_MS] = 3000;
+
+    ctx->settings->user_defined[OVERTEMP_MS] = 1000;
 }

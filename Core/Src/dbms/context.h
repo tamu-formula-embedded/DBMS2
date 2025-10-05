@@ -9,7 +9,7 @@
 #define ITER_TARGET_HZ 10
 
 // USER DEFINED UNIQUE TO EACH BATTERY
-#define N_SEGMENTS 4
+#define N_SEGMENTS 5
 #define N_SIDES_PER_SEG 2
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
@@ -186,6 +186,7 @@ typedef struct _DbmsCtx
 
     uint64_t pl_last_ok_ts;
     uint64_t pl_pulse_t;
+    uint64_t overtemp_last_ok_ts;
 
     struct {
         float       initial;                      // Q0

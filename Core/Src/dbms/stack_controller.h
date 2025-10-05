@@ -69,6 +69,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx);
 
 void StackSetupVoltReadings(DbmsCtx* ctx);
 void StackUpdateVoltReadings(DbmsCtx* ctx);
+void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr);
 
 int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on);
 
