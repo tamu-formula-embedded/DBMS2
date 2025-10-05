@@ -237,15 +237,16 @@ void DbmsIter(DbmsCtx* ctx)
     else if (ctx->cur_state == DBMS_ACTIVE)
     {
         // StackUpdateVoltReadings(ctx);
-        for (int i = 0; i < N_SIDES; i++)
-        {
-            StackUpdateVoltReadingSingle(ctx, i);   
-            HAL_Delay(1);
-        }        
+        // for (int i = 0; i < N_SIDES; i++)
+        // {
+        //     StackUpdateVoltReadingSingle(ctx, i);   
+        //     HAL_Delay(1);
+        // }        
+        // HAL_Delay(2);
 
-        HAL_Delay(2);
-
+#ifndef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
         StackUpdateTempReadings(ctx);
+#endif
         FillMissingTempReadings(ctx);
         HAL_Delay(8);
 
@@ -413,6 +414,17 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->qstats.initial_set_ts = 0;
         ctx->need_to_reset_qstats = true;
         break;
+#ifdef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
+    case CANID_DEBUG_OVERWRITE_TEMPS:
+        uint32_t temp_milli_deg_C = be32_to_u32(rx_data);
+        float temp_deg_C = temp_milli_deg_C / 1000.0;
+        for (uint8_t i = 0; i < N_SIDES; i++)
+        {
+            for (uint8_t j = 0; j < N_TEMPS_PER_SIDE; j++)
+                ctx->cell_states[i].temps[j] = temp_deg_C;
+        }
+        break;
+#endif
     default:
         ctx->stats.n_unmatched_can_frames++;
         break;
