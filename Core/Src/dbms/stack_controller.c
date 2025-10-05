@@ -378,6 +378,51 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
     }
 }
 
+void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
+{
+    uint8_t in_addr = addr * 2 + 1;
+    static uint8_t rx_buffer_volt_readings[1024];
+
+    int status = 0;
+    uint8_t FRAME_ADC_MEASUREMENTS[] = {0x80, in_addr & 0xff, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1,
+                                        0x00, 0x00};
+
+    if ((status = SendStackFrameSetCrc(ctx, FRAME_ADC_MEASUREMENTS, sizeof(FRAME_ADC_MEASUREMENTS))) != 0)
+    {
+        CAN_REPORT_FAULT(ctx, status);
+    }
+
+    size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * 1; // <- num frames
+    //                 header+crc ^         ^ readings * 2 bytes each
+
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_volt_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
+    {
+        
+    }
+    ctx->stats.n_rx_stack_frames++;
+
+    RxStackFrame rx_frame = {0};
+    FillStackFrame(&rx_frame, rx_buffer_volt_readings, data_size);
+    if (rx_frame.dev_addr != in_addr) return;
+    if (rx_frame.crc != CalcStackFrameCrc(&rx_frame)) {
+        ctx->stats.n_rx_stack_bad_crcs++;
+        return;
+    }
+
+    // CanLog(ctx, "V %d %d\n", in_addr, (rx_frame.data[0] << 8) + rx_frame.data[1]);
+
+     for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+    {
+        uint16_t raw =
+                (rx_frame.data[j * sizeof(int16_t)] << 8) + (rx_frame.data[j * sizeof(int16_t) + 1]);
+
+        ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+    }
+
+
+}
+
 // votlages ->  if (addr % 2 == 0)
 //                  monitor id = addr / 2
 //                  write(0...N_GROUPS_PER_SIDE)
@@ -425,6 +470,7 @@ void StackUpdateTempReadings(DbmsCtx* ctx)
         if (addr >= N_SIDES) continue;                      // throw some error here
 
         //    CanLog(ctx, "Temp da=%d a=%d o=%d\n", rx_frames[i].dev_addr, addr, offset);
+        ctx->stats.n_rx_stack_frames++;
 
         if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
         {

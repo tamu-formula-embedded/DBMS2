@@ -236,12 +236,18 @@ void DbmsIter(DbmsCtx* ctx)
     }
     else if (ctx->cur_state == DBMS_ACTIVE)
     {
-        StackUpdateVoltReadings(ctx);
-        HAL_Delay(8*2);
+        // StackUpdateVoltReadings(ctx);
+        for (int i = 0; i < N_SIDES; i++)
+        {
+            StackUpdateVoltReadingSingle(ctx, i);   
+            HAL_Delay(1);
+        }        
+
+        HAL_Delay(2);
 
         StackUpdateTempReadings(ctx);
         FillMissingTempReadings(ctx);
-        HAL_Delay(8*2);
+        HAL_Delay(8);
 
     
         if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
