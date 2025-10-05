@@ -32,6 +32,9 @@ enum _UserSettingIndex
     PULSE_LIMIT_TIME_MS,
     OVERTEMP_MS,
 
+    TEMP_CURVE_A,
+    TEMP_CURVE_B,
+
     __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
 };
 

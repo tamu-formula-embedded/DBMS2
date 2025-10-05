@@ -32,6 +32,10 @@
 #define N_I_MA_MEMORIZED            100
 
 
+// DANGER:  THESE DEBUGS WILL PREVENT THE CONTROLLER FROM WORKING NORMALLY
+#define DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
+// END DANGER ZONE
+
 typedef enum _DbmsState
 {
     DBMS_ACTIVE = 0,
@@ -183,6 +187,7 @@ typedef struct _DbmsCtx
         } ima;      // charge = I, ma = moving average (ang milliamps, so sometimes mavg)
 
     } isense; // current = I, sense = sensor
+    uint32_t max_current_ma;
 
     uint64_t pl_last_ok_ts;
     uint64_t pl_pulse_t;

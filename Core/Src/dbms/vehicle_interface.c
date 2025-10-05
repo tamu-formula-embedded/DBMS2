@@ -374,7 +374,12 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 41, F2I_K(ctx->qstats.historic_accumulated_loss, 1e6));
     // TODO: perm sol.
     // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
-    
+
+    SendMetric(ctx, 42, ctx->pl_pulse_t);
+    SendMetric(ctx, 43, ctx->pl_last_ok_ts);
+    SendMetric(ctx, 44, ctx->max_current_ma);
+
+
     return 0;
 }
 
