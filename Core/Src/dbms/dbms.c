@@ -206,7 +206,8 @@ void DbmsIter(DbmsCtx* ctx)
     }
     else
     {
-        ctx->req_state = DBMS_ACTIVE;
+        if (ctx->last_rx_heartbeat > 5000)
+            ctx->req_state = DBMS_ACTIVE;
     }
 
     //
@@ -238,14 +239,15 @@ void DbmsIter(DbmsCtx* ctx)
     {
         for (int i = 0; i < N_SIDES; i++)
         {
-            StackUpdateVoltReadingSingle(ctx, i);   
-            HAL_Delay(1);
+            if (ctx->stats.iters % 2 == i % 2)
+            {
+                StackUpdateVoltReadingSingle(ctx, i);   
+                HAL_Delay(2);
+            }
         }        
-        HAL_Delay(2);
+        HAL_Delay(8);
 
-#ifndef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
         StackUpdateTempReadings(ctx);
-#endif
         FillMissingTempReadings(ctx);
         HAL_Delay(8);
 
@@ -346,6 +348,7 @@ void SendPlexMetrics(DbmsCtx* ctx)
     SendPlex32(ctx, 0x19, ctx->isense.ima.current_mavg_ma / 1000);
     SendPlex32(ctx, 0x1a, ctx->pl_pulse_t);
     SendPlex32(ctx, 0x1b, ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE));
+    SendPlex32(ctx, 0x1c, ctx->stats.iters);
 
 }
 
