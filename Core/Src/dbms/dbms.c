@@ -273,9 +273,8 @@ void DbmsIter(DbmsCtx* ctx)
             CheckTemperatureFaults(ctx);
             CheckVoltageFaults(ctx);
 
-            // Read_Bridge_Fault_Comm(ctx);
-            // PollFaultSummary(ctx);
-            // HAL_Delay(SINGLE_MSG_DELAY);
+            PollFaultSummary(ctx);
+            HAL_Delay(SINGLE_MSG_DELAY);
         }
 
         ThrowHardFault(ctx);
