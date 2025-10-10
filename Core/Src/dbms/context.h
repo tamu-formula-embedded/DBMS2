@@ -6,10 +6,15 @@
 
 #include "common.h"
 
+
+// USER DEFINED
 #define ITER_TARGET_HZ 10
 
-// USER DEFINED UNIQUE TO EACH BATTERY
-#define N_SEGMENTS 1
+#define SINGLE_MSG_DELAY    2       // ms delay between individual stack messages 
+#define GROUP_MSG_DELAY     8       // ms delay between groups of stack message 
+#define SPLIT_STACK_OPS     1       // 1 = divide stack ops in half, every-other-iter, 0 = do not
+
+#define N_SEGMENTS 4
 #define N_SIDES_PER_SEG 2
 #define N_MONITORS_PER_SIDE 2
 #define N_GROUPS_PER_SIDE 14
@@ -29,7 +34,12 @@
 #define N_OCV_ENTRIES               201
 #define N_RC_ENTRIES                101
 #define N_C_ENTRIES                 101
+#define N_I_MA_MEMORIZED            100
 
+
+// DANGER:  THESE DEBUGS WILL PREVENT THE CONTROLLER FROM WORKING NORMALLY
+// #define DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
+// END DANGER ZONE
 
 typedef enum _DbmsState
 {
@@ -81,7 +91,6 @@ typedef int32_t LedState;
 typedef struct _Stats
 {
     uint64_t iters;
-
     // #define N_HISTORIC_LOOPTIMES 16
     //         wrap_queue_t looptimes_q;
     //         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
@@ -126,6 +135,11 @@ typedef struct _Model   // Outputs from the ECM model
     float I_lim;
 } Model;
 
+typedef struct _BlackboxInfo
+{
+    uint64_t iter;
+} BlackboxInfo;
+
 typedef struct _DbmsCtx
 {
 
@@ -153,6 +167,7 @@ typedef struct _DbmsCtx
     uint64_t iter_end_us;
     uint64_t m_led_blink_ts;
     uint64_t batch_telem_ts;
+    uint64_t wakeup_ts;
 
     Stats stats;
 
@@ -169,19 +184,36 @@ typedef struct _DbmsCtx
         int32_t power_w;
         int32_t charge_as;
         int32_t energy_wh;
+
+        struct {
+            ma_t ma;
+            int32_t buf[N_I_MA_MEMORIZED];
+            int32_t current_mavg_ma;
+        } ima;      // charge = I, ma = moving average (ang milliamps, so sometimes mavg)
+
     } isense; // current = I, sense = sensor
+    uint32_t max_current_ma;
+
+    uint64_t pl_last_ok_ts;
+    uint64_t pl_pulse_t;
+    uint64_t overtemp_last_ok_ts;
 
     struct {
-        float initial;              // Q0
-        float accumulated_loss;     // Qd
-        uint32_t initial_set_ts;
-        bool need_to_save;
-    } qstats;                       // charge stats
+        float       initial;                      // Q0
+        float       historic_accumulated_loss;    // QD
+        float       accumulated_loss;             // Qd
+        uint32_t    initial_set_ts;
+    } qstats;                                     // charge stats
+    bool need_to_reset_qstats;
+ 
 
     struct
     {
         uint32_t controller_mask;
-        uint32_t monitor_masks[N_MONITORS];
+        uint8_t bridge_fault_summary;
+        uint32_t bridge_faults;
+        uint8_t monitor_fault_summary[N_MONITORS];
+        bool had_fault;
     } faults;
     bool need_to_save_faults;
     uint16_t faults_crc;
@@ -192,6 +224,10 @@ typedef struct _DbmsCtx
     uint8_t last_can_err;
     bool need_to_sync_settings;
     bool m_led_on;
+
+    // Blackbox pointers for crash analysis
+    BlackboxInfo* blackbox_old;
+    BlackboxInfo* blackbox_new;
 
 } DbmsCtx;
 

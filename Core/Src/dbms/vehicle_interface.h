@@ -39,6 +39,8 @@
 #define CANID_RX_CLEAR_FAULTS       0x544
 #define CANID_RX_SET_INITIAL_CHARGE 0x545
 
+#define CANID_DEBUG_OVERWRITE_TEMPS 0x581
+
 #define ERR_CFGID_NOT_FOUND 54
 
 #define CAN_TX_WAIT_US    200 // polling sleep step

@@ -4,23 +4,10 @@
 #include "stack_controller.h"
 #include "context.h"
 #include "data.h"
+#include "fault_handler.h"
 
 static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
 static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
-
-/**
- * Prints the contents of a received RxStackFrame for debugging
- */
-void __PrintStackRxFrame(RxStackFrame* f)
-{
-    printf("RxStackFrame:\n\tinit=%d dev_addr=%d reg_addr=%d size=%d\n\tdata=", f->init_field, f->dev_addr, f->reg_addr,
-           f->size);
-    for (size_t i = 0; i < f->size; i++)
-    {
-        printf("%02x ", f->data[i]);
-    }
-    printf("\n");
-}
 
 /**
  * Sends a raw data frame to the battery stack via UART
@@ -317,66 +304,44 @@ void FillStackFrames(RxStackFrame* rx_frames, uint8_t* buffer, size_t size, size
     }
 }
 
-void StackUpdateVoltReadings(DbmsCtx* ctx)
+void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
 {
-    static uint8_t rx_buffer_volt_readings[1024 * 4];
-
     int status = 0;
-    uint8_t FRAME_ADC_MEASUREMENTS[] = {0xA0, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1,
-                                        0x00, 0x00};
-
-    if ((status = SendStackFrameSetCrc(ctx, FRAME_ADC_MEASUREMENTS, sizeof(FRAME_ADC_MEASUREMENTS))) != 0)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-    }
+    static uint8_t rx_buffer_v[1024];
+    uint8_t in_addr = addr * 2 + 1;
+    uint8_t frame[] = {0x80, in_addr & 0xff, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1, 0x00, 0x00};
 
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
-    //                 header+crc ^         ^ readings * 2 bytes each
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size);
 
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_volt_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
+    if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
+    ctx->stats.n_rx_stack_frames++;
+
+    uint8_t* data = rx_buffer_v;
+    while (data[0] != frame[3]) data++;
+    data++;
+    uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
+    *(data-1) = frame[3];
+    *(data-2) = frame[2];
+    *(data-3) = in_addr;
+    *(data-4) = frame[4];
+    uint16_t c_crc = CalcCrc16(data-4, data_size+4);
+    if (f_crc != c_crc) 
     {
-        // CAN_REPORT_FAULT(ctx, status);
-        // ^ throwing all the time in simulator
-        // return;
-        // CanLog(ctx, "BadV %d\n", status);
+        ctx->stats.n_rx_stack_bad_crcs++;
+        return;
     }
 
-    RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_frames, rx_buffer_volt_readings, data_size, N_STACKDEVS);
-    uint8_t addr;
-    uint16_t kcrc;
-
-    for (size_t i = 0; i < N_STACKDEVS; i++)
+    for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
     {
-        ctx->stats.n_rx_stack_frames++;
-
-        if (rx_frames[i].dev_addr == 0) continue; // this is myself
-        addr = rx_frames[i].dev_addr - 1;         // ignore the controller from a broadcast
-        if (addr >= N_MONITORS) continue;         // throw some error here
-        if (addr % 2 == 1) continue;              // skip the odds
-        addr /= 2;                                // addr now in side space
-        if (addr >= N_SIDES) continue;            // throw some error here
-
-        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
-        {
-            // CanLog(ctx, "Matched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
-            for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
-            {
-                uint16_t raw =
-                        (rx_frames[i].data[j * sizeof(int16_t)] << 8) + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
-
-                ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
-            }
-        }
-        else
-        {
-            //CanLog(ctx, "Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr, addr);
-            ctx->stats.n_rx_stack_bad_crcs++;
-        }
+        uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
+        ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
     }
 }
 
+// (legacy comment)
+//
 // votlages ->  if (addr % 2 == 0)
 //                  monitor id = addr / 2
 //                  write(0...N_GROUPS_PER_SIDE)
@@ -387,64 +352,41 @@ void StackUpdateVoltReadings(DbmsCtx* ctx)
 //              else
 //                  write(N_TEMPS_PER_SIDE+1...2*N_TEMPS_PER_SIDE)
 
-void StackUpdateTempReadings(DbmsCtx* ctx)
+void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick)
 {
-    // Retreives GPIO1 through GPIO7 values and stores them into the cell_states->temps array
+    static uint8_t rx_buffer_t[1024];
     int status = 0;
-    // Send read command to read GPIO1..7
-    uint8_t frame_read_gpio[] = {0xA0, 0x05, 0x8E, 0x0D, 0x00, 0x00}; // Reading 14 bytes
-    SendStackFrameSetCrc(ctx, frame_read_gpio, sizeof(frame_read_gpio));
 
-    // Receive response frame
-    size_t data_size = N_TEMPS_PER_MONITOR * sizeof(uint16_t);
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
-    static uint8_t rx_frame[1024 * 4];
+    uint8_t in_addr = addr * 2 + 1 + (sidekick ? 1 : 0);
+    uint8_t offset = sidekick ? N_TEMPS_PER_MONITOR : 0;
+    uint8_t frame[] = {0x80, in_addr, 0x05, 0x8E, 0x0D, 0x00, 0x00}; // Reading 14 bytes
 
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_frame, expected_rx_size, expected_rx_size)) != 0)
+    size_t data_size = N_TEMPS_PER_MONITOR * sizeof(int16_t);
+    size_t expected_rx_size = RX_FRAME_SIZE(data_size);
+
+    if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
+    ctx->stats.n_rx_stack_frames++;
+
+    uint8_t* data = rx_buffer_t;
+    while (data[0] != frame[3]) data++;
+    data++;
+    uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
+    *(data-1) = frame[3];
+    *(data-2) = frame[2];
+    *(data-3) = in_addr;
+    *(data-4) = frame[4];
+    uint16_t c_crc = CalcCrc16(data-4, data_size+4);
+    if (f_crc != c_crc) 
     {
-        //    CAN_REPORT_FAULT(ctx, status);
-        // CanLog(ctx, "Wtf %d\n", status);
-        // return;
+        ctx->stats.n_rx_stack_bad_crcs++;
+        return;
     }
-    RxStackFrame rx_frames[N_MONITORS];
-    FillStackFrames(rx_frames, rx_frame, data_size, N_MONITORS);
-    // Store data into cell_states->temps
-    uint8_t addr, offset;
-    uint16_t kcrc;
-    for (int i = 0; i < N_MONITORS; i++)
+
+    for (size_t j = 0; j < N_TEMPS_PER_MONITOR; j++)
     {
-        if (rx_frames[i].dev_addr <= 0)
-        {
-            continue;
-        }; // this is myself
-        addr = rx_frames[i].dev_addr - 1;                   // ignore the controller from a broadcast
-        if (addr >= N_MONITORS) continue;                   // throw some error here
-        offset = addr % 2 == 0 ? 0 : (N_TEMPS_PER_MONITOR); // what the fuckkk
-        addr /= 2;                                          // addr is halfed
-        if (addr >= N_SIDES) continue;                      // throw some error here
-
-        //    CanLog(ctx, "Temp da=%d a=%d o=%d\n", rx_frames[i].dev_addr, addr, offset);
-
-        if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
-        {
-            //          	 CanLog(ctx, "Temps Matched %X != %X Addr %d, %d and %X\n", kcrc, rx_frames[i].crc,
-            //          rx_frames[i].dev_addr, addr, rx_frames[i].data[0]);
-            for (size_t j = 0; j < N_TEMPS_PER_MONITOR; j++)
-            {
-                uint16_t raw =
-                        (rx_frames[i].data[j * sizeof(int16_t)] << 8) + (rx_frames[i].data[j * sizeof(int16_t) + 1]);
-
-                // CanLog(ctx, "A %d\n", addr);
-                ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
-                // 1000000 for uV to V
-            }
-        }
-        else
-        {
-            //    CanLog(ctx, "Temps Unmatched %X != %X Addr %d, %d\n", kcrc, rx_frames[i].crc, rx_frames[i].dev_addr,
-            //    addr);
-            ctx->stats.n_rx_stack_bad_crcs++;
-        }
+        uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
+        ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
     }
 }
 
@@ -457,7 +399,8 @@ void FillMissingTempReadings(DbmsCtx* ctx)
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
             float t = ctx->cell_states[i].temps[j];
-            if (t >= 18 && t < 120.0f){
+            if ((t >= 18 && t < 120.0f) || (i == 3 && j == 7))
+            {
                 n++;
                 sum += t;
             }
@@ -471,7 +414,8 @@ void FillMissingTempReadings(DbmsCtx* ctx)
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
              float t = ctx->cell_states[i].temps[j];
-            if (t < 18 || t >= 120.0f ){
+            if ((t < 18 || t >= 120.0f) || (i == 3 && j == 7))
+            {
                 ctx->cell_states[i].temps[j] = avg;
             }
         }
@@ -515,7 +459,6 @@ void MonitorLedBlink(DbmsCtx* ctx)
 {
 
     uint64_t curr_ts = GetUs(ctx) - ctx->m_led_blink_ts;
-    //    CanLog(ctx, "%d \n", curr_ts);
 
     if (ctx->m_led_on)
     {
@@ -537,14 +480,29 @@ void MonitorLedBlink(DbmsCtx* ctx)
     }
 }
 
-// sizeof(fault_regs) >= N_MONITORS
-int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs)
+int SetFaultMasks(DbmsCtx* ctx){
+    int status = 0;
+
+    uint8_t FRAME_MASK_CRC[] = {0xD0, 0x00, 0x17, 0x40, 0x00, 0x00};
+
+    if ((status = SendStackFrameSetCrc(ctx, FRAME_MASK_CRC, sizeof(FRAME_MASK_CRC))) != 0)
+    {
+        CAN_REPORT_FAULT(ctx, status);
+    }
+    
+    return status;
+}
+
+
+// TODO: clean this one up when we look into this stuff more
+
+int PollFaultSummary(DbmsCtx* ctx)
 {
-    static uint8_t rx_fault_readings[1024 * 4];
+    static uint8_t rx_fault_readings[1024];
     int status = 0;
     size_t data_size = 1 * sizeof(uint8_t);
-
-    uint8_t FRAME_POLL_CTRL_FAULT_SUMMARY[] = {0xA0, 0x21, fault_reg_n, data_size - 1, 0x00, 0x00};
+    // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
+    uint8_t FRAME_POLL_CTRL_FAULT_SUMMARY[] = {0xC0, 0x05, 0x2D, 0x00, 0x00, 0x00};
 
     if ((status = SendStackFrameSetCrc(ctx, FRAME_POLL_CTRL_FAULT_SUMMARY, sizeof(FRAME_POLL_CTRL_FAULT_SUMMARY))) != 0)
     {
@@ -553,41 +511,38 @@ int PollFaultRegisters(DbmsCtx* ctx, uint8_t fault_reg_n, uint8_t* fault_regs)
 
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
 
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_fault_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_fault_readings, expected_rx_size, 50)) != 0)
     {
         // CAN_REPORT_FAULT(ctx, status);
         // ^ throwing all the time in simulator
     }
 
     RxStackFrame rx_frames[N_STACKDEVS];
-    FillStackFrames(rx_frames, rx_fault_readings, data_size, N_STACKDEVS);
+    FillStackFrames(rx_frames, rx_fault_readings, data_size, N_MONITORS);
     uint16_t addr, kcrc;
 
     for (size_t i = 0; i < N_STACKDEVS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
 
+        // Excluding this since bridge device can also have faults that 
         if (rx_frames[i].dev_addr == 0) continue; // this is myself
         addr = rx_frames[i].dev_addr - 1;         // ignore the controller from a broadcast
         if (addr >= N_MONITORS) continue;         // throw some error here
 
         if (rx_frames[i].crc == (kcrc = CalcStackFrameCrc(&(rx_frames[i]))))
         {
-            // CanLog(ctx, "F %d->%d\n", addr, *rx_frames[i].data);
-            // DelayUs(ctx, 50);
-            fault_regs[addr] = (*rx_frames[i].data);
+            ctx->faults.monitor_fault_summary[i] = rx_frames[i].data[0] & FAULT_SUMM_BITMASK;
+            if (ctx->faults.monitor_fault_summary[i])
+            {
+                ControllerSetFault(ctx, CTRL_FAULT_STACK_FAULT);
+                CanLog(ctx, "F %d %x\n", addr, rx_frames[i].data[0]);
+            }
         }
         else
         {
             ctx->stats.n_rx_stack_bad_crcs++;
         }
     }
-
     return status;
-}
-
-void StackUpdateFaultReadings(DbmsCtx* ctx)
-{
-    uint8_t fault_summaries[N_MONITORS];
-    PollFaultRegisters(ctx, 0x00, fault_summaries);
 }

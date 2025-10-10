@@ -1,6 +1,6 @@
 Core/Src/dbms/dbms.o: ../Core/Src/dbms/dbms.c ../Core/Src/dbms/dbms.h \
  ../Core/Src/dbms/common.h ../Core/Src/dbms/lut.h ../Core/Src/dbms/crc.h \
- ../Core/Src/dbms/eswap.h \
+ ../Core/Src/dbms/eswap.h ../Core/Src/dbms/ma.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -40,12 +40,14 @@ Core/Src/dbms/dbms.o: ../Core/Src/dbms/dbms.c ../Core/Src/dbms/dbms.h \
  ../Core/Src/dbms/fault_handler.h ../Core/Src/dbms/led_controller.h \
  ../Core/Src/dbms/sched.h ../Core/Src/dbms/storage.h \
  ../Core/Src/dbms/vehicle_interface.h ../Core/Src/dbms/settings.h \
- ../Core/Src/dbms/stack_controller.h ../Core/Src/dbms/model.h
+ ../Core/Src/dbms/stack_controller.h ../Core/Src/dbms/model.h \
+ ../Core/Src/dbms/blackbox.h
 ../Core/Src/dbms/dbms.h:
 ../Core/Src/dbms/common.h:
 ../Core/Src/dbms/lut.h:
 ../Core/Src/dbms/crc.h:
 ../Core/Src/dbms/eswap.h:
+../Core/Src/dbms/ma.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
@@ -92,3 +94,4 @@ Core/Src/dbms/dbms.o: ../Core/Src/dbms/dbms.c ../Core/Src/dbms/dbms.h \
 ../Core/Src/dbms/settings.h:
 ../Core/Src/dbms/stack_controller.h:
 ../Core/Src/dbms/model.h:
+../Core/Src/dbms/blackbox.h:

@@ -5,6 +5,7 @@
 #include "fault_handler.h"
 #include "led_controller.h"
 #include "vehicle_interface.h"
+#include "blackbox.h"
 #include <math.h>
 
 
@@ -17,6 +18,7 @@ void DbmsAlloc(DbmsCtx* ctx)
 {
     ctx->settings = &mem_settings;
     memset(&ctx->stats, 0, sizeof(ctx->stats));
+    BlackboxInit(ctx);
 }
 
 //
@@ -65,11 +67,11 @@ void DbmsInit(DbmsCtx* ctx)
     //
     //  Load the initial charge (we know this throws CRC mismatch)
     //
-    if ((status = LoadInitialCharge(ctx)) != 0)
+    if ((status = LoadQStats(ctx)) != 0)
     {
         // CanLog(ctx, "error loading initial charge %d\n", status);
     }   
-    SaveInitialCharge(ctx);
+    ctx->need_to_reset_qstats = false;
 
     HAL_Delay(10);
     if (ctx->stats.iters % 10 == 0){
@@ -114,7 +116,15 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     }
 
     // StackStartCharging(ctx);
+    // DelayUs(ctx, 5000);
+    // Bridge_Dev_Conf_FAULT_EN(ctx);
+    // DelayUs(ctx, 5000);
+    // Stack_Dev_Conf_FAULT_EN(ctx);
 
+    DelayUs(ctx, 5000);
+    SetFaultMasks(ctx);
+
+    ctx->wakeup_ts = HAL_GetTick();
     return status;
 }
 
@@ -130,6 +140,11 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_IDLE;
 
+    ctx->qstats.historic_accumulated_loss += ctx->qstats.accumulated_loss;
+    ctx->qstats.accumulated_loss = 0;
+    CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
+    SaveQStats(ctx);
+
     HAL_Delay(200);
     return status;
 }
@@ -141,6 +156,9 @@ void DbmsIter(DbmsCtx* ctx)
     int status = 0;
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
+    
+    // Swap blackbox data and capture current state
+    BlackboxSwapAndUpdate(ctx);
 
     //
     //  Store the settings when required
@@ -162,15 +180,16 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Store the Q0 value when required
     //
-    if (ctx->qstats.need_to_save)
+    if (ctx->need_to_reset_qstats)
     {
-        if ((status = SaveInitialCharge(ctx)) != HAL_OK)
+        if ((status = SaveQStats(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
             ctx->led_state = LED_ERROR;
         }
-        ctx->qstats.need_to_save = false;
+        ctx->need_to_reset_qstats = false;
     }
+   
 
     //
     //  Let everybody know that we are alive
@@ -187,7 +206,8 @@ void DbmsIter(DbmsCtx* ctx)
     }
     else
     {
-        ctx->req_state = DBMS_ACTIVE;
+        if (ctx->last_rx_heartbeat > 5000)
+            ctx->req_state = DBMS_ACTIVE;
     }
 
     //
@@ -204,29 +224,61 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->led_state = LED_INIT;
         ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
+        // MonitorResetFaults(ctx);
     }
 
     //
     //   Main State Dispatch
     //
-    if (ctx->cur_state == DBMS_ACTIVE)
+    if (ctx->cur_state == DBMS_SHUTDOWN)
     {
-        StackUpdateVoltReadings(ctx);
-        HAL_Delay(8);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+        ctx->need_to_save_faults = false;
+    }
+    else if (ctx->cur_state == DBMS_ACTIVE)
+    {
+        for (int i = 0; i < N_SIDES; i++)
+        {
+#if SPLIT_STACK_OPS
+            if (ctx->stats.iters % 2 == i % 2)
+#endif
+            {
+                StackUpdateVoltReadingSingle(ctx, i);   
+                HAL_Delay(SINGLE_MSG_DELAY);
+            }
+        }        
 
-        StackUpdateTempReadings(ctx);
-        
+        HAL_Delay(GROUP_MSG_DELAY);
+
+        for (uint8_t i = 0; i < N_SIDES; i++)
+        {
+#if SPLIT_STACK_OPS 
+            StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
+            HAL_Delay(SINGLE_MSG_DELAY);
+#else
+            StackUpdateTempReadingSingle(ctx, i, false);
+            HAL_Delay(SINGLE_MSG_DELAY);
+            StackUpdateTempReadingSingle(ctx, i, true);
+            HAL_Delay(SINGLE_MSG_DELAY);
+#endif
+        }
+
         FillMissingTempReadings(ctx);
-        HAL_Delay(8);
+        HAL_Delay(GROUP_MSG_DELAY);
 
-        // StackUpdateFaultReadings(ctx);  // todo: put this first?
-
-        if (ctx->stats.iters > 10) {
+    
+        if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
+        {               
             CheckCurrentFaults(ctx);
             CheckTemperatureFaults(ctx);
             CheckVoltageFaults(ctx);
+
+            PollFaultSummary(ctx);
+            HAL_Delay(SINGLE_MSG_DELAY);
         }
 
+        ThrowHardFault(ctx);
+        HAL_Delay(GROUP_MSG_DELAY);
     }
     //
     //  save faults
@@ -240,6 +292,11 @@ void DbmsIter(DbmsCtx* ctx)
         }
         ctx->need_to_save_faults = false;
     }
+
+    //
+    //  Send plex metrics (this is kinda ugly)
+    //
+    SendPlexMetrics(ctx);
     
     //
     //  Update the state of charge model
@@ -250,15 +307,9 @@ void DbmsIter(DbmsCtx* ctx)
     //  Transmit important telemetry
     //
     SendMetrics(ctx);
-    // if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000)
-    if (ctx->stats.iters % 4 == 0)
-    {
-        // ctx->batch_telem_ts = ctx->iter_start_us;
-        SendCellVoltages(ctx);
-    }
-    if (ctx->stats.iters % 4 == 2){
-        SendCellTemps(ctx);
-    }
+
+    SendCellVoltages(ctx);
+    SendCellTemps(ctx);
 
     //
     //  Update the LEDs (etc.). Led state should be set every time the cur_state changes
@@ -276,6 +327,33 @@ void DbmsIter(DbmsCtx* ctx)
     
     HAL_Delay(ctx->stats.end_delay / 1000);
     DelayUs(ctx, ctx->stats.end_delay % 1000);
+}
+
+void SendPlex32(DbmsCtx* ctx, uint16_t id, uint32_t m)
+{
+    uint8_t data[8] = {0};
+    data[0] = (m >> 3*8) & 0xff;
+    data[1] = (m >> 2*8) & 0xff;
+    data[2] = (m >> 1*8) & 0xff;
+    data[3] = (m >> 0*8) & 0xff;
+    CanTransmit(ctx, id, data);
+}
+
+void SendPlexMetrics(DbmsCtx* ctx)
+{
+    uint8_t data[8] = {0};
+    uint8_t soc = CLAMP((uint8_t)(ctx->model.z_oc * 100), 0, 100);
+    data[0] = soc;
+    CanTransmit(ctx, 0x16, data);
+
+
+    SendPlex32(ctx, 0x17, ctx->faults.controller_mask);
+    SendPlex32(ctx, 0x18, ctx->isense.current_ma / 1000);
+    SendPlex32(ctx, 0x19, ctx->isense.ima.current_mavg_ma / 1000);
+    SendPlex32(ctx, 0x1a, ctx->pl_pulse_t);
+    SendPlex32(ctx, 0x1b, ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE));
+    SendPlex32(ctx, 0x1c, ctx->stats.iters);
+
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
@@ -336,9 +414,23 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_SET_INITIAL_CHARGE:
         ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;
         CanLog(ctx, "Q0: %d", be32_to_u32(rx_data));
-        ctx->qstats.initial_set_ts = (int32_t)(GetRealTime(ctx) / 1000);
-        ctx->qstats.need_to_save = true;
+        ctx->qstats.accumulated_loss = 0;
+        ctx->qstats.historic_accumulated_loss = 0;
+        // ctx->qstats.initial_set_ts = (int32_t)(GetRealTime(ctx) / 1000);
+        ctx->qstats.initial_set_ts = 0;
+        ctx->need_to_reset_qstats = true;
         break;
+#ifdef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
+    case CANID_DEBUG_OVERWRITE_TEMPS:
+        uint32_t temp_milli_deg_C = be32_to_u32(rx_data);
+        float temp_deg_C = temp_milli_deg_C / 1000.0;
+        for (uint8_t i = 0; i < N_SIDES; i++)
+        {
+            for (uint8_t j = 0; j < N_TEMPS_PER_SIDE; j++)
+                ctx->cell_states[i].temps[j] = temp_deg_C;
+        }
+        break;
+#endif
     default:
         ctx->stats.n_unmatched_can_frames++;
         break;

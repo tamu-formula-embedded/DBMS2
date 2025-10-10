@@ -40,6 +40,7 @@ typedef unsigned int uint32_t;
 #include "lut.h"
 #include "crc.h"
 #include "eswap.h"
+#include "ma.h"
 
 #ifdef SIM
 #include "sim.h"
