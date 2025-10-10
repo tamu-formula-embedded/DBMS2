@@ -19,46 +19,15 @@ bool ControllerHasFault(DbmsCtx* ctx, ControllerFaultType fault)
     return (ctx->faults.controller_mask & (1U << fault)) != 0;
 }
 
-void StackSetFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
-{
-    if (addr >= N_MONITORS) return;
-    if (fault >= STACK_FAULT_TYPE_COUNT) return;
-    ctx->faults.monitor_masks[addr] |= (1U << fault);
-}
-
-void StackClearFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
-{
-    if (addr >= N_MONITORS) return;
-    if (fault >= STACK_FAULT_TYPE_COUNT) return;
-    ctx->faults.monitor_masks[addr] &= ~(1U << fault);
-    ctx->need_to_save_faults = true;
-}
-
-// TODO: make a version over all addr?
-bool StackHasFault(DbmsCtx* ctx, uint8_t addr, StackFaultType fault)
-{
-    if (addr >= N_MONITORS) return false;
-    if (fault >= STACK_FAULT_TYPE_COUNT) return false;
-    return (ctx->faults.monitor_masks[addr] & (1U << fault)) != 0;
-}
-
 bool HasAnyFaults(DbmsCtx* ctx)
 {
     if (ctx->faults.controller_mask != 0) return true;
-    for (int i = 0; i < N_MONITORS; i++)
-    {
-        if (ctx->faults.monitor_masks[i] != 0) return true;
-    }
     return false;
 }
 
 void ClearAllFaults(DbmsCtx* ctx)
 {
     ctx->faults.controller_mask = 0;
-    for (int i = 0; i < N_MONITORS; i++)
-    {
-        ctx->faults.monitor_masks[i] = 0;
-    }
     ctx->need_to_save_faults = true;
 }
 
@@ -74,14 +43,6 @@ void CheckVoltageFaults(DbmsCtx* ctx)
         float highest_v = ctx->cell_states[i].voltages[0];
         for (int j = 1; j < N_GROUPS_PER_SIDE; j++)
         {
-            // if (ctx->cell_states[i].voltages[j] > max_group_v)
-            // {
-            //     ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
-            // }
-            // if (ctx->cell_states[i].voltages[j] < min_group_v)
-            // {
-            //     ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
-            // }
             if (ctx->cell_states[i].voltages[j] < lowest_v){
                 lowest_v = ctx->cell_states[i].voltages[j];
             }
@@ -90,59 +51,95 @@ void CheckVoltageFaults(DbmsCtx* ctx)
             }
         }
 
-        if (highest_v > max_group_v){
+        if (highest_v > max_group_v) {
             ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
         }
-        if (lowest_v < min_group_v){
+        if (lowest_v < min_group_v) {
             ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
         }
-        if (highest_v - lowest_v > max_v_delta){
+        if (highest_v - lowest_v > max_v_delta) {
             ControllerSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
         }
     }
-
-
-
-    /*
-    if (ctx->isense.voltage1_mv > GetSetting(ctx, MAX_PACK_VOLTAGE))
-    {
-        ControllerSetFault(ctx, CTRL_FAULT_PACK_VOLTAGE_OVER);
-    }
-    if (ctx->isense.voltage1_mv < GetSetting(ctx, MIN_PACK_VOLTAGE))
-    {
-        ControllerSetFault(ctx, CTRL_FAULT_PACK_VOLTAGE_UNDER);
-    }
-    */
 }
 
 void CheckTemperatureFaults(DbmsCtx* ctx)
 {
+    bool has_over_temp = false;
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
             if (ctx->cell_states[i].temps[j] > GetSetting(ctx, MAX_THERMISTOR_TEMP))
             {
-                ControllerSetFault(ctx, CTRL_FAULT_TEMP_OVER);
+                has_over_temp = true;
             }
         }
+    }
+    if (!has_over_temp)
+    {
+        ctx->overtemp_last_ok_ts = HAL_GetTick();
+    }
+    else {
+        if (HAL_GetTick() - ctx->overtemp_last_ok_ts > GetSetting(ctx, OVERTEMP_MS))
+            ControllerSetFault(ctx, CTRL_FAULT_TEMP_OVER);
     }
 }
 
 void CheckCurrentFaults(DbmsCtx* ctx)
 {
-    if (MAX(0, ctx->isense.current_ma) > GetSetting(ctx, MAX_CURRENT))
+    int32_t current_ma = MAX(0, ctx->isense.current_ma);
+
+    int32_t at = GetSetting(ctx, TEMP_CURVE_A);
+    int32_t bt = GetSetting(ctx, TEMP_CURVE_B);
+
+    // Todo: make this cleaner
+    if (ctx->stats.avg_t < at) {
+        ctx->max_current_ma = GetSetting(ctx, MAX_CURRENT) * 1000;
+    } else {
+        if (bt == at) ctx->max_current_ma = 0;
+        ctx->max_current_ma = (GetSetting(ctx, MAX_CURRENT) * 1000) * ((bt - ctx->stats.avg_t) / (bt - at));
+    }
+
+    // Do the comparison in ma
+    if (current_ma > ctx->max_current_ma)
     {
         ControllerSetFault(ctx, CTRL_FAULT_CURRENT_OVER);
+    }   
+
+    if (current_ma > GetSetting(ctx, PULSE_LIMIT_CURRENT) * 1000)
+    {
+        ctx->pl_pulse_t = HAL_GetTick() - ctx->pl_last_ok_ts;
+        if (ctx->pl_pulse_t > GetSetting(ctx, PULSE_LIMIT_TIME_MS))
+            ControllerSetFault(ctx, CTRL_FAULT_CURRENT_PULSE);
     }
+    else 
+    {
+        ctx->pl_pulse_t = 0;
+        ctx->pl_last_ok_ts = HAL_GetTick();
+    }
+
+    // TODO: need to make ma constructor
+    // ctx->isense.ima.current_mavg_ma = ma_calc_i32(ctx->isense.ima.ma, ctx->isense.current_ma);
 }
 
 void ThrowHardFault(DbmsCtx* ctx)
 {
-    if (HasAnyFaults(ctx)) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
-    else HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+    if (HasAnyFaults(ctx)) 
+    {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+    }
+    else 
+    {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+    }
+    
+    if (!ctx->faults.had_fault && HasAnyFaults(ctx))
+    {
+        ctx->need_to_save_faults = true;
+    }
+    ctx->faults.had_fault = HasAnyFaults(ctx);
 
-    ctx->need_to_save_faults = true;
 }
 
 int SaveFaultState(DbmsCtx* ctx)
@@ -159,10 +156,14 @@ int SaveFaultState(DbmsCtx* ctx)
 int LoadFaultState(DbmsCtx* ctx)
 {
     int status;
-    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
+    // Right now this only references the controller mask. When "smart" / "verbose" faults 
+    // for other components on the bus are implemented, we will deal with this.
+    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, 
+            &(ctx->faults.controller_mask), sizeof(ctx->faults.controller_mask))))
     {
         // todo: check an error here
     }
     ctx->faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
+    ctx->faults.had_fault = HasAnyFaults(ctx);
     return status;
 }

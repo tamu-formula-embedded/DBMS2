@@ -15,7 +15,7 @@
 
 void UpdateModel(DbmsCtx* ctx);
 
-int LoadInitialCharge(DbmsCtx* ctx);
-int SaveInitialCharge(DbmsCtx* ctx);
+int LoadQStats(DbmsCtx* ctx);
+int SaveQStats(DbmsCtx* ctx);
 
 #endif
