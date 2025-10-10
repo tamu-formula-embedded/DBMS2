@@ -245,13 +245,15 @@ void DbmsIter(DbmsCtx* ctx)
             {
                 StackUpdateVoltReadingSingle(ctx, i);   
                 HAL_Delay(SINGLE_MSG_DELAY);
+                REVERSE_ARRAY_T(ctx->cell_states[i].voltages, N_GROUPS_PER_SIDE, float);
             }
         }        
-
+        
         HAL_Delay(GROUP_MSG_DELAY);
 
         for (uint8_t i = 0; i < N_SIDES; i++)
         {
+            // todo: think abt switching these
 #if SPLIT_STACK_OPS 
             StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
             HAL_Delay(SINGLE_MSG_DELAY);
@@ -263,7 +265,10 @@ void DbmsIter(DbmsCtx* ctx)
 #endif
         }
 
-        FillMissingTempReadings(ctx);
+        if (GetSetting(ctx, IGNORE_BAD_THERMS))
+        {
+            FillMissingTempReadings(ctx);
+        }
         HAL_Delay(GROUP_MSG_DELAY);
 
     
@@ -280,6 +285,7 @@ void DbmsIter(DbmsCtx* ctx)
         ThrowHardFault(ctx);
         HAL_Delay(GROUP_MSG_DELAY);
     }
+
     //
     //  save faults
     //
@@ -307,9 +313,11 @@ void DbmsIter(DbmsCtx* ctx)
     //  Transmit important telemetry
     //
     SendMetrics(ctx);
-
-    SendCellVoltages(ctx);
-    SendCellTemps(ctx);
+    if (HAL_GetTick() - ctx->last_rx_telembeat < 4000) //GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN)
+    {
+        SendCellVoltages(ctx);
+        SendCellTemps(ctx);
+    }
 
     //
     //  Update the LEDs (etc.). Led state should be set every time the cur_state changes
@@ -376,7 +384,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         SyncRealTime(ctx, remote_ts);
 
         break;
-
+    case CANID_RX_TELEMBEAT:
+        ctx->last_rx_telembeat = HAL_GetTick();
+        break;
     case CANID_RX_SET_CONFIG:
         if ((status = HandleCanConfig(ctx, rx_data, CFG_SET)) != 0)
         {

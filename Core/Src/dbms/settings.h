@@ -35,6 +35,8 @@ enum _UserSettingIndex
     TEMP_CURVE_A,
     TEMP_CURVE_B,
 
+    IGNORE_BAD_THERMS,
+
     __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
 };
 

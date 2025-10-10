@@ -8,18 +8,18 @@
 
 
 // USER DEFINED
-#define ITER_TARGET_HZ 10
+#define ITER_TARGET_HZ      10      // how many iterations per second to target
 
 #define SINGLE_MSG_DELAY    2       // ms delay between individual stack messages 
 #define GROUP_MSG_DELAY     8       // ms delay between groups of stack message 
 #define SPLIT_STACK_OPS     1       // 1 = divide stack ops in half, every-other-iter, 0 = do not
 
-#define N_SEGMENTS 4
-#define N_SIDES_PER_SEG 2
-#define N_MONITORS_PER_SIDE 2
-#define N_GROUPS_PER_SIDE 14
-#define N_TEMPS_PER_MONITOR 7
-#define N_P_GROUP 3
+#define N_SEGMENTS          5       // number of segments in the stack
+#define N_SIDES_PER_SEG     2       // number of sides per segment
+#define N_MONITORS_PER_SIDE 2       // number of monitors per side
+#define N_GROUPS_PER_SIDE   14      // number of voltages per side
+#define N_TEMPS_PER_MONITOR 7       // number of temps per monitor chip 
+#define N_P_GROUP           3       // number of cells per parallel group
 // DONT CHANGE AFTER THIS
 
 #define N_TEMPS_PER_SIDE (N_MONITORS_PER_SIDE * N_TEMPS_PER_MONITOR)
@@ -163,6 +163,7 @@ typedef struct _DbmsCtx
     } realtime;
 
     uint64_t last_rx_heartbeat;
+    uint64_t last_rx_telembeat;
     uint64_t iter_start_us;
     uint64_t iter_end_us;
     uint64_t m_led_blink_ts;

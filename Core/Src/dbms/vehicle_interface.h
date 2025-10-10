@@ -33,6 +33,7 @@
 #define CANID_TX_GET_CONFIG 0x533
 #define CANID_TX_CFG_ACK    0x532
 
+#define CANID_RX_TELEMBEAT          0x540
 #define CANID_RX_HEARTBEAT          0x541
 #define CANID_RX_SET_CONFIG         0x542
 #define CANID_RX_GET_CONFIG         0x543

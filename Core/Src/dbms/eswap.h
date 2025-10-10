@@ -7,6 +7,18 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define REVERSE_ARRAY_T(arr, len, type)             \
+    do {                                            \
+        size_t i, j;                                \
+        for (i = 0, j = (len) - 1; i < j; ++i, --j) \
+        {                                           \
+            type temp = arr[i];                     \
+            arr[i] = arr[j];                        \
+            arr[j] = temp;                          \
+        }                                           \
+    } while (0)
+
+
 void memcpy_eswap2(void* dst, void* src, size_t n);
 void memcpy_eswap4(void* dst, void* src, size_t n);
 
