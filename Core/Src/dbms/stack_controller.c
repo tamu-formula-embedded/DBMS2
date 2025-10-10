@@ -388,6 +388,7 @@ void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick)
         uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
         ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
     }
+
 }
 
 void FillMissingTempReadings(DbmsCtx* ctx)

@@ -48,4 +48,6 @@ void LoadFallbackSettings(DbmsCtx* ctx)
 
     ctx->settings->user_defined[TEMP_CURVE_A] = 50;
     ctx->settings->user_defined[TEMP_CURVE_B] = 65;
+
+    ctx->settings->user_defined[IGNORE_BAD_THERMS] = 1;
 }
