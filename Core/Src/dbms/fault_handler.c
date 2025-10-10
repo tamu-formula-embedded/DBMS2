@@ -19,53 +19,15 @@ bool ControllerHasFault(DbmsCtx* ctx, ControllerFaultType fault)
     return (ctx->faults.controller_mask & (1U << fault)) != 0;
 }
 
-// void BridgeSetFaultSummary(DbmsCtx* ctx, uint8_t fault_summary_reg)
-// {
-//     ctx->faults.bridge_fault_summary = (fault_summary_reg & 0x0F); // Bits [5:8] are reserved
-// }
-
-// void BridgeSetFault(DbmsCtx* ctx, BridgeFault fault)
-// {
-//     if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
-//     ctx->faults.bridge_faults |= (1U << fault);
-// }
-
-// void BridgeClearFault(DbmsCtx* ctx, BridgeFault fault)
-// {
-//     if (fault >= BRIDGE_FAULT_TYPE_COUNT) return;
-//     ctx->faults.bridge_faults &= ~(1U << fault);
-// }
-
-// bool BridgeHasFault(DbmsCtx* ctx, BridgeFault fault)
-// {
-//     if (fault >= BRIDGE_FAULT_TYPE_COUNT) return false;
-//     return (ctx->faults.bridge_faults & (1U << fault)) != 0;
-// }
-
-// void StackSetFaultSummary(DbmsCtx* ctx, uint8_t addr, uint8_t fault_summary_reg){
-//     ctx->faults.monitor_fault_summary[addr] = fault_summary_reg;
-// }
-
 bool HasAnyFaults(DbmsCtx* ctx)
 {
     if (ctx->faults.controller_mask != 0) return true;
-    // if (ctx->faults.bridge_fault_summary != 0) return true;
-    // for (int i = 0; i < N_MONITORS; i++)
-    // {
-    //     if (ctx->faults.monitor_fault_summary[i] != 0) return true;
-    // }
     return false;
 }
 
 void ClearAllFaults(DbmsCtx* ctx)
 {
     ctx->faults.controller_mask = 0;
-    // ctx->faults.bridge_fault_summary = 0;
-    // ctx->faults.bridge_faults = 0;
-    // for (int i = 0; i < N_MONITORS; i++)
-    // {
-    //     ctx->faults.monitor_fault_summary[i] = 0;
-    // }
     ctx->need_to_save_faults = true;
 }
 
@@ -81,14 +43,6 @@ void CheckVoltageFaults(DbmsCtx* ctx)
         float highest_v = ctx->cell_states[i].voltages[0];
         for (int j = 1; j < N_GROUPS_PER_SIDE; j++)
         {
-            // if (ctx->cell_states[i].voltages[j] > max_group_v)
-            // {
-            //     ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
-            // }
-            // if (ctx->cell_states[i].voltages[j] < min_group_v)
-            // {
-            //     ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
-            // }
             if (ctx->cell_states[i].voltages[j] < lowest_v){
                 lowest_v = ctx->cell_states[i].voltages[j];
             }
@@ -107,19 +61,6 @@ void CheckVoltageFaults(DbmsCtx* ctx)
             ControllerSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
         }
     }
-
-
-
-    /*
-    if (ctx->isense.voltage1_mv > GetSetting(ctx, MAX_PACK_VOLTAGE))
-    {
-        ControllerSetFault(ctx, CTRL_FAULT_PACK_VOLTAGE_OVER);
-    }
-    if (ctx->isense.voltage1_mv < GetSetting(ctx, MIN_PACK_VOLTAGE))
-    {
-        ControllerSetFault(ctx, CTRL_FAULT_PACK_VOLTAGE_UNDER);
-    }
-    */
 }
 
 void CheckTemperatureFaults(DbmsCtx* ctx)
