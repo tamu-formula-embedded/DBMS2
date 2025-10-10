@@ -10,20 +10,6 @@ static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
 static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
 
 /**
- * Prints the contents of a received RxStackFrame for debugging
- */
-void __PrintStackRxFrame(RxStackFrame* f)
-{
-    printf("RxStackFrame:\n\tinit=%d dev_addr=%d reg_addr=%d size=%d\n\tdata=", f->init_field, f->dev_addr, f->reg_addr,
-           f->size);
-    for (size_t i = 0; i < f->size; i++)
-    {
-        printf("%02x ", f->data[i]);
-    }
-    printf("\n");
-}
-
-/**
  * Sends a raw data frame to the battery stack via UART
  */
 int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len)
@@ -488,111 +474,6 @@ void MonitorLedBlink(DbmsCtx* ctx)
         }
     }
 }
-
-int Bridge_Dev_Conf_FAULT_EN(DbmsCtx* ctx)
-{
-    int status = 0;
-    static uint8_t rx_reading[128];
-
-    size_t data_size = 1 * sizeof(uint8_t);
-    // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
-    uint8_t FRAME_DEV_CONF_READ[] = {0x80, 0x00, BRIDGE_DEV_CONF1 >> 8, BRIDGE_DEV_CONF1 & 0xFF, 0x00, 0x00, 0x00};
-
-    if ((status = SendStackFrameSetCrc(ctx, FRAME_DEV_CONF_READ, sizeof(FRAME_DEV_CONF_READ))) != 0)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-    }
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * 1; // <- num frames
-
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_reading, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
-    {
-        // CAN_REPORT_FAULT(ctx, status);
-        // ^ throwing all the time in simulator
-    }
-
-    RxStackFrame rx_frame;
-    FillStackFrame(&rx_frame, rx_reading, sizeof(rx_reading));
-    uint16_t kcrc;
-    ctx->stats.n_rx_stack_frames++;
-
-    if (rx_frame.crc == (kcrc = CalcStackFrameCrc(&rx_frame)))
-    {
-        FRAME_DEV_CONF_READ[0] = 0x90;
-        FRAME_DEV_CONF_READ[4] = *rx_frame.data | 0x10;
-        DelayUs(ctx, 8000);
-        if ((status = SendStackFrameSetCrc(ctx, FRAME_DEV_CONF_READ, sizeof(FRAME_DEV_CONF_READ))) != 0)
-        {
-            CAN_REPORT_FAULT(ctx, status);
-        }
-    }
-    else
-    {
-        ctx->stats.n_rx_stack_bad_crcs++;
-    }
-    return status;
-}
-
-int Stack_Dev_Conf_FAULT_EN(DbmsCtx* ctx)
-{
-    int status = 0;
-    // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
-    uint8_t FRAME_DEV_CONF_READ[] = {0xD0, STACK_DEV_CONF_REG >> 8, STACK_DEV_CONF_REG & 0xFF, 0x50, 0x00, 0x00};
-    if ((status = SendStackFrameSetCrc(ctx, FRAME_DEV_CONF_READ, sizeof(FRAME_DEV_CONF_READ))) != 0)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-    }
-    return status;
-}
-
-int Read_Bridge_Fault_Comm(DbmsCtx* ctx){
-    int status = 0;
-    static uint8_t rx_reading[64];
-
-    size_t data_size = 1 * sizeof(uint8_t);
-    // TODO add functions to go through all the other fault registers if fault_summary says something is wrong
-    uint8_t FRAME_BRIDGE_FAULT_READ[] = {0x80, 0x00, BRIDGE_FAULT_COMM1_REG >> 8, BRIDGE_FAULT_COMM1_REG & 0xFF, 0x00, 0x00, 0x00};
-
-    if ((status = SendStackFrameSetCrc(ctx, FRAME_BRIDGE_FAULT_READ, sizeof(FRAME_BRIDGE_FAULT_READ))) != 0)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-    }
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size) * 1; // <- num frames
-
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_reading, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
-    {
-        // CAN_REPORT_FAULT(ctx, status);
-        // ^ throwing all the time in simulator
-    }
-
-    RxStackFrame rx_frame;
-    FillStackFrame(&rx_frame, rx_reading, sizeof(rx_reading));
-    uint16_t kcrc;
-    ctx->stats.n_rx_stack_frames++;
-
-    if (rx_frame.crc == (kcrc = CalcStackFrameCrc(&rx_frame)))
-    {
-        // CanLog(ctx, "F_COMM1: %X\n", *rx_frame.data);
-        ctx->faults.bridge_fault_summary = rx_frame.data[0] & 0b10111111;
-        
-        if (ctx->faults.bridge_fault_summary != 0)
-        {
-            ControllerSetFault(ctx, CTRL_FAULT_STACK_FAULT);
-        }
-    }
-    else
-    {
-        ctx->stats.n_rx_stack_bad_crcs++;
-    }
-    return status;
-}
-
-// void Parse_FAULT_COMM1(DbmsCtx* ctx, uint8_t data){
-//     for (int i = BRIDGE_FAULT_FCOMM_DET; i < BRIDGE_FAULT_STOP_DET; i++){
-//         if ((data >> i) % 2 == 1){
-//             BridgeSetFault(ctx, i);
-//         }
-//     }
-// }
 
 int SetFaultMasks(DbmsCtx* ctx){
     int status = 0;

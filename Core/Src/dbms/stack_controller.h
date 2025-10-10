@@ -44,8 +44,6 @@ typedef struct
     uint8_t dev_addr;
 } RxStackFrame;
 
-void __PrintStackRxFrame(RxStackFrame* f);
-
 #define APBxCLK 42000000 // TODO: fix legacy name
 
 void SetBrr(uint64_t brr);
@@ -80,11 +78,7 @@ void MonitorLedBlink(DbmsCtx* ctx);
 
 void FillMissingTempReadings(DbmsCtx* ctx);
 
-int Bridge_Dev_Conf_FAULT_EN(DbmsCtx* ctx);
-int Stack_Dev_Conf_FAULT_EN(DbmsCtx* ctx);
-// void Parse_FAULT_COMM1(DbmsCtx* ctx, uint8_t data);
-
-int Read_Bridge_Fault_Comm(DbmsCtx* ctx);
 int SetFaultMasks(DbmsCtx* ctx);
 int PollFaultSummary(DbmsCtx* ctx);
+
 #endif
