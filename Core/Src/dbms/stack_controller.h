@@ -65,10 +65,9 @@ void StackAutoAddr(DbmsCtx* ctx);
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells);
 
 void StackSetupGpio(DbmsCtx* ctx);
-void StackUpdateTempReadings(DbmsCtx* ctx);
+void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick);
 
 void StackSetupVoltReadings(DbmsCtx* ctx);
-void StackUpdateVoltReadings(DbmsCtx* ctx);
 void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr);
 
 int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on);
