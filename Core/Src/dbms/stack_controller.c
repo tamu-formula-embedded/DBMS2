@@ -315,25 +315,27 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
     size_t expected_rx_size = RX_FRAME_SIZE(data_size);
 
     if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+2, 10)) != 0) { } 
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
     ctx->stats.n_rx_stack_frames++;
 
     uint8_t* data = rx_buffer_v;
-    while (data[0] != 0x6C) data++;
+    while (data[0] != frame[3]) data++;
     data++;
     uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-    *(data-1) = 0x6C;
-    *(data-2) = 0x05;
+    *(data-1) = frame[3];
+    *(data-2) = frame[2];
     *(data-3) = in_addr;
-    *(data-4) = 0x1B;
+    *(data-4) = frame[4];
     uint16_t c_crc = CalcCrc16(data-4, data_size+4);
-    if (f_crc != c_crc) return;
+    if (f_crc != c_crc) 
+    {
+        ctx->stats.n_rx_stack_bad_crcs++;
+        return;
+    }
 
     for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
     {
-        uint16_t raw =
-                (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-
+        uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
         ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
     }
 }
@@ -363,19 +365,23 @@ void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick)
     size_t expected_rx_size = RX_FRAME_SIZE(data_size);
 
     if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+2, 10)) != 0) { } 
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
     ctx->stats.n_rx_stack_frames++;
 
     uint8_t* data = rx_buffer_t;
-    while (data[0] != 0x8E) data++;
+    while (data[0] != frame[3]) data++;
     data++;
     uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-    *(data-1) = 0x8E;
-    *(data-2) = 0x05;
+    *(data-1) = frame[3];
+    *(data-2) = frame[2];
     *(data-3) = in_addr;
-    *(data-4) = 0x0D;
+    *(data-4) = frame[4];
     uint16_t c_crc = CalcCrc16(data-4, data_size+4);
-    if (f_crc != c_crc) return;
+    if (f_crc != c_crc) 
+    {
+        ctx->stats.n_rx_stack_bad_crcs++;
+        return;
+    }
 
     for (size_t j = 0; j < N_TEMPS_PER_MONITOR; j++)
     {
@@ -453,7 +459,6 @@ void MonitorLedBlink(DbmsCtx* ctx)
 {
 
     uint64_t curr_ts = GetUs(ctx) - ctx->m_led_blink_ts;
-    //    CanLog(ctx, "%d \n", curr_ts);
 
     if (ctx->m_led_on)
     {
@@ -488,6 +493,9 @@ int SetFaultMasks(DbmsCtx* ctx){
     return status;
 }
 
+
+// TODO: clean this one up when we look into this stuff more
+
 int PollFaultSummary(DbmsCtx* ctx)
 {
     static uint8_t rx_fault_readings[1024];
@@ -503,7 +511,7 @@ int PollFaultSummary(DbmsCtx* ctx)
 
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_STACKDEVS; // <- num frames
 
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_fault_readings, expected_rx_size, STACK_RECV_TIMEOUT)) != 0)
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_fault_readings, expected_rx_size, 50)) != 0)
     {
         // CAN_REPORT_FAULT(ctx, status);
         // ^ throwing all the time in simulator
