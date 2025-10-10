@@ -239,17 +239,32 @@ void DbmsIter(DbmsCtx* ctx)
     {
         for (int i = 0; i < N_SIDES; i++)
         {
+#if SPLIT_STACK_OPS
             if (ctx->stats.iters % 2 == i % 2)
+#endif
             {
                 StackUpdateVoltReadingSingle(ctx, i);   
-                HAL_Delay(2);
+                HAL_Delay(SINGLE_MSG_DELAY);
             }
         }        
-        HAL_Delay(8);
 
-        StackUpdateTempReadings(ctx);
+        HAL_Delay(GROUP_MSG_DELAY);
+
+        for (uint8_t i = 0; i < N_SIDES; i++)
+        {
+#if SPLIT_STACK_OPS 
+            StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
+            HAL_Delay(SINGLE_MSG_DELAY);
+#else
+            StackUpdateTempReadingSingle(ctx, i, false);
+            HAL_Delay(SINGLE_MSG_DELAY);
+            StackUpdateTempReadingSingle(ctx, i, true);
+            HAL_Delay(SINGLE_MSG_DELAY);
+#endif
+        }
+
         FillMissingTempReadings(ctx);
-        HAL_Delay(8);
+        HAL_Delay(GROUP_MSG_DELAY);
 
     
         if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
@@ -259,13 +274,12 @@ void DbmsIter(DbmsCtx* ctx)
             CheckVoltageFaults(ctx);
 
             // Read_Bridge_Fault_Comm(ctx);
-
             // PollFaultSummary(ctx);
-            HAL_Delay(1);
+            // HAL_Delay(SINGLE_MSG_DELAY);
         }
 
         ThrowHardFault(ctx);
-        HAL_Delay(7);
+        HAL_Delay(GROUP_MSG_DELAY);
     }
     //
     //  save faults
@@ -295,17 +309,8 @@ void DbmsIter(DbmsCtx* ctx)
     //
     SendMetrics(ctx);
 
-    // This is kinda broken:
-    // if (/*ctx->cur_state == DBMS_ACTIVE && */ ctx->iter_start_us - ctx->batch_telem_ts > 10000)
-    // if (ctx->stats.iters % 4 == 0)
-    {
-        // ctx->batch_telem_ts = ctx->iter_start_us;
-        SendCellVoltages(ctx);
-    }
-    // if (ctx->stats.iters % 4 == 2)
-    {
-        SendCellTemps(ctx);
-    }
+    SendCellVoltages(ctx);
+    SendCellTemps(ctx);
 
     //
     //  Update the LEDs (etc.). Led state should be set every time the cur_state changes
