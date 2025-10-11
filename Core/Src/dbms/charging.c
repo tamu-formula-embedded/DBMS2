@@ -30,6 +30,26 @@ static const uint16_t CB_CELL_CTRL_REGS[14] = {
 #define BAL_CTRL2_BAL_GO_MASK 0x02
 #define BAL_CTRL2_CONFIG 0x31 // auto_bal = 1, otcb_en = 1, flt_stop = 1
 
+
+void StackFindMinMaxVoltages(DbmsCtx* ctx, size_t segment, float* min_voltage, float* max_voltage)
+{
+
+    for (size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg)
+    {
+
+        size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
+        for (size_t group = 0; group < N_GROUPS_PER_SIDE; ++group)
+        {
+            float voltage = ctx->cell_states[side_index].voltages[group];
+
+            if (voltage <= 0.0f) continue;
+
+            if (voltage < *min_voltage) *min_voltage = voltage;
+            if (voltage > *max_voltage) *max_voltage = voltage;
+        }
+    }
+}
+
 /**
  *  max(v) - min(v) > balance_limit -> we need to balance
  */
@@ -40,23 +60,9 @@ bool StackNeedsBalancing(DbmsCtx* ctx)
 
     for (size_t segment = 0; segment < N_SEGMENTS; ++segment)
     {
-        float min_voltage = 5.0f;
+        float min_voltage = 5000.0f;
         float max_voltage = 0.0f;
-
-        for (size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg)
-        {
-
-            size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
-            for (size_t group = 0; group < N_GROUPS_PER_SIDE; ++group)
-            {
-                float voltage = ctx->cell_states[side_index].voltages[group];
-
-                if (voltage <= 0.0f) continue;
-
-                if (voltage < min_voltage) min_voltage = voltage;
-                if (voltage > max_voltage) max_voltage = voltage;
-            }
-        }
+        StackFindMinMaxVoltages(ctx, segment, &min_voltage, &max_voltage);
 
         // segment needs balancing
         if (max_voltage - min_voltage > BALANCE_LIMIT)

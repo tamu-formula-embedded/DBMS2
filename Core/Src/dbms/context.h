@@ -7,6 +7,7 @@
 #include "common.h"
 
 
+<<<<<<< HEAD
 // USER DEFINED
 #define ITER_TARGET_HZ      10      // how many iterations per second to target
 
@@ -20,6 +21,15 @@
 #define N_GROUPS_PER_SIDE   14      // number of voltages per side
 #define N_TEMPS_PER_MONITOR 7       // number of temps per monitor chip 
 #define N_P_GROUP           3       // number of cells per parallel group
+=======
+// USER DEFINED UNIQUE TO EACH BATTERY
+#define N_SEGMENTS 4
+#define N_SIDES_PER_SEG 2
+#define N_MONITORS_PER_SIDE 2
+#define N_GROUPS_PER_SIDE 14
+#define N_TEMPS_PER_MONITOR 7
+#define N_P_GROUP 3
+>>>>>>> remotes/origin/cam/blackbox
 // DONT CHANGE AFTER THIS
 
 #define N_TEMPS_PER_SIDE (N_MONITORS_PER_SIDE * N_TEMPS_PER_MONITOR)
@@ -36,6 +46,7 @@
 #define N_C_ENTRIES                 101
 #define N_I_MA_MEMORIZED            100
 
+#define N_BLACKBOX_ENTRIES          10
 
 // DANGER:  THESE DEBUGS WILL PREVENT THE CONTROLLER FROM WORKING NORMALLY
 // #define DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
@@ -137,7 +148,11 @@ typedef struct _Model   // Outputs from the ECM model
 
 typedef struct _BlackboxInfo
 {
+<<<<<<< HEAD
     uint64_t iter;
+=======
+    size_t iter;
+>>>>>>> remotes/origin/cam/blackbox
 } BlackboxInfo;
 
 typedef struct _DbmsCtx
@@ -220,6 +235,8 @@ typedef struct _DbmsCtx
     uint16_t faults_crc;
 
     Model model;
+
+    queue_t blackbox;
 
     uint16_t can_log_ordering_index;
     uint8_t last_can_err;
