@@ -21,7 +21,7 @@ void BlackboxSwapAndUpdate(DbmsCtx* ctx)
     PopulateBlackboxInfo(ctx, ctx->blackbox_new);
 }
 
-void PopulateBlackboxInfo(DbmsCtx* ctx, BlackboxInfo* blackbox)
+void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
 {
     // this happens every iteration - update all important info
     // blackbox->important = ctx->important
