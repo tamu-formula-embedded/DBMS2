@@ -47,6 +47,8 @@
 #define CAN_TX_WAIT_US    200 // polling sleep step
 #define CAN_TX_TIMEOUT_US 3000
 
+uint16_t can_ids_to_filter[] = {}; // must be less than 2 * 14  = 28 id ranges
+
 typedef enum _CanRxChannel
 {
     CAN_RX_0,
