@@ -158,6 +158,20 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
     
+    // Swap blackbox data and capture current state
+    BlackboxSwapAndUpdate(ctx);
+
+    //
+    //  Blackbox data requested
+    //
+    if (ctx->blackbox_request)
+    {
+        if ((status = BlackboxSend(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+        }
+        ctx->blackbox_request = false;
+    }
 
     //
     //  Store the settings when required
