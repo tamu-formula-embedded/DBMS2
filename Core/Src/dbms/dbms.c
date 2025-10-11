@@ -57,9 +57,6 @@ void DbmsInit(DbmsCtx* ctx)
         return;
     }
 
-    static BlackboxInfo blackbox_info[N_BLACKBOX_ENTRIES];
-    queue_init(&ctx->blackbox, blackbox_info, N_BLACKBOX_ENTRIES, sizeof(BlackboxInfo));
-
     //
     //  Load the fault state (we know this throws CRC mismatch)
     //
@@ -161,8 +158,6 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
     
-    // Swap blackbox data and capture current state
-    BlackboxSwapAndUpdate(ctx);
 
     //
     //  Store the settings when required
@@ -302,6 +297,7 @@ void DbmsIter(DbmsCtx* ctx)
         }
         ctx->need_to_save_faults = false;
     }
+    BlackboxSwapAndUpdate(ctx);
 
     //
     //  Send plex metrics (this is kinda ugly)
@@ -343,7 +339,7 @@ void DbmsIter(DbmsCtx* ctx)
     if(queue_full(&ctx->blackbox)){
         queue_pop(&ctx->blackbox);
     }
-    BlackboxInfo* info = queue_push(&ctx->blackbox);
+    Snapshot* info = queue_push(&ctx->blackbox);
     info->iter = ctx->stats.iters;
 
     //CanLog(ctx, "%d\niters: ", info->iter);

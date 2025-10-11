@@ -6,35 +6,23 @@
 
 void BlackboxInit(DbmsCtx* ctx)
 {
-    memset(ctx->blackbox_old, 0, sizeof(BlackboxInfo));
-    memset(ctx->blackbox_new, 0, sizeof(BlackboxInfo));
+    memset(ctx->blackbox.old, 0, sizeof(Snapshot));
+    memset(ctx->blackbox.new, 0, sizeof(Snapshot));
 }
 
 void BlackboxSwapAndUpdate(DbmsCtx* ctx)
 {
-    // swap the pointers
-    BlackboxInfo* temp = ctx->blackbox_old;
-    ctx->blackbox_old = ctx->blackbox_new;
-    ctx->blackbox_new = temp;
-    
-    // populate the new blackbox with current state
-    PopulateBlackboxInfo(ctx, ctx->blackbox_new);
+    Snapshot* temp = ctx->blackbox.old;
+    ctx->blackbox.old = ctx->blackbox.new;
+    ctx->blackbox.new = temp;
+
+    PopulateSnapshot(ctx, ctx->blackbox.new);
 }
 
-void PopulateBlackboxInfo(DbmsCtx* ctx, BlackboxInfo* blackbox)
+void PopulateSnapshot(DbmsCtx* ctx, Snapshot* snapshot)
 {
-    // this happens every iteration - update all important info
-    // blackbox->important = ctx->important
-    blackbox->iter = ctx->stats.iters;
-}
+    // populate the snapshot with all the important 
+    // information every loop
 
-// getters
-BlackboxInfo* GetBlackboxOld(DbmsCtx* ctx)
-{
-    return ctx->blackbox_old;
-}
-
-BlackboxInfo* GetBlackboxNew(DbmsCtx* ctx)
-{
-    return ctx->blackbox_new;
+    snapshot->iter = ctx->stats.iters;
 }
