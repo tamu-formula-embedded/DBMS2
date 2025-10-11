@@ -46,8 +46,10 @@ int __SimIpcSend(int fd, const unsigned char* data, int size);
 //            HAL Spoof
 //---------------------------------------------------
 
-#define CAN_FILTERMODE_IDMASK 0
-#define CAN_FILTERSCALE_32BIT 0
+#define CAN_FILTERMODE_IDMASK 1
+#define CAN_FILTERMODE_IDLIST 0
+#define CAN_FILTERSCALE_32BIT 1
+#define CAN_FILTERSCALE_16BIT 0
 #define CAN_RX_FIFO0 0
 #define ENABLE 0
 #define CAN_ID_STD 0
