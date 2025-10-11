@@ -10,7 +10,9 @@ void BlackboxInit(DbmsCtx* ctx);
 
 void BlackboxSwapAndUpdate(DbmsCtx* ctx);
 
-void PopulateSnapshot(DbmsCtx* ctx, Snapshot* blackbox);
+void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox);
+
+int BlackboxSend(DbmsCtx* ctx);
 
 Snapshot* GetBlackboxOld(DbmsCtx* ctx);
 Snapshot* GetBlackboxNew(DbmsCtx* ctx);
