@@ -36,8 +36,6 @@
 #define N_C_ENTRIES                 101
 #define N_I_MA_MEMORIZED            100
 
-#define N_BLACKBOX_ENTRIES          10
-
 // DANGER:  THESE DEBUGS WILL PREVENT THE CONTROLLER FROM WORKING NORMALLY
 // #define DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
 // END DANGER ZONE
@@ -136,10 +134,10 @@ typedef struct _Model   // Outputs from the ECM model
     float I_lim;
 } Model;
 
-typedef struct _BlackboxInfo
+typedef struct _Snapshot
 {
     uint64_t iter;
-} BlackboxInfo;
+} Snapshot;
 
 typedef struct _DbmsCtx
 {
@@ -222,16 +220,15 @@ typedef struct _DbmsCtx
 
     Model model;
 
-    queue_t blackbox;
-
     uint16_t can_log_ordering_index;
     uint8_t last_can_err;
     bool need_to_sync_settings;
     bool m_led_on;
 
-    // Blackbox pointers for crash analysis
-    BlackboxInfo* blackbox_old;
-    BlackboxInfo* blackbox_new;
+    struct {
+        Snapshot* old;
+        Snapshot* new;
+    } blackbox;
 
 } DbmsCtx;
 
