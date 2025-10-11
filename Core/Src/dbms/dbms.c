@@ -2,6 +2,7 @@
 //  Copyright (c) Texas A&M University.
 //
 #include "dbms.h"
+#include "context.h"
 #include "fault_handler.h"
 #include "led_controller.h"
 #include "vehicle_interface.h"
@@ -55,6 +56,9 @@ void DbmsInit(DbmsCtx* ctx)
         ctx->led_state = LED_ERROR;
         return;
     }
+
+    static BlackboxInfo blackbox_info[N_BLACKBOX_ENTRIES];
+    queue_init(&ctx->blackbox, blackbox_info, N_BLACKBOX_ENTRIES, sizeof(BlackboxInfo));
 
     //
     //  Load the fault state (we know this throws CRC mismatch)
@@ -333,6 +337,17 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     
+    // 
+    // blackbox code
+    // 
+    if(queue_full(&ctx->blackbox)){
+        queue_pop(&ctx->blackbox);
+    }
+    BlackboxInfo* info = queue_push(&ctx->blackbox);
+    info->iter = ctx->stats.iters;
+
+    //CanLog(ctx, "%d\niters: ", info->iter);
+
     HAL_Delay(ctx->stats.end_delay / 1000);
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
