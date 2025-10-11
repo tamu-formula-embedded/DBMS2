@@ -14,6 +14,8 @@ void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox);
 
 int BlackboxSend(DbmsCtx* ctx);
 
+int SaveBlackboxToEEPROM(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_blackbox);
+
 Snapshot* GetBlackboxOld(DbmsCtx* ctx);
 Snapshot* GetBlackboxNew(DbmsCtx* ctx);
 

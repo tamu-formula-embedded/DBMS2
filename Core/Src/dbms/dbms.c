@@ -298,20 +298,24 @@ void DbmsIter(DbmsCtx* ctx)
         ThrowHardFault(ctx);
         HAL_Delay(GROUP_MSG_DELAY);
     }
+    BlackboxSwapAndUpdate(ctx);
+
 
     //
-    //  save faults
+    //  save faults and blackbox data to eeprom
     //
     if (ctx->need_to_save_faults)
     {
         if ((status = SaveFaultState(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
-            ctx->led_state = LED_ERROR;
+        }
+        if ((status = BlackboxSaveToEEPROM(ctx, GetBlackboxOld(ctx), GetBlackboxNew(ctx))) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
         }
         ctx->need_to_save_faults = false;
     }
-    BlackboxSwapAndUpdate(ctx);
 
     //
     //  Send plex metrics (this is kinda ugly)
@@ -347,14 +351,6 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     
-    // 
-    // blackbox code
-    // 
-    if(queue_full(&ctx->blackbox)){
-        queue_pop(&ctx->blackbox);
-    }
-    Snapshot* info = queue_push(&ctx->blackbox);
-    info->iter = ctx->stats.iters;
 
     //CanLog(ctx, "%d\niters: ", info->iter);
 
@@ -454,6 +450,12 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         // ctx->qstats.initial_set_ts = (int32_t)(GetRealTime(ctx) / 1000);
         ctx->qstats.initial_set_ts = 0;
         ctx->need_to_reset_qstats = true;
+        break;
+    case CANID_RX_BLACKBOX_REQUEST:
+        if ((status = BlackboxSend(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+        }
         break;
 #ifdef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
     case CANID_DEBUG_OVERWRITE_TEMPS:

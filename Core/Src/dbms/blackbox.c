@@ -6,19 +6,19 @@
 
 void BlackboxInit(DbmsCtx* ctx)
 {
-    memset(ctx->blackbox_old, 0, sizeof(Snapshot));
-    memset(ctx->blackbox_new, 0, sizeof(Snapshot));
+    memset(ctx->blackbox.old, 0, sizeof(Snapshot));
+    memset(ctx->blackbox.new, 0, sizeof(Snapshot));
 }
 
 void BlackboxSwapAndUpdate(DbmsCtx* ctx)
 {
     // swap the pointers
-    Snapshot* temp = ctx->blackbox_old;
-    ctx->blackbox_old = ctx->blackbox_new;
-    ctx->blackbox_new = temp;
+    Snapshot* temp = ctx->blackbox.old;
+    ctx->blackbox.old = ctx->blackbox.new;
+    ctx->blackbox.new = temp;
     
     // populate the new blackbox with current state
-    PopulateBlackboxInfo(ctx, ctx->blackbox_new);
+    PopulateBlackboxInfo(ctx, ctx->blackbox.new);
 }
 
 void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
@@ -74,12 +74,28 @@ int BlackboxSend(DbmsCtx* ctx)
     return status;
 }
 
+int SaveBlackboxToEEPROM(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_blackbox)
+{
+    int status = 0;
+    status = SaveStoredObject(ctx, EEPROM_BLACKBOX_OLD_ADDR, old_blackbox, sizeof(Snapshot));
+    if (status != HAL_OK)
+    {
+        return status;
+    }
+    status = SaveStoredObject(ctx, EEPROM_BLACKBOX_NEW_ADDR, new_blackbox, sizeof(Snapshot));
+    if (status != HAL_OK)
+    {
+        return status;
+    }
+    return status;
+}
+
 Snapshot* GetBlackboxOld(DbmsCtx* ctx)
 {
-    return ctx->blackbox_old;
+    return ctx->blackbox.old;
 }
 
 Snapshot* GetBlackboxNew(DbmsCtx* ctx)
 {
-    return ctx->blackbox_new;
+    return ctx->blackbox.new;
 }
