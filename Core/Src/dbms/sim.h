@@ -51,7 +51,7 @@ int __SimIpcSend(int fd, const unsigned char* data, int size);
 #define CAN_FILTERSCALE_32BIT 1
 #define CAN_FILTERSCALE_16BIT 0
 #define CAN_RX_FIFO0 0
-#define ENABLE 0
+#define ENABLE 1
 #define CAN_ID_STD 0
 #define CAN_RTR_DATA 0
 #define DISABLE 0
