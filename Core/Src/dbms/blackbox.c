@@ -6,26 +6,26 @@
 
 void BlackboxInit(DbmsCtx* ctx)
 {
-    memset(ctx->blackbox.old, 0, sizeof(Snapshot));
-    memset(ctx->blackbox.new, 0, sizeof(Snapshot));
+    memset(ctx->blackbox.old_data, 0, sizeof(Snapshot));
+    memset(ctx->blackbox.new_data, 0, sizeof(Snapshot));
 }
 
 void BlackboxSwapAndUpdate(DbmsCtx* ctx)
 {
     // swap the pointers
-    Snapshot* temp = ctx->blackbox.old;
-    ctx->blackbox.old = ctx->blackbox.new;
-    ctx->blackbox.new = temp;
+    Snapshot* temp = ctx->blackbox.old_data;
+    ctx->blackbox.old_data = ctx->blackbox.new_data;
+    ctx->blackbox.new_data = temp;
     
     // populate the new blackbox with current state
-    PopulateBlackboxInfo(ctx, ctx->blackbox.new);
+    PopulateBlackboxInfo(ctx, ctx->blackbox.new_data);
 }
 
 void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
 {
     // this happens every iteration - update all important info
     // blackbox->important = ctx->important
-    blackbox->iter = ctx->stats.iters;
+    blackbox->iter = 100;
 }
 
 int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
@@ -43,9 +43,9 @@ int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
         frame[1] = (i / 6) >> 8;
 
         // copy next 6 bytes
-        for(uint8_t j = 2; j < 8; j++)
+        for(uint8_t j = 0; j < 6; j++)
         {
-            frame[j] = blackbox_ptr[i + j];
+            frame[j + 2] = blackbox_ptr[i + j];
         }
 
         status = CanTransmit(ctx, old ? CANID_BLACKBOX_OLD : CANID_BLACKBOX_NEW, frame);
@@ -92,10 +92,10 @@ int SaveBlackboxToEEPROM(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_bla
 
 Snapshot* GetBlackboxOld(DbmsCtx* ctx)
 {
-    return ctx->blackbox.old;
+    return ctx->blackbox.old_data;
 }
 
 Snapshot* GetBlackboxNew(DbmsCtx* ctx)
 {
-    return ctx->blackbox.new;
+    return ctx->blackbox.new_data;
 }

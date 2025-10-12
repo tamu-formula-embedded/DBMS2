@@ -226,8 +226,9 @@ typedef struct _DbmsCtx
     bool m_led_on;
 
     struct {
-        Snapshot* old;
-        Snapshot* new;
+        Snapshot* old_data;
+        Snapshot* new_data;
+        bool requested;
     } blackbox;
 
 } DbmsCtx;
