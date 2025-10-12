@@ -83,7 +83,6 @@ void DbmsInit(DbmsCtx* ctx)
     ConfigPwmLines(ctx);
     DataInit(ctx);
 
-    // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
     ctx->led_state = LED_IDLE;
 }
 
@@ -164,13 +163,13 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Blackbox data requested
     //
-    if (ctx->blackbox_request)
+    if (ctx->blackbox.requested)
     {
         if ((status = BlackboxSend(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
-        ctx->blackbox_request = false;
+        ctx->blackbox.requested = false;
     }
 
     //
@@ -310,7 +309,7 @@ void DbmsIter(DbmsCtx* ctx)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
-        if ((status = BlackboxSaveToEEPROM(ctx, GetBlackboxOld(ctx), GetBlackboxNew(ctx))) != HAL_OK)
+        if ((status = SaveBlackboxToEEPROM(ctx, GetBlackboxOld(ctx), GetBlackboxNew(ctx))) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
@@ -452,10 +451,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->need_to_reset_qstats = true;
         break;
     case CANID_RX_BLACKBOX_REQUEST:
-        if ((status = BlackboxSend(ctx)) != HAL_OK)
-        {
-            CAN_REPORT_FAULT(ctx, status);
-        }
+        ctx->blackbox.requested = true;
         break;
 #ifdef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
     case CANID_DEBUG_OVERWRITE_TEMPS:
