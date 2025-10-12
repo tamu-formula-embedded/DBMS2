@@ -5,6 +5,7 @@
 
 int ConfigCan(DbmsCtx* ctx)
 {
+    uint16_t can_ids_to_filter[] = {0x540, 0x100}; // must be less than 2 * 14  = 28 id ranges
     int status = HAL_OK;
     int id_count = sizeof(can_ids_to_filter) / 2;
 
@@ -18,7 +19,7 @@ int ConfigCan(DbmsCtx* ctx)
         CAN_FilterTypeDef s_filter_cfg;
         memset(&s_filter_cfg, 0, sizeof(s_filter_cfg));
 
-        s_filter_cfg.FilterBank = (uint32_t) bank;
+        s_filter_cfg.FilterBank = (uint32_t) 14 + bank; //14 for CAN2
         s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;           // ID list (exact matches)
         s_filter_cfg.FilterScale = CAN_FILTERSCALE_16BIT;         // pack 4 std IDs / bank
         s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;     // choose FIFO0 (or FIFO1)
@@ -34,7 +35,7 @@ int ConfigCan(DbmsCtx* ctx)
         s_filter_cfg.FilterIdHigh     = can_ids_to_filter[id] << 5;
         s_filter_cfg.FilterIdLow      = can_ids_to_filter[id + 1] << 5;
         s_filter_cfg.FilterMaskIdHigh = can_ids_to_filter[id] << 5;
-        s_filter_cfg.FilterMaskIdLow  = can_ids_to_filter[id + 1] << 5; // adding filter for non-extended ids;
+        s_filter_cfg.FilterMaskIdLow  = can_ids_to_filter[id + 1] << 5;
 
         // Configure the bank
         status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg);
@@ -49,7 +50,7 @@ int ConfigCan(DbmsCtx* ctx)
         CAN_FilterTypeDef s_filter_cfg;
         memset(&s_filter_cfg, 0, sizeof(s_filter_cfg));
 
-        s_filter_cfg.FilterBank = (uint32_t) banks_needed - 1;
+        s_filter_cfg.FilterBank = (uint32_t) 14 + banks_needed - 1; //14 since CAN2
         s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;           // ID list (exact matches)
         s_filter_cfg.FilterScale = CAN_FILTERSCALE_16BIT;         // pack 4 std IDs / bank
         s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;     // choose FIFO0 (or FIFO1)
