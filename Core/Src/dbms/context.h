@@ -137,6 +137,38 @@ typedef struct _Model   // Outputs from the ECM model
 typedef struct _Snapshot
 {
     uint64_t iter;
+    
+    // Current sensor data
+    int32_t current_ma;
+    int32_t voltage_mv;
+    
+    // Charge stats
+    float qd;
+    
+    // Current limits and resistance
+    float current_limit_a;
+    float dcir;
+    float total_resistance;
+    
+    // Temperature stats
+    float avg_temp;
+    float max_temp;
+    float min_temp;
+    
+    // Cell voltage delta
+    float cell_delta_v;
+    
+    // Voltage stats
+    float high_voltage;
+    float low_voltage;
+    float avg_voltage;
+    
+    // Faults
+    uint32_t controller_mask;
+    uint8_t bridge_fault_summary;
+    uint32_t bridge_faults;
+    uint8_t monitor_fault_summary[N_MONITORS];
+    
 } Snapshot;
 
 typedef struct _DbmsCtx
@@ -228,8 +260,6 @@ typedef struct _DbmsCtx
     struct {
         Snapshot* old_data;
         Snapshot* new_data;
-        Snapshot* saved_old_data;
-        Snapshot* saved_new_data;
         bool requested;
     } blackbox;
 
