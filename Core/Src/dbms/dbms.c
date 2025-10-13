@@ -158,7 +158,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->iter_start_us = GetUs(ctx);
     
     // Swap blackbox data and capture current state
-    BlackboxSwapAndUpdate(ctx);
+    // BlackboxSwapAndUpdate(ctx);
 
     //
     //  Blackbox data requested
@@ -309,7 +309,7 @@ void DbmsIter(DbmsCtx* ctx)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
-        if ((status = SaveBlackboxToEEPROM(ctx, GetBlackboxOld(ctx), GetBlackboxNew(ctx))) != HAL_OK)
+        if ((status = BlackboxSaveOnFault(ctx, ctx->blackbox.old_data, ctx->blackbox.new_data)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
         }

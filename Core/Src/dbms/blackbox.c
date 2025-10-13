@@ -4,67 +4,80 @@
 #include "vehicle_interface.h"
 #include "common.h"
 
-
-static Snapshot old_snapshot_storage;
-static Snapshot new_snapshot_storage;
-// static Snapshot saved_old_snapshot_storage;
-// static Snapshot saved_new_snapshot_storage;
+static Snapshot snapshot_storage[2];
 
 void BlackboxInit(DbmsCtx* ctx)
 {
-    ctx->blackbox.old_data = &old_snapshot_storage;
-    ctx->blackbox.new_data = &new_snapshot_storage;
-    // ctx->blackbox.saved_old_data = &saved_old_snapshot_storage;
-    // ctx->blackbox.saved_new_data = &saved_new_snapshot_storage;
+    memset(snapshot_storage, 0, sizeof(snapshot_storage));
     
-    memset(ctx->blackbox.old_data, 0, sizeof(Snapshot));
-    memset(ctx->blackbox.new_data, 0, sizeof(Snapshot));
-
-    // HAL_Delay(10);
-    // memset(ctx->blackbox.saved_old_data, 0, sizeof(Snapshot));
-    // memset(ctx->blackbox.saved_new_data, 0, sizeof(Snapshot));
-    
-    // // Try to load saved snapshots from EEPROM
-    // int status = LoadStoredObject(ctx, EEPROM_BLACKBOX_OLD_ADDR, 
-    //                                ctx->blackbox.saved_old_data, sizeof(Snapshot));
-    // if (status == HAL_OK) {
-    //     status = LoadStoredObject(ctx, EEPROM_BLACKBOX_NEW_ADDR, 
-    //                               ctx->blackbox.saved_new_data, sizeof(Snapshot));
-    // }
-    
-    // // If load failed or no data, zero out the saved snapshots
-    // if (status != HAL_OK) {
-    //     memset(ctx->blackbox.saved_old_data, 0, sizeof(Snapshot));
-    //     memset(ctx->blackbox.saved_new_data, 0, sizeof(Snapshot));
-    // }
+    ctx->blackbox.old_data = &snapshot_storage[0];
+    ctx->blackbox.new_data = &snapshot_storage[1];
 }
 
 void BlackboxSwapAndUpdate(DbmsCtx* ctx)
 {
-    // swap the pointers
     Snapshot* temp = ctx->blackbox.old_data;
     ctx->blackbox.old_data = ctx->blackbox.new_data;
     ctx->blackbox.new_data = temp;
     
-    // populate the new blackbox with current state
     PopulateBlackboxInfo(ctx, ctx->blackbox.new_data);
 }
 
 void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
 {
-    // this happens every iteration - update all important info
-    // blackbox->important = ctx->important
-    memset(blackbox, 0, sizeof(Snapshot));
-    
-    blackbox->iter = ctx->stats.iters;
+    {
+        memset(blackbox, 0, sizeof(Snapshot));
+        
+        // Iteration counter
+        blackbox->iter = ctx->stats.iters;
+        
+        // Current sensor data
+        blackbox->current_ma = ctx->isense.current_ma;
+        blackbox->voltage_mv = ctx->isense.voltage1_mv;
+        
+        // Charge stats
+        blackbox->qd = ctx->qstats.accumulated_loss;
+        
+        // Current limits and resistance
+        blackbox->current_limit_a = ctx->model.I_lim;
+        blackbox->dcir = ctx->model.R_cell;
+        blackbox->total_resistance = ctx->model.R0 + ctx->model.R1 + ctx->model.R2;
+        
+        // Temperature stats
+        blackbox->avg_temp = ctx->stats.avg_t;
+        blackbox->max_temp = ctx->stats.max_t;
+        blackbox->min_temp = ctx->stats.min_t;
+        
+        // Cell voltage delta
+        blackbox->cell_delta_v = ctx->stats.max_v - ctx->stats.min_v;
+        
+        // Voltage stats
+        blackbox->high_voltage = ctx->stats.max_v;
+        blackbox->low_voltage = ctx->stats.min_v;
+        blackbox->avg_voltage = ctx->stats.avg_v;
+        
+        // Faults
+        blackbox->controller_mask = ctx->faults.controller_mask;
+        blackbox->bridge_fault_summary = ctx->faults.bridge_fault_summary;
+        blackbox->bridge_faults = ctx->faults.bridge_faults;
+        memcpy(blackbox->monitor_fault_summary, ctx->faults.monitor_fault_summary, N_MONITORS);
+    }
 }
 
 int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
 {
     int status = 0;
-    // REMEMBER U DID THIS
-    Snapshot* blackbox = old ? GetBlackboxOld(ctx) : GetBlackboxNew(ctx);
-    uint8_t* blackbox_ptr = (uint8_t*)blackbox;
+    Snapshot temp_snapshot;
+    
+    // load from EEPROM into temporary buffer
+    status = LoadStoredObject(ctx, old ? EEPROM_BLACKBOX_OLD_ADDR : EEPROM_BLACKBOX_NEW_ADDR, 
+                             &temp_snapshot, sizeof(Snapshot));
+    
+    if(status != HAL_OK){
+        //todo
+    }
+    
+    uint8_t* blackbox_ptr = (uint8_t*)&temp_snapshot;
 
     for(uint16_t i = 0; i < sizeof(Snapshot); i += 6)
     {
@@ -107,18 +120,8 @@ int BlackboxSend(DbmsCtx* ctx)
     return status;
 }
 
-// void BlackboxSaveOnFault(DbmsCtx* ctx)
-// {
-//     // save the current blackbox to the saved blackbox
-//     memcpy(ctx->blackbox.saved_old_data, ctx->blackbox.old_data, sizeof(Snapshot));
-//     memcpy(ctx->blackbox.saved_new_data, ctx->blackbox.new_data, sizeof(Snapshot));
-// }
-
-int SaveBlackboxToEEPROM(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_blackbox)
+int BlackboxSaveOnFault(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_blackbox)
 {
-    // copy values
-    // BlackboxSaveOnFault(ctx);
-
     // save to eeprom
     int status = 0;
     status = SaveStoredObject(ctx, EEPROM_BLACKBOX_OLD_ADDR, old_blackbox, sizeof(Snapshot));
@@ -126,31 +129,10 @@ int SaveBlackboxToEEPROM(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_bla
     {
         return status;
     }
-    HAL_Delay(8);
     status = SaveStoredObject(ctx, EEPROM_BLACKBOX_NEW_ADDR, new_blackbox, sizeof(Snapshot));
     if (status != HAL_OK)
     {
         return status;
     }
     return status;
-}
-
-Snapshot* GetBlackboxOld(DbmsCtx* ctx)
-{
-    return ctx->blackbox.old_data;
-}
-
-Snapshot* GetBlackboxNew(DbmsCtx* ctx)
-{
-    return ctx->blackbox.new_data;
-}
-
-Snapshot* GetBlackboxSavedOld(DbmsCtx* ctx)
-{
-    return ctx->blackbox.saved_old_data;
-}
-
-Snapshot* GetBlackboxSavedNew(DbmsCtx* ctx)
-{
-    return ctx->blackbox.saved_new_data;
 }
