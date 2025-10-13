@@ -228,6 +228,8 @@ typedef struct _DbmsCtx
     struct {
         Snapshot* old_data;
         Snapshot* new_data;
+        Snapshot* saved_old_data;
+        Snapshot* saved_new_data;
         bool requested;
     } blackbox;
 

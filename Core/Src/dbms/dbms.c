@@ -453,6 +453,10 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_BLACKBOX_REQUEST:
         ctx->blackbox.requested = true;
         break;
+    case CANID_RX_BLACKBOX_SAVE:
+        ctx->need_to_save_faults = true;
+        break;
+
 #ifdef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
     case CANID_DEBUG_OVERWRITE_TEMPS:
         uint32_t temp_milli_deg_C = be32_to_u32(rx_data);

@@ -4,9 +4,9 @@
 #include "context.h"
 #include "fault_handler.h"
 
-
-// Initialize blackbox system - allocates memory for old and new blackbox
 void BlackboxInit(DbmsCtx* ctx);
+
+void BlackboxSaveOnFault(DbmsCtx* ctx);
 
 void BlackboxSwapAndUpdate(DbmsCtx* ctx);
 
@@ -18,5 +18,7 @@ int SaveBlackboxToEEPROM(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_bla
 
 Snapshot* GetBlackboxOld(DbmsCtx* ctx);
 Snapshot* GetBlackboxNew(DbmsCtx* ctx);
+Snapshot* GetBlackboxSavedOld(DbmsCtx* ctx);
+Snapshot* GetBlackboxSavedNew(DbmsCtx* ctx);
 
 #endif
