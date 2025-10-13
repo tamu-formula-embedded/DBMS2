@@ -138,7 +138,6 @@ void ThrowHardFault(DbmsCtx* ctx)
     if (!ctx->faults.had_fault && HasAnyFaults(ctx))
     {
         ctx->need_to_save_faults = true;
-        BlackboxSaveOnFault(ctx);
     }
     ctx->faults.had_fault = HasAnyFaults(ctx);
 }
