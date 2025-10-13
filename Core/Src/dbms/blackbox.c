@@ -7,20 +7,22 @@
 
 static Snapshot old_snapshot_storage;
 static Snapshot new_snapshot_storage;
-static Snapshot saved_old_snapshot_storage;
-static Snapshot saved_new_snapshot_storage;
+// static Snapshot saved_old_snapshot_storage;
+// static Snapshot saved_new_snapshot_storage;
 
 void BlackboxInit(DbmsCtx* ctx)
 {
     ctx->blackbox.old_data = &old_snapshot_storage;
     ctx->blackbox.new_data = &new_snapshot_storage;
-    ctx->blackbox.saved_old_data = &saved_old_snapshot_storage;
-    ctx->blackbox.saved_new_data = &saved_new_snapshot_storage;
+    // ctx->blackbox.saved_old_data = &saved_old_snapshot_storage;
+    // ctx->blackbox.saved_new_data = &saved_new_snapshot_storage;
     
     memset(ctx->blackbox.old_data, 0, sizeof(Snapshot));
     memset(ctx->blackbox.new_data, 0, sizeof(Snapshot));
-    memset(ctx->blackbox.saved_old_data, 0, sizeof(Snapshot));
-    memset(ctx->blackbox.saved_new_data, 0, sizeof(Snapshot));
+
+    // HAL_Delay(10);
+    // memset(ctx->blackbox.saved_old_data, 0, sizeof(Snapshot));
+    // memset(ctx->blackbox.saved_new_data, 0, sizeof(Snapshot));
     
     // // Try to load saved snapshots from EEPROM
     // int status = LoadStoredObject(ctx, EEPROM_BLACKBOX_OLD_ADDR, 
@@ -60,7 +62,8 @@ void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
 int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
 {
     int status = 0;
-    Snapshot* blackbox = old ? GetBlackboxSavedOld(ctx) : GetBlackboxSavedNew(ctx);
+    // REMEMBER U DID THIS
+    Snapshot* blackbox = old ? GetBlackboxOld(ctx) : GetBlackboxNew(ctx);
     uint8_t* blackbox_ptr = (uint8_t*)blackbox;
 
     for(uint16_t i = 0; i < sizeof(Snapshot); i += 6)
@@ -104,17 +107,17 @@ int BlackboxSend(DbmsCtx* ctx)
     return status;
 }
 
-void BlackboxSaveOnFault(DbmsCtx* ctx)
-{
-    // save the current blackbox to the saved blackbox
-    memcpy(ctx->blackbox.saved_old_data, ctx->blackbox.old_data, sizeof(Snapshot));
-    memcpy(ctx->blackbox.saved_new_data, ctx->blackbox.new_data, sizeof(Snapshot));
-}
+// void BlackboxSaveOnFault(DbmsCtx* ctx)
+// {
+//     // save the current blackbox to the saved blackbox
+//     memcpy(ctx->blackbox.saved_old_data, ctx->blackbox.old_data, sizeof(Snapshot));
+//     memcpy(ctx->blackbox.saved_new_data, ctx->blackbox.new_data, sizeof(Snapshot));
+// }
 
 int SaveBlackboxToEEPROM(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_blackbox)
 {
     // copy values
-    BlackboxSaveOnFault(ctx);
+    // BlackboxSaveOnFault(ctx);
 
     // save to eeprom
     int status = 0;
