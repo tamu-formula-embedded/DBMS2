@@ -4,10 +4,28 @@
 #include "vehicle_interface.h"
 #include "common.h"
 
+
+static Snapshot old_snapshot_storage;
+static Snapshot new_snapshot_storage;
+static Snapshot saved_old_snapshot_storage;
+static Snapshot saved_new_snapshot_storage;
 void BlackboxInit(DbmsCtx* ctx)
 {
+    ctx->blackbox.old_data = &old_snapshot_storage;
+    ctx->blackbox.new_data = &new_snapshot_storage;
+    ctx->blackbox.saved_old_data = &saved_old_snapshot_storage;
+    ctx->blackbox.saved_new_data = &saved_new_snapshot_storage;
     memset(ctx->blackbox.old_data, 0, sizeof(Snapshot));
     memset(ctx->blackbox.new_data, 0, sizeof(Snapshot));
+    memset(ctx->blackbox.saved_old_data, 0, sizeof(Snapshot));
+    memset(ctx->blackbox.saved_new_data, 0, sizeof(Snapshot));
+}
+
+void BlackboxSaveOnFault(DbmsCtx* ctx)
+{
+    // save the current blackbox to the saved blackbox
+    memcpy(ctx->blackbox.saved_old_data, ctx->blackbox.old_data, sizeof(Snapshot));
+    memcpy(ctx->blackbox.saved_new_data, ctx->blackbox.new_data, sizeof(Snapshot));
 }
 
 void BlackboxSwapAndUpdate(DbmsCtx* ctx)
@@ -25,7 +43,9 @@ void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
 {
     // this happens every iteration - update all important info
     // blackbox->important = ctx->important
-    blackbox->iter = 100;
+    memset(blackbox, 0, sizeof(Snapshot));
+    
+    blackbox->iter = ctx->stats.iters;
 }
 
 int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
@@ -53,6 +73,7 @@ int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
         {
             return status;
         }
+        HAL_Delay(10);
     }
     return status;
 }
@@ -82,6 +103,7 @@ int SaveBlackboxToEEPROM(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_bla
     {
         return status;
     }
+    HAL_Delay(8);
     status = SaveStoredObject(ctx, EEPROM_BLACKBOX_NEW_ADDR, new_blackbox, sizeof(Snapshot));
     if (status != HAL_OK)
     {
@@ -98,4 +120,14 @@ Snapshot* GetBlackboxOld(DbmsCtx* ctx)
 Snapshot* GetBlackboxNew(DbmsCtx* ctx)
 {
     return ctx->blackbox.new_data;
+}
+
+Snapshot* GetBlackboxSavedOld(DbmsCtx* ctx)
+{
+    return ctx->blackbox.saved_old_data;
+}
+
+Snapshot* GetBlackboxSavedNew(DbmsCtx* ctx)
+{
+    return ctx->blackbox.saved_new_data;
 }
