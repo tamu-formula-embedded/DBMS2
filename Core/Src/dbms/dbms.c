@@ -357,7 +357,7 @@ void DbmsIter(DbmsCtx* ctx)
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
 
-void SendPlex32(DbmsCtx* ctx, uint16_t id, uint32_t m)
+void SendPlex32(DbmsCtx* ctx, uint32_t id, uint32_t m)
 {
     uint8_t data[8] = {0};
     data[0] = (m >> 3*8) & 0xff;
@@ -382,15 +382,19 @@ void SendPlexMetrics(DbmsCtx* ctx)
     SendPlex32(ctx, 0x1b, ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE));
     SendPlex32(ctx, 0x1c, ctx->stats.iters);
 
+    // Not an actual plex metric
+    SendPlex32(ctx, CANID_ELCON_A, ctx->stats.elcon_rx);
+
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
     int status = 0;
+    uint32_t can_id = (rx_header.IDE == CAN_ID_EXT) ? rx_header.ExtId : rx_header.StdId;
 
     ctx->stats.n_rx_can_frames++;
 
-    switch (rx_header.StdId)
+    switch (can_id)
     {
     case CANID_RX_HEARTBEAT:
         ctx->last_rx_heartbeat = HAL_GetTick();
@@ -468,6 +472,10 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         }
         break;
 #endif
+    case CANID_ELCON_B:
+        ctx->stats.elcon_rx++;
+        break;
+
     default:
         ctx->stats.n_unmatched_can_frames++;
         break;

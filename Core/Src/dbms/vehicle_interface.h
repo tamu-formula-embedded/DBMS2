@@ -11,6 +11,9 @@
 #include "sched.h"
 #include "settings.h"
 
+#define CAN_STD_ID_MASK         0x7FF
+#define CAN_EXT_ID_MASK         0x1FFFFFFF
+
 #define CANID_ISENSE_COMMAND 0x411
 
 #define CANID_TX_HEARTBEAT    0x501
@@ -46,6 +49,9 @@
 #define CANID_RX_BLACKBOX_SAVE      0x547
 
 #define CANID_DEBUG_OVERWRITE_TEMPS 0x581
+
+#define CANID_ELCON_A   0x1806E5F4
+#define CANID_ELCON_B   0x18FF50E5
 
 #define ERR_CFGID_NOT_FOUND 54
 

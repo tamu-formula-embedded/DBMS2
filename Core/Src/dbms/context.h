@@ -115,6 +115,8 @@ typedef struct _Stats
     float min_t;
     float max_t;
     float avg_t;
+
+    uint32_t elcon_rx;
 } Stats;
 
 typedef struct _Model   // Outputs from the ECM model
