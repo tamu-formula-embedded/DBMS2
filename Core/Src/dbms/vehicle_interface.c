@@ -5,119 +5,186 @@
 
 int ConfigCan(DbmsCtx* ctx)
 {
-    uint16_t can_ids_to_filter[] = {0x540, 0x100}; // must be less than 2 * 14  = 28 id ranges
-    int status = HAL_OK;
-    int id_count = sizeof(can_ids_to_filter) / 2;
+    // uint16_t can_ids_to_filter[] = {0x500};
+int status = HAL_OK;
 
-    const int ids_per_bank = 2;
-    int banks_needed = (id_count + ids_per_bank - 1) / ids_per_bank;
-    bool extra_id = id_count % 2;
+// Initialize filter structure
+CAN_FilterTypeDef s_filter_cfg;
+memset(&s_filter_cfg, 0, sizeof(s_filter_cfg));
 
-    int id = 0;
-    for (int bank = 0; bank < banks_needed - extra_id; bank++)
-    {
-        CAN_FilterTypeDef s_filter_cfg;
-        memset(&s_filter_cfg, 0, sizeof(s_filter_cfg));
+// CAN2 uses filter banks 14–27
+s_filter_cfg.FilterBank = 14;  // Use first available bank for CAN2
+s_filter_cfg.SlaveStartFilterBank = 14; // Required for dual CAN configuration
 
-        s_filter_cfg.FilterBank = (uint32_t) 14 + bank; //14 for CAN2
-        s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;           // ID list (exact matches)
-        s_filter_cfg.FilterScale = CAN_FILTERSCALE_16BIT;         // pack 4 std IDs / bank
-        s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;     // choose FIFO0 (or FIFO1)
-        s_filter_cfg.FilterActivation = ENABLE;
-        s_filter_cfg.SlaveStartFilterBank = 14;     // required for dual-CAN (CAN2)
+// Use IDMASK mode: match ID bits using mask bits
+s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;
 
-        // For 16-bit IDLIST we store IDs into the four 16-bit slots:
-        // FilterIdHigh  -> slot0  (first 16-bit)
-        // FilterIdLow   -> slot1
-        // FilterMaskIdHigh -> slot2
-        // FilterMaskIdLow  -> slot3
-        // assign packed values
-        s_filter_cfg.FilterIdHigh     = can_ids_to_filter[id] << 5;
-        s_filter_cfg.FilterIdLow      = can_ids_to_filter[id + 1] << 5;
-        s_filter_cfg.FilterMaskIdHigh = can_ids_to_filter[id] << 5;
-        s_filter_cfg.FilterMaskIdLow  = can_ids_to_filter[id + 1] << 5;
+// Use 32-bit scale (one ID per bank)
+s_filter_cfg.FilterScale = CAN_FILTERSCALE_32BIT;
 
-        // Configure the bank
-        status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg);
-        if (status != HAL_OK)
-        {
-            return status; // caller can set LED or error handling as you already do
-        }
-    }
+// Assign to FIFO0
+s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;
 
-    if (extra_id)
-    {
-        CAN_FilterTypeDef s_filter_cfg;
-        memset(&s_filter_cfg, 0, sizeof(s_filter_cfg));
+// Enable filter
+s_filter_cfg.FilterActivation = ENABLE;
 
-        s_filter_cfg.FilterBank = (uint32_t) 14 + banks_needed - 1; //14 since CAN2
-        s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;           // ID list (exact matches)
-        s_filter_cfg.FilterScale = CAN_FILTERSCALE_16BIT;         // pack 4 std IDs / bank
-        s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;     // choose FIFO0 (or FIFO1)
-        s_filter_cfg.FilterActivation = ENABLE;
-        s_filter_cfg.SlaveStartFilterBank = 14;     // required for dual-CAN (CAN2)
+// --- Set up exact match for standard ID 0x500 ---
+// In IDMASK mode:
+//   - FilterIdHigh/Low defines the ID bits
+//   - FilterMaskIdHigh/Low defines which bits matter (1 = compare, 0 = ignore)
 
-        // For 16-bit IDLIST we store IDs into the four 16-bit slots:
-        // FilterIdHigh  -> slot0  (first 16-bit)
-        // FilterIdLow   -> slot1
-        // FilterMaskIdHigh -> slot2
-        // FilterMaskIdLow  -> slot3
-        // assign packed values
-        s_filter_cfg.FilterIdHigh     = can_ids_to_filter[id_count - 2] << 5;
-        s_filter_cfg.FilterIdLow      = can_ids_to_filter[id_count - 1] << 5;
-        s_filter_cfg.FilterMaskIdHigh = can_ids_to_filter[id_count - 2] << 5;
-        s_filter_cfg.FilterMaskIdLow  = can_ids_to_filter[id_count - 1] << 5; // adding filter for non-extended ids;
+// Standard ID occupies bits 10:0 in 16-bit halves shifted by 5 bits
+s_filter_cfg.FilterIdHigh     = (0x500 << 5);
+s_filter_cfg.FilterIdLow      = 0x0000;  // IDE=0, RTR=0
+s_filter_cfg.FilterMaskIdHigh = (0x700 << 5); // Compare all 11 bits of ID
+s_filter_cfg.FilterMaskIdLow  = 0x0004;  // Mask IDE bit → reject extended frames
 
-        // Configure the bank
-        status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg);
-        if (status != HAL_OK)
-        {
-            return status; // caller can set LED or error handling as you already do
-        }
-    }
-
-    // Create a filter
-    CAN_FilterTypeDef s_filter_cfg = {0};
-
-    s_filter_cfg.FilterBank = 14; // For CAN2, banks 14–27 are available
-    s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;
-    s_filter_cfg.FilterScale = CAN_FILTERSCALE_32BIT;
-    s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-    s_filter_cfg.FilterActivation = ENABLE;
-    s_filter_cfg.SlaveStartFilterBank = 14; // Required when using CAN2
-
-    // Accept all 11-bit standard IDs (0x000–0x7FF), reject extended frames
-    s_filter_cfg.FilterIdHigh = 0x0000;     // ID[28:13]
-    s_filter_cfg.FilterIdLow = 0x0000;      // ID[12:0], IDE=0, RTR=0
-    s_filter_cfg.FilterMaskIdHigh = 0x0000; // Mask to allow all standard IDs
-    s_filter_cfg.FilterMaskIdLow = 0x0004;  // Mask IDE bit to reject extended frames
-
-    // Add the filter to CAN peripheral
-    if ((status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg)) != HAL_OK)
-    {
-        ctx->led_state = LED_COMM_ERROR;
-        return status;
-    }
-    if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK)
-    {
-        ctx->led_state = LED_COMM_ERROR;
-        return status;
-    }
-    if ((status = HAL_CAN_ActivateNotification(ctx->hw.can,
-                                               CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK)
-    {
-        ctx->led_state = LED_COMM_ERROR;
-        return status;
-    }
-
-    // Config TX header
-    ctx->hw.can_tx_header.StdId = 0xdead;
-    ctx->hw.can_tx_header.IDE = CAN_ID_STD;
-    ctx->hw.can_tx_header.RTR = CAN_RTR_DATA;
-    ctx->hw.can_tx_header.DLC = 8;
-    ctx->hw.can_tx_header.TransmitGlobalTime = DISABLE;
-
+// Configure filter
+status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg);
+if (status != HAL_OK)
+{
+    ctx->led_state = LED_COMM_ERROR;
     return status;
+}
+
+// Start CAN
+if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK)
+{
+    ctx->led_state = LED_COMM_ERROR;
+    return status;
+}
+
+// Enable interrupts
+if ((status = HAL_CAN_ActivateNotification(ctx->hw.can,
+                                           CAN_IT_RX_FIFO0_MSG_PENDING |
+                                           CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK)
+{
+    ctx->led_state = LED_COMM_ERROR;
+    return status;
+}
+
+// Configure TX header (example)
+ctx->hw.can_tx_header.StdId = 0x500;
+ctx->hw.can_tx_header.IDE = CAN_ID_STD;
+ctx->hw.can_tx_header.RTR = CAN_RTR_DATA;
+ctx->hw.can_tx_header.DLC = 8;
+ctx->hw.can_tx_header.TransmitGlobalTime = DISABLE;
+
+return status;
+
+    // uint16_t can_ids_to_filter[] = {0x500}; // must be less than 2 * 14  = 28 id ranges
+    // int status = HAL_OK;
+    // int id_count = sizeof(can_ids_to_filter) / 2;
+
+    // const int ids_per_bank = 2;
+    // int banks_needed = (id_count + ids_per_bank - 1) / ids_per_bank;
+    // bool extra_id = id_count % 2;
+
+    // int id = 0;
+    // for (int bank = 0; bank < banks_needed - extra_id; bank++)
+    // {
+    //     CAN_FilterTypeDef s_filter_cfg;
+    //     memset(&s_filter_cfg, 0, sizeof(s_filter_cfg));
+
+    //     s_filter_cfg.FilterBank = (uint32_t) 14 + bank; //14 for CAN2
+    //     s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;           // ID list (exact matches)
+    //     s_filter_cfg.FilterScale = CAN_FILTERSCALE_16BIT;         // pack 4 std IDs / bank
+    //     s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;     // choose FIFO0 (or FIFO1)
+    //     s_filter_cfg.FilterActivation = ENABLE;
+    //     s_filter_cfg.SlaveStartFilterBank = 14 + bank;     // required for dual-CAN (CAN2)
+
+    //     // For 16-bit IDLIST we store IDs into the four 16-bit slots:
+    //     // FilterIdHigh  -> slot0  (first 16-bit)
+    //     // FilterIdLow   -> slot1
+    //     // FilterMaskIdHigh -> slot2
+    //     // FilterMaskIdLow  -> slot3
+    //     // assign packed values
+    //     s_filter_cfg.FilterIdHigh     = can_ids_to_filter[id] << 5;
+    //     s_filter_cfg.FilterIdLow      = can_ids_to_filter[id + 1] << 5;
+    //     s_filter_cfg.FilterMaskIdHigh = can_ids_to_filter[id] << 5;
+    //     s_filter_cfg.FilterMaskIdLow  = can_ids_to_filter[id + 1] << 5;
+
+    //     // Configure the bank
+    //     status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg);
+    //     if (status != HAL_OK)
+    //     {
+    //         return status; // caller can set LED or error handling as you already do
+    //     }
+    // }
+
+    // if (extra_id)
+    // {
+    //     CAN_FilterTypeDef s_filter_cfg;
+    //     memset(&s_filter_cfg, 0, sizeof(s_filter_cfg));
+
+    //     s_filter_cfg.FilterBank = (uint32_t) 14 + banks_needed - 1; //14 since CAN2
+    //     s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;           // ID list (exact matches)
+    //     s_filter_cfg.FilterScale = CAN_FILTERSCALE_16BIT;         // pack 4 std IDs / bank
+    //     s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;     // choose FIFO0 (or FIFO1)
+    //     s_filter_cfg.FilterActivation = ENABLE;
+    //     s_filter_cfg.SlaveStartFilterBank = 14 + banks_needed;     // required for dual-CAN (CAN2)
+
+    //     // For 16-bit IDLIST we store IDs into the four 16-bit slots:
+    //     // FilterIdHigh  -> slot0  (first 16-bit)
+    //     // FilterIdLow   -> slot1
+    //     // FilterMaskIdHigh -> slot2
+    //     // FilterMaskIdLow  -> slot3
+    //     // assign packed values
+    //     s_filter_cfg.FilterIdHigh     = can_ids_to_filter[id_count - 2] << 5;
+    //     s_filter_cfg.FilterIdLow      = can_ids_to_filter[id_count - 1] << 5;
+    //     s_filter_cfg.FilterMaskIdHigh = can_ids_to_filter[id_count - 2] << 5;
+    //     s_filter_cfg.FilterMaskIdLow  = can_ids_to_filter[id_count - 1] << 5; // adding filter for non-extended ids;
+
+    //     // Configure the bank
+    //     status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg);
+    //     if (status != HAL_OK)
+    //     {
+    //         return status; // caller can set LED or error handling as you already do
+    //     }
+    // }
+
+    // // // Create a filter
+    // // CAN_FilterTypeDef s_filter_cfg = {0};
+
+    // // s_filter_cfg.FilterBank = 14; // For CAN2, banks 14–27 are available
+    // // s_filter_cfg.FilterMode = CAN_FILTERMODE_IDMASK;
+    // // s_filter_cfg.FilterScale = CAN_FILTERSCALE_32BIT;
+    // // s_filter_cfg.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+    // // s_filter_cfg.FilterActivation = ENABLE;
+    // // s_filter_cfg.SlaveStartFilterBank = 14; // Required when using CAN2
+
+    // // // Accept all 11-bit standard IDs (0x000–0x7FF), reject extended frames
+    // // s_filter_cfg.FilterIdHigh = 0x0000;     // ID[28:13]
+    // // s_filter_cfg.FilterIdLow = 0x0000;      // ID[12:0], IDE=0, RTR=0
+    // // s_filter_cfg.FilterMaskIdHigh = 0x0000; // Mask to allow all standard IDs
+    // // s_filter_cfg.FilterMaskIdLow = 0x0004;  // Mask IDE bit to reject extended frames
+
+    // // // Add the filter to CAN peripheral
+    // // if ((status = HAL_CAN_ConfigFilter(ctx->hw.can, &s_filter_cfg)) != HAL_OK)
+    // // {
+    // //     ctx->led_state = LED_COMM_ERROR;
+    // //     return status;
+    // // }
+    // if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK)
+    // {
+    //     ctx->led_state = LED_COMM_ERROR;
+    //     return status;
+    // }
+    // if ((status = HAL_CAN_ActivateNotification(ctx->hw.can,
+    //                                            CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK)
+    // {
+    //     ctx->led_state = LED_COMM_ERROR;
+    //     return status;
+    // }
+
+    // // Config TX header
+    // ctx->hw.can_tx_header.StdId = 0xdead;
+    // ctx->hw.can_tx_header.IDE = CAN_ID_STD;
+    // ctx->hw.can_tx_header.RTR = CAN_RTR_DATA;
+    // ctx->hw.can_tx_header.DLC = 8;
+    // ctx->hw.can_tx_header.TransmitGlobalTime = DISABLE;
+
+    // return status;
 }
 
 int ConfigPwmLines(DbmsCtx* ctx)
