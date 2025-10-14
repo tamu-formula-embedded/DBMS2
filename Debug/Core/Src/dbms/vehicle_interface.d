@@ -38,7 +38,7 @@ Core/Src/dbms/vehicle_interface.o: ../Core/Src/dbms/vehicle_interface.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  ../Core/Src/dbms/context.h ../Core/Src/dbms/led_controller.h \
  ../Core/Src/dbms/sched.h ../Core/Src/dbms/storage.h \
- ../Core/Src/dbms/settings.h
+ ../Core/Src/dbms/settings.h ../Core/Inc/main.h
 ../Core/Src/dbms/vehicle_interface.h:
 ../Core/Src/dbms/common.h:
 ../Core/Src/dbms/lut.h:
@@ -84,3 +84,4 @@ Core/Src/dbms/vehicle_interface.o: ../Core/Src/dbms/vehicle_interface.c \
 ../Core/Src/dbms/sched.h:
 ../Core/Src/dbms/storage.h:
 ../Core/Src/dbms/settings.h:
+../Core/Inc/main.h:
