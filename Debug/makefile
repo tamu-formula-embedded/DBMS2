@@ -52,7 +52,6 @@ default.size.stdout \
 
 OBJDUMP_LIST += \
 DBMS2.list \
-<<<<<<< HEAD
 
 
 # All Target
@@ -62,8 +61,8 @@ all: main-build
 main-build: DBMS2.elf secondary-outputs
 
 # Tool invocations
-DBMS2.elf DBMS2.map: $(OBJS) $(USER_OBJS) C:\Users\User\Documents\school\fsae\DBMS2\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "DBMS2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\User\Documents\school\fsae\DBMS2\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="DBMS2.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+DBMS2.elf DBMS2.map: $(OBJS) $(USER_OBJS) /Users/justus/Projects/stm32/DBMS2/STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "DBMS2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/justus/Projects/stm32/DBMS2/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="DBMS2.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -94,46 +93,3 @@ warn-no-linker-script-specified:
 .PHONY: all clean dependents main-build fail-specified-linker-script-missing warn-no-linker-script-specified
 
 -include ../makefile.targets
-=======
-
-
-# All Target
-all: main-build
-
-# Main-build Target
-main-build: DBMS2.elf secondary-outputs
-
-# Tool invocations
-DBMS2.elf DBMS2.map: $(OBJS) $(USER_OBJS) C:\Users\Cameron\dev\DBMS\DBMS2\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "DBMS2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Cameron\dev\DBMS\DBMS2\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="DBMS2.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-	@echo 'Finished building target: $@'
-	@echo ' '
-
-default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-size  $(EXECUTABLES)
-	@echo 'Finished building: $@'
-	@echo ' '
-
-DBMS2.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "DBMS2.list"
-	@echo 'Finished building: $@'
-	@echo ' '
-
-# Other Targets
-clean:
-	-$(RM) DBMS2.elf DBMS2.list DBMS2.map default.size.stdout
-	-@echo ' '
-
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
-
-fail-specified-linker-script-missing:
-	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'
-	@exit 2
-
-warn-no-linker-script-specified:
-	@echo 'Warning: No linker script specified. Check the linker settings in the build configuration.'
-
-.PHONY: all clean dependents main-build fail-specified-linker-script-missing warn-no-linker-script-specified
-
--include ../makefile.targets
->>>>>>> master
