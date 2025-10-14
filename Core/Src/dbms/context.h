@@ -8,7 +8,7 @@
 
 
 // USER DEFINED
-#define ITER_TARGET_HZ      10      // how many iterations per second to target
+#define ITER_TARGET_HZ      10      // ho	w many iterations per second to target
 
 #define SINGLE_MSG_DELAY    2       // ms delay between individual stack messages 
 #define GROUP_MSG_DELAY     8       // ms delay between groups of stack message 
