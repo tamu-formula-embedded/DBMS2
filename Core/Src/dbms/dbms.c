@@ -391,7 +391,10 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 {
     int status = 0;
     uint32_t can_id = (rx_header.IDE == CAN_ID_EXT) ? rx_header.ExtId : rx_header.StdId;
-
+    if (rx_header.IDE == CAN_ID_EXT)
+    {
+        CanLog(ctx, "%X\n", rx_header.ExtId);
+    }
     ctx->stats.n_rx_can_frames++;
 
     switch (can_id)
@@ -473,6 +476,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
 #endif
     case CANID_ELCON_B:
+        CanLog(ctx, "Rec");
         ctx->stats.elcon_rx++;
         break;
 

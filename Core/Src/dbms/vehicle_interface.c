@@ -79,8 +79,8 @@ int ConfigCan(DbmsCtx* ctx)
     CanFilterMask masks[] = 
     {
         { 0x500, 0x700, false },
-        { CANID_ELCON_A, CAN_EXT_ID_MASK, true },
-        { CANID_ELCON_B, CAN_EXT_ID_MASK, true },
+        { CANID_ELCON_A, 0, true },
+        { CANID_ELCON_B, 0, true }
     };
 
     if ((status = ConfigCanFilters(ctx->hw.can, masks, sizeof(masks)/sizeof(masks[0]))) != 0)
