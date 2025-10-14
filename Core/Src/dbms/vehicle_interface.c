@@ -74,9 +74,9 @@ int ConfigCan(DbmsCtx* ctx)
 {
     int status = 0;
     CanFilterMask masks[] = {
-        { 0x321, 0x7FF }, // exact 0x321
-        { 0x540, 0x7FF }, // exact 0x540
-        { 0x550, 0x7F0 }, // range 0x550–0x55F
+        { 0x500, 0x700 } // exact 0x321
+        // { 0x540, 0x7FF }, // exact 0x540
+        // { 0x550, 0x7F0 }, // range 0x550–0x55F
     };
 
     if ((status = ConfigCanFilters(ctx->hw.can, masks, sizeof(masks)/sizeof(masks[0]))) != 0)
