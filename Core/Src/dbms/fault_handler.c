@@ -1,4 +1,5 @@
 #include "fault_handler.h"
+#include "blackbox.h"
 #include "settings.h"
 
 void ControllerSetFault(DbmsCtx* ctx, ControllerFaultType fault)
@@ -139,7 +140,6 @@ void ThrowHardFault(DbmsCtx* ctx)
         ctx->need_to_save_faults = true;
     }
     ctx->faults.had_fault = HasAnyFaults(ctx);
-
 }
 
 int SaveFaultState(DbmsCtx* ctx)

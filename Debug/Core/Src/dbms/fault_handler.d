@@ -1,7 +1,7 @@
 Core/Src/dbms/fault_handler.o: ../Core/Src/dbms/fault_handler.c \
  ../Core/Src/dbms/fault_handler.h ../Core/Src/dbms/common.h \
- ../Core/Src/dbms/lut.h ../Core/Src/dbms/crc.h ../Core/Src/dbms/eswap.h \
- ../Core/Src/dbms/ma.h \
+ ../Core/Src/dbms/queue.h ../Core/Src/dbms/lut.h ../Core/Src/dbms/crc.h \
+ ../Core/Src/dbms/eswap.h ../Core/Src/dbms/ma.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -36,11 +36,13 @@ Core/Src/dbms/fault_handler.o: ../Core/Src/dbms/fault_handler.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Src/dbms/context.h ../Core/Src/dbms/settings.h \
- ../Core/Src/dbms/storage.h ../Core/Src/dbms/vehicle_interface.h \
- ../Core/Src/dbms/led_controller.h ../Core/Src/dbms/sched.h
+ ../Core/Src/dbms/context.h ../Core/Src/dbms/blackbox.h \
+ ../Core/Src/dbms/settings.h ../Core/Src/dbms/storage.h \
+ ../Core/Src/dbms/vehicle_interface.h ../Core/Src/dbms/led_controller.h \
+ ../Core/Src/dbms/sched.h
 ../Core/Src/dbms/fault_handler.h:
 ../Core/Src/dbms/common.h:
+../Core/Src/dbms/queue.h:
 ../Core/Src/dbms/lut.h:
 ../Core/Src/dbms/crc.h:
 ../Core/Src/dbms/eswap.h:
@@ -80,6 +82,7 @@ Core/Src/dbms/fault_handler.o: ../Core/Src/dbms/fault_handler.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 ../Core/Src/dbms/context.h:
+../Core/Src/dbms/blackbox.h:
 ../Core/Src/dbms/settings.h:
 ../Core/Src/dbms/storage.h:
 ../Core/Src/dbms/vehicle_interface.h:
