@@ -2,6 +2,7 @@
 //  Copyright (c) Texas A&M University.
 //
 #include "dbms.h"
+#include "context.h"
 #include "fault_handler.h"
 #include "led_controller.h"
 #include "vehicle_interface.h"
@@ -82,7 +83,6 @@ void DbmsInit(DbmsCtx* ctx)
     ConfigPwmLines(ctx);
     DataInit(ctx);
 
-    // set to idle or active? i think idle because we would want to call dbmsperformwakeup?
     ctx->led_state = LED_IDLE;
 }
 
@@ -158,7 +158,19 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->iter_start_us = GetUs(ctx);
     
     // Swap blackbox data and capture current state
-    BlackboxSwapAndUpdate(ctx);
+    // BlackboxSwapAndUpdate(ctx);
+
+    //
+    //  Blackbox data requested
+    //
+    if (ctx->blackbox.requested)
+    {
+        if ((status = BlackboxSend(ctx)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+        }
+        ctx->blackbox.requested = false;
+    }
 
     //
     //  Store the settings when required
@@ -285,16 +297,21 @@ void DbmsIter(DbmsCtx* ctx)
         ThrowHardFault(ctx);
         HAL_Delay(GROUP_MSG_DELAY);
     }
+    BlackboxSwapAndUpdate(ctx);
+
 
     //
-    //  save faults
+    //  save faults and blackbox data to eeprom
     //
     if (ctx->need_to_save_faults)
     {
         if ((status = SaveFaultState(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
-            ctx->led_state = LED_ERROR;
+        }
+        if ((status = BlackboxSaveOnFault(ctx, ctx->blackbox.old_data, ctx->blackbox.new_data)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
         }
         ctx->need_to_save_faults = false;
     }
@@ -333,6 +350,9 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     
+
+    //CanLog(ctx, "%d\niters: ", info->iter);
+
     HAL_Delay(ctx->stats.end_delay / 1000);
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
@@ -430,6 +450,13 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->qstats.initial_set_ts = 0;
         ctx->need_to_reset_qstats = true;
         break;
+    case CANID_RX_BLACKBOX_REQUEST:
+        ctx->blackbox.requested = true;
+        break;
+    case CANID_RX_BLACKBOX_SAVE:
+        ctx->need_to_save_faults = true;
+        break;
+
 #ifdef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
     case CANID_DEBUG_OVERWRITE_TEMPS:
         uint32_t temp_milli_deg_C = be32_to_u32(rx_data);

@@ -36,7 +36,6 @@
 #define N_C_ENTRIES                 101
 #define N_I_MA_MEMORIZED            100
 
-
 // DANGER:  THESE DEBUGS WILL PREVENT THE CONTROLLER FROM WORKING NORMALLY
 // #define DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
 // END DANGER ZONE
@@ -135,10 +134,42 @@ typedef struct _Model   // Outputs from the ECM model
     float I_lim;
 } Model;
 
-typedef struct _BlackboxInfo
+typedef struct _Snapshot
 {
     uint64_t iter;
-} BlackboxInfo;
+    
+    // Current sensor data
+    int32_t current_ma;
+    int32_t voltage_mv;
+    
+    // Charge stats
+    float qd;
+    
+    // Current limits and resistance
+    float current_limit_a;
+    float dcir;
+    float total_resistance;
+    
+    // Temperature stats
+    float avg_temp;
+    float max_temp;
+    float min_temp;
+    
+    // Cell voltage delta
+    float cell_delta_v;
+    
+    // Voltage stats
+    float high_voltage;
+    float low_voltage;
+    float avg_voltage;
+    
+    // Faults
+    uint32_t controller_mask;
+    uint8_t bridge_fault_summary;
+    uint32_t bridge_faults;
+    uint8_t monitor_fault_summary[N_MONITORS];
+    
+} Snapshot;
 
 typedef struct _DbmsCtx
 {
@@ -226,9 +257,11 @@ typedef struct _DbmsCtx
     bool need_to_sync_settings;
     bool m_led_on;
 
-    // Blackbox pointers for crash analysis
-    BlackboxInfo* blackbox_old;
-    BlackboxInfo* blackbox_new;
+    struct {
+        Snapshot* old_data;
+        Snapshot* new_data;
+        bool requested;
+    } blackbox;
 
 } DbmsCtx;
 
