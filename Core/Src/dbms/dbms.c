@@ -211,6 +211,19 @@ void DbmsIter(DbmsCtx* ctx)
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //
+    uint64_t cur_time = HAL_GetTick();
+    if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN) && cur_time - ctx->elcon_beat < 2500)
+    {
+        ThrowHardFault(ctx);
+    }
+    if (cur_time - ctx->elcon_beat < 2500)
+    {
+        ctx->req_state = CHARGING;
+    }
+    if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    {
+        ctx->req_state = DBMS_ACTIVE;
+    }
     if (HAL_GetTick() - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         ctx->req_state = DBMS_SHUTDOWN;
@@ -237,7 +250,11 @@ void DbmsIter(DbmsCtx* ctx)
         DbmsPerformWakeup(ctx);
         // MonitorResetFaults(ctx);
     }
-
+    else if (ctx->cur_state == CHARGING)
+    {
+        ctx->led_state = LED_CHARGING;
+        ctx->cur_state = CHARGING;
+    }
     //
     //   Main State Dispatch
     //
@@ -246,7 +263,7 @@ void DbmsIter(DbmsCtx* ctx)
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
         ctx->need_to_save_faults = false;
     }
-    else if (ctx->cur_state == DBMS_ACTIVE)
+    else if (ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == CHARGING)
     {
         for (int i = 0; i < N_SIDES; i++)
         {
@@ -467,6 +484,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         }
         break;
 #endif
+    case CANID_ELCON_B:
+        ctx->elcon_beat = HAL_GetTick();
+        break;
     default:
         ctx->stats.n_unmatched_can_frames++;
         break;
