@@ -525,6 +525,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK)
     {
         // Manually correct IDE / RTR fields 
+        // Not sure if necessary. TODO: double check
         uint32_t rir = hcan->Instance->sFIFOMailBox[0].RIR;
 
         rxHeader.IDE = (rir & CAN_RI0R_IDE) ? CAN_ID_EXT : CAN_ID_STD;
