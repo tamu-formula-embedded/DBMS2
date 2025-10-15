@@ -212,19 +212,19 @@ void DbmsIter(DbmsCtx* ctx)
     //  otherwise we want to be active
     //
     uint64_t cur_time = HAL_GetTick();
-    if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN) && cur_time - ctx->elcon_beat < 2500)
+    if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN) && cur_time - ctx->elcon_beat < 5000)
     {
         ThrowHardFault(ctx);
     }
-    if (cur_time - ctx->elcon_beat < 2500)
+    else if (cur_time - ctx->elcon_beat < 5000)
     {
         ctx->req_state = CHARGING;
     }
-    if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    else if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         ctx->req_state = DBMS_ACTIVE;
     }
-    if (HAL_GetTick() - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    else if (cur_time - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         ctx->req_state = DBMS_SHUTDOWN;
     }
@@ -234,6 +234,7 @@ void DbmsIter(DbmsCtx* ctx)
             ctx->req_state = DBMS_ACTIVE;
     }
 
+    CanLog(ctx, "%d", ctx->req_state);
     //
     //  Gracefully handle state transition
     //
@@ -250,7 +251,7 @@ void DbmsIter(DbmsCtx* ctx)
         DbmsPerformWakeup(ctx);
         // MonitorResetFaults(ctx);
     }
-    else if (ctx->cur_state == CHARGING)
+    else if (ctx->req_state == CHARGING)
     {
         ctx->led_state = LED_CHARGING;
         ctx->cur_state = CHARGING;
@@ -403,10 +404,10 @@ void SendPlexMetrics(DbmsCtx* ctx)
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
     int status = 0;
-
+    uint32_t can_id = (rx_header.IDE == CAN_ID_EXT) ? rx_header.ExtId : rx_header.StdId;
     ctx->stats.n_rx_can_frames++;
 
-    switch (rx_header.StdId)
+    switch (can_id)
     {
     case CANID_RX_HEARTBEAT:
         ctx->last_rx_heartbeat = HAL_GetTick();
@@ -485,6 +486,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
 #endif
     case CANID_ELCON_B:
+        CanLog(ctx, "G\n");
         ctx->elcon_beat = HAL_GetTick();
         break;
     default:
