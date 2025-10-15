@@ -211,21 +211,7 @@ void DbmsIter(DbmsCtx* ctx)
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //
-    uint64_t cur_time = HAL_GetTick();
-    //TODO: change these timestamps to something better (setting or smthg)
-    if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN) && cur_time - ctx->elcon_beat < 2500)
-    {
-        ThrowHardFault(ctx);
-    }
-    else if (cur_time - ctx->elcon_beat < 2500)
-    {
-        ctx->req_state = CHARGING;
-    }
-    else if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
-    {
-        ctx->req_state = DBMS_ACTIVE;
-    }
-    else if (cur_time - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    if (HAL_GetTick() - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         ctx->req_state = DBMS_SHUTDOWN;
     }
@@ -238,7 +224,7 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Gracefully handle state transition
     //
-    if (ctx->cur_state == DBMS_ACTIVE && ctx->req_state == DBMS_SHUTDOWN)
+    if ((ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == CHARGING) && ctx->req_state == DBMS_SHUTDOWN)
     {
         // on these states -- probably need to write to disk too
         DbmsPerformShutdown(ctx);
@@ -250,11 +236,6 @@ void DbmsIter(DbmsCtx* ctx)
         ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
         // MonitorResetFaults(ctx);
-    }
-    else if (ctx->req_state == CHARGING)
-    {
-        ctx->cur_state = CHARGING;
-        ctx->led_state = LED_CHARGING;
     }
 
     //
@@ -400,18 +381,15 @@ void SendPlexMetrics(DbmsCtx* ctx)
     SendPlex32(ctx, 0x1b, ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE));
     SendPlex32(ctx, 0x1c, ctx->stats.iters);
 
-    // Not an actual plex metric
-    SendPlex32(ctx, CANID_ELCON_A, ctx->stats.elcon_rx);
-
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
     int status = 0;
-    uint32_t can_id = (rx_header.IDE == CAN_ID_EXT) ? rx_header.ExtId : rx_header.StdId;
+
     ctx->stats.n_rx_can_frames++;
-    CanLog(ctx, "%X\n", can_id);
-    switch (can_id)
+
+    switch (rx_header.StdId)
     {
     case CANID_RX_HEARTBEAT:
         ctx->last_rx_heartbeat = HAL_GetTick();
@@ -489,10 +467,6 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         }
         break;
 #endif
-    case CANID_ELCON_B:
-        ctx->elcon_beat = HAL_GetTick();
-        break;
-
     default:
         ctx->stats.n_unmatched_can_frames++;
         break;
