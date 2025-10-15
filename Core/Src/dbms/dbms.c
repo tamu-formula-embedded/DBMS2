@@ -30,7 +30,6 @@ void DbmsInit(DbmsCtx* ctx)
     int status = 0;
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_INIT;
-    ctx->charging.state = NOT_CHARGING;
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
     {
@@ -212,7 +211,21 @@ void DbmsIter(DbmsCtx* ctx)
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //
-    if (HAL_GetTick() - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    uint64_t cur_time = HAL_GetTick();
+    //TODO: change these timestamps to something better (setting or smthg)
+    if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN) && cur_time - ctx->elcon_beat < 2500)
+    {
+        ThrowHardFault(ctx);
+    }
+    else if (cur_time - ctx->elcon_beat < 2500)
+    {
+        ctx->req_state = CHARGING;
+    }
+    else if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    {
+        ctx->req_state = DBMS_ACTIVE;
+    }
+    else if (cur_time - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         ctx->req_state = DBMS_SHUTDOWN;
     }
@@ -237,6 +250,11 @@ void DbmsIter(DbmsCtx* ctx)
         ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
         // MonitorResetFaults(ctx);
+    }
+    else if (ctx->req_state == CHARGING)
+    {
+        ctx->cur_state = CHARGING;
+        ctx->led_state = LED_CHARGING;
     }
 
     //
@@ -392,7 +410,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     int status = 0;
     uint32_t can_id = (rx_header.IDE == CAN_ID_EXT) ? rx_header.ExtId : rx_header.StdId;
     ctx->stats.n_rx_can_frames++;
-
+    CanLog(ctx, "%X\n", can_id);
     switch (can_id)
     {
     case CANID_RX_HEARTBEAT:
@@ -472,7 +490,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
 #endif
     case CANID_ELCON_B:
-        ctx->stats.elcon_rx++;
+        ctx->elcon_beat = HAL_GetTick();
         break;
 
     default:

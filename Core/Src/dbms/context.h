@@ -44,19 +44,11 @@ typedef enum _DbmsState
 {
     DBMS_ACTIVE = 0,
     DBMS_SHUTDOWN,
+    CHARGING
 } DbmsState;
 
 // fwd definition -- perf_counters.h
 typedef struct _PerfCounters PerfCounters;
-
-typedef enum
-{
-    NOT_CHARGING = 0,
-    CHARGING_ACTIVE,
-    CHARGING_PAUSED_FOR_BALANCING,
-    CHARGING_COMPLETE,
-    CHARGING_ERROR
-} ChargingState;
 
 // Hardware context stores prts
 // to peripheral interfaces
@@ -202,12 +194,12 @@ typedef struct _DbmsCtx
     uint64_t m_led_blink_ts;
     uint64_t batch_telem_ts;
     uint64_t wakeup_ts;
+    uint64_t elcon_beat;
 
     Stats stats;
 
     struct
     {
-        ChargingState state;
         bool balancing_requested;
     } charging;
 
