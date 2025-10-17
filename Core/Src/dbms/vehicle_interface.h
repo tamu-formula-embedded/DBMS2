@@ -98,4 +98,7 @@ int64_t UnpackCurrentSensorData(uint8_t* data);
 int ConfigPwmLines(DbmsCtx* ctx);
 int SetPwmStates(DbmsCtx* ctx);
 
+int32_t UnpackElconDataVoltage(uint8_t* data);
+int32_t UnpackElconDataCurrent(uint8_t* data);
+
 #endif

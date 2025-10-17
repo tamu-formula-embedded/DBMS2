@@ -497,3 +497,14 @@ int64_t UnpackCurrentSensorData(uint8_t* data) // expects >= 6 bytes, big-endian
     }
     return (int64_t)v;
 }
+
+int32_t UnpackElconDataVoltage(uint8_t* data)
+{
+    return ((uint16_t) (*data) << 8) + *(data + 1);
+}
+
+int32_t UnpackElconDataCurrent(uint8_t* data)
+{
+    return ((uint16_t) *(data + 2) << 8) + *(data + 3);
+
+}

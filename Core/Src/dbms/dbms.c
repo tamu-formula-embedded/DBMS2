@@ -234,7 +234,6 @@ void DbmsIter(DbmsCtx* ctx)
             ctx->req_state = DBMS_ACTIVE;
     }
 
-    CanLog(ctx, "%d", ctx->req_state);
     //
     //  Gracefully handle state transition
     //
@@ -486,8 +485,12 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
 #endif
     case CANID_ELCON_B:
-        CanLog(ctx, "G\n");
         ctx->elcon_beat = HAL_GetTick();
+        CanLog(ctx, "t %d\n", ctx->elcon_beat);
+        ctx->elcon_output.elcon_current_out = UnpackElconDataVoltage(rx_data);
+        ctx->elcon_output.elcon_current_out = UnpackElconDataCurrent(rx_data);
+        CanLog(ctx, "%d\n", (int) ctx->elcon_output.elcon_voltage_out);
+        CanLog(ctx, "%d\n", (int) ctx->elcon_output.elcon_current_out);
         break;
     default:
         ctx->stats.n_unmatched_can_frames++;
