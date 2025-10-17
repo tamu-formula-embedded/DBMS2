@@ -257,6 +257,10 @@ typedef struct _DbmsCtx
         bool requested;
     } blackbox;
 
+    struct{
+        int32_t elcon_voltage_out;
+        int32_t elcon_current_out;
+    } elcon_output;
 } DbmsCtx;
 
 #endif
