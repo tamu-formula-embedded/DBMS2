@@ -29,8 +29,7 @@
 
 #define BRIDGE_FAULT_COMM1_REG  0x2104
 
-#define FAULT_SUMM_BITMASK 0b11101100   // DO NOT CHANGE WITHOUT TALKING 
-                                        // WITH THE TEAM FIRST PLSSS!!
+
 
 #define RX_FRAME_SIZE(DATA_SIZE) (DATA_SIZE + 6)
 

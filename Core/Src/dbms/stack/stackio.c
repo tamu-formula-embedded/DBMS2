@@ -47,7 +47,7 @@ void SetBrr(uint64_t brr)
  * 
  * Right now the length of the blip is set by BRR.
  *
- * TODO: make it accept us or something more intuitive.
+ * TODO: make it accept param as us or something more intuitive.
  */
 int SendStackBlip(DbmsCtx* ctx, uint64_t brr)
 {
@@ -55,7 +55,7 @@ int SendStackBlip(DbmsCtx* ctx, uint64_t brr)
 
     // Switch to a very slow baud rate. receiving chips will see this
     // as a continuous low signal
-    SetBrr(brr)); // ?
+    SetBrr(brr); 
 
     // Send a single byte at this slow speed
     uint8_t wake_frame[] = {0x00};

@@ -1,6 +1,3 @@
-//
-//  Copyright (c) Texas A&M University.
-//
 #include "crc.h"
 
 static uint16_t crc16_table[256] = {
