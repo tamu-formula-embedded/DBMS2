@@ -4,17 +4,22 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-// Lookup Table Entry mapping voltage to temperature
 typedef struct
 {
     float key;
     float value;
 } LTE;
 
-// Builds a LUT from parallel arrays, copies up to max_count, then sorts.
+/**
+ * Function to build a lookup table from arrays of keys and values.
+ * Copies up to count entries from the input arrays, then sorts.
+ */
 void lut_build(LTE* out_entries, const float* keys, const float* values, size_t count);
 
-// Interpolates between two entries to find the closest value at a given key
+/**
+ * Function to interpolate between two entries to find the value at a given key
+ * returns interpolated value, used to see which entry is closer
+ */
 float lut_interpolate(const LTE* entries, size_t count, float key);
 
 #endif

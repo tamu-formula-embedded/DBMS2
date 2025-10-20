@@ -1,7 +1,7 @@
 #include "charging.h"
 #include "context.h"
-#include "led_controller.h"
-#include "stack_controller.h"
+#include "ledctl.h"
+#include "stack/stack.h"
 
 /*
 static const uint16_t CB_CELL_CTRL_REGS[14] = {

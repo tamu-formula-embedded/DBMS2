@@ -42,3 +42,4 @@ int64_t  be48_to_i64(const uint8_t b[6]);
 uint64_t be64_to_u64(const uint8_t b[8]);
 int64_t  be64_to_i64(const uint8_t b[8]);
 
+#endif

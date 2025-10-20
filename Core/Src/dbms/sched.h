@@ -4,7 +4,7 @@
 #ifndef _H_SCHED_H
 #define _H_SCHED_H
 
-#include "common.h"
+#include "utils/common.h"
 #include "context.h"
 #include "storage.h"
 

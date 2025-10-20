@@ -1,11 +1,18 @@
 1.  split stack_controller into more modules, grouped into stack directory,
     - stackio           handles stack io
     - stackctl          control operations like startup, shutdown, etc.
-    - stackv(olt)       voltage reading related 
-    - stackt(emp)       temp reading related
-    - stackf(ault)      fault reading related
+    - stackvolt         voltage reading related 
+    - stacktemp         temp reading related
+    - stackfault        fault reading related
+    - stackbal          balancing related
+    - stackled          stack led related
 
-2.  group utility modules (crc, queue, lut, ma, etc.) into util directory
+2.  group utility modules into util directory
+    - common
+    - crc
+    - eswap
+    - lut
+    - ma
 
 3.  remove current_meter
 

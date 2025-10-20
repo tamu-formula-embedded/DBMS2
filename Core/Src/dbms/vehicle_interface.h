@@ -4,10 +4,10 @@
 #ifndef _VINTF_H_
 #define _VINTF_H_
 
-#include "common.h"
+#include "utils/common.h"
 #include "context.h"
 
-#include "led_controller.h"
+#include "ledctl.h"
 #include "sched.h"
 #include "settings.h"
 
