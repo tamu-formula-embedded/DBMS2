@@ -4,7 +4,7 @@
 #ifndef _CTRL_FAULT_HANDLER_H_
 #define _CTRL_FAULT_HANDLER_H_
 
-#include "common.h"
+#include "utils/common.h"
 #include "context.h"
 
 /*

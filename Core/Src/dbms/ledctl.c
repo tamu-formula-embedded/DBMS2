@@ -1,7 +1,7 @@
 //
 //  Copyright (c) Texas A&M University.
 //
-#include "led_controller.h"
+#include "ledctl.h"
 
 #define FAST_BLINK_INTERVAL 100
 #define SLOW_BLINK_INTERVAL 500

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
+#include "utils/common.h"
 #include "context.h"
 
 #include "data.h"
@@ -18,7 +18,7 @@
 #include "charging.h"
 #include "current_meter.h"
 #include "fault_handler.h"
-#include "led_controller.h"
+#include "ledctl.h"
 #include "sched.h"
 #include "settings.h"
 #include "stack_controller.h"

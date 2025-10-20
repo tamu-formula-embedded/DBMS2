@@ -38,8 +38,19 @@
 //#define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
 
 #ifdef __vscode__
-typedef int int32_t;
-typedef unsigned int uint32_t;
+
+// typedef int int32_t;
+// typedef unsigned int uint32_t;
+#define int32_t     int
+#define uint32_t    unsigned int
+
 #endif
+
+#include "stm32f4xx_hal.h"
+
+#include "crc.h"
+#include "eswap.h"
+#include "lut.h"
+#include "ma.h"
 
 #endif
