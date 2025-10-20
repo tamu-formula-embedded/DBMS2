@@ -91,6 +91,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     int status = 0;
     HAL_Delay(2000);
 
+    // TODO: check these all and make a critical couldnt wake stack fault
     if ((status = StackWake(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
