@@ -524,7 +524,19 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK)
     {
-        // Process the received CAN message
+        // Manually correct IDE / RTR fields 
+        // Not sure if necessary. TODO: double check
+        uint32_t rir = hcan->Instance->sFIFOMailBox[0].RIR;
+
+        rxHeader.IDE = (rir & CAN_RI0R_IDE) ? CAN_ID_EXT : CAN_ID_STD;
+        rxHeader.RTR = (rir & CAN_RI0R_RTR) ? CAN_RTR_REMOTE : CAN_RTR_DATA;
+
+        // Correctly extract IDs depending on IDE
+        if (rxHeader.IDE == CAN_ID_STD)
+            rxHeader.StdId = (rir & CAN_RI0R_STID) >> CAN_TI0R_STID_Pos;
+        else
+            rxHeader.ExtId = (rir & (CAN_RI0R_EXID | CAN_RI0R_STID)) >> CAN_RI0R_EXID_Pos;
+
         DbmsCanRx(&dbms_ctx, CAN_RX_0, rxHeader, rxData);
     }
 }
@@ -536,10 +548,21 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rxHeader, rxData) == HAL_OK)
     {
-        // Process the received CAN message
+        // Manually correct IDE / RTR fields 
+        uint32_t rir = hcan->Instance->sFIFOMailBox[1].RIR;
+
+        rxHeader.IDE = (rir & CAN_RI0R_IDE) ? CAN_ID_EXT : CAN_ID_STD;
+        rxHeader.RTR = (rir & CAN_RI0R_RTR) ? CAN_RTR_REMOTE : CAN_RTR_DATA;
+
+        if (rxHeader.IDE == CAN_ID_STD)
+            rxHeader.StdId = (rir & CAN_RI0R_STID) >> CAN_TI0R_STID_Pos;
+        else
+            rxHeader.ExtId = (rir & (CAN_RI0R_EXID | CAN_RI0R_STID)) >> CAN_RI0R_EXID_Pos;
+
         DbmsCanRx(&dbms_ctx, CAN_RX_1, rxHeader, rxData);
     }
 }
+
 
 /* USER CODE END 4 */
 

@@ -30,7 +30,6 @@ void DbmsInit(DbmsCtx* ctx)
     int status = 0;
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_INIT;
-    ctx->charging.state = NOT_CHARGING;
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
     {
@@ -213,7 +212,20 @@ void DbmsIter(DbmsCtx* ctx)
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //
-    if (HAL_GetTick() - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    uint64_t cur_time = HAL_GetTick();
+    if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN) && cur_time - ctx->elcon_beat < 5000)
+    {
+        ThrowHardFault(ctx);
+    }
+    else if (cur_time - ctx->elcon_beat < 5000)
+    {
+        ctx->req_state = CHARGING;
+    }
+    else if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    {
+        ctx->req_state = DBMS_ACTIVE;
+    }
+    else if (cur_time - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         ctx->req_state = DBMS_SHUTDOWN;
     }
@@ -226,7 +238,7 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Gracefully handle state transition
     //
-    if (ctx->cur_state == DBMS_ACTIVE && ctx->req_state == DBMS_SHUTDOWN)
+    if ((ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == CHARGING) && ctx->req_state == DBMS_SHUTDOWN)
     {
         // on these states -- probably need to write to disk too
         DbmsPerformShutdown(ctx);
@@ -239,7 +251,11 @@ void DbmsIter(DbmsCtx* ctx)
         DbmsPerformWakeup(ctx);
         // MonitorResetFaults(ctx);
     }
-
+    else if (ctx->req_state == CHARGING)
+    {
+        ctx->led_state = LED_CHARGING;
+        ctx->cur_state = CHARGING;
+    }
     //
     //   Main State Dispatch
     //
@@ -248,7 +264,7 @@ void DbmsIter(DbmsCtx* ctx)
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
         ctx->need_to_save_faults = false;
     }
-    else if (ctx->cur_state == DBMS_ACTIVE)
+    else if (ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == CHARGING)
     {
         for (int i = 0; i < N_SIDES; i++)
         {
@@ -358,7 +374,7 @@ void DbmsIter(DbmsCtx* ctx)
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
 
-void SendPlex32(DbmsCtx* ctx, uint16_t id, uint32_t m)
+void SendPlex32(DbmsCtx* ctx, uint32_t id, uint32_t m)
 {
     uint8_t data[8] = {0};
     data[0] = (m >> 3*8) & 0xff;
@@ -388,10 +404,10 @@ void SendPlexMetrics(DbmsCtx* ctx)
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
     int status = 0;
-
+    uint32_t can_id = (rx_header.IDE == CAN_ID_EXT) ? rx_header.ExtId : rx_header.StdId;
     ctx->stats.n_rx_can_frames++;
 
-    switch (rx_header.StdId)
+    switch (can_id)
     {
     case CANID_RX_HEARTBEAT:
         ctx->last_rx_heartbeat = HAL_GetTick();
@@ -469,6 +485,14 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         }
         break;
 #endif
+    case CANID_ELCON_B:
+        ctx->elcon_beat = HAL_GetTick();
+        CanLog(ctx, "t %d\n", ctx->elcon_beat);
+        ctx->elcon_output.elcon_current_out = UnpackElconDataVoltage(rx_data);
+        ctx->elcon_output.elcon_current_out = UnpackElconDataCurrent(rx_data);
+        CanLog(ctx, "%d\n", (int) ctx->elcon_output.elcon_voltage_out);
+        CanLog(ctx, "%d\n", (int) ctx->elcon_output.elcon_current_out);
+        break;
     default:
         ctx->stats.n_unmatched_can_frames++;
         break;
