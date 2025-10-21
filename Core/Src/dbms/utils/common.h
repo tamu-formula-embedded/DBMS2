@@ -34,8 +34,7 @@
  */
 #define CLAMP(X, LOW, HIGH) X < LOW ? LOW : (X > HIGH ? HIGH : X);
 
-#define CLAMP_U16(x)    (CLAMP(x, 0, 65535))
-//#define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
+
 
 #ifdef __vscode__
 

@@ -1,9 +1,9 @@
 #ifndef DBMS_DATA_H
 #define DBMS_DATA_H
 
-#include "context.h"
+#include "../context.h"
 
-#include "lut.h"
+#include "../utils/lut.h"
 
 
 extern const float ocv_t_high[N_OCV_ENTRIES];

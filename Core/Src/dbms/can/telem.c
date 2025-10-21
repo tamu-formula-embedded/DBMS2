@@ -1,0 +1,242 @@
+#include "can.h"
+
+
+
+/*****************************
+ *      HEARTBEAT
+ *****************************/
+
+int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc)
+{
+    // TODO: rethink this
+    static uint8_t frame[] = {N_SEGMENTS, N_SIDES_PER_SEG, N_GROUPS_PER_SIDE, N_TEMPS_PER_SIDE, 0, 0, 0, 0};
+    frame[6] = (settings_crc & 0xff00) >> 8;
+    frame[7] = (settings_crc & 0xff);
+    return CanTransmit(ctx, CANID_TX_HEARTBEAT, frame);
+}
+
+/*****************************
+ *      CONFIG
+ *****************************/
+
+int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
+{
+    // This is an inefficient frame format ):
+    uint8_t cfg_id = rx_data[0];
+    int32_t cfg_set = 0, cfg_get = 0;
+
+    cfg_set |= (rx_data[4] << 3 * 8);
+    cfg_set |= (rx_data[5] << 2 * 8);
+    cfg_set |= (rx_data[6] << 1 * 8);
+    cfg_set |= (rx_data[7] << 0 * 8);
+    // CanLog(ctx, "%d config_id\n", cfg_id);
+
+#ifdef ACK_CFG
+    uint8_t ack_frame[] = {action, cfg_id, 0, 0, 0, 0, 0, 0};
+    CanTransmit(ctx, CANID_TX_CFG_ACK, ack_frame);
+#endif
+
+    //    CanLog(ctx, "CFG %d\n", cfg_id);
+    if (!IsValidSettingIndex(ctx, cfg_id)) return ERR_CFGID_NOT_FOUND;
+
+    if (action == CFG_SET)
+    {
+        SetSetting(ctx, cfg_id, cfg_set);
+        ctx->need_to_sync_settings = true;
+    }
+    else
+    {
+        cfg_get = GetSetting(ctx, cfg_id);
+        uint8_t frame[] = {cfg_id, 0, 0, 0, 0, 0, 0, 0};
+        frame[4] = ((cfg_get >> 3 * 8) & 0xFF);
+        frame[5] = ((cfg_get >> 2 * 8) & 0xFF);
+        frame[6] = ((cfg_get >> 1 * 8) & 0xFF);
+        frame[7] = ((cfg_get >> 0 * 8) & 0xFF);
+        CanTransmit(ctx, CANID_TX_GET_CONFIG, frame);
+    }
+
+    return 0;
+}
+
+/*****************************
+ *      METRICS
+ *****************************/
+
+int SendMetric(DbmsCtx* ctx, uint8_t id, uint32_t value)
+{
+    static uint8_t data[8] = {0};
+    data[0] = id;
+    data[4] = ((value >> 3 * 8) & 0xFF);
+    data[5] = ((value >> 2 * 8) & 0xFF);
+    data[6] = ((value >> 1 * 8) & 0xFF);
+    data[7] = ((value >> 0 * 8) & 0xFF);
+    return CanTransmit(ctx, CANID_METRIC, data);
+}
+
+#define F2I_K(F, K) ((int)(F * K))
+#define F2I_RAW(F)  (*((int*)&F))
+
+int SendMetrics(DbmsCtx* ctx)
+{
+
+    SendMetric(ctx, 0, ctx->stats.iters);
+
+    SendMetric(ctx, 1, ctx->stats.n_tx_can_frames);
+    SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
+    SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
+
+    SendMetric(ctx, 4, ctx->isense.current_ma);
+    SendMetric(ctx, 5, ctx->isense.voltage1_mv);
+
+    // SendMetric(ctx, 6, 0);
+    // SendMetric(ctx, 7, 0);
+    SendMetric(ctx, 8, ctx->isense.power_w);
+    SendMetric(ctx, 9, ctx->isense.charge_as);
+    SendMetric(ctx, 10, ctx->isense.energy_wh);
+
+    SendMetric(ctx, 11, ctx->stats.n_tx_can_fail);
+    SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_timeout);
+
+    SendMetric(ctx, 13, ctx->stats.looptime);
+    SendMetric(ctx, 14, ctx->stats.end_delay);
+
+    SendMetric(ctx, 15, ctx->faults.controller_mask);
+
+    SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
+    SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
+
+    SendMetric(ctx, 18, ctx->stats.n_eeprom_writes);
+    SendMetric(ctx, 19, ctx->faults_crc);
+
+    SendMetric(ctx, 20, F2I_K(ctx->qstats.initial, 1e6));
+    SendMetric(ctx, 21, F2I_K(ctx->qstats.accumulated_loss, 1e6));
+    SendMetric(ctx, 22, F2I_K(ctx->model.Q, 1e6));
+    SendMetric(ctx, 23, F2I_K(ctx->model.z_oc, 1e6));
+    SendMetric(ctx, 24, F2I_K(ctx->model.V_oc, 1e6));
+    SendMetric(ctx, 25, F2I_K(ctx->model.R_oc, 1e6));
+    SendMetric(ctx, 26, F2I_K(ctx->model.z_rc, 1e6));
+    SendMetric(ctx, 27, F2I_K(ctx->model.R0, 1e6));
+    SendMetric(ctx, 28, F2I_K(ctx->model.R1, 1e6));
+    SendMetric(ctx, 29, F2I_K(ctx->model.R2, 1e6));
+    SendMetric(ctx, 30, F2I_K(ctx->model.R_rc, 1e6));
+    SendMetric(ctx, 31, F2I_K(ctx->model.R_cell, 1e6));
+    SendMetric(ctx, 32, F2I_K(ctx->model.I_lim, 1e6));
+
+    SendMetric(ctx, 33, ctx->qstats.initial_set_ts);
+    SendMetric(ctx, 34, (uint32_t)(GetRealTime(ctx) / 1000));   // conv to S
+
+    SendMetric(ctx, 35, F2I_K(ctx->stats.max_t, 1e3));
+    SendMetric(ctx, 36, F2I_K(ctx->stats.min_t, 1e3));
+    SendMetric(ctx, 37, F2I_K(ctx->stats.avg_t, 1e3));
+    SendMetric(ctx, 38, F2I_K(ctx->stats.max_v, 1e4));
+    SendMetric(ctx, 39, F2I_K(ctx->stats.min_v, 1e4));
+    SendMetric(ctx, 40, F2I_K(ctx->stats.avg_v, 1e4));
+
+    SendMetric(ctx, 41, F2I_K(ctx->qstats.historic_accumulated_loss, 1e6));
+    // TODO: perm sol.
+    // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
+
+    SendMetric(ctx, 42, ctx->pl_pulse_t);
+    SendMetric(ctx, 43, ctx->pl_last_ok_ts);
+    SendMetric(ctx, 44, ctx->max_current_ma);
+
+
+    return 0;
+}
+
+
+/*****************************
+ *      LOGGING
+ *****************************/
+
+
+void CanLog(DbmsCtx* ctx, const char* fmt, ...)
+{
+    char buffer[CAN_LOG_BUFFER_SIZE];
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
+    if (len < 0) return;
+
+    for (int i = 0; i < len; i += 8)
+    {
+        uint8_t chunk[8] = {0}; // zero out to pad shorter chunks
+        int chunk_size = (len - i >= 8) ? 8 : (len - i);
+        memcpy(chunk, &buffer[i], chunk_size);
+        CanTransmit(ctx, CANID_CONSOLE_C0, chunk);
+        DelayUs(ctx, 10);
+    }
+}
+
+
+/*****************************
+ *      CELL DATA 
+ *****************************/
+
+#define PAD_BUFFER(SZ, K) (((SZ / K) + 1) * K)
+#define PAD_BUFFER_3(SZ) (PAD_BUFFER(SZ, 3))
+#define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
+
+/**
+ * Send cell voltage data (version 1)
+ */
+int SendCellVoltages(DbmsCtx* ctx)
+{
+    int status = 0;
+    uint8_t frame[8];
+    uint16_t buffer[PAD_BUFFER_3(N_GROUPS_PER_SIDE)] = {0};
+
+    for (size_t i = 0; i < N_SIDES; i++)
+    {
+        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+        {
+            buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
+            // CanLog(ctx, "v=%d mV -> s=%ld\n", (uint16_t)ctx->cell_states[i].voltages[j], s);
+        }
+
+        for (size_t j = 0; j < PAD_BUFFER_3(N_GROUPS_PER_SIDE); j += 3)
+        {
+            frame[0] = (uint8_t)i; // monitor id
+            frame[1] = (uint8_t)j; // group index (in uint16_t units)
+
+            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t));
+
+            status = CanTransmit(ctx, CANID_CELLSTATE_VOLTS, frame);
+            if (status != 0) return status;
+        }
+    }
+    return 0; // todo: make a real return value
+}
+
+/**
+ * Send cell temperature data (version 1)
+ */
+int SendCellTemps(DbmsCtx* ctx)
+{
+    int status = 0;
+    uint8_t frame[8];
+    uint16_t buffer[PAD_BUFFER_3(N_TEMPS_PER_SIDE)] = {0};
+
+    for (size_t i = 0; i < N_SIDES; i++)
+    {
+        for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++)
+        {
+            buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].temps[j] * 1000.0f));
+        }
+
+        for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS_PER_SIDE); j += 3)
+        {
+            frame[0] = (uint8_t)i; // monitor id
+            frame[1] = (uint8_t)j; // group index (in uint16_t units)
+
+            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t)); // <-- fixed
+
+            status = CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame);
+            if (status != 0) return status;
+        }
+    }
+    return 0;
+}
+

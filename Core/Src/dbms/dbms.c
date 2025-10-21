@@ -5,7 +5,7 @@
 #include "context.h"
 #include "fault_handler.h"
 #include "ledctl.h"
-#include "vehicle_interface.h"
+#include "can/can.h"
 #include "blackbox.h"
 #include <math.h>
 
@@ -104,7 +104,8 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     StackSetNumActiveCells(ctx, 0x0A);
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx); // todo: rn start
-    StackBalancingConfig(ctx);
+
+    // StackBalancingConfig(ctx);
 
     if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
     {
@@ -234,6 +235,7 @@ void DbmsIter(DbmsCtx* ctx)
         if (ctx->last_rx_heartbeat > 5000)
             ctx->req_state = DBMS_ACTIVE;
     }
+    // TODO: fix this @ab this is retarded
 
     //
     //  Gracefully handle state transition

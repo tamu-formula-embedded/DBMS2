@@ -12,18 +12,15 @@
 
 #include "utils/common.h"
 #include "context.h"
-
-#include "data.h"
-#include "lut.h"
-#include "charging.h"
-#include "current_meter.h"
+#include "stack/stack.h"
+#include "model/data.h"
+#include "model/model.h"
 #include "fault_handler.h"
 #include "ledctl.h"
 #include "sched.h"
 #include "settings.h"
-#include "stack_controller.h"
 #include "storage.h"
-#include "vehicle_interface.h" // should go first?
+#include "can/can.h" // should go first?
 
 void SendPlexMetrics(DbmsCtx* ctx);
 
