@@ -15,6 +15,9 @@
 
 #include "../fault_handler.h"
 #include "../context.h"
+#include "../model/data.h"
+
+#include "../can/can.h"
 
 #define STACK_V_UV_PER_BIT 190.73
 #define STACK_T_UV_PER_BIT 152.59
@@ -92,7 +95,7 @@ int StackShutdown(DbmsCtx* ctx);
 /**
  * Enable the voltage tap ADCs
  */
-int StackSetupVoltReadings(DbmsCtx* ctx); 
+void StackSetupVoltReadings(DbmsCtx* ctx); 
 
 
 /**

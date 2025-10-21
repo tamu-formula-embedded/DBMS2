@@ -1,7 +1,5 @@
 #include "model.h"
 
-
-
 float Temp_C_to_K(float T_C)
 {
     return T_C + 273.15;

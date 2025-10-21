@@ -1,10 +1,10 @@
 #ifndef _MODEL_H_
 #define _MODEL_H_
 
-#include "context.h"
+#include "../context.h"
 #include "data.h"
-#include "lut.h"
-#include "storage.h"
+#include "../utils/lut.h"
+#include "../storage.h"
 
 #define Q_BOUND_L_OC    4.3696    
 #define Q_BOUND_H_OC    4.3967
