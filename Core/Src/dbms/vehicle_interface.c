@@ -3,80 +3,84 @@
 //
 #include "vehicle_interface.h"
 
-
-#include "main.h"
-#include <string.h>
-#include <stdbool.h>
-
-typedef struct {
-    uint16_t id;    // standard 11-bit CAN ID
-    uint16_t mask;  // standard 11-bit mask
+typedef struct 
+{
+    uint32_t id;        // up to 29-bit CAN ID
+    uint32_t mask;      // 29-bit or 11-bit mask
+    bool extended;      // true = extended (29-bit)
 } CanFilterMask;
 
+/**
+ * 
+ */
 int ConfigCanFilters(CAN_HandleTypeDef *hcan, const CanFilterMask *filters, size_t count)
 {
-    const int base_bank = 14, ids_per_bank = 2;     
-    HAL_StatusTypeDef status = HAL_OK;
-    int banks_needed = (count + ids_per_bank - 1) / ids_per_bank;
-    bool has_extra = (count % ids_per_bank) != 0;
-    size_t idx = 0;
+    const int base_bank = 14;
+    int status = HAL_OK, bank = 0;
+    size_t i = 0;
 
-    // Configure all full banks (2 filters per bank)
-    for (int bank = 0; bank < banks_needed - has_extra; bank++)
+    while (i < count)
     {
         CAN_FilterTypeDef f = {0};
         f.FilterBank = base_bank + bank;
-        f.FilterMode = CAN_FILTERMODE_IDMASK;     // use IDMASK for (id, mask)
-        f.FilterScale = CAN_FILTERSCALE_16BIT;    // 16-bit allows 2 filters per bank
         f.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-        f.FilterActivation = ENABLE;
-        f.SlaveStartFilterBank = base_bank;       // for dual-CAN setups
-
-        // First pair
-        f.FilterIdHigh     = filters[idx].id   << 5;
-        f.FilterMaskIdHigh = filters[idx].mask << 5;
-        idx++;
-        // Second pair
-        f.FilterIdLow      = filters[idx].id   << 5;
-        f.FilterMaskIdLow  = filters[idx].mask << 5;
-        idx++;
-
-        status = HAL_CAN_ConfigFilter(hcan, &f);
-        if (status != HAL_OK)
-            return status;
-    }
-    // Handle leftover filter if odd count
-    if (has_extra)
-    {
-        CAN_FilterTypeDef f = {0};
-        f.FilterBank = base_bank + banks_needed - 1;
         f.FilterMode = CAN_FILTERMODE_IDMASK;
-        f.FilterScale = CAN_FILTERSCALE_16BIT;
-        f.FilterFIFOAssignment = CAN_FILTER_FIFO0;
         f.FilterActivation = ENABLE;
         f.SlaveStartFilterBank = base_bank;
 
-        // Fill the one remaining slot
-        f.FilterIdHigh     = filters[idx].id   << 5;
-        f.FilterMaskIdHigh = filters[idx].mask << 5;
-        f.FilterIdLow      = 0x0000;  // unused
-        f.FilterMaskIdLow  = 0x0000;  // unused
+        // Check if this entry (or next) is extended -> use 32-bit mode
+        if (filters[i].extended)
+        {
+            f.FilterScale = CAN_FILTERSCALE_32BIT;
+            f.FilterIdHigh     = (filters[i].id   << 3) >> 16;
+            f.FilterIdLow      = ((filters[i].id  << 3) & 0xFFFF) | (1 << 2); 
+            f.FilterMaskIdHigh = (filters[i].mask << 3) >> 16;
+            f.FilterMaskIdLow  = ((filters[i].mask << 3) & 0xFFFF) | (1 << 2);
 
-        status = HAL_CAN_ConfigFilter(hcan, &f);
-        if (status != HAL_OK)
-            return status;
+            status = HAL_CAN_ConfigFilter(hcan, &f);
+            if (status != HAL_OK) 
+                return status;
+            bank++;
+            i++;
+        }
+        else
+        {
+            f.FilterScale = CAN_FILTERSCALE_16BIT;
+            // First standard ID
+            f.FilterIdHigh     = filters[i].id   << 5;
+            f.FilterMaskIdHigh = filters[i].mask << 5;
+            i++;
+
+            // Second standard ID (if available and not extended)
+            if (i < count && !filters[i].extended) {
+                f.FilterIdLow      = filters[i].id   << 5;
+                f.FilterMaskIdLow  = filters[i].mask << 5;
+                i++;
+            } else {
+                f.FilterIdLow = 0;
+                f.FilterMaskIdLow = 0;
+            }
+
+            status = HAL_CAN_ConfigFilter(hcan, &f);
+            if (status != HAL_OK) 
+                return status;
+            bank++;
+        }
     }
 
     return HAL_OK;
 }
 
+
+
 int ConfigCan(DbmsCtx* ctx)
 {
     int status = 0;
-    CanFilterMask masks[] = {
-        { 0x500, 0x700 } // exact 0x321
-        // { 0x540, 0x7FF }, // exact 0x540
-        // { 0x550, 0x7F0 }, // range 0x550–0x55F
+    CanFilterMask masks[] = 
+    {
+        { 0x500, 0x700, false },
+        { CANID_ELCON_A, 0, true },
+        { CANID_ELCON_B, 0, true }
     };
 
     if ((status = ConfigCanFilters(ctx->hw.can, masks, sizeof(masks)/sizeof(masks[0]))) != 0)
@@ -134,17 +138,29 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
     CAN_TxHeaderTypeDef* hdr = &ctx->hw.can_tx_header;
 
-    hdr->StdId = id; // ensure IDE=CAN_ID_STD elsewhere
-    // hdr->IDE = CAN_ID_STD; hdr->RTR = CAN_RTR_DATA; hdr->DLC = 8; // set once at init if fixed
+    // Determine if extended or standard ID
+    if (id > CAN_STD_ID_MASK)
+    {
+        hdr->IDE = CAN_ID_EXT;
+        hdr->ExtId = id & CAN_EXT_ID_MASK;
+    }
+    else
+    {
+        hdr->IDE = CAN_ID_STD;
+        hdr->StdId = id & CAN_STD_ID_MASK;      
+    }
 
-    // Wait (briefly) for a free mailbox instead of calling blindly.
+    hdr->RTR = CAN_RTR_DATA;
+    hdr->DLC = 8; // or customize if you have variable payloads
+    hdr->TransmitGlobalTime = DISABLE;
+
+    // Wait for a free mailbox
     uint32_t waited = 0;
     while (HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) == 0U)
     {
         if (waited >= CAN_TX_TIMEOUT_US)
         {
             ctx->stats.n_tx_can_drop_timeout++;
-            // ctx->led_state = LED_COMM_ERROR; // not worth a locking error
             return HAL_TIMEOUT;
         }
         DelayUs(ctx, CAN_TX_WAIT_US);
@@ -157,14 +173,16 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     {
         ctx->stats.n_tx_can_fail++;
         ctx->led_state = LED_COMM_ERROR;
-        ctx->last_can_err = HAL_CAN_GetError(ctx->hw.can); // capture why
+        ctx->last_can_err = HAL_CAN_GetError(ctx->hw.can);
     }
     else
     {
         ctx->stats.n_tx_can_frames++;
     }
+
     return result;
 }
+
 
 void CanLog(DbmsCtx* ctx, const char* fmt, ...)
 {
@@ -478,4 +496,15 @@ int64_t UnpackCurrentSensorData(uint8_t* data) // expects >= 6 bytes, big-endian
         v |= ~((1ULL << 48) - 1); // set all upper bits to 1
     }
     return (int64_t)v;
+}
+
+int32_t UnpackElconDataVoltage(uint8_t* data)
+{
+    return ((uint16_t) (*data) << 8) + *(data + 1);
+}
+
+int32_t UnpackElconDataCurrent(uint8_t* data)
+{
+    return ((uint16_t) *(data + 2) << 8) + *(data + 3);
+
 }

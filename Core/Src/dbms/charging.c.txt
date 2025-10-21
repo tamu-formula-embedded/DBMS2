@@ -251,6 +251,5 @@ void StackStartCharging(DbmsCtx* ctx)
     // heartbeat from charger detected
     // shutdown circuit active
 
-    ctx->charging.state = CHARGING_ACTIVE;
-    ctx->led_state = LED_CHARGING;
+    
 }
