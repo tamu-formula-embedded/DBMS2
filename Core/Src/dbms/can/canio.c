@@ -17,7 +17,6 @@ typedef struct
     bool extended;      // true = extended (29-bit)
 } CanFilterMask;
 
-0xB1775
 
 /**
  * 
@@ -86,9 +85,10 @@ int ConfigCan(DbmsCtx* ctx)
     int status = 0;
     CanFilterMask masks[] = 
     {
+        { 0x0B0, 0x7F0, false },
         { 0x500, 0x700, false },
-        { CANID_ELCON_A, 0, true },
-        { CANID_ELCON_B, 0, true }
+        { CANID_ELCON_TX, 0, true },
+        { CANID_ELCON_RX, 0, true }
     };
 
     if ((status = ConfigCanFilters(ctx->hw.can, masks, sizeof(masks)/sizeof(masks[0]))) != 0)
@@ -173,16 +173,3 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     return result;
 }
 
-
-/**
- * TODO: move these functions out of here
- * TODO: fix the impl to use [ ]
- */
-int32_t UnpackElconDataVoltage(uint8_t* data)
-{
-    return ((uint16_t) (*data) << 8) + *(data + 1);
-}
-int32_t UnpackElconDataCurrent(uint8_t* data)
-{
-    return ((uint16_t) *(data + 2) << 8) + *(data + 3);
-}

@@ -215,38 +215,40 @@ void DbmsIter(DbmsCtx* ctx)
     //
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
 
+    uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+
     //
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //
     uint64_t cur_time = HAL_GetTick();
-    if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN) && cur_time - ctx->elcon_beat < 5000)
+    if (cur_time - ctx->last_rx_heartbeat < quiet_ms && cur_time - ctx->elcon.heartbeat < quiet_ms)
     {
         ThrowHardFault(ctx);
     }
-    else if (cur_time - ctx->elcon_beat < 5000)
+    else if (cur_time - ctx->elcon.heartbeat < quiet_ms)
     {
-        ctx->req_state = CHARGING;
+        ctx->req_state = DBMS_CHARGING;
     }
-    else if (cur_time - ctx->last_rx_heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    else if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
     {
         ctx->req_state = DBMS_ACTIVE;
     }
-    else if (cur_time - ctx->last_rx_heartbeat > GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    else if (cur_time - ctx->last_rx_heartbeat > quiet_ms)
     {
         ctx->req_state = DBMS_SHUTDOWN;
     }
     else
     {
-        if (ctx->last_rx_heartbeat > 5000)
-            ctx->req_state = DBMS_ACTIVE;
+        // if (ctx->last_rx_heartbeat > 5000)
+            // ctx->req_state = DBMS_ACTIVE;
     }
     // TODO: fix this @ab this is retarded
 
     //
     //  Gracefully handle state transition
     //
-    if ((ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == CHARGING) && ctx->req_state == DBMS_SHUTDOWN)
+    if ((ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == DBMS_CHARGING) && ctx->req_state == DBMS_SHUTDOWN)
     {
         // on these states -- probably need to write to disk too
         DbmsPerformShutdown(ctx);
@@ -259,10 +261,10 @@ void DbmsIter(DbmsCtx* ctx)
         DbmsPerformWakeup(ctx);
         // MonitorResetFaults(ctx);
     }
-    else if (ctx->req_state == CHARGING)
+    else if (ctx->req_state == DBMS_CHARGING)
     {
         ctx->led_state = LED_CHARGING;
-        ctx->cur_state = CHARGING;
+        ctx->cur_state = DBMS_CHARGING;
     }
     //
     //   Main State Dispatch
@@ -272,7 +274,7 @@ void DbmsIter(DbmsCtx* ctx)
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
         ctx->need_to_save_faults = false;
     }
-    else if (ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == CHARGING)
+    else if (ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == DBMS_CHARGING)
     {
         for (int i = 0; i < N_SIDES; i++)
         {
@@ -354,9 +356,9 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Transmit important telemetry
     //
-    SendMetrics(ctx);
-    if (HAL_GetTick() - ctx->last_rx_telembeat < 4000) //GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN)
+    if (HAL_GetTick() - ctx->last_rx_telembeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
+        SendMetrics(ctx);
         SendCellVoltages(ctx);
         SendCellTemps(ctx);
     }
@@ -375,7 +377,6 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     
-
     //CanLog(ctx, "%d\niters: ", info->iter);
 
     HAL_Delay(ctx->stats.end_delay / 1000);
@@ -439,6 +440,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_CLEAR_FAULTS:
         CtrlClearAllFaults(ctx);
         break;
+
     case CANID_RX_SET_INITIAL_CHARGE:
         ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;
         CanLog(ctx, "Q0: %d", be32_to_u32(rx_data));
@@ -448,6 +450,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->qstats.initial_set_ts = 0;
         ctx->need_to_reset_qstats = true;
         break;
+
     case CANID_RX_BLACKBOX_REQUEST:
         ctx->blackbox.requested = true;
         break;
@@ -455,6 +458,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->need_to_save_faults = true;
         break;
 
+// TODO: remove this
 #ifdef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
     case CANID_DEBUG_OVERWRITE_TEMPS:
         uint32_t temp_milli_deg_C = be32_to_u32(rx_data);
@@ -466,13 +470,10 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         }
         break;
 #endif
-    case CANID_ELCON_B:
-        ctx->elcon_beat = HAL_GetTick();
-        CanLog(ctx, "t %d\n", ctx->elcon_beat);
-        ctx->elcon_output.elcon_current_out = UnpackElconDataVoltage(rx_data);
-        ctx->elcon_output.elcon_current_out = UnpackElconDataCurrent(rx_data);
-        CanLog(ctx, "%d\n", (int) ctx->elcon_output.elcon_voltage_out);
-        CanLog(ctx, "%d\n", (int) ctx->elcon_output.elcon_current_out);
+
+    case CANID_ELCON_RX:
+        HandleElconHeartbeat(ctx, rx_data);
+      
         break;
     default:
         ctx->stats.n_unmatched_can_frames++;

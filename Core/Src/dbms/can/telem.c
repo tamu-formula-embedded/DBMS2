@@ -70,19 +70,30 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
  *      METRICS
  *****************************/
 
-int SendMetric(DbmsCtx* ctx, uint8_t id, uint32_t value)
+int SendMetric(DbmsCtx* ctx, uint16_t id, uint64_t value)
 {
     static uint8_t data[8] = {0};
-    data[0] = id;
+#ifdef CAN_VERSION_2
+    data[0] = (value >> 56) & 0xFF;
+    data[1] = (value >> 48) & 0xFF;
+    data[2] = (value >> 40) & 0xFF;
+    data[3] = (value >> 32) & 0xFF;
+    data[4] = (value >> 24) & 0xFF;
+    data[5] = (value >> 16) & 0xFF;
+    data[6] = (value >> 8)  & 0xFF;
+    data[7] = (value >> 0)  & 0xFF;
+    return CanTransmit(ctx, (CANID_METRIC & 0xFFFFF000) | (id & 0xFFF), data);
+#else
+    data[0] = id & 0xFF;
     data[4] = ((value >> 3 * 8) & 0xFF);
     data[5] = ((value >> 2 * 8) & 0xFF);
     data[6] = ((value >> 1 * 8) & 0xFF);
     data[7] = ((value >> 0 * 8) & 0xFF);
     return CanTransmit(ctx, CANID_METRIC, data);
+#endif
 }
 
 #define F2I_K(F, K) ((int)(F * K))
-#define F2I_RAW(F)  (*((int*)&F))
 
 int SendMetrics(DbmsCtx* ctx)
 {
@@ -141,12 +152,15 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 40, F2I_K(ctx->stats.avg_v, 1e4));
 
     SendMetric(ctx, 41, F2I_K(ctx->qstats.historic_accumulated_loss, 1e6));
-    // TODO: perm sol.
-    // SendMetric(ctx, 18, ctx->faults.monitor_masks[0]);
 
     SendMetric(ctx, 42, ctx->pl_pulse_t);
     SendMetric(ctx, 43, ctx->pl_last_ok_ts);
     SendMetric(ctx, 44, ctx->max_current_ma);
+
+    SendMetric(ctx, 45, ctx->elcon.heartbeat);
+    SendMetric(ctx, 46, ctx->elcon.voltage_out);
+    SendMetric(ctx, 47, ctx->elcon.current_out);
+    SendMetric(ctx, 48, ctx->elcon.status_flags);
 
 
     return 0;
@@ -169,7 +183,6 @@ void SendPlexMetrics(DbmsCtx* ctx)
     data[0] = soc;
     CanTransmit(ctx, 0x16, data);
 
-
     SendPlex32(ctx, 0x17, ctx->faults.controller_mask);
     SendPlex32(ctx, 0x18, ctx->isense.current_ma / 1000);
     SendPlex32(ctx, 0x19, ctx->isense.ima.current_mavg_ma / 1000);
@@ -178,8 +191,6 @@ void SendPlexMetrics(DbmsCtx* ctx)
     SendPlex32(ctx, 0x1c, ctx->stats.iters);
 
 }
-
-
 
 
 /*****************************
@@ -213,9 +224,57 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...)
  *****************************/
 
 #define PAD_BUFFER(SZ, K) (((SZ / K) + 1) * K)
-#define PAD_BUFFER_3(SZ) (PAD_BUFFER(SZ, 3))
 #define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
 
+#ifdef CAN_VERSION_2
+
+int SendCellDataBuffer(DbmsCtx* ctx, uint32_t id_base, uint16_t side_n, uint16_t* buffer, size_t len)
+{
+    int status = 0;
+    uint8_t frame[8];
+    for (size_t j = 0; j < len; j += 4)
+    {
+        uint32_t id = id_base | (side_n << 4) | (j / 4);
+        memcpy_eswap2(frame, buffer + j, 4 * sizeof(uint16_t));
+        if ((status = CanTransmit(ctx, id, frame)) != 0) return status;
+    }
+    return status;
+}
+
+int SendCellVoltages(DbmsCtx* ctx)
+{
+    uint16_t buffer[PAD_BUFFER(N_GROUPS_PER_SIDE, 3)] = {0};
+
+    for (size_t i = 0; i < N_SIDES; i++)
+    {
+        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+        {
+            buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
+        }
+
+        SendCellDataBuffer(ctx, CANID_CELLSTATE_VOLTS, i, buffer, ARRAY_LEN(buffer));
+    }
+    return 0;   // dont really care if it fails or not
+}
+
+int SendCellTemps(DbmsCtx* ctx)
+{
+    uint16_t buffer[PAD_BUFFER(N_GROUPS_PER_SIDE, 3)] = {0};
+
+    for (size_t i = 0; i < N_SIDES; i++)
+    {
+        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+        {
+            buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].temps[j] * 1000.0f));
+        }
+        SendCellDataBuffer(ctx, CANID_CELLSTATE_TEMPS, i, buffer, ARRAY_LEN(buffer));
+    }
+    return 0;   
+}
+
+#else
+
+#define PAD_BUFFER_3(SZ) (PAD_BUFFER(SZ, 3))
 /**
  * Send cell voltage data (version 1)
  */
@@ -277,3 +336,4 @@ int SendCellTemps(DbmsCtx* ctx)
     return 0;
 }
 
+#endif
