@@ -4,8 +4,10 @@
     - stackvolt         voltage reading related 
     - stacktemp         temp reading related
     - stackfault        fault reading related
-    - stackbal          balancing related
+    - stackbal          balancing related (charging directory)
     - stackled          stack led related
+
+    todo: rework a lot of components (balancing, all readings, etc.)
 
 2.  group utility modules into util directory
     - common
@@ -18,15 +20,15 @@
 
 4.  remove sim
 
-5.  rename led_controller to led, fix some of the bugs
+5.  rename led_controller to ledctl
+    todo: fix some of the bugs
 
 6.  create model folder for model related (model and data modules, etc.)
 
 7.  figure out a solution kinda breaking up monolithic context
 
 8.  break vehicle interface up into more modules
-    - can
-    - pwm
-    - etc
+    - can directory (contains canio, isense, telem)
+    - pwm file (what are we using this for again?)
 
 
