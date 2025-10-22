@@ -1,7 +1,22 @@
-#include "charging.h"
-#include "context.h"
-#include "ledctl.h"
-#include "stack/stack.h"
+/** 
+ * 
+ * Distributed BMS      Stack Module -> Stack Balancing
+ *
+ * Copyright (C) 2025   Texas A&M University
+ * 
+ *                      Cam Stone <cameron28202@tamu.edu>
+ */
+#include "stack.h"
+
+// TODO: rework all this
+
+// to determine if we need balancing
+#define BALANCE_LIMIT 1000.0f
+
+// so that we aren't just doing v > min(v) to filter groups - small margin
+#define BALANCE_MARGIN 5.0f
+
+#if 0
 
 /*
 static const uint16_t CB_CELL_CTRL_REGS[14] = {
@@ -253,3 +268,5 @@ void StackStartCharging(DbmsCtx* ctx)
 
     
 }
+
+#endif

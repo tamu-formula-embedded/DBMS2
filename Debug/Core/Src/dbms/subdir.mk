@@ -7,7 +7,6 @@
 C_SRCS += \
 ../Core/Src/dbms/blackbox.c \
 ../Core/Src/dbms/dbms.c \
-../Core/Src/dbms/fault_handler.c \
 ../Core/Src/dbms/ledctl.c \
 ../Core/Src/dbms/pwm.c \
 ../Core/Src/dbms/sched.c \
@@ -17,7 +16,6 @@ C_SRCS += \
 OBJS += \
 ./Core/Src/dbms/blackbox.o \
 ./Core/Src/dbms/dbms.o \
-./Core/Src/dbms/fault_handler.o \
 ./Core/Src/dbms/ledctl.o \
 ./Core/Src/dbms/pwm.o \
 ./Core/Src/dbms/sched.o \
@@ -27,7 +25,6 @@ OBJS += \
 C_DEPS += \
 ./Core/Src/dbms/blackbox.d \
 ./Core/Src/dbms/dbms.d \
-./Core/Src/dbms/fault_handler.d \
 ./Core/Src/dbms/ledctl.d \
 ./Core/Src/dbms/pwm.d \
 ./Core/Src/dbms/sched.d \
@@ -42,7 +39,7 @@ Core/Src/dbms/%.o Core/Src/dbms/%.su Core/Src/dbms/%.cyclo: ../Core/Src/dbms/%.c
 clean: clean-Core-2f-Src-2f-dbms
 
 clean-Core-2f-Src-2f-dbms:
-	-$(RM) ./Core/Src/dbms/blackbox.cyclo ./Core/Src/dbms/blackbox.d ./Core/Src/dbms/blackbox.o ./Core/Src/dbms/blackbox.su ./Core/Src/dbms/dbms.cyclo ./Core/Src/dbms/dbms.d ./Core/Src/dbms/dbms.o ./Core/Src/dbms/dbms.su ./Core/Src/dbms/fault_handler.cyclo ./Core/Src/dbms/fault_handler.d ./Core/Src/dbms/fault_handler.o ./Core/Src/dbms/fault_handler.su ./Core/Src/dbms/ledctl.cyclo ./Core/Src/dbms/ledctl.d ./Core/Src/dbms/ledctl.o ./Core/Src/dbms/ledctl.su ./Core/Src/dbms/pwm.cyclo ./Core/Src/dbms/pwm.d ./Core/Src/dbms/pwm.o ./Core/Src/dbms/pwm.su ./Core/Src/dbms/sched.cyclo ./Core/Src/dbms/sched.d ./Core/Src/dbms/sched.o ./Core/Src/dbms/sched.su ./Core/Src/dbms/settings.cyclo ./Core/Src/dbms/settings.d ./Core/Src/dbms/settings.o ./Core/Src/dbms/settings.su ./Core/Src/dbms/storage.cyclo ./Core/Src/dbms/storage.d ./Core/Src/dbms/storage.o ./Core/Src/dbms/storage.su
+	-$(RM) ./Core/Src/dbms/blackbox.cyclo ./Core/Src/dbms/blackbox.d ./Core/Src/dbms/blackbox.o ./Core/Src/dbms/blackbox.su ./Core/Src/dbms/dbms.cyclo ./Core/Src/dbms/dbms.d ./Core/Src/dbms/dbms.o ./Core/Src/dbms/dbms.su ./Core/Src/dbms/ledctl.cyclo ./Core/Src/dbms/ledctl.d ./Core/Src/dbms/ledctl.o ./Core/Src/dbms/ledctl.su ./Core/Src/dbms/pwm.cyclo ./Core/Src/dbms/pwm.d ./Core/Src/dbms/pwm.o ./Core/Src/dbms/pwm.su ./Core/Src/dbms/sched.cyclo ./Core/Src/dbms/sched.d ./Core/Src/dbms/sched.o ./Core/Src/dbms/sched.su ./Core/Src/dbms/settings.cyclo ./Core/Src/dbms/settings.d ./Core/Src/dbms/settings.o ./Core/Src/dbms/settings.su ./Core/Src/dbms/storage.cyclo ./Core/Src/dbms/storage.d ./Core/Src/dbms/storage.o ./Core/Src/dbms/storage.su
 
 .PHONY: clean-Core-2f-Src-2f-dbms
 

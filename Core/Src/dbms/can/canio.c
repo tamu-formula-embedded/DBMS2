@@ -1,3 +1,13 @@
+/** 
+ * 
+ * Distributed BMS      CAN I/O Interface
+ *
+ * Copyright (C) 2025   Texas A&M University
+ * 
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ */
 #include "can.h"
 
 typedef struct 
@@ -6,6 +16,8 @@ typedef struct
     uint32_t mask;      // 29-bit or 11-bit mask
     bool extended;      // true = extended (29-bit)
 } CanFilterMask;
+
+0xB1775
 
 /**
  * 

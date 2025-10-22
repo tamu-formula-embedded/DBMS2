@@ -24,6 +24,7 @@ C_DEPS :=
 SUBDIRS := \
 Core/Src/dbms \
 Core/Src/dbms/can \
+Core/Src/dbms/faults \
 Core/Src/dbms/model \
 Core/Src/dbms/stack \
 Core/Src/dbms/utils \

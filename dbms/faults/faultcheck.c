@@ -1,36 +1,4 @@
-#include "fault_handler.h"
-#include "blackbox.h"
-#include "settings.h"
-
-void ControllerSetFault(DbmsCtx* ctx, ControllerFaultType fault)
-{
-    if (fault >= CTRL_FAULT_TYPE_COUNT) return;
-    ctx->faults.controller_mask |= (1U << fault);
-}
-
-void ControllerClearFault(DbmsCtx* ctx, ControllerFaultType fault)
-{
-    if (fault >= CTRL_FAULT_TYPE_COUNT) return;
-    ctx->faults.controller_mask &= ~(1U << fault);
-}
-
-bool ControllerHasFault(DbmsCtx* ctx, ControllerFaultType fault)
-{
-    if (fault >= CTRL_FAULT_TYPE_COUNT) return false;
-    return (ctx->faults.controller_mask & (1U << fault)) != 0;
-}
-
-bool HasAnyFaults(DbmsCtx* ctx)
-{
-    if (ctx->faults.controller_mask != 0) return true;
-    return false;
-}
-
-void ClearAllFaults(DbmsCtx* ctx)
-{
-    ctx->faults.controller_mask = 0;
-    ctx->need_to_save_faults = true;
-}
+#include "faults.h"
 
 void CheckVoltageFaults(DbmsCtx* ctx)
 {
@@ -53,13 +21,13 @@ void CheckVoltageFaults(DbmsCtx* ctx)
         }
 
         if (highest_v > max_group_v) {
-            ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
+            CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
         }
         if (lowest_v < min_group_v) {
-            ControllerSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
+            CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
         }
         if (highest_v - lowest_v > max_v_delta) {
-            ControllerSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
+            CtrlSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
         }
     }
 }
@@ -83,7 +51,7 @@ void CheckTemperatureFaults(DbmsCtx* ctx)
     }
     else {
         if (HAL_GetTick() - ctx->overtemp_last_ok_ts > GetSetting(ctx, OVERTEMP_MS))
-            ControllerSetFault(ctx, CTRL_FAULT_TEMP_OVER);
+            CtrlSetFault(ctx, CTRL_FAULT_TEMP_OVER);
     }
 }
 
@@ -105,14 +73,14 @@ void CheckCurrentFaults(DbmsCtx* ctx)
     // Do the comparison in ma
     if (current_ma > ctx->max_current_ma)
     {
-        ControllerSetFault(ctx, CTRL_FAULT_CURRENT_OVER);
+        CtrlSetFault(ctx, CTRL_FAULT_CURRENT_OVER);
     }   
 
     if (current_ma > GetSetting(ctx, PULSE_LIMIT_CURRENT) * 1000)
     {
         ctx->pl_pulse_t = HAL_GetTick() - ctx->pl_last_ok_ts;
         if (ctx->pl_pulse_t > GetSetting(ctx, PULSE_LIMIT_TIME_MS))
-            ControllerSetFault(ctx, CTRL_FAULT_CURRENT_PULSE);
+            CtrlSetFault(ctx, CTRL_FAULT_CURRENT_PULSE);
     }
     else 
     {
@@ -122,48 +90,4 @@ void CheckCurrentFaults(DbmsCtx* ctx)
 
     // TODO: need to make ma constructor
     // ctx->isense.ima.current_mavg_ma = ma_calc_i32(ctx->isense.ima.ma, ctx->isense.current_ma);
-}
-
-void ThrowHardFault(DbmsCtx* ctx)
-{
-    if (HasAnyFaults(ctx)) 
-    {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
-    }
-    else 
-    {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
-    }
-    
-    if (!ctx->faults.had_fault && HasAnyFaults(ctx))
-    {
-        ctx->need_to_save_faults = true;
-    }
-    ctx->faults.had_fault = HasAnyFaults(ctx);
-}
-
-int SaveFaultState(DbmsCtx* ctx)
-{
-    uint16_t faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
-    if (ctx->faults_crc != faults_crc)
-    {
-        ctx->faults_crc = faults_crc;
-        SaveStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults));
-    }
-    return 0;
-}
-
-int LoadFaultState(DbmsCtx* ctx)
-{
-    int status;
-    // Right now this only references the controller mask. When "smart" / "verbose" faults 
-    // for other components on the bus are implemented, we will deal with this.
-    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, 
-            &(ctx->faults.controller_mask), sizeof(ctx->faults.controller_mask))))
-    {
-        // todo: check an error here
-    }
-    ctx->faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
-    ctx->faults.had_fault = HasAnyFaults(ctx);
-    return status;
 }
