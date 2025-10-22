@@ -50,7 +50,7 @@ typedef enum _DbmsState
 {
     DBMS_ACTIVE = 0,
     DBMS_SHUTDOWN,
-    CHARGING
+    DBMS_CHARGING
 } DbmsState;
 
 // fwd definition -- perf_counters.h
@@ -200,7 +200,6 @@ typedef struct _DbmsCtx
     uint64_t m_led_blink_ts;
     uint64_t batch_telem_ts;
     uint64_t wakeup_ts;
-    uint64_t elcon_beat;
 
     Stats stats;
 
@@ -263,9 +262,13 @@ typedef struct _DbmsCtx
     } blackbox;
 
     struct{
-        int32_t elcon_voltage_out;
-        int32_t elcon_current_out;
-    } elcon_output;
+        uint64_t heartbeat;
+        int32_t voltage_out;
+        int32_t current_out;
+        uint8_t status_flags;
+
+    } elcon;
+
 } DbmsCtx;
 
 #endif

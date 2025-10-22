@@ -35,6 +35,11 @@
 #define CLAMP(X, LOW, HIGH) X < LOW ? LOW : (X > HIGH ? HIGH : X);
 
 
+/**
+ * Length of a static array
+ */
+#define ARRAY_LEN(ARR) (sizeof(ARR) / sizeof(*ARR))
+
 
 #ifdef __vscode__
 
