@@ -215,7 +215,8 @@ void DbmsIter(DbmsCtx* ctx)
     //
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
 
-    uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+    // uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+    uint32_t quiet_ms = 5000;
 
     //
     //  Its been too long since we have recived a frame, we need to force a shutdown
@@ -356,7 +357,7 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Transmit important telemetry
     //
-    if (HAL_GetTick() - ctx->last_rx_telembeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    if (HAL_GetTick() - ctx->last_rx_telembeat < 5000)// < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         SendMetrics(ctx);
         SendCellVoltages(ctx);
@@ -392,13 +393,13 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     switch (can_id)
     {
     case CANID_RX_HEARTBEAT:
+
         ctx->last_rx_heartbeat = HAL_GetTick();
         
         if (ctx->led_state == LED_COMM_ERROR)
         {
             ctx->led_state = LED_ACTIVE;
         }
-
         uint64_t remote_ts = be64_to_u64(rx_data);
         SyncRealTime(ctx, remote_ts);
 
