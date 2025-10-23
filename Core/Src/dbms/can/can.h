@@ -18,7 +18,7 @@
 #include "../sched.h"
 #include "../settings.h"
 
-#define CAN_VERSION_2
+// #define CAN_VERSION_2
 
 #define CAN_STD_ID_MASK         0x7FF
 #define CAN_EXT_ID_MASK         0x1FFFFFFF

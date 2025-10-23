@@ -37,18 +37,17 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     cfg_set |= (rx_data[5] << 2 * 8);
     cfg_set |= (rx_data[6] << 1 * 8);
     cfg_set |= (rx_data[7] << 0 * 8);
-    // CanLog(ctx, "%d config_id\n", cfg_id);
 
 #ifdef ACK_CFG
-    uint8_t ack_frame[] = {action, cfg_id, 0, 0, 0, 0, 0, 0};
-    CanTransmit(ctx, CANID_TX_CFG_ACK, ack_frame);
+    if (action == CFG_SET)
+        CanTransmit(ctx, CANID_TX_CFG_ACK, rx_data);
 #endif
 
-    //    CanLog(ctx, "CFG %d\n", cfg_id);
     if (!IsValidSettingIndex(ctx, cfg_id)) return ERR_CFGID_NOT_FOUND;
 
     if (action == CFG_SET)
     {
+        CanLog(ctx, "CFG %d %d\n", cfg_id, cfg_set);
         SetSetting(ctx, cfg_id, cfg_set);
         ctx->need_to_sync_settings = true;
     }
@@ -210,11 +209,19 @@ void CanLog(DbmsCtx* ctx, const char* fmt, ...)
 
     for (int i = 0; i < len; i += 8)
     {
+        int32_t id = CANID_CONSOLE_C0;
         uint8_t chunk[8] = {0}; // zero out to pad shorter chunks
         int chunk_size = (len - i >= 8) ? 8 : (len - i);
         memcpy(chunk, &buffer[i], chunk_size);
-        CanTransmit(ctx, CANID_CONSOLE_C0, chunk);
+#ifdef CAN_VERSION_2
+        id |= (ctx->stats.n_logging_frames & 0xFFF);
+#endif
+        CanTransmit(ctx, id, chunk);
+#ifndef CAN_VERSION_2
         DelayUs(ctx, 10);
+#endif
+
+        ctx->stats.n_logging_frames++;
     }
 }
 
@@ -250,6 +257,7 @@ int SendCellVoltages(DbmsCtx* ctx)
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
             buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
+            CanLog(ctx, "V(%d %d) = %d\n",  i, j, buffer[j]);
         }
 
         SendCellDataBuffer(ctx, CANID_CELLSTATE_VOLTS, i, buffer, ARRAY_LEN(buffer));
