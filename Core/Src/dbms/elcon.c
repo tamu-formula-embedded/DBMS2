@@ -7,7 +7,8 @@
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
  *                      Justus Languell  <justus@tamu.edu>
  */
-#include "can.h"
+
+#include "elcon.h"
 
 void HandleElconHeartbeat(DbmsCtx* ctx, uint8_t* data)
 {

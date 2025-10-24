@@ -8,7 +8,7 @@
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
  */
-#include "can.h"
+#include "vinterface.h"
 
 /*****************************
  *      HEARTBEAT

@@ -11,7 +11,7 @@
 #include "dbms.h"
 #include "context.h"
 #include "ledctl.h"
-#include "can/can.h"
+#include "can.h"
 #include "blackbox.h"
 #include <math.h>
 
@@ -79,11 +79,7 @@ void DbmsInit(DbmsCtx* ctx)
     }   
     ctx->need_to_reset_qstats = false;
 
-    HAL_Delay(10);
-    if (ctx->stats.iters % 10 == 0){
-        ConfigCurrentSensor(ctx, 10);
-    }
-    // ConfigCurrentSensor(ctx, 10);
+    ctx->last_rx_heartbeat = -GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
     ConfigPwmLines(ctx);
     DataInit(ctx);
@@ -163,9 +159,6 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
     
-    // Swap blackbox data and capture current state
-    // BlackboxSwapAndUpdate(ctx);
-
     //
     //  Blackbox data requested
     //
@@ -177,6 +170,13 @@ void DbmsIter(DbmsCtx* ctx)
         }
         ctx->blackbox.requested = false;
     }
+
+    if (ctx->stats.iters % 10 == 0)
+    {
+        ConfigCurrentSensor(ctx, 10);
+    }
+
+
 
     //
     //  Store the settings when required
@@ -327,6 +327,8 @@ void DbmsIter(DbmsCtx* ctx)
         ThrowHardFault(ctx);                // this can override fault state
         HAL_Delay(GROUP_MSG_DELAY);
     }
+
+    // Swap blackbox data and capture current state
     BlackboxSwapAndUpdate(ctx);
 
     //

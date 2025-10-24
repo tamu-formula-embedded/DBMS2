@@ -7,7 +7,7 @@
 #include "utils/common.h"
 #include "context.h"
 
-#include "can/can.h"
+#include "can.h"
 
 #define EEPROM_WRITE_TIMEOUT            100     // todo: drop
 #define EEPROM_READ_TIMEOUT             100     //

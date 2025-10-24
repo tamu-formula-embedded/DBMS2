@@ -17,5 +17,4 @@
 int ConfigPwmLines(DbmsCtx* ctx);
 int SetPwmStates(DbmsCtx* ctx);
 
-
 #endif

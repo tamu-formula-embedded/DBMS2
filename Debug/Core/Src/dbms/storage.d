@@ -36,11 +36,9 @@ Core/Src/dbms/storage.o: ../Core/Src/dbms/storage.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  ../Core/Src/dbms/utils/crc.h ../Core/Src/dbms/utils/eswap.h \
  ../Core/Src/dbms/utils/lut.h ../Core/Src/dbms/utils/ma.h \
- ../Core/Src/dbms/context.h ../Core/Src/dbms/can/can.h \
- ../Core/Src/dbms/can/../utils/common.h ../Core/Src/dbms/can/../context.h \
- ../Core/Src/dbms/can/../ledctl.h ../Core/Src/dbms/can/../utils/common.h \
- ../Core/Src/dbms/can/../context.h ../Core/Src/dbms/can/../sched.h \
- ../Core/Src/dbms/can/../storage.h ../Core/Src/dbms/can/../settings.h
+ ../Core/Src/dbms/context.h ../Core/Src/dbms/can.h \
+ ../Core/Src/dbms/ledctl.h ../Core/Src/dbms/sched.h \
+ ../Core/Src/dbms/settings.h
 ../Core/Src/dbms/storage.h:
 ../Core/Src/dbms/utils/common.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -82,12 +80,7 @@ Core/Src/dbms/storage.o: ../Core/Src/dbms/storage.c \
 ../Core/Src/dbms/utils/lut.h:
 ../Core/Src/dbms/utils/ma.h:
 ../Core/Src/dbms/context.h:
-../Core/Src/dbms/can/can.h:
-../Core/Src/dbms/can/../utils/common.h:
-../Core/Src/dbms/can/../context.h:
-../Core/Src/dbms/can/../ledctl.h:
-../Core/Src/dbms/can/../utils/common.h:
-../Core/Src/dbms/can/../context.h:
-../Core/Src/dbms/can/../sched.h:
-../Core/Src/dbms/can/../storage.h:
-../Core/Src/dbms/can/../settings.h:
+../Core/Src/dbms/can.h:
+../Core/Src/dbms/ledctl.h:
+../Core/Src/dbms/sched.h:
+../Core/Src/dbms/settings.h:

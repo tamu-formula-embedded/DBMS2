@@ -27,7 +27,11 @@
 #include "sched.h"
 #include "settings.h"
 #include "storage.h"
-#include "can/can.h" // should go first?
+#include "vinterface.h"
+#include "pwm.h"
+#include "isense.h"
+#include "elcon.h"
+#include "can.h" // should go first?
 
 
 // Called before the main loop but strictly used for memory allocation

@@ -15,7 +15,6 @@ RM := rm -rf
 -include Core/Src/dbms/stack/subdir.mk
 -include Core/Src/dbms/model/subdir.mk
 -include Core/Src/dbms/faults/subdir.mk
--include Core/Src/dbms/can/subdir.mk
 -include Core/Src/dbms/subdir.mk
 -include Core/Src/subdir.mk
 -include objects.mk
