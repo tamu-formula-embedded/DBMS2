@@ -117,6 +117,8 @@ typedef struct _Stats
     uint32_t elcon_rx;
 
     uint64_t n_logging_frames;
+    bool fault_line_faulted;
+
 } Stats;
 
 typedef struct _Model   // Outputs from the ECM model

@@ -32,15 +32,24 @@ void CtrlClearAllFaults(DbmsCtx* ctx)
     ctx->need_to_save_faults = true;
 }
 
+void SetFaultLine(DbmsCtx* ctx, bool faulted)
+{
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, !((bool)faulted));
+    ctx->stats.fault_line_faulted = faulted;
+}
+
 void ThrowHardFault(DbmsCtx* ctx)
 {
     if (CtrlHasAnyFaults(ctx)) 
     {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+        ctx->led_state = LED_FAULT;
+        // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+        SetFaultLine(ctx, true);
     }
     else 
     {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+        // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
+        SetFaultLine(ctx, false);
     }
     
     if (!ctx->faults.had_fault && CtrlHasAnyFaults(ctx))

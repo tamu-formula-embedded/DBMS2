@@ -93,14 +93,14 @@ int ConfigCan(DbmsCtx* ctx)
 
     if ((status = ConfigCanFilters(ctx->hw.can, masks, sizeof(masks)/sizeof(masks[0]))) != 0)
     {
-        ctx->led_state = LED_COMM_ERROR;
+        ctx->led_state = LED_ERROR;
         return status;
     }
 
     // Start CAN
     if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK)
     {
-        ctx->led_state = LED_COMM_ERROR;
+        ctx->led_state = LED_ERROR;
         return status;
     }
 
@@ -109,7 +109,7 @@ int ConfigCan(DbmsCtx* ctx)
                                             CAN_IT_RX_FIFO0_MSG_PENDING |
                                             CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK)
     {
-        ctx->led_state = LED_COMM_ERROR;
+        ctx->led_state = LED_ERROR;
         return status;
     }
 
@@ -162,7 +162,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     if (result != HAL_OK)
     {
         ctx->stats.n_tx_can_fail++;
-        ctx->led_state = LED_COMM_ERROR;
+        // ctx->led_state = LED_COMM_ERROR;
         ctx->last_can_err = HAL_CAN_GetError(ctx->hw.can);
     }
     else

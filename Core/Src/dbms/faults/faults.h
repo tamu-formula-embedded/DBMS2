@@ -36,6 +36,7 @@ void CheckVoltageFaults(DbmsCtx* ctx);
 void CheckTemperatureFaults(DbmsCtx* ctx);
 void CheckCurrentFaults(DbmsCtx* ctx);
 
+void SetFaultLine(DbmsCtx* ctx, bool faulted);
 void ThrowHardFault(DbmsCtx* ctx);
 int LoadFaultState(DbmsCtx* ctx);
 int SaveFaultState(DbmsCtx* ctx);
