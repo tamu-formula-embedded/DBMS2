@@ -88,7 +88,6 @@ void DbmsInit(DbmsCtx* ctx)
     ConfigPwmLines(ctx);
     DataInit(ctx);
 
-    ctx->led_state = LED_IDLE;
 }
 
 int DbmsPerformWakeup(DbmsCtx* ctx)
@@ -215,17 +214,16 @@ void DbmsIter(DbmsCtx* ctx)
     //
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
 
-    // uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
-    uint32_t quiet_ms = 5000;
-
     //
     //  Its been too long since we have recived a frame, we need to force a shutdown
     //  otherwise we want to be active
     //
     uint64_t cur_time = HAL_GetTick();
+    uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+
     if (cur_time - ctx->last_rx_heartbeat < quiet_ms && cur_time - ctx->elcon.heartbeat < quiet_ms)
     {
-        ThrowHardFault(ctx);
+        // ThrowHardFault(ctx);
     }
     else if (cur_time - ctx->elcon.heartbeat < quiet_ms)
     {
@@ -249,12 +247,12 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Gracefully handle state transition
     //
-    if ((ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == DBMS_CHARGING) && ctx->req_state == DBMS_SHUTDOWN)
+    if (ctx->cur_state != DBMS_SHUTDOWN && ctx->req_state == DBMS_SHUTDOWN)
     {
         // on these states -- probably need to write to disk too
         DbmsPerformShutdown(ctx);
     }
-    else if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_ACTIVE)
+    else if (ctx->cur_state != DBMS_ACTIVE && ctx->req_state == DBMS_ACTIVE)
     {
         // on these states -- probably need to write to disk too
         ctx->led_state = LED_INIT;
@@ -264,24 +262,28 @@ void DbmsIter(DbmsCtx* ctx)
     }
     else if (ctx->req_state == DBMS_CHARGING)
     {
-        ctx->led_state = LED_CHARGING;
         ctx->cur_state = DBMS_CHARGING;
     }
+
+
     //
     //   Main State Dispatch
     //
     if (ctx->cur_state == DBMS_SHUTDOWN)
     {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
+        SetFaultLine(ctx, true);
         ctx->need_to_save_faults = false;
+        ctx->led_state = LED_IDLE;
     }
     else if (ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == DBMS_CHARGING)
     {
+        ctx->led_state = (ctx->cur_state == DBMS_ACTIVE) ? LED_ACTIVE : LED_CHARGING;       // start with the led in our resp. state
+
         for (int i = 0; i < N_SIDES; i++)
         {
-#if SPLIT_STACK_OPS
+            #if SPLIT_STACK_OPS
             if (ctx->stats.iters % 2 == i % 2)
-#endif
+            #endif
             {
                 StackUpdateVoltReadingSingle(ctx, i);   
                 HAL_Delay(SINGLE_MSG_DELAY);
@@ -294,15 +296,15 @@ void DbmsIter(DbmsCtx* ctx)
         for (uint8_t i = 0; i < N_SIDES; i++)
         {
             // todo: think abt switching these
-#if SPLIT_STACK_OPS 
+            #if SPLIT_STACK_OPS 
             StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
             HAL_Delay(SINGLE_MSG_DELAY);
-#else
+            #else
             StackUpdateTempReadingSingle(ctx, i, false);
             HAL_Delay(SINGLE_MSG_DELAY);
             StackUpdateTempReadingSingle(ctx, i, true);
             HAL_Delay(SINGLE_MSG_DELAY);
-#endif
+            #endif
         }
 
         if (GetSetting(ctx, IGNORE_BAD_THERMS))
@@ -318,15 +320,14 @@ void DbmsIter(DbmsCtx* ctx)
             CheckTemperatureFaults(ctx);
             CheckVoltageFaults(ctx);
 
-            PollFaultSummary(ctx);
+            // PollFaultSummary(ctx);
             HAL_Delay(SINGLE_MSG_DELAY);
         }
 
-        ThrowHardFault(ctx);
+        ThrowHardFault(ctx);                // this can override fault state
         HAL_Delay(GROUP_MSG_DELAY);
     }
     BlackboxSwapAndUpdate(ctx);
-
 
     //
     //  save faults and blackbox data to eeprom
@@ -396,10 +397,6 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 
         ctx->last_rx_heartbeat = HAL_GetTick();
         
-        if (ctx->led_state == LED_COMM_ERROR)
-        {
-            ctx->led_state = LED_ACTIVE;
-        }
         uint64_t remote_ts = be64_to_u64(rx_data);
         SyncRealTime(ctx, remote_ts);
 
@@ -489,6 +486,7 @@ void DbmsErr(DbmsCtx* ctx)
 {
     ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_ERROR;
+    DbmsPerformShutdown(ctx);    
 }
 
 void DbmsClose(DbmsCtx* ctx)

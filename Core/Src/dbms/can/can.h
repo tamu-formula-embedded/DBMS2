@@ -18,7 +18,7 @@
 #include "../sched.h"
 #include "../settings.h"
 
-// #define CAN_VERSION_2
+#define CAN_VERSION_2
 
 #define CAN_STD_ID_MASK         0x7FF
 #define CAN_EXT_ID_MASK         0x1FFFFFFF
@@ -57,9 +57,9 @@
 
     /* Extended IDs */
 
-    #define CANID_CELLSTATE_VOLTS       0x0B001000
-    #define CANID_CELLSTATE_TEMPS       0x0B002000
-    #define CANID_METRIC                0x0B003000
+    #define CANID_CELLSTATE_VOLTS       0x0B002000
+    #define CANID_CELLSTATE_TEMPS       0x0B003000
+    #define CANID_METRIC                0x0B001000
     #define CANID_CONSOLE_C0            0x0B004000
 
     /* Undefined yet */
@@ -94,7 +94,6 @@
     #define CANID_RX_SET_INITIAL_CHARGE 0x545
     #define CANID_RX_BLACKBOX_REQUEST   0x546
     #define CANID_RX_BLACKBOX_SAVE      0x547
-
 
 #endif
 

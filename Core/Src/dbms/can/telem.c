@@ -160,7 +160,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 46, ctx->elcon.voltage_out);
     SendMetric(ctx, 47, ctx->elcon.current_out);
     SendMetric(ctx, 48, ctx->elcon.status_flags);
-
+    SendMetric(ctx, 49, ctx->stats.fault_line_faulted);
 
     return 0;
 }
@@ -257,7 +257,6 @@ int SendCellVoltages(DbmsCtx* ctx)
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
             buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
-            // CanLog(ctx, "V(%d %d) = %d\n",  i, j, buffer[j]);
         }
 
         SendCellDataBuffer(ctx, CANID_CELLSTATE_VOLTS, i, buffer, ARRAY_LEN(buffer));
