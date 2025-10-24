@@ -257,7 +257,7 @@ int SendCellVoltages(DbmsCtx* ctx)
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
             buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
-            CanLog(ctx, "V(%d %d) = %d\n",  i, j, buffer[j]);
+            // CanLog(ctx, "V(%d %d) = %d\n",  i, j, buffer[j]);
         }
 
         SendCellDataBuffer(ctx, CANID_CELLSTATE_VOLTS, i, buffer, ARRAY_LEN(buffer));
