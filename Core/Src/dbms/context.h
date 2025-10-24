@@ -197,7 +197,7 @@ typedef struct _DbmsCtx
         uint64_t local_ts;
     } realtime;
 
-    uint64_t last_rx_heartbeat;
+    int64_t last_rx_heartbeat;      // lets keep this signed to start it with a -value
     uint64_t last_rx_telembeat;
     uint64_t iter_start_us;
     uint64_t iter_end_us;

@@ -23,7 +23,6 @@ C_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 Core/Src/dbms \
-Core/Src/dbms/can \
 Core/Src/dbms/faults \
 Core/Src/dbms/model \
 Core/Src/dbms/stack \

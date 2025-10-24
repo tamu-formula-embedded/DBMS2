@@ -17,7 +17,8 @@
 #include "../context.h"
 #include "../model/data.h"
 
-#include "../can/can.h"
+#include "../can.h"
+#include "../vinterface.h"
 
 #define STACK_V_UV_PER_BIT 190.73
 #define STACK_T_UV_PER_BIT 152.59

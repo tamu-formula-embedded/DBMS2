@@ -11,12 +11,12 @@
 #ifndef _CAN_H_
 #define _CAN_H_
 
-#include "../utils/common.h"
-#include "../context.h"
+#include "utils/common.h"
+#include "context.h"
 
-#include "../ledctl.h"
-#include "../sched.h"
-#include "../settings.h"
+#include "ledctl.h"
+#include "sched.h"
+#include "settings.h"
 
 #define CAN_VERSION_2
 
@@ -117,60 +117,5 @@ typedef enum
 int ConfigCan(DbmsCtx* ctx);
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8]);
-
-/*****************************
- *   TELEMETRY
- *****************************/
-
-
-int SendCellVoltages(DbmsCtx* ctx);
-
-int SendCellTemps(DbmsCtx* ctx);
-
-int SendMetrics(DbmsCtx* ctx);
-
-void SendPlexMetrics(DbmsCtx* ctx);
-
-/**
- * Send a formatted log message to the app  
- */
-void CanLog(DbmsCtx* ctx, const char* fmt, ...);
-
-/**
- * Deprecated
- */
-#define CAN_REPORT_FAULT(CTX, ERR)  do {} while (0)
-
-int CanTxHeartbeat(DbmsCtx* ctx, uint16_t settings_crc);
-
-int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action);
-
-/*****************************
- *   PWM LINE FOR ????
- *****************************/
-
-// TODO: Wtf is this used for?
-int ConfigPwmLines(DbmsCtx* ctx);
-int SetPwmStates(DbmsCtx* ctx);
-
-
-/*****************************
- *   CURRENT SENSOR
- *****************************/
-
-/**
- * Start the current sensor and configure the data channels
- */
-void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time);
-
-/**
- * Unpack a data reading from the current sensor
- */
-int64_t UnpackCurrentSensorData(uint8_t* data);
-
-
-// int32_t UnpackElconDataVoltage(uint8_t* data);
-// int32_t UnpackElconDataCurrent(uint8_t* data);
-void HandleElconHeartbeat(DbmsCtx* ctx, uint8_t* data);
 
 #endif

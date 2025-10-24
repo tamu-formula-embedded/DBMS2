@@ -9,7 +9,7 @@
 #include "blackbox.h"
 #include "context.h"
 #include "storage.h"
-#include "can/can.h"
+#include "can.h"
 #include "utils/common.h"
 
 static Snapshot snapshot_storage[2];
