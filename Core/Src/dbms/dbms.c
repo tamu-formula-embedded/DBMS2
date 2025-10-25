@@ -176,7 +176,7 @@ void DbmsIter(DbmsCtx* ctx)
         ConfigCurrentSensor(ctx, 10);
     }
 
-
+    // SendElconRequest(ctx, 0, 0, 0);
 
     //
     //  Store the settings when required
@@ -472,6 +472,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 #endif
 
     case CANID_ELCON_RX:
+        CanLog(ctx, "Wtf man\n");
         HandleElconHeartbeat(ctx, rx_data);
       
         break;
