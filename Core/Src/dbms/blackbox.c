@@ -39,7 +39,7 @@ void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
         blackbox->qd = ctx->qstats.accumulated_loss;
         
         // Current limits and resistance
-        blackbox->current_limit_a = ctx->model.I_lim;
+        blackbox->current_limit_a = ctx->max_current_ma;
         blackbox->dcir = ctx->model.R_cell;
         blackbox->total_resistance = ctx->model.R0 + ctx->model.R1 + ctx->model.R2;
         

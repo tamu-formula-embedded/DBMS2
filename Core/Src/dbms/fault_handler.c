@@ -95,11 +95,11 @@ void CheckCurrentFaults(DbmsCtx* ctx)
     int32_t bt = GetSetting(ctx, TEMP_CURVE_B);
 
     // Todo: make this cleaner
-    if (ctx->stats.avg_t < at) {
+    if (ctx->stats.max_t < at) {
         ctx->max_current_ma = GetSetting(ctx, MAX_CURRENT) * 1000;
     } else {
         if (bt == at) ctx->max_current_ma = 0;
-        ctx->max_current_ma = (GetSetting(ctx, MAX_CURRENT) * 1000) * ((bt - ctx->stats.avg_t) / (bt - at));
+        ctx->max_current_ma = (GetSetting(ctx, MAX_CURRENT) * 1000) * ((bt - ctx->stats.max_t) / (bt - at));
     }
 
     // Do the comparison in ma
