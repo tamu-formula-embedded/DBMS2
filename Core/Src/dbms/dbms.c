@@ -249,11 +249,11 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->led_state = LED_INIT;
         ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
+        if (ctx->req_state == DBMS_CHARGING)
+        {
+            ChargingEnter(ctx);
+        }
         ctx->cur_state = ctx->req_state;
-    }
-    else if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_CHARGING)
-    {
-        ChargingEnter(ctx);
     }
 
 
