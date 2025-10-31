@@ -5,7 +5,6 @@
 
 void ChargingEnter(DbmsCtx* ctx)
 {
-    // set to balancing for now
     ctx->charging.state = CH_CHARGING;
     ctx->cur_state = DBMS_CHARGING;
 }
@@ -13,10 +12,8 @@ void ChargingEnter(DbmsCtx* ctx)
 void ChargingUpdate(DbmsCtx* ctx)
 {
 
-    if(ctx->charging.state == CH_CHARGING )//&& StackNeedsBalancing(ctx))
-    //if(StackNeedsBalancing(ctx))
-    {
-        //CanLog(ctx, "here");       
+    if(ctx->charging.state == CH_CHARGING && StackNeedsBalancing(ctx))
+    {     
         ctx->charging.state = CH_BALANCING;
         ctx->led_state = LED_BALANCING;
         //StackDumpCellsToBalance(ctx);
