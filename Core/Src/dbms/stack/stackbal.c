@@ -11,127 +11,71 @@
 // TODO: rework all this
 
 // to determine if we need balancing
-#define BALANCE_LIMIT 1000.0f
+#define BALANCE_LIMIT           1000.0f
 
 // so that we aren't just doing v > min(v) to filter groups - small margin
-#define BALANCE_MARGIN 5.0f
+#define BALANCE_MARGIN          5.0f
 
-#if 0
+#define CB_CELL1_CTRL_REG       0x31A
 
-/*
-static const uint16_t CB_CELL_CTRL_REGS[14] = {
-    0x327,  // CB_CELL1_CTRL
-    0x326,  // CB_CELL2_CTRL
-    0x325,  // CB_CELL3_CTRL
-    0x324,  // CB_CELL4_CTRL
-    0x323,  // CB_CELL5_CTRL
-    0x322,  // CB_CELL6_CTRL
-    0x321,  // CB_CELL7_CTRL
-    0x320,  // CB_CELL8_CTRL
-    0x31F,  // CB_CELL9_CTRL
-    0x31E,  // CB_CELL10_CTRL
-    0x31D,  // CB_CELL11_CTRL
-    0x31C,  // CB_CELL12_CTRL
-    0x31B,  // CB_CELL13_CTRL
-    0x31A   // CB_CELL14_CTRL
-};
-*/
-#define CB_CELL1_CTRL_REG 0x31A
+#define TIMER_VALUE             0x02    // 30 seconds - page 157
 
-#define TIMER_VALUE 0x02 // 30 seconds - page 157
+#define CB_RUN_BIT_MASK         0x08
+#define BAL_STAT_ABORT_MASK     0x04
+#define BAL_CTRL2_BAL_GO_MASK   0x02
+#define BAL_CTRL2_CONFIG        0x31    // auto_bal = 1, otcb_en = 1, flt_stop = 1
 
-#define CB_RUN_BIT_MASK 0x08
-#define BAL_STAT_ABORT_MASK 0x04
-#define BAL_CTRL2_BAL_GO_MASK 0x02
-#define BAL_CTRL2_CONFIG 0x31 // auto_bal = 1, otcb_en = 1, flt_stop = 1
-
-
-void StackFindMinMaxVoltages(DbmsCtx* ctx, size_t segment, float* min_voltage, float* max_voltage)
+void StackBalancingConfig(DbmsCtx* ctx)
 {
-
-    for (size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg)
-    {
-
-        size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
-        for (size_t group = 0; group < N_GROUPS_PER_SIDE; ++group)
-        {
-            float voltage = ctx->cell_states[side_index].voltages[group];
-
-            if (voltage <= 0.0f) continue;
-
-            if (voltage < *min_voltage) *min_voltage = voltage;
-            if (voltage > *max_voltage) *max_voltage = voltage;
-        }
-    }
+    // Setting balancing method to auto balancing and to stop at fault
+    uint8_t frame_cb_config[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_CONFIG, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, frame_cb_config, sizeof(frame_cb_config));
 }
 
-/**
- *  max(v) - min(v) > balance_limit -> we need to balance
- */
-bool StackNeedsBalancing(DbmsCtx* ctx)
+
+void StackSetDeviceBalanceTimer(DbmsCtx* ctx, uint8_t device_addr, bool cells_to_balance[N_GROUPS_PER_SIDE])
 {
-    // if any segment needs balancing - if this is false at the end we can skip balancing
-    bool needs_balancing = false;
-
-    for (size_t segment = 0; segment < N_SEGMENTS; ++segment)
-    {
-        float min_voltage = 5000.0f;
-        float max_voltage = 0.0f;
-        StackFindMinMaxVoltages(ctx, segment, &min_voltage, &max_voltage);
-
-        // segment needs balancing
-        if (max_voltage - min_voltage > BALANCE_LIMIT)
-        {
-            needs_balancing = true;
-
-            // determine cells we need to balance
-            float balance_threshold = min_voltage + BALANCE_MARGIN;
-            for (size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg)
-            {
-                size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
-                for (size_t group = 0; group < N_GROUPS_PER_SIDE; ++group)
-                {
-                    float voltage = ctx->cell_states[side_index].voltages[group];
-                    ctx->cell_states[side_index].cells_to_balance[group] = voltage > balance_threshold;
-                }
-            }
-        }
-    }
-
-    return needs_balancing;
-}
-
-void StackSetCellBalanceTimer(DbmsCtx* ctx, bool cells_to_balance[N_GROUPS_PER_SIDE])
-{
-    // no need for lookup table because of contiguous register memory addresses
-    uint16_t start_reg = CB_CELL1_CTRL_REG;
-    uint8_t frame_size = N_GROUPS_PER_SIDE + 5;
-    // uint8_t frame_size = 4 + N_GROUPS_PER_SIDE + 2;
-    uint8_t cb_bulk_frame[frame_size]; // 20 bytes max
-
-    cb_bulk_frame[0] = 0xBE - 1;
-    cb_bulk_frame[1] = start_reg >> 8;
-    cb_bulk_frame[2] = start_reg & 0xFF;
-
+    uint16_t base_reg = 0x0327;  // CB_CELL1_CTRL (starts at cell 1, goes down)
+    
+    // Write each cell timer individually
     for (size_t i = 0; i < N_GROUPS_PER_SIDE; ++i)
     {
-        cb_bulk_frame[3 + i] = cells_to_balance[i] ? TIMER_VALUE : 0;
+        uint16_t reg_addr = base_reg - i; // registers decrement
+        uint8_t timer_val = cells_to_balance[i] ? TIMER_VALUE : 0x00;
+        
+        uint8_t frame[7];
+        frame[0] = 0x90;                        // single device write, 1 byte
+        frame[1] = device_addr;                 // which monitor chip
+        frame[2] = reg_addr >> 8;               // register MSB
+        frame[3] = reg_addr & 0xFF;             // register LSB  
+        frame[4] = timer_val;                   // timer value
+        frame[5] = 0x00;                        // crc placeholder
+        frame[6] = 0x00;                        // crc placeholder
+        
+        SendStackFrameSetCrc(ctx, frame, sizeof(frame));
+        HAL_Delay(2);  // small delay between writes
     }
-
-    cb_bulk_frame[frame_size - 2] = 0x00;
-    cb_bulk_frame[frame_size - 1] = 0x00;
-
-    SendStackFrameSetCrc(ctx, cb_bulk_frame, frame_size);
-    HAL_Delay(8);
 }
 
-void StackStartBalancing(DbmsCtx* ctx)
+
+void StackStartDeviceBalancing(DbmsCtx* ctx, uint8_t device_addr)
 {
     // this is the final trigger - balancing doesn't start until bal_ctrl2 is set
-    uint8_t bal_ctrl2_frame[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_BAL_GO_MASK, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, bal_ctrl2_frame, sizeof(bal_ctrl2_frame));
+    //uint8_t bal_ctrl2_frame[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_BAL_GO_MASK, 0x00, 0x00};
+    
+    uint8_t frame[7];
+
+    frame[0] = 0x90; // single stack write
+    frame[1] = device_addr;
+    frame[2] = 0x03; // bal_ctrl2 reg
+    frame[3] = 0x2F; // bal_ctrl2 reg 
+    frame[4] = 0x02; // bal_go bit
+    frame[5] = 0x00; // crc
+    frame[6] = 0x00; // crc
+    SendStackFrameSetCrc(ctx, frame, sizeof(frame));
     HAL_Delay(8);
 }
+
 
 /**
  *   3 step process -
@@ -140,7 +84,7 @@ void StackStartBalancing(DbmsCtx* ctx)
  *   2. configure balancing method
  *   3. set additional controls (write to bal_ctrl2 register to configure auto or manual balancing)
  */
-void StackUpdateBalancing(DbmsCtx* ctx)
+void StackStartBalancing(DbmsCtx* ctx)
 {
     for (size_t segment = 0; segment < N_SEGMENTS; ++segment)
     {
@@ -148,15 +92,20 @@ void StackUpdateBalancing(DbmsCtx* ctx)
         {
             size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
 
-            StackSetCellBalanceTimer(ctx, ctx->cell_states[side_index].cells_to_balance);
+            for(size_t monitor = 0; monitor < N_MONITORS_PER_SIDE; ++monitor)
+            {
+                uint8_t device_addr = (side_index * N_MONITORS_PER_SIDE) + monitor;
+                
+                StackSetDeviceBalanceTimer(ctx, device_addr, ctx->cell_states[side_index].cells_to_balance);
+                StackStartDeviceBalancing(ctx, device_addr);
+            }
         }
     }
-    // StackStartBalancing(ctx);
 }
 
-bool StackBalancingComplete(DbmsCtx* ctx)
-{
 
+bool StackIsDoneBalancing(DbmsCtx* ctx)
+{
     uint8_t bal_stat_frame[] = {0xA0, 0x05, 0x2B, 0x00, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, bal_stat_frame, sizeof(bal_stat_frame));
 
@@ -168,105 +117,19 @@ bool StackBalancingComplete(DbmsCtx* ctx)
         return false;
     }
 
-    RxStackFrame rx_frames[N_MONITORS];
-    FillStackFrames(rx_frames, rx_buffer, sizeof(rx_buffer), N_MONITORS);
-    uint8_t bal_stat_value = 0;
-    for (size_t i = 0; i < N_MONITORS; ++i)
-    {
-        bal_stat_value = rx_frames[i].data[0];
+    // RxStackFrame rx_frames[N_MONITORS];
+    // FillStackFrames(rx_frames, rx_buffer, sizeof(rx_buffer), N_MONITORS);
+    // uint8_t bal_stat_value = 0;
+    // for (size_t i = 0; i < N_MONITORS; ++i)
+    // {
+    //     bal_stat_value = rx_frames[i].data[0];
 
-        if ((bal_stat_value & CB_RUN_BIT_MASK) != 0)
-        {
-            return false; // Still balancing
-        }
-    }
-
-    return true;
-
-    /*
-
-        // read bal_stat register from each active monitor chip
-        // return true when CB_RUN = 0 for all monitors that were balancing
-        for(size_t segment = 0; segment < N_SEGMENTS; ++segment){
-            for(size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg){
-                //size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
-                //uint8_t monitor_addr = (side_index * 2) + 1;
-
-                // bal_stat register is 52B
-                uint8_t bal_stat_frame[] = {0xA0, 0x05, 0x2B, 0x00, 0x00, 0x00};
-
-                SendStackFrameSetCrc(ctx, bal_stat_frame, sizeof(bal_stat_frame));
-
-                // recieve response
-                uint8_t rx_buffer[RX_FRAME_SIZE(1)];
-                if(HAL_UART_Receive(ctx->hw.uart, rx_buffer, sizeof(rx_buffer), STACK_RECV_TIMEOUT) != HAL_OK){
-                    // throw error
-                    return false;
-                }
-
-                RxStackFrame rx_frame;
-                FillStackFrame(&rx_frame, rx_buffer, 1); // 1 byte of data expected
-
-                // check if CB_RUN bit is set
-                uint8_t bal_stat_value = rx_frame.data[0];
-                bool cb_run = (bal_stat_value & CB_RUN_BIT_MASK) != 0;
-
-                if(cb_run){
-                    return false; // Still balancing
-                }
-            }
-        }
-        return true;
-
-        */
-}
-
-bool StackBalancingAbortedByFault(DbmsCtx* ctx)
-{
-    // page 42
-    uint8_t bal_stat_frame[] = {0xA0, 0x05, 0x2B, 0x00, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, bal_stat_frame, sizeof(bal_stat_frame));
-
-    // recieve response
-    uint8_t rx_buffer[RX_FRAME_SIZE(1) * N_MONITORS];
-    if (HAL_UART_Receive(ctx->hw.uart, rx_buffer, sizeof(rx_buffer), STACK_RECV_TIMEOUT) != HAL_OK)
-    {
-        // throw error
-        return true;
-    }
-
-    RxStackFrame rx_frames[N_MONITORS];
-    FillStackFrames(rx_frames, rx_buffer, 1, N_MONITORS); // 1 byte of data expected
-
-    // check if abort bit is set
-    uint8_t bal_stat_value = 0;
-    for (size_t monitor = 0; monitor < N_MONITORS; monitor++)
-    { // TODO: Need to change this to iterate by side instead of by monitor
-        bal_stat_value = rx_frames[monitor].data[0];
-        if ((bal_stat_value & BAL_STAT_ABORT_MASK) != 0)
-        {
-            return true; // Balancing aborted
-        }
-    }
+    //     if ((bal_stat_value & CB_RUN_BIT_MASK) != 0)
+    //     {
+    //         return false; // Still balancing
+    //     }
+    // }
+    // return true;
 
     return false;
 }
-
-void StackBalancingConfig(DbmsCtx* ctx)
-{
-    // Setting balancing method to auto balancing and to stop at fault
-    uint8_t frame_cb_config[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_CONFIG, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, frame_cb_config, sizeof(frame_cb_config));
-}
-
-void StackStartCharging(DbmsCtx* ctx)
-{
-    // begin charging if:
-    // hearbeat from car not detected
-    // heartbeat from charger detected
-    // shutdown circuit active
-
-    
-}
-
-#endif

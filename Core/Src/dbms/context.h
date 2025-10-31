@@ -53,6 +53,14 @@ typedef enum _DbmsState
     DBMS_CHARGING
 } DbmsState;
 
+typedef enum _ChargingState
+{
+    CH_CONNECTING = 0,
+    CH_CHARGING,
+    CH_BALANCING,
+    CH_COMPLETE
+} ChargingState;
+
 // fwd definition -- perf_counters.h
 typedef struct _PerfCounters PerfCounters;
 
@@ -207,10 +215,7 @@ typedef struct _DbmsCtx
 
     Stats stats;
 
-    struct
-    {
-        bool balancing_requested;
-    } charging;
+   
 
     struct
     {
@@ -265,13 +270,29 @@ typedef struct _DbmsCtx
         bool requested;
     } blackbox;
 
-    struct{
-        uint64_t heartbeat;
-        int32_t voltage_out;
-        int32_t current_out;
-        uint8_t status_flags;
-
+    struct
+    {
+        uint64_t    heartbeat;
+        int32_t     voltage_out;
+        int32_t     current_out;
+        uint8_t     status_flags;
     } elcon;
+
+    struct {
+        uint32_t    cp_duty_cycle;
+        uint32_t    pp_raw_voltage;
+        bool        pp_connect;
+        bool        charge_en_req;
+        int64_t     last_cp_pwm_read;
+        // for testing:
+        int64_t     pwm_ts;
+        bool        pwm_recieved;
+    } j1772;
+
+    struct
+    {
+        ChargingState state;
+    } charging;
 
 } DbmsCtx;
 
