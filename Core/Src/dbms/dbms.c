@@ -176,8 +176,6 @@ void DbmsIter(DbmsCtx* ctx)
         ConfigCurrentSensor(ctx, 10);
     }
 
-    // SendElconRequest(ctx, 0, 0, 0);
-
     //
     //  Store the settings when required
     //
@@ -207,7 +205,6 @@ void DbmsIter(DbmsCtx* ctx)
         }
         ctx->need_to_reset_qstats = false;
     }
-   
 
     //
     //  Let everybody know that we are alive
@@ -237,37 +234,27 @@ void DbmsIter(DbmsCtx* ctx)
     {
         ctx->req_state = DBMS_SHUTDOWN;
     }
-    else
-    {
-        // if (ctx->last_rx_heartbeat > 5000)
-            // ctx->req_state = DBMS_ACTIVE;
-    }
-    // TODO: fix this @ab this is retarded
 
     //
     //  Gracefully handle state transition
     //
     if (ctx->cur_state != DBMS_SHUTDOWN && ctx->req_state == DBMS_SHUTDOWN)
     {
-        // on these states -- probably need to write to disk too
         DbmsPerformShutdown(ctx);
     }
     else if (ctx->cur_state != DBMS_ACTIVE && ctx->req_state == DBMS_ACTIVE)
     {
-        // on these states -- probably need to write to disk too
         ctx->led_state = LED_INIT;
         ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
-        // MonitorResetFaults(ctx);
     }
     else if (ctx->req_state == DBMS_CHARGING)
     {
         ctx->cur_state = DBMS_CHARGING;
     }
 
-
     //
-    //   Main State Dispatch
+    //   Handle shutdown state
     //
     if (ctx->cur_state == DBMS_SHUTDOWN)
     {
@@ -275,7 +262,12 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->need_to_save_faults = false;
         ctx->led_state = LED_IDLE;
     }
-    else if (ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == DBMS_CHARGING)
+
+    //
+    //  Handle ACTIVE/CHARGING common logic poll voltages 
+    //  and temps, handle faults, etc.
+    // 
+    if (ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == DBMS_CHARGING)
     {
         ctx->led_state = (ctx->cur_state == DBMS_ACTIVE) ? LED_ACTIVE : LED_CHARGING;       // start with the led in our resp. state
 
@@ -326,6 +318,14 @@ void DbmsIter(DbmsCtx* ctx)
 
         ThrowHardFault(ctx);                // this can override fault state
         HAL_Delay(GROUP_MSG_DELAY);
+    }
+
+    //
+    //  Handle CHARGING only logic
+    //
+    if (ctx->cur_state == DBMS_CHARGING)
+    {
+
     }
 
     // Swap blackbox data and capture current state
