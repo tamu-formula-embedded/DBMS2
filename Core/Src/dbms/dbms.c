@@ -98,8 +98,6 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
         ctx->led_state = LED_ERROR;
         return status; // we are cooked
     }
-    ctx->cur_state = DBMS_ACTIVE;
-    ctx->led_state = LED_ACTIVE;
 
     StackAutoAddr(ctx);
     StackSetNumActiveCells(ctx, 0x0A);
@@ -246,14 +244,14 @@ void DbmsIter(DbmsCtx* ctx)
             ChargingExit(ctx);
         DbmsPerformShutdown(ctx);
     }
-    else if (ctx->cur_state != DBMS_ACTIVE && (ctx->req_state == DBMS_ACTIVE || ctx->req_state == DBMS_CHARGING))
+    else if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state != DBMS_SHUTDOWN)
     {
         ctx->led_state = LED_INIT;
         ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
+        ctx->cur_state = ctx->req_state;
         if (ctx->req_state == DBMS_CHARGING)
         {
-            ctx->cur_state = DBMS_CHARGING;
             ChargingEnter(ctx);
         }
     }
