@@ -1,4 +1,5 @@
 #include "charging.h"
+#include "context.h"
 
 void ChargingEnter(DbmsCtx* ctx)
 {
@@ -8,8 +9,10 @@ void ChargingEnter(DbmsCtx* ctx)
 
 void ChargingUpdate(DbmsCtx* ctx)
 {
-    
-
+    if(ctx->charging.state == CH_BALANCING)
+    {
+        BalancingTest(ctx);
+    }
 }
 
 void ChargingExit(DbmsCtx* ctx)
