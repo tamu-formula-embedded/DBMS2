@@ -154,7 +154,7 @@ int PollFaultSummary(DbmsCtx* ctx);
  *  BALANCING 
  *****************************/
 
- void StackBalancingConfig(DbmsCtx* ctx);
+void StackBalancingConfig(DbmsCtx* ctx);
 
 void StackSetDeviceBalanceTimer(DbmsCtx* ctx, uint8_t device_addr, bool cells_to_balance[N_GROUPS_PER_SIDE]);
 
@@ -164,5 +164,10 @@ void StackStartBalancing(DbmsCtx* ctx);
 
 bool StackIsDoneBalancing(DbmsCtx* ctx);
 
+bool StackNeedsBalancing(DbmsCtx* ctx);
+
+void StackUpdateBalancing(DbmsCtx* ctx);
+
+void StackDumpCellsToBalance(DbmsCtx* ctx);
 
 #endif

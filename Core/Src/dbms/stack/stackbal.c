@@ -82,22 +82,6 @@ void StackUpdateBalancing(DbmsCtx* ctx)
     }
 }
 
-bool hasBalanced = false;
-
-void BalancingTest(DbmsCtx* ctx)
-{
-    if(HAL_GetTick() < 5000) return;
-    
-    if(!hasBalanced && StackNeedsBalancing(ctx)){
-
-        StackDumpCellsToBalance(ctx);
-
-        hasBalanced = true;
-        ctx->led_state = LED_BALANCING;
-        StackUpdateBalancing(ctx);
-    }
-}
-
 void StackBalancingConfig(DbmsCtx* ctx)
 {
     // Setting balancing method to auto balancing and to stop at fault

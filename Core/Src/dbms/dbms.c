@@ -250,11 +250,12 @@ void DbmsIter(DbmsCtx* ctx)
         ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
         ctx->cur_state = ctx->req_state;
-        if (ctx->req_state == DBMS_CHARGING)
-        {
-            ChargingEnter(ctx);
-        }
     }
+    else if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state == DBMS_CHARGING)
+    {
+        ChargingEnter(ctx);
+    }
+
 
     //
     //   Handle shutdown state
@@ -476,7 +477,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 #endif
 
     case CANID_ELCON_RX:
-        CanLog(ctx, "Wtf man\n");
+        // CanLog(ctx, "Wtf man\n");
         HandleElconHeartbeat(ctx, rx_data);
       
         break;
