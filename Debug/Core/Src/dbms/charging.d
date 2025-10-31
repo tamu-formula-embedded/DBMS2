@@ -1,7 +1,6 @@
 Core/Src/dbms/charging.o: ../Core/Src/dbms/charging.c \
- ../Core/Src/dbms/charging.h ../Core/Src/dbms/common.h \
- ../Core/Src/dbms/queue.h ../Core/Src/dbms/lut.h ../Core/Src/dbms/crc.h \
- ../Core/Src/dbms/eswap.h ../Core/Src/dbms/ma.h \
+ ../Core/Src/dbms/charging.h ../Core/Src/dbms/context.h \
+ ../Core/Src/dbms/utils/common.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -36,18 +35,15 @@ Core/Src/dbms/charging.o: ../Core/Src/dbms/charging.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Src/dbms/context.h ../Core/Src/dbms/led_controller.h \
- ../Core/Src/dbms/stack_controller.h ../Core/Src/dbms/sched.h \
- ../Core/Src/dbms/storage.h ../Core/Src/dbms/vehicle_interface.h \
- ../Core/Src/dbms/settings.h ../Core/Src/dbms/data.h \
- ../Core/Src/dbms/model.h
+ ../Core/Src/dbms/utils/crc.h ../Core/Src/dbms/utils/eswap.h \
+ ../Core/Src/dbms/utils/lut.h ../Core/Src/dbms/utils/ma.h \
+ ../Core/Src/dbms/storage.h ../Core/Src/dbms/can.h \
+ ../Core/Src/dbms/ledctl.h ../Core/Src/dbms/sched.h \
+ ../Core/Src/dbms/settings.h ../Core/Src/dbms/elcon.h \
+ ../Core/Src/dbms/vinterface.h ../Core/Src/dbms/j1772.h
 ../Core/Src/dbms/charging.h:
-../Core/Src/dbms/common.h:
-../Core/Src/dbms/queue.h:
-../Core/Src/dbms/lut.h:
-../Core/Src/dbms/crc.h:
-../Core/Src/dbms/eswap.h:
-../Core/Src/dbms/ma.h:
+../Core/Src/dbms/context.h:
+../Core/Src/dbms/utils/common.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
@@ -82,12 +78,15 @@ Core/Src/dbms/charging.o: ../Core/Src/dbms/charging.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
-../Core/Src/dbms/context.h:
-../Core/Src/dbms/led_controller.h:
-../Core/Src/dbms/stack_controller.h:
-../Core/Src/dbms/sched.h:
+../Core/Src/dbms/utils/crc.h:
+../Core/Src/dbms/utils/eswap.h:
+../Core/Src/dbms/utils/lut.h:
+../Core/Src/dbms/utils/ma.h:
 ../Core/Src/dbms/storage.h:
-../Core/Src/dbms/vehicle_interface.h:
+../Core/Src/dbms/can.h:
+../Core/Src/dbms/ledctl.h:
+../Core/Src/dbms/sched.h:
 ../Core/Src/dbms/settings.h:
-../Core/Src/dbms/data.h:
-../Core/Src/dbms/model.h:
+../Core/Src/dbms/elcon.h:
+../Core/Src/dbms/vinterface.h:
+../Core/Src/dbms/j1772.h:
