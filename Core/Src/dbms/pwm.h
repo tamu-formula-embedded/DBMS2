@@ -13,7 +13,8 @@
 #include "utils/common.h"
 #include "context.h"
 
-// TODO: Wtf is this used for?
+// Q: Wtf is this used for?
+// A: Fan control
 int ConfigPwmLines(DbmsCtx* ctx);
 int SetPwmStates(DbmsCtx* ctx);
 

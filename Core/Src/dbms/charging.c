@@ -8,6 +8,7 @@ void ChargingEnter(DbmsCtx* ctx)
 
 void ChargingUpdate(DbmsCtx* ctx)
 {
+    
 
 }
 

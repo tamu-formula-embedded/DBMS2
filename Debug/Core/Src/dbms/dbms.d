@@ -63,9 +63,10 @@ Core/Src/dbms/dbms.o: ../Core/Src/dbms/dbms.c ../Core/Src/dbms/dbms.h \
  ../Core/Src/dbms/model/../storage.h ../Core/Src/dbms/faults/faults.h \
  ../Core/Src/dbms/ledctl.h ../Core/Src/dbms/sched.h \
  ../Core/Src/dbms/settings.h ../Core/Src/dbms/storage.h \
- ../Core/Src/dbms/vinterface.h ../Core/Src/dbms/pwm.h \
- ../Core/Src/dbms/isense.h ../Core/Src/dbms/can.h \
- ../Core/Src/dbms/elcon.h ../Core/Src/dbms/blackbox.h
+ ../Core/Src/dbms/can.h ../Core/Src/dbms/vinterface.h \
+ ../Core/Src/dbms/pwm.h ../Core/Src/dbms/isense.h \
+ ../Core/Src/dbms/elcon.h ../Core/Src/dbms/charging.h \
+ ../Core/Src/dbms/j1772.h ../Core/Src/dbms/blackbox.h
 ../Core/Src/dbms/dbms.h:
 ../Core/Src/dbms/utils/common.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -143,9 +144,11 @@ Core/Src/dbms/dbms.o: ../Core/Src/dbms/dbms.c ../Core/Src/dbms/dbms.h \
 ../Core/Src/dbms/sched.h:
 ../Core/Src/dbms/settings.h:
 ../Core/Src/dbms/storage.h:
+../Core/Src/dbms/can.h:
 ../Core/Src/dbms/vinterface.h:
 ../Core/Src/dbms/pwm.h:
 ../Core/Src/dbms/isense.h:
-../Core/Src/dbms/can.h:
 ../Core/Src/dbms/elcon.h:
+../Core/Src/dbms/charging.h:
+../Core/Src/dbms/j1772.h:
 ../Core/Src/dbms/blackbox.h:
