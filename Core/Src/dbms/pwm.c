@@ -8,7 +8,8 @@ int ConfigPwmLines(DbmsCtx* ctx)
 
 int SetPwmStates(DbmsCtx* ctx)
 {
-    float soc = ctx->model.z_oc;
+    // TODO: make this impl fan control
+    float soc = 0;  
 
     uint32_t arr = __HAL_TIM_GET_AUTORELOAD(ctx->hw.timer_pwm_1);
     uint32_t ccr = (uint32_t)((soc / 100.0f) * (arr + 1));

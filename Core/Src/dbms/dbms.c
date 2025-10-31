@@ -235,22 +235,27 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->req_state = DBMS_SHUTDOWN;
     }
 
+    // TODO: redo the statemachine, fix all this fuckshit
+
     //
     //  Gracefully handle state transition
     //
     if (ctx->cur_state != DBMS_SHUTDOWN && ctx->req_state == DBMS_SHUTDOWN)
     {
+        if (ctx->cur_state == DBMS_CHARGING)
+            ChargingExit(ctx);
         DbmsPerformShutdown(ctx);
     }
-    else if (ctx->cur_state != DBMS_ACTIVE && ctx->req_state == DBMS_ACTIVE)
+    else if (ctx->cur_state != DBMS_ACTIVE && (ctx->req_state == DBMS_ACTIVE || ctx->req_state == DBMS_CHARGING))
     {
         ctx->led_state = LED_INIT;
         ProcessLedAction(ctx);
         DbmsPerformWakeup(ctx);
-    }
-    else if (ctx->req_state == DBMS_CHARGING)
-    {
-        ctx->cur_state = DBMS_CHARGING;
+        if (ctx->req_state == DBMS_CHARGING)
+        {
+            ctx->cur_state = DBMS_CHARGING;
+            ChargingEnter(ctx);
+        }
     }
 
     //
@@ -325,7 +330,7 @@ void DbmsIter(DbmsCtx* ctx)
     //
     if (ctx->cur_state == DBMS_CHARGING)
     {
-
+        ChargingUpdate(ctx);
     }
 
     // Swap blackbox data and capture current state
@@ -350,6 +355,7 @@ void DbmsIter(DbmsCtx* ctx)
     //
     //  Send plex metrics (this is kinda ugly)
     //
+    // TODO: resolve conflicting metrics
     SendPlexMetrics(ctx);
     
     //

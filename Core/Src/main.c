@@ -641,8 +641,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
         uint32_t captured_value = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
         if (captured_value)
         {
-        	//update pwm values
+            dbms_ctx.j1772.cp_duty_cycle = 100 * HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2) / captured_value; // if 1 µs timer tick
         }
+        dbms_ctx.j1772.last_cp_pwm_read = HAL_GetTick();
         //update receive ts
     }
 }
