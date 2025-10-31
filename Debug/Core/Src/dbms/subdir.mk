@@ -7,9 +7,11 @@
 C_SRCS += \
 ../Core/Src/dbms/blackbox.c \
 ../Core/Src/dbms/can.c \
+../Core/Src/dbms/charging.c \
 ../Core/Src/dbms/dbms.c \
 ../Core/Src/dbms/elcon.c \
 ../Core/Src/dbms/isense.c \
+../Core/Src/dbms/j1772.c \
 ../Core/Src/dbms/ledctl.c \
 ../Core/Src/dbms/pwm.c \
 ../Core/Src/dbms/sched.c \
@@ -20,9 +22,11 @@ C_SRCS += \
 OBJS += \
 ./Core/Src/dbms/blackbox.o \
 ./Core/Src/dbms/can.o \
+./Core/Src/dbms/charging.o \
 ./Core/Src/dbms/dbms.o \
 ./Core/Src/dbms/elcon.o \
 ./Core/Src/dbms/isense.o \
+./Core/Src/dbms/j1772.o \
 ./Core/Src/dbms/ledctl.o \
 ./Core/Src/dbms/pwm.o \
 ./Core/Src/dbms/sched.o \
@@ -33,9 +37,11 @@ OBJS += \
 C_DEPS += \
 ./Core/Src/dbms/blackbox.d \
 ./Core/Src/dbms/can.d \
+./Core/Src/dbms/charging.d \
 ./Core/Src/dbms/dbms.d \
 ./Core/Src/dbms/elcon.d \
 ./Core/Src/dbms/isense.d \
+./Core/Src/dbms/j1772.d \
 ./Core/Src/dbms/ledctl.d \
 ./Core/Src/dbms/pwm.d \
 ./Core/Src/dbms/sched.d \
@@ -51,7 +57,7 @@ Core/Src/dbms/%.o Core/Src/dbms/%.su Core/Src/dbms/%.cyclo: ../Core/Src/dbms/%.c
 clean: clean-Core-2f-Src-2f-dbms
 
 clean-Core-2f-Src-2f-dbms:
-	-$(RM) ./Core/Src/dbms/blackbox.cyclo ./Core/Src/dbms/blackbox.d ./Core/Src/dbms/blackbox.o ./Core/Src/dbms/blackbox.su ./Core/Src/dbms/can.cyclo ./Core/Src/dbms/can.d ./Core/Src/dbms/can.o ./Core/Src/dbms/can.su ./Core/Src/dbms/dbms.cyclo ./Core/Src/dbms/dbms.d ./Core/Src/dbms/dbms.o ./Core/Src/dbms/dbms.su ./Core/Src/dbms/elcon.cyclo ./Core/Src/dbms/elcon.d ./Core/Src/dbms/elcon.o ./Core/Src/dbms/elcon.su ./Core/Src/dbms/isense.cyclo ./Core/Src/dbms/isense.d ./Core/Src/dbms/isense.o ./Core/Src/dbms/isense.su ./Core/Src/dbms/ledctl.cyclo ./Core/Src/dbms/ledctl.d ./Core/Src/dbms/ledctl.o ./Core/Src/dbms/ledctl.su ./Core/Src/dbms/pwm.cyclo ./Core/Src/dbms/pwm.d ./Core/Src/dbms/pwm.o ./Core/Src/dbms/pwm.su ./Core/Src/dbms/sched.cyclo ./Core/Src/dbms/sched.d ./Core/Src/dbms/sched.o ./Core/Src/dbms/sched.su ./Core/Src/dbms/settings.cyclo ./Core/Src/dbms/settings.d ./Core/Src/dbms/settings.o ./Core/Src/dbms/settings.su ./Core/Src/dbms/storage.cyclo ./Core/Src/dbms/storage.d ./Core/Src/dbms/storage.o ./Core/Src/dbms/storage.su ./Core/Src/dbms/vinterface.cyclo ./Core/Src/dbms/vinterface.d ./Core/Src/dbms/vinterface.o ./Core/Src/dbms/vinterface.su
+	-$(RM) ./Core/Src/dbms/blackbox.cyclo ./Core/Src/dbms/blackbox.d ./Core/Src/dbms/blackbox.o ./Core/Src/dbms/blackbox.su ./Core/Src/dbms/can.cyclo ./Core/Src/dbms/can.d ./Core/Src/dbms/can.o ./Core/Src/dbms/can.su ./Core/Src/dbms/charging.cyclo ./Core/Src/dbms/charging.d ./Core/Src/dbms/charging.o ./Core/Src/dbms/charging.su ./Core/Src/dbms/dbms.cyclo ./Core/Src/dbms/dbms.d ./Core/Src/dbms/dbms.o ./Core/Src/dbms/dbms.su ./Core/Src/dbms/elcon.cyclo ./Core/Src/dbms/elcon.d ./Core/Src/dbms/elcon.o ./Core/Src/dbms/elcon.su ./Core/Src/dbms/isense.cyclo ./Core/Src/dbms/isense.d ./Core/Src/dbms/isense.o ./Core/Src/dbms/isense.su ./Core/Src/dbms/j1772.cyclo ./Core/Src/dbms/j1772.d ./Core/Src/dbms/j1772.o ./Core/Src/dbms/j1772.su ./Core/Src/dbms/ledctl.cyclo ./Core/Src/dbms/ledctl.d ./Core/Src/dbms/ledctl.o ./Core/Src/dbms/ledctl.su ./Core/Src/dbms/pwm.cyclo ./Core/Src/dbms/pwm.d ./Core/Src/dbms/pwm.o ./Core/Src/dbms/pwm.su ./Core/Src/dbms/sched.cyclo ./Core/Src/dbms/sched.d ./Core/Src/dbms/sched.o ./Core/Src/dbms/sched.su ./Core/Src/dbms/settings.cyclo ./Core/Src/dbms/settings.d ./Core/Src/dbms/settings.o ./Core/Src/dbms/settings.su ./Core/Src/dbms/storage.cyclo ./Core/Src/dbms/storage.d ./Core/Src/dbms/storage.o ./Core/Src/dbms/storage.su ./Core/Src/dbms/vinterface.cyclo ./Core/Src/dbms/vinterface.d ./Core/Src/dbms/vinterface.o ./Core/Src/dbms/vinterface.su
 
 .PHONY: clean-Core-2f-Src-2f-dbms
 

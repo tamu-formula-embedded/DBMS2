@@ -1,9 +1,3 @@
-../Core/Src/dbms/charging.c:34:6:StackFindMinMaxVoltages	40	static
-../Core/Src/dbms/charging.c:56:6:StackNeedsBalancing	56	static
-../Core/Src/dbms/charging.c:89:6:StackSetCellBalanceTimer	56	dynamic
-../Core/Src/dbms/charging.c:113:6:StackStartBalancing	24	static
-../Core/Src/dbms/charging.c:128:6:StackUpdateBalancing	32	static
-../Core/Src/dbms/charging.c:142:6:StackBalancingComplete	488	static
-../Core/Src/dbms/charging.c:209:6:StackBalancingAbortedByFault	488	static
-../Core/Src/dbms/charging.c:240:6:StackBalancingConfig	24	static
-../Core/Src/dbms/charging.c:247:6:StackStartCharging	16	static
+../Core/Src/dbms/charging.c:3:6:ChargingEnter	16	static
+../Core/Src/dbms/charging.c:9:6:ChargingUpdate	16	static
+../Core/Src/dbms/charging.c:14:6:ChargingExit	16	static
