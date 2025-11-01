@@ -84,6 +84,8 @@ void DbmsInit(DbmsCtx* ctx)
     ConfigPwmLines(ctx);
     DataInit(ctx);
 
+    ChargingEnter(ctx);
+
 }
 
 int DbmsPerformWakeup(DbmsCtx* ctx)
