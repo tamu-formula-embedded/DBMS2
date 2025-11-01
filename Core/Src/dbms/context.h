@@ -192,9 +192,8 @@ typedef struct _DbmsCtx
         LTE lut_therm_v_to_t[N_THERM_V_TO_T_ENTRIES];
     } data;
 
-    DbmsState req_state; // the state we want
-    DbmsState cur_state; // the state we are in
     LedState led_state;  // the state of the LEDs
+    bool active;
 
     DbmsSettings* settings; // struct fwd defs has to be a ptr
 
@@ -284,14 +283,17 @@ typedef struct _DbmsCtx
         bool        pp_connect;
         bool        charge_en_req;
         int64_t     last_cp_pwm_read;
-        // for testing:
         int64_t     pwm_ts;
         bool        pwm_recieved;
+        uint32_t    maxCurrentSupply;
     } j1772;
 
     struct
     {
+        int64_t heartbeat; 
         ChargingState state;
+        bool allowed;
+        bool conn;
     } charging;
 
 } DbmsCtx;

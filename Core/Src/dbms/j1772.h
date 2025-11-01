@@ -3,9 +3,10 @@
 
 #include "context.h"
 #include "storage.h"
+#include "vinterface.h"
 
 // TODO: make this a setting?
-#define PP_LOW_THRESHOLD_MV     2200
+#define PP_GOOD_THRESHOLD_MV    1600
 #define PWM_READ_TIMEOUT        500
 
 void J1772SetChargeEnable(DbmsCtx* ctx, bool en);
