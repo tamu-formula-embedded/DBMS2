@@ -63,7 +63,14 @@ void StackDumpCellsToBalance(DbmsCtx* ctx)
     }
 }
 
-void StackUpdateBalancing(DbmsCtx* ctx)
+/**
+ *   3 step process -
+ *   1. set up individual cell timers (write non-zero values to cb_cell_ctrl registers) - need to experiment with timer
+ * values
+ *   2. configure balancing method
+ *   3. set additional controls (write to bal_ctrl2 register to configure auto or manual balancing)
+ */
+void StackStartBalancing(DbmsCtx* ctx)
 {
     for (size_t segment = 0; segment < N_SEGMENTS; ++segment)
     {
@@ -76,7 +83,7 @@ void StackUpdateBalancing(DbmsCtx* ctx)
                 uint8_t device_addr = (side_index * N_MONITORS_PER_SIDE) + monitor;
                 
                 StackSetDeviceBalanceTimer(ctx, device_addr, ctx->cell_states[side_index].cells_to_balance);
-                StackStartBalancing(ctx);
+                StackStartDeviceBalancing(ctx, device_addr);
             }
         }
     }
@@ -182,33 +189,6 @@ void StackStartDeviceBalancing(DbmsCtx* ctx, uint8_t device_addr)
     frame[6] = 0x00; // crc
     SendStackFrameSetCrc(ctx, frame, sizeof(frame));
     HAL_Delay(8);
-}
-
-
-/**
- *   3 step process -
- *   1. set up individual cell timers (write non-zero values to cb_cell_ctrl registers) - need to experiment with timer
- * values
- *   2. configure balancing method
- *   3. set additional controls (write to bal_ctrl2 register to configure auto or manual balancing)
- */
-void StackStartBalancing(DbmsCtx* ctx)
-{
-    for (size_t segment = 0; segment < N_SEGMENTS; ++segment)
-    {
-        for (size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg)
-        {
-            size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
-
-            for(size_t monitor = 0; monitor < N_MONITORS_PER_SIDE; ++monitor)
-            {
-                uint8_t device_addr = (side_index * N_MONITORS_PER_SIDE) + monitor;
-                
-                StackSetDeviceBalanceTimer(ctx, device_addr, ctx->cell_states[side_index].cells_to_balance);
-                StackStartDeviceBalancing(ctx, device_addr);
-            }
-        }
-    }
 }
 
 
