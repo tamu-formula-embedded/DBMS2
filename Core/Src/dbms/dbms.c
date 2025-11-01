@@ -34,7 +34,7 @@ void DbmsAlloc(DbmsCtx* ctx)
 void DbmsInit(DbmsCtx* ctx)
 {
     int status = 0;
-    ctx->cur_state = DBMS_SHUTDOWN;
+    ctx->active = false;
     ctx->led_state = LED_INIT;
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
@@ -137,7 +137,6 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
         ctx->led_state = LED_ERROR;
         return status;
     }
-    ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_IDLE;
 
     ctx->qstats.historic_accumulated_loss += ctx->qstats.accumulated_loss;
@@ -149,7 +148,61 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     return status;
 }
 
-#define PERIOD(CNT, HZ, OFFSET) (fmod(CNT, (ITER_TARGET_HZ / (HZ + 0.))) == OFFSET)
+/**
+ * Handle active logic: poll voltages and temps, handle faults, etc.
+ */
+void DbmsHandleActive(DbmsCtx* ctx)
+{
+    if (!ctx->active) return;
+
+    for (int i = 0; i < N_SIDES; i++)
+    {
+        #if SPLIT_STACK_OPS
+        if (ctx->stats.iters % 2 == i % 2)
+        #endif
+        {
+            StackUpdateVoltReadingSingle(ctx, i);   
+            HAL_Delay(SINGLE_MSG_DELAY);            
+        }
+    }        
+    
+    HAL_Delay(GROUP_MSG_DELAY);
+
+    for (uint8_t i = 0; i < N_SIDES; i++)
+    {
+        // todo: think abt switching these
+        #if SPLIT_STACK_OPS 
+        StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
+        HAL_Delay(SINGLE_MSG_DELAY);
+        #else
+        StackUpdateTempReadingSingle(ctx, i, false);
+        HAL_Delay(SINGLE_MSG_DELAY);
+        StackUpdateTempReadingSingle(ctx, i, true);
+        HAL_Delay(SINGLE_MSG_DELAY);
+        #endif
+    }
+
+    if (GetSetting(ctx, IGNORE_BAD_THERMS))
+    {
+        FillMissingTempReadings(ctx);
+    }
+    HAL_Delay(GROUP_MSG_DELAY);
+
+
+    if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
+    {               
+        CheckCurrentFaults(ctx);
+        CheckTemperatureFaults(ctx);
+        CheckVoltageFaults(ctx);
+
+        // PollFaultSummary(ctx);
+        HAL_Delay(SINGLE_MSG_DELAY);
+    }
+
+    ThrowHardFault(ctx);                // this can override fault state
+    HAL_Delay(GROUP_MSG_DELAY);
+}
+
 
 void DbmsIter(DbmsCtx* ctx)
 {
@@ -157,9 +210,9 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
     
-    //
-    //  Blackbox data requested
-    //
+    /**
+     * Handle blackbox data requested
+     */
     if (ctx->blackbox.requested)
     {
         if ((status = BlackboxSend(ctx)) != HAL_OK)
@@ -174,9 +227,7 @@ void DbmsIter(DbmsCtx* ctx)
         ConfigCurrentSensor(ctx, 10);
     }
 
-    //
-    //  Store the settings when required
-    //
+    // Store the settings when required
     if (ctx->need_to_sync_settings)
     {
         // should we also check that we are awake?
@@ -191,9 +242,7 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->need_to_sync_settings = false;
     }
 
-    //
-    //  Store the Q0 value when required
-    //
+    // Store the Q0 value when required
     if (ctx->need_to_reset_qstats)
     {
         if ((status = SaveQStats(ctx)) != HAL_OK)
@@ -204,139 +253,50 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->need_to_reset_qstats = false;
     }
 
-    //
-    //  Let everybody know that we are alive
-    //
+    // Let everybody know that we are alive
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
 
-    //
-    //  Its been too long since we have recived a frame, we need to force a shutdown
-    //  otherwise we want to be active
-    //
+    /**
+     * Active/shutdown switch based on main heartbeat
+     * If it's been too long since we have recived a frame, we need to force a shutdown
+     * otherwise we want to be active
+     */
     uint64_t cur_time = HAL_GetTick();
     uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
-    if (cur_time - ctx->last_rx_heartbeat < quiet_ms && cur_time - ctx->elcon.heartbeat < quiet_ms)
+    if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
     {
-        // ThrowHardFault(ctx);
-    }
-    else if (cur_time - ctx->elcon.heartbeat < quiet_ms)
-    {
-        ctx->req_state = DBMS_CHARGING;
-    }
-    else if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
-    {
-        ctx->req_state = DBMS_ACTIVE;
-    }
-    else if (cur_time - ctx->last_rx_heartbeat > quiet_ms)
-    {
-        ctx->req_state = DBMS_SHUTDOWN;
-    }
-
-    // TODO: redo the statemachine, fix all this fuckshit
-
-    //
-    //  Gracefully handle state transition
-    //
-    if (ctx->cur_state != DBMS_SHUTDOWN && ctx->req_state == DBMS_SHUTDOWN)
-    {
-        if (ctx->cur_state == DBMS_CHARGING)
-            ChargingExit(ctx);
-        DbmsPerformShutdown(ctx);
-    }
-    else if (ctx->cur_state == DBMS_SHUTDOWN && ctx->req_state != DBMS_SHUTDOWN)
-    {
-        ctx->led_state = LED_INIT;
-        ProcessLedAction(ctx);
-        DbmsPerformWakeup(ctx);
-        ctx->cur_state = ctx->req_state;
-        if (ctx->req_state == DBMS_CHARGING)
+        if (!ctx->active)
         {
-            ChargingEnter(ctx);
+            ctx->led_state = LED_INIT;
+            ProcessLedAction(ctx);
+            DbmsPerformWakeup(ctx);
+            ctx->led_state = LED_ACTIVE;
         }
+        ctx->active = true;
+        DbmsHandleActive(ctx);
     }
-
-    //
-    //   Handle shutdown state
-    //
-    if (ctx->cur_state == DBMS_SHUTDOWN)
+    else 
     {
+        if (ctx->active)
+            DbmsPerformShutdown(ctx);
+        ctx->active = false;
         SetFaultLine(ctx, true);
         ctx->need_to_save_faults = false;
         ctx->led_state = LED_IDLE;
     }
 
-    //
-    //  Handle ACTIVE/CHARGING common logic poll voltages 
-    //  and temps, handle faults, etc.
-    // 
-    if (ctx->cur_state == DBMS_ACTIVE || ctx->cur_state == DBMS_CHARGING)
-    {
-        ctx->led_state = (ctx->cur_state == DBMS_ACTIVE) ? LED_ACTIVE : LED_CHARGING;       // start with the led in our resp. state
+    ChargingUpdate(ctx);
 
-        for (int i = 0; i < N_SIDES; i++)
-        {
-            #if SPLIT_STACK_OPS
-            if (ctx->stats.iters % 2 == i % 2)
-            #endif
-            {
-                StackUpdateVoltReadingSingle(ctx, i);   
-                HAL_Delay(SINGLE_MSG_DELAY);
-                REVERSE_ARRAY_T(ctx->cell_states[i].voltages, N_GROUPS_PER_SIDE, float);
-            }
-        }        
-        
-        HAL_Delay(GROUP_MSG_DELAY);
+    // Update the state of charge model
+    UpdateModel(ctx);   // TODO: add condition for when we update this
 
-        for (uint8_t i = 0; i < N_SIDES; i++)
-        {
-            // todo: think abt switching these
-            #if SPLIT_STACK_OPS 
-            StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
-            HAL_Delay(SINGLE_MSG_DELAY);
-            #else
-            StackUpdateTempReadingSingle(ctx, i, false);
-            HAL_Delay(SINGLE_MSG_DELAY);
-            StackUpdateTempReadingSingle(ctx, i, true);
-            HAL_Delay(SINGLE_MSG_DELAY);
-            #endif
-        }
-
-        if (GetSetting(ctx, IGNORE_BAD_THERMS))
-        {
-            FillMissingTempReadings(ctx);
-        }
-        HAL_Delay(GROUP_MSG_DELAY);
-
-    
-        if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
-        {               
-            CheckCurrentFaults(ctx);
-            CheckTemperatureFaults(ctx);
-            CheckVoltageFaults(ctx);
-
-            // PollFaultSummary(ctx);
-            HAL_Delay(SINGLE_MSG_DELAY);
-        }
-
-        ThrowHardFault(ctx);                // this can override fault state
-        HAL_Delay(GROUP_MSG_DELAY);
-    }
-
-    //
-    //  Handle CHARGING only logic
-    //
-    if (ctx->cur_state == DBMS_CHARGING)
-    {
-        ChargingUpdate(ctx);
-    }
-
-    // Swap blackbox data and capture current state
+    // Blackbox handler
     BlackboxSwapAndUpdate(ctx);
 
-    //
-    //  save faults and blackbox data to eeprom
-    //
+    /**
+     * Save faults and blackbox data to eeprom
+     */
     if (ctx->need_to_save_faults)
     {
         if ((status = SaveFaultState(ctx)) != HAL_OK)
@@ -350,43 +310,31 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->need_to_save_faults = false;
     }
 
-    //
-    //  Send plex metrics (this is kinda ugly)
-    //
-    // TODO: resolve conflicting metrics
+    /**
+     * Transmit telemetry
+     */
     SendPlexMetrics(ctx);
-    
-    //
-    //  Update the state of charge model
-    //
-    UpdateModel(ctx);   // TODO: add condition for when we update this
-
-    //
-    //  Transmit important telemetry
-    //
     if (HAL_GetTick() - ctx->last_rx_telembeat < 5000)// < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
-        SendMetrics(ctx);
+        SendMetrics(ctx);               // TODO: resolve conflicting metrics
         SendCellVoltages(ctx);
         SendCellTemps(ctx);
     }
 
-    //
-    //  Update the LEDs (etc.). Led state should be set every time the cur_state changes
-    //
+    /**
+     * Handle LED states and such
+     */
     SetPwmStates(ctx);
     ProcessLedAction(ctx);
     MonitorLedBlink(ctx);
 
-    //
-    //  Schedule the next loop
-    //
+    /**
+     * Schedule the next loop
+     */
     ctx->iter_end_us = GetUs(ctx);
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     
-    //CanLog(ctx, "%d\niters: ", info->iter);
-
     HAL_Delay(ctx->stats.end_delay / 1000);
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
@@ -476,9 +424,11 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 #endif
 
     case CANID_ELCON_RX:
-        CanLog(ctx, "Wtf man\n");
         HandleElconHeartbeat(ctx, rx_data);
-      
+        break;
+    case CANID_CHARGING_HB:
+        CanLog(ctx, "Charging HB\n");
+        ctx->charging.heartbeat = HAL_GetTick();
         break;
     default:
         ctx->stats.n_unmatched_can_frames++;
@@ -491,13 +441,11 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 //
 void DbmsErr(DbmsCtx* ctx)
 {
-    ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_ERROR;
     DbmsPerformShutdown(ctx);    
 }
 
 void DbmsClose(DbmsCtx* ctx)
 {
-    ctx->cur_state = DBMS_SHUTDOWN;
     ctx->led_state = LED_IDLE;
 }

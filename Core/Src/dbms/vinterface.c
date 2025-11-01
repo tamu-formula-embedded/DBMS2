@@ -162,6 +162,13 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 48, ctx->elcon.status_flags);
     SendMetric(ctx, 49, ctx->stats.fault_line_faulted);
 
+    SendMetric(ctx, 50, ctx->j1772.cp_duty_cycle);
+    SendMetric(ctx, 51, ctx->j1772.pp_connect);
+    SendMetric(ctx, 52, ctx->j1772.charge_en_req);
+    SendMetric(ctx, 53, ctx->j1772.pp_raw_voltage);
+    SendMetric(ctx, 54, ctx->charging.conn);
+    SendMetric(ctx, 55, ctx->j1772.maxCurrentSupply);
+
     return 0;
 }
 
@@ -256,7 +263,7 @@ int SendCellVoltages(DbmsCtx* ctx)
     {
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
-            buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
+            buffer[N_GROUPS_PER_SIDE - j - 1] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
         }
 
         SendCellDataBuffer(ctx, CANID_CELLSTATE_VOLTS, i, buffer, ARRAY_LEN(buffer));

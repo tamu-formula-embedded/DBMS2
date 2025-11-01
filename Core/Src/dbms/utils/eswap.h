@@ -14,12 +14,12 @@
 
 #define REVERSE_ARRAY_T(arr, len, type)             \
     do {                                            \
-        size_t i, j;                                \
-        for (i = 0, j = (len) - 1; i < j; ++i, --j) \
+        size_t _i, _j;                                \
+        for (_i = 0, _j = (len) - 1; _i < _j; ++_i, --_j) \
         {                                           \
-            type temp = arr[i];                     \
-            arr[i] = arr[j];                        \
-            arr[j] = temp;                          \
+            type temp = arr[_i];                     \
+            arr[_i] = arr[_j];                        \
+            arr[_j] = temp;                          \
         }                                           \
     } while (0)
 

@@ -43,6 +43,7 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on)
 
 void MonitorLedBlink(DbmsCtx* ctx)
 {
+    //if (!ctx->active) return;
 
     uint64_t curr_ts = GetUs(ctx) - ctx->m_led_blink_ts;
 

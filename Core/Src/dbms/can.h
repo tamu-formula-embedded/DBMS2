@@ -52,6 +52,7 @@
 
     #define CANID_RX_CLEAR_FAULTS       0x0B7
     #define CANID_RX_SET_INITIAL_CHARGE 0x0B8
+    #define CANID_CHARGING_HB           0x0B9
 
     #define CANID_RX_TELEMBEAT          0x0BF
 
