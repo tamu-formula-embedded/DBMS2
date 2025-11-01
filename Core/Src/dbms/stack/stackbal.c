@@ -11,7 +11,7 @@
 // TODO: rework all this
 
 // to determine if we need balancing
-#define BALANCE_LIMIT           1000.0f
+#define BALANCE_LIMIT           5.0f
 
 // so that we aren't just doing v > min(v) to filter groups - small margin
 #define BALANCE_MARGIN          5.0f
@@ -25,6 +25,63 @@
 #define BAL_CTRL2_BAL_GO_MASK   0x02
 #define BAL_CTRL2_CONFIG        0x31    // auto_bal = 1, otcb_en = 1, flt_stop = 1
 
+void StackDumpCellsToBalance(DbmsCtx* ctx)
+{
+    for (size_t side_index = 0; side_index < N_SIDES; ++side_index)
+    {
+        CanLog(ctx, "Side ");
+        // Convert side_index to string manually
+        char side_str[8];
+        side_str[0] = '0' + side_index;
+        side_str[1] = ':';
+        side_str[2] = ' ';
+        side_str[3] = '\0';
+        CanLog(ctx, side_str);
+        
+        bool found_any = false;
+        for (size_t group = 0; group < N_GROUPS_PER_SIDE; ++group)
+        {
+            if (ctx->cell_states[side_index].cells_to_balance[group])
+            {
+                char cell_str[8];
+                cell_str[0] = 'C';
+                cell_str[1] = '0' + (group / 10);      // Tens digit
+                cell_str[2] = '0' + (group % 10);      // Ones digit
+                cell_str[3] = ' ';
+                cell_str[4] = '\0';
+                CanLog(ctx, cell_str);
+                found_any = true;
+            }
+        }
+        
+        if (!found_any)
+        {
+            CanLog(ctx, "None");
+        }
+        
+        CanLog(ctx, "\n");
+    }
+}
+
+void StackUpdateBalancing(DbmsCtx* ctx)
+{
+    for (size_t segment = 0; segment < N_SEGMENTS; ++segment)
+    {
+        for (size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg)
+        {
+            size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
+
+            for(size_t monitor = 0; monitor < N_MONITORS_PER_SIDE; ++monitor)
+            {
+                uint8_t device_addr = (side_index * N_MONITORS_PER_SIDE) + monitor;
+                
+                StackSetDeviceBalanceTimer(ctx, device_addr, ctx->cell_states[side_index].cells_to_balance);
+                StackStartBalancing(ctx);
+            }
+        }
+    }
+}
+
 void StackBalancingConfig(DbmsCtx* ctx)
 {
     // Setting balancing method to auto balancing and to stop at fault
@@ -32,6 +89,57 @@ void StackBalancingConfig(DbmsCtx* ctx)
     SendStackFrameSetCrc(ctx, frame_cb_config, sizeof(frame_cb_config));
 }
 
+void StackFindMinMaxVoltages(DbmsCtx* ctx, size_t segment, float* min_voltage, float* max_voltage)
+{
+
+    for (size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg)
+    {
+
+        size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
+        for (size_t group = 0; group < N_GROUPS_PER_SIDE; ++group)
+        {
+            float voltage = ctx->cell_states[side_index].voltages[group];
+
+            if (voltage <= 0.0f) continue;
+
+            if (voltage < *min_voltage) *min_voltage = voltage;
+            if (voltage > *max_voltage) *max_voltage = voltage;
+        }
+    }
+}
+
+bool StackNeedsBalancing(DbmsCtx* ctx)
+{
+    // if any segment needs balancing - if this is false at the end we can skip balancing
+    bool needs_balancing = false;
+
+    for (size_t segment = 0; segment < N_SEGMENTS; ++segment)
+    {
+        float min_voltage = 5000.0f;
+        float max_voltage = 0.0f;
+        StackFindMinMaxVoltages(ctx, segment, &min_voltage, &max_voltage);
+
+        // segment needs balancing
+        if (max_voltage - min_voltage > BALANCE_LIMIT)
+        {
+            needs_balancing = true;
+
+            // determine cells we need to balance
+            float balance_threshold = min_voltage + BALANCE_MARGIN;
+            for (size_t side_in_seg = 0; side_in_seg < N_SIDES_PER_SEG; ++side_in_seg)
+            {
+                size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
+                for (size_t group = 0; group < N_GROUPS_PER_SIDE; ++group)
+                {
+                    float voltage = ctx->cell_states[side_index].voltages[group];
+                    ctx->cell_states[side_index].cells_to_balance[group] = voltage > balance_threshold;
+                }
+            }
+        }
+    }
+
+    return needs_balancing;
+}
 
 void StackSetDeviceBalanceTimer(DbmsCtx* ctx, uint8_t device_addr, bool cells_to_balance[N_GROUPS_PER_SIDE])
 {

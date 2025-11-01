@@ -13,13 +13,13 @@
 void HandleElconHeartbeat(DbmsCtx* ctx, uint8_t* data)
 {
     ctx->elcon.heartbeat = HAL_GetTick();
-    CanLog(ctx, "t %d\n", ctx->elcon.heartbeat);
+    // CanLog(ctx, "t %d\n", ctx->elcon.heartbeat);
 
     ctx->elcon.voltage_out = be16_to_u16(data) / 10;
     ctx->elcon.current_out = be16_to_u16(data+2) / 10;
 
-    CanLog(ctx, "%d\n", (int) ctx->elcon.voltage_out);
-    CanLog(ctx, "%d\n", (int) ctx->elcon.current_out);
+    // CanLog(ctx, "%d\n", (int) ctx->elcon.voltage_out);
+    // CanLog(ctx, "%d\n", (int) ctx->elcon.current_out);
 
     ctx->elcon.status_flags = data[5];
 }

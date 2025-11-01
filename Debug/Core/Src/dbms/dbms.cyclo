@@ -2,8 +2,15 @@
 ../Core/Src/dbms/dbms.c:34:6:DbmsInit	4
 ../Core/Src/dbms/dbms.c:89:5:DbmsPerformWakeup	2
 ../Core/Src/dbms/dbms.c:131:5:DbmsPerformShutdown	2
+<<<<<<< HEAD
 ../Core/Src/dbms/dbms.c:154:6:DbmsHandleActive	7
 ../Core/Src/dbms/dbms.c:207:6:DbmsIter	12
 ../Core/Src/dbms/dbms.c:342:6:DbmsCanRx	22
 ../Core/Src/dbms/dbms.c:442:6:DbmsErr	1
 ../Core/Src/dbms/dbms.c:448:6:DbmsClose	1
+=======
+../Core/Src/dbms/dbms.c:154:6:DbmsIter	32
+../Core/Src/dbms/dbms.c:396:6:DbmsCanRx	21
+../Core/Src/dbms/dbms.c:494:6:DbmsErr	1
+../Core/Src/dbms/dbms.c:501:6:DbmsClose	1
+>>>>>>> cam/goodbalancingtest
