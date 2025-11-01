@@ -41,8 +41,9 @@ void ChargingUpdate(DbmsCtx* ctx)
         ChargingExit(ctx);
     ctx->charging.conn = charge_conn;
 
-    if(StackNeedsBalancing(ctx))
-    {     
+    if(!ctx->has_balanced && StackNeedsBalancing(ctx))
+    {   
+        ctx->has_balanced = true;  
         ctx->charging.state = CH_BALANCING;
         ctx->led_state = LED_BALANCING;
         StackDumpCellsToBalance(ctx);
