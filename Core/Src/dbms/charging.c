@@ -1,4 +1,7 @@
 #include "charging.h"
+#include "context.h"
+#include "ledctl.h"
+#include "stack/stack.h"
 
 bool ElconConnected(DbmsCtx* ctx)
 {
@@ -18,7 +21,8 @@ bool ChargingConnected(DbmsCtx* ctx)
 
 void ChargingEnter(DbmsCtx* ctx)
 {
-    CanLog(ctx, "Entering charging state\n");
+    ctx->charging.state = CH_CHARGING;
+    ctx->cur_state = DBMS_CHARGING;
 }
 
 void ChargingUpdate(DbmsCtx* ctx)
