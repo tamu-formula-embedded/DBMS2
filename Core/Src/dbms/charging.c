@@ -27,6 +27,15 @@ void ChargingEnter(DbmsCtx* ctx)
 
 void ChargingUpdate(DbmsCtx* ctx)
 {
+
+    if(StackNeedsBalancing(ctx))
+    {     
+        ctx->charging.state = CH_BALANCING;
+        ctx->led_state = LED_BALANCING;
+        //StackDumpCellsToBalance(ctx);
+        //StackUpdateBalancing(ctx);
+    }
+    /*
     J1772ReadState(ctx);
 
     ctx->charging.allowed = HAL_GetTick() - ctx->charging.heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
@@ -43,6 +52,7 @@ void ChargingUpdate(DbmsCtx* ctx)
     ctx->charging.conn = charge_conn;
 
     CanLog(ctx, "Yo bal\n");
+    */
 }
 
 void ChargingExit(DbmsCtx* ctx)
