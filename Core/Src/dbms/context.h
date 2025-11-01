@@ -296,6 +296,8 @@ typedef struct _DbmsCtx
         bool conn;
     } charging;
 
+    bool has_balanced;
 } DbmsCtx;
+
 
 #endif
