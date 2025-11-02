@@ -41,19 +41,29 @@ void ChargingUpdate(DbmsCtx* ctx)
         ChargingExit(ctx);
     ctx->charging.conn = charge_conn;
 
-    if(!ctx->has_balanced && StackNeedsBalancing(ctx))
-    {   
-        ctx->has_balanced = true;  
-        ctx->charging.state = CH_BALANCING;
+    HAL_Delay(1);
+
+    if (ctx->active)
+        StackReadBalStat(ctx, 0);
+
+    HAL_Delay(2);
+
+    if (ctx->active && HAL_GetTick() - ctx->wakeup_ts > 10000 && ctx->charging.state != CH_BALANCING && StackNeedsBalancing(ctx))
+    {
+        ctx->charging.state = CH_BALANCING;   
+        CanLog(ctx, "Balancing:\n");
         ctx->led_state = LED_BALANCING;
         StackDumpCellsToBalance(ctx);
+        HAL_Delay(2);
         StackStartBalancing(ctx);
+        HAL_Delay(10);
     }
-    // else
-    // {
-    //     ctx->charging.state = CH_CHARGING;
-    //     ctx->led_state = LED_CHARGING;
-    // }
+    else
+    {
+        ctx->charging.state = CH_CHARGING;
+        ctx->led_state = LED_CHARGING;
+    }
+    HAL_Delay(10);
 }
 
 void ChargingExit(DbmsCtx* ctx)
