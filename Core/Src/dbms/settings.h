@@ -36,7 +36,7 @@ enum _UserSettingIndex
     TEMP_CURVE_B,
 
     IGNORE_BAD_THERMS,
-
+    CELL_BALANCE_LIMIT,
     __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
 };
 

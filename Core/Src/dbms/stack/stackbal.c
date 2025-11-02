@@ -10,9 +10,6 @@
 
 // TODO: rework all this
 
-// to determine if we need balancing
-#define BALANCE_LIMIT           5.0f
-
 // so that we aren't just doing v > min(v) to filter groups - small margin
 #define BALANCE_MARGIN          5.0f
 
@@ -127,7 +124,7 @@ bool StackNeedsBalancing(DbmsCtx* ctx)
         StackFindMinMaxVoltages(ctx, segment, &min_voltage, &max_voltage);
 
         // segment needs balancing
-        if (max_voltage - min_voltage > BALANCE_LIMIT)
+        if (max_voltage - min_voltage > CELL_BALANCE_LIMIT)
         {
             needs_balancing = true;
 
