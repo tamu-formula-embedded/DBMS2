@@ -84,7 +84,7 @@ void DbmsInit(DbmsCtx* ctx)
     ConfigPwmLines(ctx);
     DataInit(ctx);
 
-    ChargingEnter(ctx);
+    ChargingEnter(ctx); //TODO: remove
 
 }
 
@@ -106,7 +106,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx); // todo: rn start
 
-    // StackBalancingConfig(ctx);
+    StackBalancingConfig(ctx);
 
     if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
     {
@@ -287,6 +287,7 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->need_to_save_faults = false;
         ctx->led_state = LED_IDLE;
     }
+
 
     ChargingUpdate(ctx);
 

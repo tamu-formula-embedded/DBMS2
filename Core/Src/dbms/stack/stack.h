@@ -166,8 +166,8 @@ bool StackIsDoneBalancing(DbmsCtx* ctx);
 
 bool StackNeedsBalancing(DbmsCtx* ctx);
 
-void StackUpdateBalancing(DbmsCtx* ctx);
-
 void StackDumpCellsToBalance(DbmsCtx* ctx);
+
+void StackReadBalStat(DbmsCtx* ctx, uint16_t addr);
 
 #endif

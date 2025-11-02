@@ -138,6 +138,7 @@ bool StackNeedsBalancing(DbmsCtx* ctx)
                 size_t side_index = segment * N_SIDES_PER_SEG + side_in_seg;
                 for (size_t group = 0; group < N_GROUPS_PER_SIDE; ++group)
                 {
+                    if (group % 2 == 1) continue; // debug!
                     float voltage = ctx->cell_states[side_index].voltages[group];
                     ctx->cell_states[side_index].cells_to_balance[group] = voltage > balance_threshold;
                 }
@@ -220,4 +221,49 @@ bool StackIsDoneBalancing(DbmsCtx* ctx)
     // return true;
 
     return false;
+}
+
+/**
+ * Request and populate voltage readings for a monitor by side-addr
+ */
+void StackReadBalStat(DbmsCtx* ctx, uint16_t addr)
+{
+    int status = 0;
+    static uint8_t rx_buffer[1024];
+    uint8_t in_addr = addr * 2 + 1;
+    uint8_t frame[] = {0x80, in_addr & 0xff, 0x05, 0x2B, 0, 0x00, 0x00};
+
+    size_t expected_rx_size = RX_FRAME_SIZE(1);
+
+    if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
+
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
+    ctx->stats.n_rx_stack_frames++;
+
+    // CanLog(ctx, "Frame:");
+    // for (int i = 0; i < 12; i++)
+    // {
+    //     CanLog(ctx, "%02X ", rx_buffer[i]);
+    // }
+    // CanLog(ctx, "\n");
+
+    uint8_t* data = rx_buffer;
+    while (data[0] != frame[3]) data++;
+    data++;
+    uint16_t f_crc = (data[1]) + (data[1+1] << 8);
+    *(data-1) = frame[3];
+    *(data-2) = frame[2];
+    *(data-3) = in_addr;
+    *(data-4) = frame[4]; 
+
+    // CanLog(ctx, "CRC = %04X\n", f_crc); 
+    uint16_t c_crc = CalcCrc16(data-4, 1+4);
+    if (f_crc != c_crc) 
+    {
+        // CanLog(ctx, "CRC! %X %X\n", c_crc, f_crc);
+        ctx->stats.n_rx_stack_bad_crcs++;
+        return;
+    }
+
+    CanLog(ctx, "BAL Stat = %X\n", data[0]);
 }
