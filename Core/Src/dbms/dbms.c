@@ -83,9 +83,6 @@ void DbmsInit(DbmsCtx* ctx)
 
     ConfigPwmLines(ctx);
     DataInit(ctx);
-
-    ChargingEnter(ctx); //TODO: remove
-
 }
 
 int DbmsPerformWakeup(DbmsCtx* ctx)
@@ -117,8 +114,6 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
         // todo: check an error here
     }
 
-    // StackStartCharging(ctx);
-    // DelayUs(ctx, 5000);
     // Bridge_Dev_Conf_FAULT_EN(ctx);
     // DelayUs(ctx, 5000);
     // Stack_Dev_Conf_FAULT_EN(ctx);

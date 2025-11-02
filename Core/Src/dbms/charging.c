@@ -10,13 +10,12 @@ bool ElconConnected(DbmsCtx* ctx)
 
 bool ChargingAllowed(DbmsCtx* ctx)
 {
-
     return HAL_GetTick() - ctx->charging.heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 }
 
 bool ChargingConnected(DbmsCtx* ctx)
 {
-    return ctx->active && ctx->charging.allowed && ElconConnected(ctx) && ctx->j1772.pp_connect;
+    return ctx->active && /*ctx->charging.allowed &&*/ ElconConnected(ctx) /*&& ctx->j1772.pp_connect*/;
 }
 
 void ChargingEnter(DbmsCtx* ctx)
@@ -28,8 +27,7 @@ void ChargingUpdate(DbmsCtx* ctx)
 {   
     J1772ReadState(ctx);
 
-    ctx->charging.allowed = HAL_GetTick() - ctx->charging.heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
-    if (ctx->charging.allowed)
+    if (ctx->charging.state == CH_CONNECTING)
     {
         SendElconRequest(ctx, 0, 0, 0);
     }
@@ -43,31 +41,33 @@ void ChargingUpdate(DbmsCtx* ctx)
 
     HAL_Delay(1);
 
-    if (ctx->active)
-        StackReadBalStat(ctx, 0);
+    CanLog(ctx, "CH = %d\tTH = %d\n", ctx->charging.state, GetSetting(ctx, CELL_BALANCE_LIMIT));
 
-    HAL_Delay(2);
+    // if (ctx->active)
+    //     StackReadBalStat(ctx, 0);
 
-    if (ctx->active && HAL_GetTick() - ctx->wakeup_ts > 10000 && ctx->charging.state != CH_BALANCING && StackNeedsBalancing(ctx))
-    {
-        ctx->charging.state = CH_BALANCING;   
-        CanLog(ctx, "Balancing:\n");
-        ctx->led_state = LED_BALANCING;
-        StackDumpCellsToBalance(ctx);
-        HAL_Delay(2);
-        StackStartBalancing(ctx);
-        HAL_Delay(10);
-    }
-    else
-    {
-        ctx->charging.state = CH_CHARGING;
-        ctx->led_state = LED_CHARGING;
-    }
-    HAL_Delay(10);
+    // HAL_Delay(2);
+
+    // if (ctx->active && HAL_GetTick() - ctx->wakeup_ts > 10000 && ctx->charging.state != CH_BALANCING && StackNeedsBalancing(ctx))
+    // {
+    //     ctx->charging.state = CH_BALANCING;   
+    //     CanLog(ctx, "Balancing:\n");
+    //     ctx->led_state = LED_BALANCING;
+    //     StackDumpCellsToBalance(ctx);
+    //     HAL_Delay(2);
+    //     StackStartBalancing(ctx);
+    //     HAL_Delay(10);
+    // }
+    // else
+    // {
+    //     ctx->charging.state = CH_CHARGING;
+    //     ctx->led_state = LED_CHARGING;
+    // }
+    // HAL_Delay(10);
 }
 
 void ChargingExit(DbmsCtx* ctx)
 {
-    CanLog(ctx, "Exiting charging state\n");
+    ctx->charging.state = CH_CONNECTING;
 }
 
