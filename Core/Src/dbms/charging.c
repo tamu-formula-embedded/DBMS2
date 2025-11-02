@@ -49,11 +49,11 @@ void ChargingUpdate(DbmsCtx* ctx)
         StackDumpCellsToBalance(ctx);
         StackStartBalancing(ctx);
     }
-    else
-    {
-        ctx->charging.state = CH_CHARGING;
-        ctx->led_state = LED_CHARGING;
-    }
+    // else
+    // {
+    //     ctx->charging.state = CH_CHARGING;
+    //     ctx->led_state = LED_CHARGING;
+    // }
 }
 
 void ChargingExit(DbmsCtx* ctx)
