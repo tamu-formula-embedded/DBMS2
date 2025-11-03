@@ -36,34 +36,22 @@ Core/Src/dbms/dbms.o: ../Core/Src/dbms/dbms.c ../Core/Src/dbms/dbms.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  ../Core/Src/dbms/utils/crc.h ../Core/Src/dbms/utils/eswap.h \
  ../Core/Src/dbms/utils/lut.h ../Core/Src/dbms/utils/ma.h \
- ../Core/Src/dbms/context.h ../Core/Src/dbms/stack/stack.h \
- ../Core/Src/dbms/stack/../utils/common.h \
- ../Core/Src/dbms/stack/../faults/faults.h \
- ../Core/Src/dbms/stack/../faults/../utils/common.h \
- ../Core/Src/dbms/stack/../faults/../context.h \
- ../Core/Src/dbms/stack/../faults/../settings.h \
- ../Core/Src/dbms/stack/../faults/../utils/common.h \
- ../Core/Src/dbms/stack/../faults/../context.h \
- ../Core/Src/dbms/stack/../faults/../storage.h \
- ../Core/Src/dbms/stack/../faults/../can.h \
- ../Core/Src/dbms/stack/../faults/../ledctl.h \
- ../Core/Src/dbms/stack/../faults/../sched.h \
- ../Core/Src/dbms/stack/../faults/../settings.h \
- ../Core/Src/dbms/stack/../context.h \
- ../Core/Src/dbms/stack/../model/data.h \
- ../Core/Src/dbms/stack/../model/../context.h \
- ../Core/Src/dbms/stack/../model/../utils/lut.h \
- ../Core/Src/dbms/stack/../can.h ../Core/Src/dbms/stack/../vinterface.h \
- ../Core/Src/dbms/stack/../can.h ../Core/Src/dbms/stack/../utils/common.h \
- ../Core/Src/dbms/stack/../context.h ../Core/Src/dbms/stack/../ledctl.h \
- ../Core/Src/dbms/stack/../sched.h ../Core/Src/dbms/stack/../settings.h \
- ../Core/Src/dbms/model/data.h ../Core/Src/dbms/model/model.h \
- ../Core/Src/dbms/model/../context.h ../Core/Src/dbms/model/data.h \
- ../Core/Src/dbms/model/../utils/lut.h \
- ../Core/Src/dbms/model/../storage.h ../Core/Src/dbms/faults/faults.h \
- ../Core/Src/dbms/ledctl.h ../Core/Src/dbms/sched.h \
- ../Core/Src/dbms/settings.h ../Core/Src/dbms/storage.h \
- ../Core/Src/dbms/can.h ../Core/Src/dbms/vinterface.h \
+ ../Core/Src/dbms/context.h ../Core/Src/dbms/stack.h \
+ ../Core/Src/dbms/bridge.h ../Core/Src/dbms/faults/faults.h \
+ ../Core/Src/dbms/faults/../utils/common.h \
+ ../Core/Src/dbms/faults/../context.h \
+ ../Core/Src/dbms/faults/../settings.h \
+ ../Core/Src/dbms/faults/../utils/common.h \
+ ../Core/Src/dbms/faults/../context.h \
+ ../Core/Src/dbms/faults/../storage.h ../Core/Src/dbms/faults/../can.h \
+ ../Core/Src/dbms/faults/../ledctl.h ../Core/Src/dbms/faults/../sched.h \
+ ../Core/Src/dbms/faults/../settings.h ../Core/Src/dbms/model/data.h \
+ ../Core/Src/dbms/model/../context.h \
+ ../Core/Src/dbms/model/../utils/lut.h ../Core/Src/dbms/can.h \
+ ../Core/Src/dbms/vinterface.h ../Core/Src/dbms/ledctl.h \
+ ../Core/Src/dbms/sched.h ../Core/Src/dbms/settings.h \
+ ../Core/Src/dbms/model/model.h ../Core/Src/dbms/model/data.h \
+ ../Core/Src/dbms/model/../storage.h ../Core/Src/dbms/storage.h \
  ../Core/Src/dbms/pwm.h ../Core/Src/dbms/isense.h \
  ../Core/Src/dbms/elcon.h ../Core/Src/dbms/charging.h \
  ../Core/Src/dbms/j1772.h ../Core/Src/dbms/blackbox.h
@@ -108,44 +96,31 @@ Core/Src/dbms/dbms.o: ../Core/Src/dbms/dbms.c ../Core/Src/dbms/dbms.h \
 ../Core/Src/dbms/utils/lut.h:
 ../Core/Src/dbms/utils/ma.h:
 ../Core/Src/dbms/context.h:
-../Core/Src/dbms/stack/stack.h:
-../Core/Src/dbms/stack/../utils/common.h:
-../Core/Src/dbms/stack/../faults/faults.h:
-../Core/Src/dbms/stack/../faults/../utils/common.h:
-../Core/Src/dbms/stack/../faults/../context.h:
-../Core/Src/dbms/stack/../faults/../settings.h:
-../Core/Src/dbms/stack/../faults/../utils/common.h:
-../Core/Src/dbms/stack/../faults/../context.h:
-../Core/Src/dbms/stack/../faults/../storage.h:
-../Core/Src/dbms/stack/../faults/../can.h:
-../Core/Src/dbms/stack/../faults/../ledctl.h:
-../Core/Src/dbms/stack/../faults/../sched.h:
-../Core/Src/dbms/stack/../faults/../settings.h:
-../Core/Src/dbms/stack/../context.h:
-../Core/Src/dbms/stack/../model/data.h:
-../Core/Src/dbms/stack/../model/../context.h:
-../Core/Src/dbms/stack/../model/../utils/lut.h:
-../Core/Src/dbms/stack/../can.h:
-../Core/Src/dbms/stack/../vinterface.h:
-../Core/Src/dbms/stack/../can.h:
-../Core/Src/dbms/stack/../utils/common.h:
-../Core/Src/dbms/stack/../context.h:
-../Core/Src/dbms/stack/../ledctl.h:
-../Core/Src/dbms/stack/../sched.h:
-../Core/Src/dbms/stack/../settings.h:
-../Core/Src/dbms/model/data.h:
-../Core/Src/dbms/model/model.h:
-../Core/Src/dbms/model/../context.h:
-../Core/Src/dbms/model/data.h:
-../Core/Src/dbms/model/../utils/lut.h:
-../Core/Src/dbms/model/../storage.h:
+../Core/Src/dbms/stack.h:
+../Core/Src/dbms/bridge.h:
 ../Core/Src/dbms/faults/faults.h:
+../Core/Src/dbms/faults/../utils/common.h:
+../Core/Src/dbms/faults/../context.h:
+../Core/Src/dbms/faults/../settings.h:
+../Core/Src/dbms/faults/../utils/common.h:
+../Core/Src/dbms/faults/../context.h:
+../Core/Src/dbms/faults/../storage.h:
+../Core/Src/dbms/faults/../can.h:
+../Core/Src/dbms/faults/../ledctl.h:
+../Core/Src/dbms/faults/../sched.h:
+../Core/Src/dbms/faults/../settings.h:
+../Core/Src/dbms/model/data.h:
+../Core/Src/dbms/model/../context.h:
+../Core/Src/dbms/model/../utils/lut.h:
+../Core/Src/dbms/can.h:
+../Core/Src/dbms/vinterface.h:
 ../Core/Src/dbms/ledctl.h:
 ../Core/Src/dbms/sched.h:
 ../Core/Src/dbms/settings.h:
+../Core/Src/dbms/model/model.h:
+../Core/Src/dbms/model/data.h:
+../Core/Src/dbms/model/../storage.h:
 ../Core/Src/dbms/storage.h:
-../Core/Src/dbms/can.h:
-../Core/Src/dbms/vinterface.h:
 ../Core/Src/dbms/pwm.h:
 ../Core/Src/dbms/isense.h:
 ../Core/Src/dbms/elcon.h:

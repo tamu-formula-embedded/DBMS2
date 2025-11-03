@@ -55,9 +55,10 @@ typedef enum _DbmsState
 
 typedef enum _ChargingState
 {
-    CH_CONNECTING = 0,
+    CH_NO_CONN = 0,
     CH_CHARGING,
-    CH_BALANCING,
+    CH_BALANCING_ODDS,
+    CH_BALANCING_EVENS,
     CH_COMPLETE
 } ChargingState;
 
@@ -214,8 +215,6 @@ typedef struct _DbmsCtx
 
     Stats stats;
 
-   
-
     struct
     {
         int32_t current_ma;
@@ -291,6 +290,8 @@ typedef struct _DbmsCtx
     struct
     {
         int64_t heartbeat; 
+        int64_t state_enter_ts;
+        ChargingState prev_state;
         ChargingState state;
         bool allowed;
         bool conn;

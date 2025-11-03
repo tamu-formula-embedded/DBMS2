@@ -156,18 +156,18 @@ int PollFaultSummary(DbmsCtx* ctx);
 
 void StackBalancingConfig(DbmsCtx* ctx);
 
-void StackSetDeviceBalanceTimer(DbmsCtx* ctx, uint8_t device_addr, bool cells_to_balance[N_GROUPS_PER_SIDE]);
+void StackSetDeviceBalanceTimer(DbmsCtx* ctx, uint8_t device_addr, bool cells_to_balance[N_GROUPS_PER_SIDE], bool odds);
 
-void StackStartDeviceBalancing(DbmsCtx* ctx, uint8_t device_addr);
+void StackStartDeviceBalancing(DbmsCtx* ctx, uint8_t device_addr, int32_t bal_time);
 
-void StackStartBalancing(DbmsCtx* ctx);
+void StackStartBalancing(DbmsCtx* ctx, bool odds, int32_t bal_time);
 
-bool StackIsDoneBalancing(DbmsCtx* ctx);
-
-bool StackNeedsBalancing(DbmsCtx* ctx);
+void StackCalcBalanceTimers(DbmsCtx* ctx, int32_t threshold_ms);
 
 void StackDumpCellsToBalance(DbmsCtx* ctx);
 
 void StackReadBalStat(DbmsCtx* ctx, uint16_t addr);
+
+void StackCalcStats(DbmsCtx* ctx);
 
 #endif

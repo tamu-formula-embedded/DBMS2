@@ -59,3 +59,39 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
         ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
     }
 }
+
+/**
+ * Compute min, avg, max voltages and temperatures 
+ */
+void StackCalcStats(DbmsCtx* ctx)
+{
+    float v_min = 999999.0f, v_max = 0.0f, v_sum = 0.0f;
+    float t_min = 999.0f,    t_max = 0.0f, t_sum = 0.0f;
+
+    for (int i = 0; i < N_SIDES; i++)
+    {
+        for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
+        {
+            float v = ctx->cell_states[i].voltages[j];
+            v_min = MIN(v_min, v);
+            v_max = MAX(v_max, v);
+            v_sum += v;
+        }
+
+        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
+        {
+            float t = ctx->cell_states[i].temps[j];
+            t_min = MIN(t_min, t);
+            t_max = MAX(t_max, t);
+            t_sum += t;
+        }
+    }
+
+    ctx->stats.min_v = v_min / 1000.0f;
+    ctx->stats.max_v = v_max / 1000.0f;
+    ctx->stats.avg_v = v_sum / (N_SIDES * N_GROUPS_PER_SIDE) / 1000.0f;
+
+    ctx->stats.min_t = t_min;
+    ctx->stats.max_t = t_max;
+    ctx->stats.avg_t = t_sum / (N_SIDES * N_TEMPS_PER_SIDE);
+}

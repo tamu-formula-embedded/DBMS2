@@ -25,7 +25,6 @@ SUBDIRS := \
 Core/Src/dbms \
 Core/Src/dbms/faults \
 Core/Src/dbms/model \
-Core/Src/dbms/stack \
 Core/Src/dbms/utils \
 Core/Src \
 Core/Startup \

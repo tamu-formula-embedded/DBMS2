@@ -50,5 +50,9 @@ void LoadFallbackSettings(DbmsCtx* ctx)
     ctx->settings->user_defined[TEMP_CURVE_B] = 65;
 
     ctx->settings->user_defined[IGNORE_BAD_THERMS] = 1;
-    ctx->settings->user_defined[CELL_BALANCE_LIMIT] = 50.0;
+
+    ctx->settings->user_defined[CH_BAL_DELTA] = 50.0;
+    ctx->settings->user_defined[CH_BAL_MIN_V] = 3800;
+    ctx->settings->user_defined[CH_BAL_T_IDX] = 2;
+    ctx->settings->user_defined[CH_TARGET_V] = 4200;
 }
