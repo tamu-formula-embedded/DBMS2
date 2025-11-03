@@ -6,46 +6,20 @@ void CheckVoltageFaults(DbmsCtx* ctx)
     uint32_t min_group_v = GetSetting(ctx, MIN_GROUP_VOLTAGE);
     uint32_t max_v_delta = GetSetting(ctx, MAX_V_DELTA);
     
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        float lowest_v = ctx->cell_states[i].voltages[0];
-        float highest_v = ctx->cell_states[i].voltages[0];
-        for (int j = 1; j < N_GROUPS_PER_SIDE; j++)
-        {
-            if (ctx->cell_states[i].voltages[j] < lowest_v){
-                lowest_v = ctx->cell_states[i].voltages[j];
-            }
-            if (ctx->cell_states[i].voltages[j] > highest_v){
-                highest_v = ctx->cell_states[i].voltages[j];
-            }
-        }
-
-        if (highest_v > max_group_v) {
-            CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
-        }
-        if (lowest_v < min_group_v) {
-            CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
-        }
-        if (highest_v - lowest_v > max_v_delta) {
-            CtrlSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
-        }
+    if (ctx->stats.max_v > max_group_v) {
+        CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
+    }
+    if (ctx->stats.min_v < min_group_v) {
+        CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
+    }
+    if (ctx->stats.max_v - ctx->stats.min_v > max_v_delta) {
+        CtrlSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
     }
 }
 
 void CheckTemperatureFaults(DbmsCtx* ctx)
 {
-    bool has_over_temp = false;
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
-        {
-            if (ctx->cell_states[i].temps[j] > GetSetting(ctx, MAX_THERMISTOR_TEMP))
-            {
-                has_over_temp = true;
-            }
-        }
-    }
-    if (!has_over_temp)
+    if (ctx->stats.max_t < GetSetting(ctx, MAX_THERMISTOR_TEMP))    // temp is ok 
     {
         ctx->overtemp_last_ok_ts = HAL_GetTick();
     }

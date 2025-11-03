@@ -19,7 +19,7 @@
 
 #include "utils/common.h"
 #include "context.h"
-#include "stack/stack.h"
+#include "stack.h"
 #include "model/data.h"
 #include "model/model.h"
 #include "faults/faults.h"

@@ -41,16 +41,13 @@ Core/Src/dbms/charging.o: ../Core/Src/dbms/charging.c \
  ../Core/Src/dbms/ledctl.h ../Core/Src/dbms/sched.h \
  ../Core/Src/dbms/settings.h ../Core/Src/dbms/elcon.h \
  ../Core/Src/dbms/vinterface.h ../Core/Src/dbms/j1772.h \
- ../Core/Src/dbms/stack/stack.h ../Core/Src/dbms/stack/../utils/common.h \
- ../Core/Src/dbms/stack/../faults/faults.h \
- ../Core/Src/dbms/stack/../faults/../utils/common.h \
- ../Core/Src/dbms/stack/../faults/../context.h \
- ../Core/Src/dbms/stack/../faults/../settings.h \
- ../Core/Src/dbms/stack/../context.h \
- ../Core/Src/dbms/stack/../model/data.h \
- ../Core/Src/dbms/stack/../model/../context.h \
- ../Core/Src/dbms/stack/../model/../utils/lut.h \
- ../Core/Src/dbms/stack/../can.h ../Core/Src/dbms/stack/../vinterface.h
+ ../Core/Src/dbms/stack.h ../Core/Src/dbms/bridge.h \
+ ../Core/Src/dbms/faults/faults.h \
+ ../Core/Src/dbms/faults/../utils/common.h \
+ ../Core/Src/dbms/faults/../context.h \
+ ../Core/Src/dbms/faults/../settings.h ../Core/Src/dbms/model/data.h \
+ ../Core/Src/dbms/model/../context.h \
+ ../Core/Src/dbms/model/../utils/lut.h
 ../Core/Src/dbms/charging.h:
 ../Core/Src/dbms/context.h:
 ../Core/Src/dbms/utils/common.h:
@@ -100,15 +97,12 @@ Core/Src/dbms/charging.o: ../Core/Src/dbms/charging.c \
 ../Core/Src/dbms/elcon.h:
 ../Core/Src/dbms/vinterface.h:
 ../Core/Src/dbms/j1772.h:
-../Core/Src/dbms/stack/stack.h:
-../Core/Src/dbms/stack/../utils/common.h:
-../Core/Src/dbms/stack/../faults/faults.h:
-../Core/Src/dbms/stack/../faults/../utils/common.h:
-../Core/Src/dbms/stack/../faults/../context.h:
-../Core/Src/dbms/stack/../faults/../settings.h:
-../Core/Src/dbms/stack/../context.h:
-../Core/Src/dbms/stack/../model/data.h:
-../Core/Src/dbms/stack/../model/../context.h:
-../Core/Src/dbms/stack/../model/../utils/lut.h:
-../Core/Src/dbms/stack/../can.h:
-../Core/Src/dbms/stack/../vinterface.h:
+../Core/Src/dbms/stack.h:
+../Core/Src/dbms/bridge.h:
+../Core/Src/dbms/faults/faults.h:
+../Core/Src/dbms/faults/../utils/common.h:
+../Core/Src/dbms/faults/../context.h:
+../Core/Src/dbms/faults/../settings.h:
+../Core/Src/dbms/model/data.h:
+../Core/Src/dbms/model/../context.h:
+../Core/Src/dbms/model/../utils/lut.h:

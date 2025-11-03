@@ -183,6 +183,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     {
         FillMissingTempReadings(ctx);
     }
+    StackCalcStats(ctx);
     HAL_Delay(GROUP_MSG_DELAY);
 
 

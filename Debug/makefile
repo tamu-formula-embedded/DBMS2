@@ -12,7 +12,6 @@ RM := rm -rf
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/dbms/utils/subdir.mk
--include Core/Src/dbms/stack/subdir.mk
 -include Core/Src/dbms/model/subdir.mk
 -include Core/Src/dbms/faults/subdir.mk
 -include Core/Src/dbms/subdir.mk
@@ -65,8 +64,8 @@ all: main-build
 main-build: DBMS2.elf secondary-outputs
 
 # Tool invocations
-DBMS2.elf DBMS2.map: $(OBJS) $(USER_OBJS) C:\Users\purav\Documents\DBMSEmbedded\DBMS2\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "DBMS2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\purav\Documents\DBMSEmbedded\DBMS2\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="DBMS2.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+DBMS2.elf DBMS2.map: $(OBJS) $(USER_OBJS) /Users/justus/Projects/Formula/dbms/STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "DBMS2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/justus/Projects/Formula/dbms/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="DBMS2.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

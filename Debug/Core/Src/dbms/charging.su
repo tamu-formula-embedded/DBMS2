@@ -1,6 +1,8 @@
 ../Core/Src/dbms/charging.c:6:6:ElconConnected	40	static
 ../Core/Src/dbms/charging.c:11:6:ChargingAllowed	40	static
 ../Core/Src/dbms/charging.c:16:6:ChargingConnected	16	static
-../Core/Src/dbms/charging.c:21:6:ChargingEnter	16	static
-../Core/Src/dbms/charging.c:26:6:ChargingUpdate	32	static
-../Core/Src/dbms/charging.c:69:6:ChargingExit	16	static
+../Core/Src/dbms/charging.c:21:6:NeedsToBalance	24	static
+../Core/Src/dbms/charging.c:28:6:ChargingComplete	24	static
+../Core/Src/dbms/charging.c:38:6:DoneBalancing	40	static
+../Core/Src/dbms/charging.c:44:6:ChargingEnterState	24	static
+../Core/Src/dbms/charging.c:75:6:ChargingUpdate	24	static

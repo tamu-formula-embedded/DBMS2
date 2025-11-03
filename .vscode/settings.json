@@ -62,10 +62,34 @@
         "*.txt": "c",
         "faults.h": "c",
         "data.h": "c",
-        "j1772.h": "c"
+        "j1772.h": "c",
+        "stdarg.h": "c",
+        "math.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "Tag Parser",
     "stm32-for-vscode.openOCDPath": false,
     "stm32-for-vscode.makePath": false,
-    "stm32-for-vscode.armToolchainPath": false
+    "stm32-for-vscode.armToolchainPath": false,
+    "doxdocgen.file.versionTag": "@version 3.0",
+    "doxdocgen.generic.authorEmail": "justus@tamu.edu",
+    "doxdocgen.generic.authorName": "Justus Languell",
+    "doxdocgen.file.fileTemplate": "@file {name}",
+    "doxdocgen.generic.authorTag": "@author {author} <{email}>",
+    "doxdocgen.generic.returnTemplate": "@return ",
+    "doxdocgen.file.fileOrder": [
+        "custom",
+        "file",
+        "copyright",
+        "author",
+        "empty",
+        "brief"
+    ],
+    "doxdocgen.file.copyrightTag": [
+        "@copyright (C) {year} Texas A&M University"
+    ],
+    "doxdocgen.file.customTag": [
+        "Distributed BMS ______ Module",
+        ""
+    ]
+
 }

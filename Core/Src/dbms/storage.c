@@ -69,7 +69,6 @@ int SaveStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_s
 
 int LoadStoredObject(DbmsCtx* ctx, uint32_t mem_addr, void* object, size_t obj_size)
 {
-    printf("%p %d\n", object, obj_size);
     int status = 0;
     uint8_t buf[obj_size + sizeof(uint16_t)];
 

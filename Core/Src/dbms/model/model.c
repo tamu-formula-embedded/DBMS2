@@ -139,94 +139,10 @@ void ComputeModel(Model* m, float T_bar, float I, float Q0, float Qd, float V_pa
     m->I_lim = F_I_Limit(V_min, V_dyn_min, m->R_cell);
 }
 
-float CalcMinTemp(DbmsCtx* ctx)
-{
-    float t_min = 999;
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
-        {
-            t_min = MIN(t_min, ctx->cell_states[i].temps[j]);
-        }
-    }
-    return t_min;
-}
-
-float CalcMaxTemp(DbmsCtx* ctx)
-{
-    float t_max = 0;
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
-        {
-            t_max = MAX(t_max, ctx->cell_states[i].temps[j]);
-        }
-    }
-    return t_max;
-}
-
-
-float CalcAvgTemp(DbmsCtx* ctx)
-{
-    float sum = 0;
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
-        {
-            sum += ctx->cell_states[i].temps[j];
-        }
-    }
-    return sum / (N_SIDES * N_TEMPS_PER_SIDE);
-}
-
-float CalcMinVoltage(DbmsCtx* ctx)
-{
-    float v_min = 999999;
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
-        {
-            v_min = MIN(v_min, ctx->cell_states[i].voltages[j]);
-        }
-    }
-    return v_min;
-}
-
-float CalcMaxVoltage(DbmsCtx* ctx)
-{
-    float v_max = 0;
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
-        {
-            v_max = MAX(v_max, ctx->cell_states[i].voltages[j]);
-        }
-    }
-    return v_max;
-}
-
-float CalcAvgVoltage(DbmsCtx* ctx)
-{
-    float sum = 0;
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
-        {
-            sum += ctx->cell_states[i].voltages[j];
-        }
-    }
-    return sum / (N_SIDES * N_GROUPS_PER_SIDE);
-}
 
 void UpdateModel(DbmsCtx* ctx)
 {
-    ctx->stats.min_v = CalcMinVoltage(ctx) / 1000.0f;
-    ctx->stats.max_v = CalcMaxVoltage(ctx) / 1000.0f;
-    ctx->stats.avg_v = CalcAvgVoltage(ctx) / 1000.0f;
-
-    ctx->stats.min_t = CalcMinTemp(ctx);
-    ctx->stats.max_t = CalcMaxTemp(ctx);
-    ctx->stats.avg_t = CalcAvgTemp(ctx);
+  
 
     float v_pack = (ctx->isense.voltage1_mv / 1e3f) / (N_SIDES * N_GROUPS_PER_SIDE);
     float current = (ctx->isense.current_ma / 1000.0) / N_P_GROUP;
