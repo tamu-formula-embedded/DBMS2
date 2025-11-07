@@ -1,21 +1,22 @@
 /*
- * 
- * Distributed BMS      PWM Interface 
+ *
+ * Distributed BMS      PWM Interface
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell <justus@tamu.edu>
  */
 
-#ifndef _PWM_H_
-#define _PWM_H_
+#ifndef _FAN_H_
+#define _FAN_H_
 
-#include "utils/common.h"
 #include "context.h"
+#include "settings.h"
+#include "utils/common.h"
 
 // Q: Wtf is this used for?
 // A: Fan control
-int ConfigPwmLines(DbmsCtx* ctx);
-int SetPwmStates(DbmsCtx* ctx);
+int InitFan(DbmsCtx *ctx);
+int UpdateFan(DbmsCtx *ctx);
 
 #endif
