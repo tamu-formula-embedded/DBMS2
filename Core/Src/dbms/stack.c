@@ -539,7 +539,7 @@ void StackStartBalancing(DbmsCtx* ctx, bool odds, int32_t bal_time)
 void StackComputeCellsToBalance(DbmsCtx* ctx, int32_t threshold_mv)
 {
     // if any segment needs balancing - if this is false at the end we can skip balancing
-    float balance_threshold = ctx->stats.min_v + threshold_mv;
+    float balance_threshold = 1000 * ctx->stats.min_v + threshold_mv;
     // if (ctx->stats.max_v > balance_threshold) return false;
 
     for (size_t side = 0; side < N_SIDES; side++)

@@ -96,7 +96,6 @@ int SendMetric(DbmsCtx* ctx, uint16_t id, uint64_t value)
 
 int SendMetrics(DbmsCtx* ctx)
 {
-
     SendMetric(ctx, 0, ctx->stats.iters);
 
     SendMetric(ctx, 1, ctx->stats.n_tx_can_frames);
@@ -168,6 +167,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 53, ctx->j1772.pp_raw_voltage);
     SendMetric(ctx, 54, ctx->charging.conn);
     SendMetric(ctx, 55, ctx->j1772.maxCurrentSupply);
+    SendMetric(ctx, 56, ctx->charging.state);
 
     return 0;
 }
