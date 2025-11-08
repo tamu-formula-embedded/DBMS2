@@ -286,6 +286,21 @@ int SendCellTemps(DbmsCtx* ctx)
     return 0;   
 }
 
+int SendCellsToBalance(DbmsCtx* ctx)
+{
+    uint16_t buffer[PAD_BUFFER(N_GROUPS_PER_SIDE, 3)] = {0};
+
+    for (size_t i = 0; i < N_SIDES; i++)
+    {
+        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+        {
+            buffer[j] = ctx->cell_states[i].cells_to_balance[j] ? 1 : 0;
+        }
+        SendCellDataBuffer(ctx, CANID_CELLSTATE_BALANCE, i, buffer, ARRAY_LEN(buffer));
+    }
+    return 0;
+}
+
 #else
 
 #define PAD_BUFFER_3(SZ) (PAD_BUFFER(SZ, 3))
@@ -344,6 +359,36 @@ int SendCellTemps(DbmsCtx* ctx)
             memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t)); // <-- fixed
 
             status = CanTransmit(ctx, CANID_CELLSTATE_TEMPS, frame);
+            if (status != 0) return status;
+        }
+    }
+    return 0;
+}
+
+/**
+ * Send cells to balance data (version 1)
+ */
+int SendCellsToBalance(DbmsCtx* ctx)
+{
+    int status = 0;
+    uint8_t frame[8];
+    uint16_t buffer[PAD_BUFFER_3(N_TEMPS_PER_SIDE)] = {0};
+
+    for (size_t i = 0; i < N_SIDES; i++)
+    {
+        for (size_t j = 0; j < N_TEMPS_PER_SIDE; j++)
+        {
+            buffer[j] = ctx->call_states[i].cells_to_balance[j] ? 1 : 0;
+        }
+
+        for (size_t j = 0; j < PAD_BUFFER_3(N_TEMPS_PER_SIDE); j += 3)
+        {
+            frame[0] = (uint8_t)i; // monitor id
+            frame[1] = (uint8_t)j; // group index (in uint16_t units)
+
+            memcpy_eswap2(frame + 2, buffer + j, 3 * sizeof(uint16_t)); // <-- fixed
+
+            status = CanTransmit(ctx, CANID_CELLSTATE_BALANCE, frame);
             if (status != 0) return status;
         }
     }
