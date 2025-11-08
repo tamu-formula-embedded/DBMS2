@@ -13,6 +13,7 @@
 #include "context.h"
 #include "settings.h"
 #include "utils/common.h"
+#include "vinterface.h"
 
 // Q: Wtf is this used for?
 // A: Fan control
