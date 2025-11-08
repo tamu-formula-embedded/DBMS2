@@ -2,6 +2,7 @@
 #include "context.h"
 #include "ledctl.h"
 #include "stack.h"
+#include "vinterface.h"
 
 bool ElconConnected(DbmsCtx* ctx)
 {
@@ -74,6 +75,7 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
     case CH_BALANCING_ODDS:
         CanLog(ctx, "Enter Bal Odds\n");
         StackComputeCellsToBalance(ctx, GetSetting(ctx, CH_BAL_DELTA));
+        SendCellsToBalance(ctx);
         // Sends balance timers and starts charging:
         //StackStartBalancing(ctx, true, GetSetting(ctx, CH_BAL_T_IDX));
         break;
@@ -81,6 +83,7 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
     case CH_BALANCING_EVENS:
         CanLog(ctx, "Enter Bal Evens\n");
         StackComputeCellsToBalance(ctx, GetSetting(ctx, CH_BAL_DELTA));
+        SendCellsToBalance(ctx);
         //StackStartBalancing(ctx, false, GetSetting(ctx, CH_BAL_T_IDX));
         break;
 
