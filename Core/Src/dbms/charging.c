@@ -23,8 +23,9 @@ bool NeedsToBalance(DbmsCtx* ctx)   // TODO: this is the start condition
 {
     // TODO: condition for BMS temperature < some threshold
     // TODO: if we have a cell at max V
-    return 1000 * (ctx->stats.max_v - ctx->stats.min_v) > GetSetting(ctx, CH_BAL_DELTA_BEGIN)
-           && 1000 * ctx->stats.min_v > GetSetting(ctx, CH_BAL_MIN_V);
+    return 1000 * (ctx->stats.max_v - ctx->stats.min_v) > GetSetting(ctx, CH_BAL_DELTA_BEGIN) 
+        || (1000 * ctx->stats.max_v > GetSetting(ctx, CH_TARGET_V) 
+           && 1000 * (ctx->stats.max_v - ctx->stats.min_v) > CH_BAL_DELTA_END);
 }
 
 bool NeedsToBalanceMore(DbmsCtx* ctx)
@@ -35,7 +36,8 @@ bool NeedsToBalanceMore(DbmsCtx* ctx)
 
 bool ChargingComplete(DbmsCtx* ctx)
 {
-    return ctx->stats.min_v > GetSetting(ctx, CH_TARGET_V);
+    return ctx->stats.max_v > GetSetting(ctx, CH_TARGET_V) 
+        && 1000 * (ctx->stats.max_v - ctx->stats.min_v) < GetSetting(ctx, CH_BAL_DELTA_END);
 }
 
 
