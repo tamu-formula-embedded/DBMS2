@@ -45,13 +45,14 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Core/Src/dbms/faults/../context.h \
  ../Core/Src/dbms/faults/../storage.h ../Core/Src/dbms/faults/../can.h \
  ../Core/Src/dbms/faults/../ledctl.h ../Core/Src/dbms/faults/../sched.h \
- ../Core/Src/dbms/faults/../settings.h ../Core/Src/dbms/model/data.h \
+ ../Core/Src/dbms/faults/../settings.h \
+ ../Core/Src/dbms/faults/../vinterface.h ../Core/Src/dbms/model/data.h \
  ../Core/Src/dbms/model/../context.h \
  ../Core/Src/dbms/model/../utils/lut.h ../Core/Src/dbms/can.h \
- ../Core/Src/dbms/vinterface.h ../Core/Src/dbms/ledctl.h \
- ../Core/Src/dbms/sched.h ../Core/Src/dbms/settings.h \
- ../Core/Src/dbms/model/model.h ../Core/Src/dbms/model/data.h \
- ../Core/Src/dbms/model/../storage.h ../Core/Src/dbms/storage.h \
+ ../Core/Src/dbms/vinterface.h ../Core/Src/dbms/model/model.h \
+ ../Core/Src/dbms/model/data.h ../Core/Src/dbms/model/../storage.h \
+ ../Core/Src/dbms/ledctl.h ../Core/Src/dbms/sched.h \
+ ../Core/Src/dbms/settings.h ../Core/Src/dbms/storage.h \
  ../Core/Src/dbms/fan.h ../Core/Src/dbms/isense.h \
  ../Core/Src/dbms/elcon.h ../Core/Src/dbms/charging.h \
  ../Core/Src/dbms/j1772.h
@@ -110,17 +111,18 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Src/dbms/faults/../ledctl.h:
 ../Core/Src/dbms/faults/../sched.h:
 ../Core/Src/dbms/faults/../settings.h:
+../Core/Src/dbms/faults/../vinterface.h:
 ../Core/Src/dbms/model/data.h:
 ../Core/Src/dbms/model/../context.h:
 ../Core/Src/dbms/model/../utils/lut.h:
 ../Core/Src/dbms/can.h:
 ../Core/Src/dbms/vinterface.h:
-../Core/Src/dbms/ledctl.h:
-../Core/Src/dbms/sched.h:
-../Core/Src/dbms/settings.h:
 ../Core/Src/dbms/model/model.h:
 ../Core/Src/dbms/model/data.h:
 ../Core/Src/dbms/model/../storage.h:
+../Core/Src/dbms/ledctl.h:
+../Core/Src/dbms/sched.h:
+../Core/Src/dbms/settings.h:
 ../Core/Src/dbms/storage.h:
 ../Core/Src/dbms/fan.h:
 ../Core/Src/dbms/isense.h:

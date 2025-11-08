@@ -25,12 +25,12 @@ bool NeedsToBalance(DbmsCtx* ctx)   // TODO: this is the start condition
     // TODO: if we have a cell at max V
     return 1000 * (ctx->stats.max_v - ctx->stats.min_v) > GetSetting(ctx, CH_BAL_DELTA_BEGIN) 
         || (1000 * ctx->stats.max_v > GetSetting(ctx, CH_TARGET_V) 
-           && 1000 * (ctx->stats.max_v - ctx->stats.min_v) > CH_BAL_DELTA_END);
+           && 1000 * (ctx->stats.max_v - ctx->stats.min_v) > GetSetting(ctx, CH_BAL_DELTA_END));
 }
 
 bool NeedsToBalanceMore(DbmsCtx* ctx)
 {
-    return 1000 * (ctx->stats.max_v - ctx->stats.min_v) > GetSetting(ctx, CH_BAL_DELTA_END);
+    return 1000 * (ctx->stats.max_v - ctx->charging.pre_bal_min_v) > GetSetting(ctx, CH_BAL_DELTA_END);
             // && 1000 * ctx->stats.min_v > GetSetting(ctx, CH_BAL_MIN_V);
 }
 
@@ -48,7 +48,7 @@ static uint32_t bal_times[] = { 0, 10, 30, 60 };
 bool DoneBalancing(DbmsCtx* ctx)
 {
     int32_t bal_t_idx = GetSetting(ctx, CH_BAL_T_IDX);
-    int32_t times = LOOKUP_BAL_TIMES(bal_t_idx) * 1000 + 2000;
+    int32_t times = LOOKUP_BAL_TIMES(bal_t_idx) * 1000 + 6000;
     CanLog(ctx, "Times %d\n", times);
     return TIME_IN_STATE_MS(ctx) > times; // TODO: impl condition based on status
 }
@@ -56,7 +56,7 @@ bool DoneBalancing(DbmsCtx* ctx)
 
 void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
 {
-     if (ctx->charging.state == new_state) return;
+    if (ctx->charging.state == new_state) return;
 
     ctx->charging.prev_state = ctx->charging.state;
     ctx->charging.state = new_state;
@@ -81,17 +81,18 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
 
     case CH_BALANCING_ODDS:
         CanLog(ctx, "Enter Bal Odds\n");
-        StackComputeCellsToBalance(ctx, true, GetSetting(ctx, CH_BAL_DELTA_END));
+        ctx->charging.pre_bal_min_v = ctx->stats.min_v;
+        StackComputeCellsToBalance(ctx, true, GetSetting(ctx, CH_BAL_DELTA_END)); 
         SendCellsToBalance(ctx);
         // Sends balance timers and starts charging:
-        //StackStartBalancing(ctx, true, GetSetting(ctx, CH_BAL_T_IDX));
+        StackStartBalancing(ctx, true, GetSetting(ctx, CH_BAL_T_IDX));
         break;
 
     case CH_BALANCING_EVENS:
         CanLog(ctx, "Enter Bal Evens\n");
         StackComputeCellsToBalance(ctx, false, GetSetting(ctx, CH_BAL_DELTA_END));
         SendCellsToBalance(ctx);
-        //StackStartBalancing(ctx, false, GetSetting(ctx, CH_BAL_T_IDX));
+        StackStartBalancing(ctx, false, GetSetting(ctx, CH_BAL_T_IDX));
         break;
 
     case CH_COMPLETE:
@@ -136,11 +137,12 @@ void ChargingUpdate(DbmsCtx* ctx)
     case CH_CHARGING:
         ctx->led_state = LED_CHARGING;
 
-        int16_t v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600);
-        int16_t i_req = MIN(MIN(GetSetting(ctx, CH_I), ctx->j1772.maxCurrentSupply), 25);
+        int32_t v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600000) / 1000;
+        int32_t i_req = MIN(MIN(GetSetting(ctx, CH_I), ctx->j1772.maxCurrentSupply), 25);
         SendElconRequest(ctx, v_req, i_req, 1);
+        CanLog(ctx, "Elcon V=%d I=%d\n", ctx->elcon.v_req, ctx->elcon.i_req);
 
-        if (TIME_IN_STATE_MS(ctx) > 3000)
+        if (TIME_IN_STATE_MS(ctx) > 1000)   // TODO:?
         {
             if (NeedsToBalance(ctx)) ChargingEnterState(ctx, CH_BALANCING_ODDS);
 
@@ -161,7 +163,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         ctx->led_state = LED_BALANCING;
         SendElconRequest(ctx, 0, 0, 0);
 
-        if (DoneBalancing(ctx)) 
+        if (DoneBalancing(ctx))
         {
             if (NeedsToBalanceMore(ctx))
                 ChargingEnterState(ctx, CH_BALANCING_ODDS);

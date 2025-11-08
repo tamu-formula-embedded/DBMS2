@@ -45,7 +45,8 @@ Core/Src/dbms/charging.o: ../Core/Src/dbms/charging.c \
  ../Core/Src/dbms/faults/faults.h \
  ../Core/Src/dbms/faults/../utils/common.h \
  ../Core/Src/dbms/faults/../context.h \
- ../Core/Src/dbms/faults/../settings.h ../Core/Src/dbms/model/data.h \
+ ../Core/Src/dbms/faults/../settings.h \
+ ../Core/Src/dbms/faults/../vinterface.h ../Core/Src/dbms/model/data.h \
  ../Core/Src/dbms/model/../context.h \
  ../Core/Src/dbms/model/../utils/lut.h
 ../Core/Src/dbms/charging.h:
@@ -103,6 +104,7 @@ Core/Src/dbms/charging.o: ../Core/Src/dbms/charging.c \
 ../Core/Src/dbms/faults/../utils/common.h:
 ../Core/Src/dbms/faults/../context.h:
 ../Core/Src/dbms/faults/../settings.h:
+../Core/Src/dbms/faults/../vinterface.h:
 ../Core/Src/dbms/model/data.h:
 ../Core/Src/dbms/model/../context.h:
 ../Core/Src/dbms/model/../utils/lut.h:

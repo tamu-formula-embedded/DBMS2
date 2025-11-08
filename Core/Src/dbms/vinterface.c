@@ -169,6 +169,9 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 55, ctx->j1772.maxCurrentSupply);
     SendMetric(ctx, 56, ctx->charging.state);
 
+    SendMetric(ctx, 57, ctx->elcon.v_req);
+    SendMetric(ctx, 58, ctx->elcon.i_req);
+
     return 0;
 }
 

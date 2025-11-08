@@ -6,6 +6,8 @@ void CheckVoltageFaults(DbmsCtx* ctx)
     uint32_t min_group_v = GetSetting(ctx, MIN_GROUP_VOLTAGE);
     uint32_t max_v_delta = GetSetting(ctx, MAX_V_DELTA);
     
+    CanLog(ctx, "min: %d %d max: %d %d\n", ctx->stats.min_v, min_group_v, ctx->stats.max_v, max_group_v);
+
     if (ctx->stats.max_v > max_group_v) {
         CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
     }
