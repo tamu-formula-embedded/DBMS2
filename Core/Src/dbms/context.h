@@ -274,6 +274,8 @@ typedef struct _DbmsCtx
         int32_t     voltage_out;
         int32_t     current_out;
         uint8_t     status_flags;
+        int16_t     v_req;
+        int16_t     i_req;
     } elcon;
 
     struct {
@@ -293,6 +295,7 @@ typedef struct _DbmsCtx
         int64_t state_enter_ts;
         ChargingState prev_state;
         ChargingState state;
+        float pre_bal_min_v;
         bool allowed;
         bool conn;
     } charging;
