@@ -6,7 +6,7 @@
 
 bool ElconConnected(DbmsCtx* ctx)
 {
-    return HAL_GetTick() - ctx->elcon.heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+    return (HAL_GetTick() - ctx->elcon.heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))&&!CtrlHasAnyFaults(ctx);
 }
 
 bool ChargingAllowed(DbmsCtx* ctx)
@@ -139,7 +139,7 @@ void ChargingUpdate(DbmsCtx* ctx)
 
         int32_t v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600000) / 1000;
         int32_t i_req = MIN(MIN(GetSetting(ctx, CH_I), ctx->j1772.maxCurrentSupply), 25);
-        SendElconRequest(ctx, v_req, i_req, 1);
+        //SendElconRequest(ctx, v_req, i_req, 1);
         CanLog(ctx, "Elcon V=%d I=%d\n", ctx->elcon.v_req, ctx->elcon.i_req);
 
         if (TIME_IN_STATE_MS(ctx) > 1000)   // TODO:?
