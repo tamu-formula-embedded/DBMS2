@@ -58,7 +58,7 @@ void DbmsInit(DbmsCtx* ctx)
     if ((status = ConfigCan(ctx)) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = LED_ERROR;
+        ctx->led_state = LED_FIRMWARE_FAULT;
         return;
     }
 
@@ -94,7 +94,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     if ((status = StackWake(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = LED_ERROR;
+        ctx->led_state = LED_FIRMWARE_FAULT;
         return status; // we are cooked
     }
 
@@ -131,7 +131,7 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     if ((status = StackShutdown(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = LED_ERROR;
+        ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
     }
     ctx->led_state = LED_IDLE;
@@ -235,7 +235,7 @@ void DbmsIter(DbmsCtx* ctx)
         if ((status = SaveSettings(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
-            ctx->led_state = LED_ERROR;
+            ctx->led_state = LED_FIRMWARE_FAULT;
         }
         ctx->need_to_sync_settings = false;
     }
@@ -246,7 +246,7 @@ void DbmsIter(DbmsCtx* ctx)
         if ((status = SaveQStats(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
-            ctx->led_state = LED_ERROR;
+            ctx->led_state = LED_FIRMWARE_FAULT;
         }
         ctx->need_to_reset_qstats = false;
     }
@@ -269,8 +269,11 @@ void DbmsIter(DbmsCtx* ctx)
             ctx->led_state = LED_INIT;
             ProcessLedAction(ctx);
             DbmsPerformWakeup(ctx);
-            ctx->led_state = LED_ACTIVE;
         }
+        if (CtrlHasAnyFaults(ctx))
+            ctx->led_state = LED_ACTIVE_FAULT;
+        else
+            ctx->led_state = LED_ACTIVE;
         ctx->active = true;
         DbmsHandleActive(ctx);
     }
@@ -281,7 +284,10 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->active = false;
         SetFaultLine(ctx, true);
         ctx->need_to_save_faults = false;
-        ctx->led_state = LED_IDLE;
+        if (CtrlHasAnyFaults(ctx))
+            ctx->led_state = LED_IDLE_FAULT;
+        else
+            ctx->led_state = LED_IDLE;
     }
 
 
@@ -440,7 +446,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 //
 void DbmsErr(DbmsCtx* ctx)
 {
-    ctx->led_state = LED_ERROR;
+    ctx->led_state = LED_FIRMWARE_FAULT;
     DbmsPerformShutdown(ctx);    
 }
 
