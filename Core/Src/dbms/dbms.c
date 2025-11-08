@@ -189,9 +189,9 @@ void DbmsHandleActive(DbmsCtx* ctx)
 
     if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
     {               
+        CheckVoltageFaults(ctx);
         CheckCurrentFaults(ctx);
         CheckTemperatureFaults(ctx);
-        CheckVoltageFaults(ctx);
 
         // PollFaultSummary(ctx);
         HAL_Delay(SINGLE_MSG_DELAY);
