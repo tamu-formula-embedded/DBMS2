@@ -59,11 +59,13 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
     case CH_BALANCING_ODDS:
         StackComputeCellsToBalance(ctx, GetSetting(ctx, CH_BAL_DELTA));
         // Sends balance timers and starts charging:
+        SendCellsToBalance(ctx);
         StackStartBalancing(ctx, true, GetSetting(ctx, CH_BAL_T_IDX));
         break;
 
     case CH_BALANCING_EVENS:
         StackComputeCellsToBalance(ctx, GetSetting(ctx, CH_BAL_DELTA));
+        SendCellsToBalance(ctx);
         StackStartBalancing(ctx, false, GetSetting(ctx, CH_BAL_T_IDX));
         break;
 

@@ -294,7 +294,7 @@ int SendCellsToBalance(DbmsCtx* ctx)
     {
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
-            buffer[j] = ctx->call_states[i].cells_to_balance[j] ? 1 : 0;
+            buffer[j] = ctx->cell_states[i].cells_to_balance[j] ? 1 : 0;
         }
         SendCellDataBuffer(ctx, CANID_CELLSTATE_BALANCE, i, buffer, ARRAY_LEN(buffer));
     }
