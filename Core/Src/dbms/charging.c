@@ -66,10 +66,17 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
     {
     case CH_NO_CONN:
         CanLog(ctx, "Enter No Comms\n");
+        for (int i = 0; i < N_SIDES; i++) {
+            memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
+        }
+        SendCellsToBalance(ctx);
         break;
     case CH_CHARGING:
         CanLog(ctx, "Enter Charging\n");
-        break;
+        for (int i = 0; i < N_SIDES; i++) {
+            memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
+        }
+        SendCellsToBalance(ctx);
         break;
 
     case CH_BALANCING_ODDS:
@@ -89,6 +96,10 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
 
     case CH_COMPLETE:
         CanLog(ctx, "Enter Complete\n");
+        for (int i = 0; i < N_SIDES; i++) {
+            memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
+        }
+        SendCellsToBalance(ctx);
         break;
     }
 }
