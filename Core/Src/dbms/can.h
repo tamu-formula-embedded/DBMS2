@@ -60,6 +60,7 @@
 
     #define CANID_CELLSTATE_VOLTS       0x0B002000
     #define CANID_CELLSTATE_TEMPS       0x0B003000
+    #define CANID_CELLSTATE_BALANCE     0x0B005000
     #define CANID_METRIC                0x0B001000
     #define CANID_CONSOLE_C0            0x0B004000
 
@@ -79,6 +80,8 @@
     #define CANID_METRIC                0x506
     #define CANID_CELLSTATE_VOLTS       0x507
     #define CANID_CELLSTATE_TEMPS       0x508
+    #define CANID_CELLSTATE_BALANCE     0x509
+
     #define CANID_FATAL_ERROR           0x50B // = SOB = Son Of a Bitch
 
     #define CANID_BLACKBOX_OLD          0x529
