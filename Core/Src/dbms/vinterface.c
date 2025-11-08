@@ -92,7 +92,7 @@ int SendMetric(DbmsCtx* ctx, uint16_t id, uint64_t value)
 #endif
 }
 
-#define F2I_K(F, K) ((int)(F * K))
+#define F2I_K(F, K) ((int)((F) * (K)))
 
 int SendMetrics(DbmsCtx* ctx)
 {
@@ -171,6 +171,8 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 57, ctx->elcon.v_req);
     SendMetric(ctx, 58, ctx->elcon.i_req);
+
+    SendMetric(ctx, 59, F2I_K(ctx->stats.max_v - ctx->stats.min_v, 1e4));
 
     return 0;
 }
