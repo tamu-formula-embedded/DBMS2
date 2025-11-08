@@ -30,6 +30,8 @@ int SendCellVoltages(DbmsCtx* ctx);
 
 int SendCellTemps(DbmsCtx* ctx);
 
+int SendCellsToBalance(DbmsCtx* ctx);
+
 int SendMetrics(DbmsCtx* ctx);
 
 void SendPlexMetrics(DbmsCtx* ctx);
