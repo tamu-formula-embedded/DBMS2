@@ -318,8 +318,6 @@ void DbmsIter(DbmsCtx* ctx)
         SendMetrics(ctx);               // TODO: resolve conflicting metrics
         SendCellVoltages(ctx);
         SendCellTemps(ctx);
-        if (ctx->charging.state == CH_BALANCING_EVENS || ctx->charging.state == CH_BALANCING_ODDS)
-            SendCellsToBalance(ctx);
     }
 
     /**
