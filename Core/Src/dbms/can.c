@@ -93,14 +93,14 @@ int ConfigCan(DbmsCtx* ctx)
 
     if ((status = ConfigCanFilters(ctx->hw.can, masks, sizeof(masks)/sizeof(masks[0]))) != 0)
     {
-        ctx->led_state = LED_ERROR;
+        ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
     }
 
     // Start CAN
     if ((status = HAL_CAN_Start(ctx->hw.can)) != HAL_OK)
     {
-        ctx->led_state = LED_ERROR;
+        ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
     }
 
@@ -109,7 +109,7 @@ int ConfigCan(DbmsCtx* ctx)
                                             CAN_IT_RX_FIFO0_MSG_PENDING |
                                             CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK)
     {
-        ctx->led_state = LED_ERROR;
+        ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
     }
 

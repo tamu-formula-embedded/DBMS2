@@ -152,7 +152,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         break;
 
     case CH_BALANCING_ODDS:
-        ctx->led_state = LED_BALANCING;
+        ctx->led_state = LED_BALANCING_ODDS;
         SendElconRequest(ctx, 0, 0, 0);
 
         if (DoneBalancing(ctx)) ChargingEnterState(ctx, CH_BALANCING_EVENS);
@@ -160,7 +160,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         break;
 
     case CH_BALANCING_EVENS:
-        ctx->led_state = LED_BALANCING;
+        ctx->led_state = LED_BALANCING_EVENS;
         SendElconRequest(ctx, 0, 0, 0);
 
         if (DoneBalancing(ctx))
@@ -175,7 +175,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         break;
 
     case CH_COMPLETE:
-        ctx->led_state = LED_CHARGING;  // TODO: new LED state
+        ctx->led_state = LED_CHARGING_COMPLETE;  // TODO: new LED state
         SendElconRequest(ctx, 0, 0, 0);
 
         break;
