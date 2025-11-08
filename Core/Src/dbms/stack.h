@@ -153,7 +153,7 @@ void StackStartBalancing(DbmsCtx* ctx, bool odds, int32_t bal_time);
 void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, 
         StackBalanceTimes bal_time_idx);
 
-void StackComputeCellsToBalance(DbmsCtx* ctx, int32_t threshold_mv);
+void StackComputeCellsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv);
 
 void StackDumpCellsToBalance(DbmsCtx* ctx);
 

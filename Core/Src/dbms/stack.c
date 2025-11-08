@@ -536,7 +536,7 @@ void StackStartBalancing(DbmsCtx* ctx, bool odds, int32_t bal_time)
     }
 }
 
-void StackComputeCellsToBalance(DbmsCtx* ctx, int32_t threshold_mv)
+void StackComputeCellsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv)
 {
     // if any segment needs balancing - if this is false at the end we can skip balancing
     float balance_threshold = 1000 * ctx->stats.min_v + threshold_mv;
@@ -547,7 +547,7 @@ void StackComputeCellsToBalance(DbmsCtx* ctx, int32_t threshold_mv)
         for (size_t group = 0; group < N_GROUPS_PER_SIDE; group++)
         {
             float voltage = ctx->cell_states[side].voltages[group];
-            ctx->cell_states[side].cells_to_balance[group] = voltage > balance_threshold;
+            ctx->cell_states[side].cells_to_balance[group] = voltage > balance_threshold && group % 2 == odds;
         }   
     }
 }
