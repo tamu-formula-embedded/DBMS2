@@ -133,7 +133,10 @@ void ChargingUpdate(DbmsCtx* ctx)
 
     case CH_CHARGING:
         ctx->led_state = LED_CHARGING;
-        SendElconRequest(ctx, 0, 0, 0); // TODO: figure out what to put here
+
+        int16_t v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600);
+        int16_t i_req = MIN(MIN(GetSetting(ctx, CH_I), ctx->j1772.maxCurrentSupply), 25);
+        SendElconRequest(ctx, v_req, i_req, 1);
 
         if (TIME_IN_STATE_MS(ctx) > 3000)
         {
