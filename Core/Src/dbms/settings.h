@@ -37,7 +37,8 @@ enum _UserSettingIndex
 
     IGNORE_BAD_THERMS,
 
-    CH_BAL_DELTA,
+    CH_BAL_DELTA_BEGIN,
+    CH_BAL_DELTA_END,
     CH_BAL_MIN_V,
     CH_BAL_T_IDX,
     CH_TARGET_V,
