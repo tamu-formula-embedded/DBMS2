@@ -29,7 +29,7 @@
 #include "storage.h"
 #include "can.h"
 #include "vinterface.h"
-#include "pwm.h"
+#include "fan.h"
 #include "isense.h"
 #include "elcon.h"
 #include "charging.h"

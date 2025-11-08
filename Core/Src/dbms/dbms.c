@@ -81,7 +81,7 @@ void DbmsInit(DbmsCtx* ctx)
 
     ctx->last_rx_heartbeat = -GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
-    ConfigPwmLines(ctx);
+    InitFan(ctx);
     DataInit(ctx);
 }
 
@@ -323,7 +323,7 @@ void DbmsIter(DbmsCtx* ctx)
     /**
      * Handle LED states and such
      */
-    SetPwmStates(ctx);
+    UpdateFan(ctx);
     ProcessLedAction(ctx);
     MonitorLedBlink(ctx);
 
