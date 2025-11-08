@@ -56,4 +56,6 @@ void LoadFallbackSettings(DbmsCtx* ctx)
     ctx->settings->user_defined[CH_BAL_MIN_V] = 3800;
     ctx->settings->user_defined[CH_BAL_T_IDX] = 2;
     ctx->settings->user_defined[CH_TARGET_V] = 4200;
+
+    ctx->settings->user_defined[FAN_T_TH] = 30; // todo: ?
 }

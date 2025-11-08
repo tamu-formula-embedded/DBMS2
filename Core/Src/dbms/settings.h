@@ -43,6 +43,8 @@ enum _UserSettingIndex
     CH_BAL_T_IDX,
     CH_TARGET_V,
 
+    FAN_T_TH,
+
     __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
 };
 
