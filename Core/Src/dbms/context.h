@@ -20,7 +20,7 @@
 #define GROUP_MSG_DELAY     8       // ms delay between groups of stack message 
 #define SPLIT_STACK_OPS     1       // 1 = divide stack ops in half, every-other-iter, 0 = do not
 
-#define N_SEGMENTS          5       // number of segments in the stack
+#define N_SEGMENTS          1       // number of segments in the stack
 #define N_SIDES_PER_SEG     2       // number of sides per segment
 #define N_MONITORS_PER_SIDE 2       // number of monitors per side
 #define N_GROUPS_PER_SIDE   14      // number of voltages per side
