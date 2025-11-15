@@ -44,6 +44,7 @@
 
     #define CANID_TX_HEARTBEAT          0x0B1
     #define CANID_RX_HEARTBEAT          0x0B2
+    #define CANID_RX_OLD_HEARTBEAT      0x541
 
     #define CANID_TX_GET_CONFIG         0x0B3
     #define CANID_TX_CFG_ACK            0x0B4
