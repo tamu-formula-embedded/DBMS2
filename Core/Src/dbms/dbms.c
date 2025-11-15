@@ -391,6 +391,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
     case CANID_ISENSE_CHARGE:
         ctx->isense.charge_as = (int32_t)UnpackCurrentSensorData(rx_data);
+        // CanLog(ctx, "Got charge measurement\n");
         break;
     case CANID_ISENSE_ENERGY:
         ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);

@@ -6,13 +6,13 @@ void CheckVoltageFaults(DbmsCtx* ctx)
     uint32_t min_group_v = GetSetting(ctx, MIN_GROUP_VOLTAGE);
     uint32_t max_v_delta = GetSetting(ctx, MAX_V_DELTA);
     
-    if (ctx->stats.max_v > max_group_v) {
+    if (ctx->stats.max_v * 1000 > max_group_v) {
         CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
     }
-    if (ctx->stats.min_v < min_group_v) {
+    if (ctx->stats.min_v * 1000 < min_group_v) {
         CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
     }
-    if (ctx->stats.max_v - ctx->stats.min_v > max_v_delta) {
+    if ((ctx->stats.max_v - ctx->stats.min_v) * 1000 > max_v_delta) {
         CtrlSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
     }
 }
