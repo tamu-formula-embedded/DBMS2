@@ -56,6 +56,12 @@
 
     #define CANID_RX_TELEMBEAT          0x0BF
 
+    #define CANID_RX_BLACKBOX_REQUEST   0x0BA
+    #define CANID_TX_BLACKBOX_OLD       0x0BB
+    #define CANID_TX_BLACKBOX_NEW       0x0BC
+    #define CANID_TX_BLACKBOX_READY     0x0BD
+
+
     /* Extended IDs */
 
     #define CANID_CELLSTATE_VOLTS       0x0B002000
@@ -67,12 +73,6 @@
     /* Undefined yet */
 
     #define CANID_FATAL_ERROR           0x50B 
-
-    #define CANID_BLACKBOX_OLD          0x529
-    #define CANID_BLACKBOX_NEW          0x530
-
-    #define CANID_RX_BLACKBOX_REQUEST   0x546
-    #define CANID_RX_BLACKBOX_SAVE      0x547
 #else
     #define CANID_TX_HEARTBEAT          0x501
     #define CANID_CONSOLE_C0            0x502 // No compression
@@ -84,8 +84,11 @@
 
     #define CANID_FATAL_ERROR           0x50B // = SOB = Son Of a Bitch
 
-    #define CANID_BLACKBOX_OLD          0x529
-    #define CANID_BLACKBOX_NEW          0x530
+    #define CANID_RX_BLACKBOX_REQUEST   0x510
+    #define CANID_TX_BLACKBOX_OLD       0x511
+    #define CANID_TX_BLACKBOX_NEW       0x512
+    #define CANID_RX_BLACKBOX_READY     0x513
+
 
     #define CANID_TX_GET_CONFIG         0x533
     #define CANID_TX_CFG_ACK            0x532
@@ -96,8 +99,6 @@
     #define CANID_RX_GET_CONFIG         0x543
     #define CANID_RX_CLEAR_FAULTS       0x544
     #define CANID_RX_SET_INITIAL_CHARGE 0x545
-    #define CANID_RX_BLACKBOX_REQUEST   0x546
-    #define CANID_RX_BLACKBOX_SAVE      0x547
 
 #endif
 

@@ -217,6 +217,12 @@ void DbmsIter(DbmsCtx* ctx)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
+        uint8_t frame[8] = {0};
+        if ((status = CanTransmit(ctx, CANID_TX_BLACKBOX_READY, frame)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+        }
+
         ctx->blackbox.requested = false;
     }
 
@@ -402,9 +408,6 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 
     case CANID_RX_BLACKBOX_REQUEST:
         ctx->blackbox.requested = true;
-        break;
-    case CANID_RX_BLACKBOX_SAVE:
-        ctx->need_to_save_faults = true;
         break;
 
 // TODO: remove this
