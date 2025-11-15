@@ -220,10 +220,8 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->blackbox.requested = false;
     }
 
-    if (ctx->stats.iters % 10 == 0)
-    {
-        ConfigCurrentSensor(ctx, 10);
-    }
+
+    ConfigCurrentSensor(ctx, 10);
 
     // Store the settings when required
     if (ctx->need_to_sync_settings)

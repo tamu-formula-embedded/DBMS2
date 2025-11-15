@@ -16,23 +16,32 @@ void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time)
     frame_set_metric_cycle[2] = (cycle_time & 0xFF00) >> 8;
     frame_set_metric_cycle[3] = (cycle_time & 0x00FF) >> 0;
 
+    switch (ctx->stats.iters % 10)
+    {
+    case 0:
+        frame_set_metric_cycle[0] = 0x21; // IVT_Msg_Result_U1
+        break;
+    case 1:
+        frame_set_metric_cycle[0] = 0x22; // IVT_Msg_Result_U2
+        break;
+    case 2:
+        frame_set_metric_cycle[0] = 0x25; // IVT_Msg_Result_W
+        break;
+    case 3:
+        frame_set_metric_cycle[0] = 0x26; // IVT_Msg_Result_As
+        break;
+    case 4:
+        frame_set_metric_cycle[0] = 0x27; // IVT_Msg_Result_Wh
+        break;
+    default:
+        return;
+    }
+
     CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_stop_mode);
-    HAL_Delay(1);
-
-    frame_set_metric_cycle[0] = 0x21;
+    HAL_Delay(2);
     CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
-    frame_set_metric_cycle[0] = 0x22;
-    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
-    frame_set_metric_cycle[0] = 0x25;
-    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
-    frame_set_metric_cycle[0] = 0x26;
-    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
-    frame_set_metric_cycle[0] = 0x27;
-    CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
-
-    HAL_Delay(1);
+    HAL_Delay(2);
     CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_run_mode);
-    HAL_Delay(1);
 }
 
 int64_t UnpackCurrentSensorData(uint8_t* data) // expects >= 6 bytes, big-endian
