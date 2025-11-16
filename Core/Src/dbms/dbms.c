@@ -213,6 +213,7 @@ void DbmsIter(DbmsCtx* ctx)
      */
     if (ctx->blackbox.requested)
     {
+        CanLog(ctx, "sending");
         if ((status = BlackboxSend(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
@@ -263,12 +264,10 @@ void DbmsIter(DbmsCtx* ctx)
      * If it's been too long since we have recived a frame, we need to force a shutdown
      * otherwise we want to be active
      */
-    uint64_t cur_time = HAL_GetTick();
-    uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+    // uint64_t cur_time = HAL_GetTick();
+    // uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
-    if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
-    {
-        if (!ctx->active)
+    if (!ctx->active)
         {
             ctx->led_state = LED_INIT;
             ProcessLedAction(ctx);
@@ -277,16 +276,27 @@ void DbmsIter(DbmsCtx* ctx)
         }
         ctx->active = true;
         DbmsHandleActive(ctx);
-    }
-    else 
-    {
-        if (ctx->active)
-            DbmsPerformShutdown(ctx);
-        ctx->active = false;
-        SetFaultLine(ctx, true);
-        ctx->need_to_save_faults = false;
-        ctx->led_state = LED_IDLE;
-    }
+    // if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
+    // {
+    //     if (!ctx->active)
+    //     {
+    //         ctx->led_state = LED_INIT;
+    //         ProcessLedAction(ctx);
+    //         DbmsPerformWakeup(ctx);
+    //         ctx->led_state = LED_ACTIVE;
+    //     }
+    //     ctx->active = true;
+    //     DbmsHandleActive(ctx);
+    // }
+    // else 
+    // {
+    //     if (ctx->active)
+    //         DbmsPerformShutdown(ctx);
+    //     ctx->active = false;
+    //     SetFaultLine(ctx, true);
+    //     ctx->need_to_save_faults = false;
+    //     ctx->led_state = LED_IDLE;
+    // }
 
 
     ChargingUpdate(ctx);
@@ -411,6 +421,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
 
     case CANID_RX_BLACKBOX_REQUEST:
+    CanLog(ctx, "hi");
         ctx->blackbox.requested = true;
         break;
 

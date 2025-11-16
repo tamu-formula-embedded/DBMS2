@@ -13,7 +13,7 @@ int UpdateFan(DbmsCtx* ctx)
     if (ctx->stats.avg_t > GetSetting(ctx, FAN_T_TH))
     {
         // duty = GetSetting(ctx, FAN_DUTY);
-        duty = 90;
+        duty = 100;
     }
 
     uint32_t arr = __HAL_TIM_GET_AUTORELOAD(ctx->hw.timer_pwm_1);
