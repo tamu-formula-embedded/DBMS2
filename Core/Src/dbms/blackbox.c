@@ -100,7 +100,7 @@ int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
         {
             frame[j + 2] = blackbox_ptr[i + j];
         }
-
+        
         status = CanTransmit(ctx, old ? CANID_TX_BLACKBOX_OLD : CANID_TX_BLACKBOX_NEW, frame);
         if(status != HAL_OK)
         {
