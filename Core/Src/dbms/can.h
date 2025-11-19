@@ -18,8 +18,6 @@
 #include "sched.h"
 #include "settings.h"
 
-#define CAN_VERSION_2
-
 #define CAN_STD_ID_MASK         0x7FF
 #define CAN_EXT_ID_MASK         0x1FFFFFFF
 #define CAN_LOG_BUFFER_SIZE     512             // max formatted string length
@@ -38,70 +36,40 @@
 #define CANID_ISENSE_CHARGE             0x527
 #define CANID_ISENSE_ENERGY             0x528
 
-#ifdef CAN_VERSION_2
+/* CAN Band 1 */
 
-    /* CAN Band 1 */
+#define CANID_TX_HEARTBEAT          0x0B1
+#define CANID_RX_HEARTBEAT          0x0B2
+#define CANID_RX_OLD_HEARTBEAT      0x541 // TODO: Remove when LV updates this
 
-    #define CANID_TX_HEARTBEAT          0x0B1
-    #define CANID_RX_HEARTBEAT          0x0B2
-    #define CANID_RX_OLD_HEARTBEAT      0x541
+#define CANID_TX_GET_CONFIG         0x0B3
+#define CANID_TX_CFG_ACK            0x0B4
+#define CANID_RX_SET_CONFIG         0x0B5
+#define CANID_RX_GET_CONFIG         0x0B6
 
-    #define CANID_TX_GET_CONFIG         0x0B3
-    #define CANID_TX_CFG_ACK            0x0B4
-    #define CANID_RX_SET_CONFIG         0x0B5
-    #define CANID_RX_GET_CONFIG         0x0B6
+#define CANID_RX_CLEAR_FAULTS       0x0B7
+#define CANID_RX_SET_INITIAL_CHARGE 0x0B8
+#define CANID_CHARGING_HB           0x0B9
 
-    #define CANID_RX_CLEAR_FAULTS       0x0B7
-    #define CANID_RX_SET_INITIAL_CHARGE 0x0B8
-    #define CANID_CHARGING_HB           0x0B9
+#define CANID_RX_TELEMBEAT          0x0BF
 
-    #define CANID_RX_TELEMBEAT          0x0BF
-
-    #define CANID_RX_BLACKBOX_REQUEST   0x0B006000
-    #define CANID_TX_BLACKBOX_OLD       0x0B007000
-    #define CANID_TX_BLACKBOX_NEW       0x0B008000
-    #define CANID_TX_BLACKBOX_READY     0x0B009000
+#define CANID_RX_BLACKBOX_REQUEST   0x0B006000
+#define CANID_TX_BLACKBOX_OLD       0x0B007000
+#define CANID_TX_BLACKBOX_NEW       0x0B008000
+#define CANID_TX_BLACKBOX_READY     0x0B009000
 
 
-    /* Extended IDs */
+/* Extended IDs */
 
-    #define CANID_CELLSTATE_VOLTS       0x0B002000
-    #define CANID_CELLSTATE_TEMPS       0x0B003000
-    #define CANID_CELLSTATE_BALANCE     0x0B005000
-    #define CANID_METRIC                0x0B001000
-    #define CANID_CONSOLE_C0            0x0B004000
+#define CANID_CELLSTATE_VOLTS       0x0B002000
+#define CANID_CELLSTATE_TEMPS       0x0B003000
+#define CANID_CELLSTATE_BALANCE     0x0B005000
+#define CANID_METRIC                0x0B001000
+#define CANID_CONSOLE_C0            0x0B004000
 
-    /* Undefined yet */
+/* Undefined yet */
 
-    #define CANID_FATAL_ERROR           0x50B 
-#else
-    #define CANID_TX_HEARTBEAT          0x501
-    #define CANID_CONSOLE_C0            0x502 // No compression
-    #define CANID_CONSOLE_C3            0x505 // Aggressive compression -- Huffman encoding
-    #define CANID_METRIC                0x506
-    #define CANID_CELLSTATE_VOLTS       0x507
-    #define CANID_CELLSTATE_TEMPS       0x508
-    #define CANID_CELLSTATE_BALANCE     0x509
-
-    #define CANID_FATAL_ERROR           0x50B // = SOB = Son Of a Bitch
-
-    #define CANID_RX_BLACKBOX_REQUEST   0x510
-    #define CANID_TX_BLACKBOX_OLD       0x511
-    #define CANID_TX_BLACKBOX_NEW       0x512
-    #define CANID_RX_BLACKBOX_READY     0x513
-
-
-    #define CANID_TX_GET_CONFIG         0x533
-    #define CANID_TX_CFG_ACK            0x532
-
-    #define CANID_RX_TELEMBEAT          0x540
-    #define CANID_RX_HEARTBEAT          0x541
-    #define CANID_RX_SET_CONFIG         0x542
-    #define CANID_RX_GET_CONFIG         0x543
-    #define CANID_RX_CLEAR_FAULTS       0x544
-    #define CANID_RX_SET_INITIAL_CHARGE 0x545
-
-#endif
+#define CANID_FATAL_ERROR           0x50B 
 
 #define CANID_DEBUG_OVERWRITE_TEMPS     0x581
 
