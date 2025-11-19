@@ -92,7 +92,7 @@ int SendMetric(DbmsCtx* ctx, uint16_t id, uint64_t value)
 #endif
 }
 
-#define F2I_K(F, K) ((int)(F * K))
+#define F2I_K(F, K) ((int)((F) * (K)))
 
 int SendMetrics(DbmsCtx* ctx)
 {
@@ -169,6 +169,11 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 55, ctx->j1772.maxCurrentSupply);
     SendMetric(ctx, 56, ctx->charging.state);
 
+    SendMetric(ctx, 57, ctx->elcon.v_req);
+    SendMetric(ctx, 58, ctx->elcon.i_req);
+
+    SendMetric(ctx, 59, F2I_K(ctx->stats.max_v - ctx->stats.min_v, 1e4));
+
     return 0;
 }
 
@@ -182,6 +187,25 @@ void SendPlex32(DbmsCtx* ctx, uint32_t id, uint32_t m)
     CanTransmit(ctx, id, data);
 }
 
+void SendPlex16x4(DbmsCtx* ctx, uint16_t id, uint16_t v1, uint16_t v2, uint16_t v3, uint16_t v4)
+{
+    uint8_t data[8] = {0};
+
+    data[0] = (v1 >> 8) & 0xff;
+    data[1] = (v1 >> 0) & 0xff;
+
+    data[2] = (v2 >> 8) & 0xff;
+    data[3] = (v2 >> 0) & 0xff;
+
+    data[4] = (v3 >> 8) & 0xff;
+    data[5] = (v3 >> 0) & 0xff;
+
+    data[6] = (v4 >> 8) & 0xff;
+    data[7] = (v4 >> 0) & 0xff;
+
+    CanTransmit(ctx, id, data);
+}
+
 void SendPlexMetrics(DbmsCtx* ctx)
 {
     uint8_t data[8] = {0};
@@ -189,15 +213,25 @@ void SendPlexMetrics(DbmsCtx* ctx)
     data[0] = soc;
     CanTransmit(ctx, 0x16, data);
 
+    int32_t pack_v = ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE);
+
     SendPlex32(ctx, 0x17, ctx->faults.controller_mask);
     SendPlex32(ctx, 0x18, ctx->isense.current_ma / 1000);
     SendPlex32(ctx, 0x19, ctx->isense.ima.current_mavg_ma / 1000);
     SendPlex32(ctx, 0x1a, ctx->pl_pulse_t);
-    SendPlex32(ctx, 0x1b, ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE));
+    SendPlex32(ctx, 0x1b, pack_v);
     SendPlex32(ctx, 0x1c, ctx->stats.iters);
     SendPlex32(ctx, 0x1d, ctx->stats.avg_t);
     SendPlex32(ctx, 0x1e, ctx->stats.max_t);
 
+#ifndef F2I_K
+#define F2I_K(F, K) ((int)((F) * (K)))
+#endif
+
+    SendPlex16x4(ctx, 1, F2I_K(ctx->stats.max_t, 1), F2I_K(ctx->stats.min_t, 1), F2I_K(ctx->stats.avg_t, 1), 0);
+
+    SendPlex16x4(ctx, 2, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
+                 F2I_K(pack_v, 10));
 }
 
 

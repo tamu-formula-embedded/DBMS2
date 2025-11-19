@@ -5,6 +5,7 @@
 #include "../utils/common.h"
 #include "../context.h"
 #include "../settings.h"
+#include "../vinterface.h"
 
 /*
  *  Fault types, ordinal determines position in bitmask
