@@ -357,9 +357,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 
     switch (can_id)
     {
-#ifdef CAN_VERSION_2
     case CANID_RX_OLD_HEARTBEAT:
-#endif
     case CANID_RX_HEARTBEAT:
 
         ctx->last_rx_heartbeat = HAL_GetTick();
