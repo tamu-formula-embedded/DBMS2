@@ -213,17 +213,22 @@ void DbmsIter(DbmsCtx* ctx)
      */
     if (ctx->blackbox.requested)
     {
+        CanLog(ctx, "sending");
         if ((status = BlackboxSend(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
+        uint8_t frame[8] = {0};
+        if ((status = CanTransmit(ctx, CANID_TX_BLACKBOX_READY, frame)) != HAL_OK)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+        }
+
         ctx->blackbox.requested = false;
     }
 
-    if (ctx->stats.iters % 10 == 0)
-    {
-        ConfigCurrentSensor(ctx, 10);
-    }
+
+    ConfigCurrentSensor(ctx, 10);
 
     // Store the settings when required
     if (ctx->need_to_sync_settings)
@@ -259,12 +264,10 @@ void DbmsIter(DbmsCtx* ctx)
      * If it's been too long since we have recived a frame, we need to force a shutdown
      * otherwise we want to be active
      */
-    uint64_t cur_time = HAL_GetTick();
-    uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+    // uint64_t cur_time = HAL_GetTick();
+    // uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
-    if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
-    {
-        if (!ctx->active)
+    if (!ctx->active)
         {
             ctx->led_state = LED_INIT;
             ProcessLedAction(ctx);
@@ -273,16 +276,27 @@ void DbmsIter(DbmsCtx* ctx)
         }
         ctx->active = true;
         DbmsHandleActive(ctx);
-    }
-    else 
-    {
-        if (ctx->active)
-            DbmsPerformShutdown(ctx);
-        ctx->active = false;
-        SetFaultLine(ctx, true);
-        ctx->need_to_save_faults = false;
-        ctx->led_state = LED_IDLE;
-    }
+    // if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
+    // {
+    //     if (!ctx->active)
+    //     {
+    //         ctx->led_state = LED_INIT;
+    //         ProcessLedAction(ctx);
+    //         DbmsPerformWakeup(ctx);
+    //         ctx->led_state = LED_ACTIVE;
+    //     }
+    //     ctx->active = true;
+    //     DbmsHandleActive(ctx);
+    // }
+    // else 
+    // {
+    //     if (ctx->active)
+    //         DbmsPerformShutdown(ctx);
+    //     ctx->active = false;
+    //     SetFaultLine(ctx, true);
+    //     ctx->need_to_save_faults = false;
+    //     ctx->led_state = LED_IDLE;
+    // }
 
 
     ChargingUpdate(ctx);
@@ -346,6 +360,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 
     switch (can_id)
     {
+#ifdef CAN_VERSION_2
+    case CANID_RX_OLD_HEARTBEAT:
+#endif
     case CANID_RX_HEARTBEAT:
 
         ctx->last_rx_heartbeat = HAL_GetTick();
@@ -384,6 +401,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
     case CANID_ISENSE_CHARGE:
         ctx->isense.charge_as = (int32_t)UnpackCurrentSensorData(rx_data);
+        // CanLog(ctx, "Got charge measurement\n");
         break;
     case CANID_ISENSE_ENERGY:
         ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
@@ -403,10 +421,8 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
 
     case CANID_RX_BLACKBOX_REQUEST:
+    CanLog(ctx, "hi");
         ctx->blackbox.requested = true;
-        break;
-    case CANID_RX_BLACKBOX_SAVE:
-        ctx->need_to_save_faults = true;
         break;
 
 // TODO: remove this

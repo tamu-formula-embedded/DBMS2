@@ -52,7 +52,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Core/Src/dbms/sched.h ../Core/Src/dbms/settings.h \
  ../Core/Src/dbms/model/model.h ../Core/Src/dbms/model/data.h \
  ../Core/Src/dbms/model/../storage.h ../Core/Src/dbms/storage.h \
- ../Core/Src/dbms/pwm.h ../Core/Src/dbms/isense.h \
+ ../Core/Src/dbms/fan.h ../Core/Src/dbms/isense.h \
  ../Core/Src/dbms/elcon.h ../Core/Src/dbms/charging.h \
  ../Core/Src/dbms/j1772.h
 ../Core/Inc/main.h:
@@ -122,7 +122,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Src/dbms/model/data.h:
 ../Core/Src/dbms/model/../storage.h:
 ../Core/Src/dbms/storage.h:
-../Core/Src/dbms/pwm.h:
+../Core/Src/dbms/fan.h:
 ../Core/Src/dbms/isense.h:
 ../Core/Src/dbms/elcon.h:
 ../Core/Src/dbms/charging.h:

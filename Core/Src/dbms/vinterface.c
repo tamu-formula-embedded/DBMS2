@@ -195,6 +195,8 @@ void SendPlexMetrics(DbmsCtx* ctx)
     SendPlex32(ctx, 0x1a, ctx->pl_pulse_t);
     SendPlex32(ctx, 0x1b, ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE));
     SendPlex32(ctx, 0x1c, ctx->stats.iters);
+    SendPlex32(ctx, 0x1d, ctx->stats.avg_t);
+    SendPlex32(ctx, 0x1e, ctx->stats.max_t);
 
 }
 
