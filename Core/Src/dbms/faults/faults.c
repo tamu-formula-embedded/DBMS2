@@ -43,7 +43,7 @@ void ThrowHardFault(DbmsCtx* ctx)
     if (CtrlHasAnyFaults(ctx)) 
     {
 #ifdef USE_FAULT_LED
-        ctx->led_state = LED_FAULT;
+        ctx->led_state = LED_ACTIVE_FAULT;
 #endif
         // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
         SetFaultLine(ctx, true);

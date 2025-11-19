@@ -58,7 +58,7 @@ void DbmsInit(DbmsCtx* ctx)
     if ((status = ConfigCan(ctx)) != HAL_OK)
     {
         CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = LED_ERROR;
+        ctx->led_state = LED_FIRMWARE_FAULT;
         return;
     }
 
@@ -94,7 +94,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     if ((status = StackWake(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = LED_ERROR;
+        ctx->led_state = LED_FIRMWARE_FAULT;
         return status; // we are cooked
     }
 
@@ -131,7 +131,7 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
     if ((status = StackShutdown(ctx)) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = LED_ERROR;
+        ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
     }
     ctx->led_state = LED_IDLE;
@@ -189,9 +189,9 @@ void DbmsHandleActive(DbmsCtx* ctx)
 
     if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
     {               
+        CheckVoltageFaults(ctx);
         CheckCurrentFaults(ctx);
         CheckTemperatureFaults(ctx);
-        CheckVoltageFaults(ctx);
 
         // PollFaultSummary(ctx);
         HAL_Delay(SINGLE_MSG_DELAY);
@@ -240,7 +240,7 @@ void DbmsIter(DbmsCtx* ctx)
         if ((status = SaveSettings(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
-            ctx->led_state = LED_ERROR;
+            ctx->led_state = LED_FIRMWARE_FAULT;
         }
         ctx->need_to_sync_settings = false;
     }
@@ -251,7 +251,7 @@ void DbmsIter(DbmsCtx* ctx)
         if ((status = SaveQStats(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
-            ctx->led_state = LED_ERROR;
+            ctx->led_state = LED_FIRMWARE_FAULT;
         }
         ctx->need_to_reset_qstats = false;
     }
@@ -264,39 +264,36 @@ void DbmsIter(DbmsCtx* ctx)
      * If it's been too long since we have recived a frame, we need to force a shutdown
      * otherwise we want to be active
      */
-    // uint64_t cur_time = HAL_GetTick();
-    // uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+    uint64_t cur_time = HAL_GetTick();
+    uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
-    if (!ctx->active)
+    if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
+    {
+        if (!ctx->active)
         {
             ctx->led_state = LED_INIT;
             ProcessLedAction(ctx);
             DbmsPerformWakeup(ctx);
-            ctx->led_state = LED_ACTIVE;
         }
+        if (CtrlHasAnyFaults(ctx)) 
+            ctx->led_state = LED_ACTIVE_FAULT;
+        else 
+            ctx->led_state = LED_ACTIVE;
         ctx->active = true;
         DbmsHandleActive(ctx);
-    // if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
-    // {
-    //     if (!ctx->active)
-    //     {
-    //         ctx->led_state = LED_INIT;
-    //         ProcessLedAction(ctx);
-    //         DbmsPerformWakeup(ctx);
-    //         ctx->led_state = LED_ACTIVE;
-    //     }
-    //     ctx->active = true;
-    //     DbmsHandleActive(ctx);
-    // }
-    // else 
-    // {
-    //     if (ctx->active)
-    //         DbmsPerformShutdown(ctx);
-    //     ctx->active = false;
-    //     SetFaultLine(ctx, true);
-    //     ctx->need_to_save_faults = false;
-    //     ctx->led_state = LED_IDLE;
-    // }
+    }
+    else 
+    {
+        if (ctx->active)
+            DbmsPerformShutdown(ctx);
+        ctx->active = false;
+        SetFaultLine(ctx, true);
+        ctx->need_to_save_faults = false;
+        if (CtrlHasAnyFaults(ctx))
+            ctx->led_state = LED_IDLE_FAULT;
+        else
+            ctx->led_state = LED_IDLE;
+    }
 
 
     ChargingUpdate(ctx);
@@ -456,7 +453,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 //
 void DbmsErr(DbmsCtx* ctx)
 {
-    ctx->led_state = LED_ERROR;
+    ctx->led_state = LED_FIRMWARE_FAULT;
     DbmsPerformShutdown(ctx);    
 }
 

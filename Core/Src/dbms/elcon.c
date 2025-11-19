@@ -27,6 +27,8 @@ void HandleElconHeartbeat(DbmsCtx* ctx, uint8_t* data)
 void SendElconRequest(DbmsCtx* ctx, int16_t v_req, int16_t i_req, bool en)
 {
     uint8_t frame[8] = {0};
+    ctx->elcon.v_req = v_req;
+    ctx->elcon.i_req = i_req;
     v_req *= 10;     
     i_req *= 10;
     frame[0] = (v_req >> 8) & 0xFF;

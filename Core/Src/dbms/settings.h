@@ -42,6 +42,7 @@ enum _UserSettingIndex
     CH_BAL_MIN_V,
     CH_BAL_T_IDX,
     CH_TARGET_V,
+    CH_I,
 
     FAN_T_TH,
     FAN_DUTY,
