@@ -69,7 +69,7 @@ bool DoneBalancing(DbmsCtx* ctx)
 {
     int32_t bal_t_idx = GetSetting(ctx, CH_BAL_T_IDX);
     int32_t times = LOOKUP_BAL_TIMES(bal_t_idx) * 1000 + 6000;
-    CanLog(ctx, "Times %d\n", times);
+    // CanLog(ctx, "Times %d\n", times);
     return TIME_IN_STATE_MS(ctx) > times; // TODO: impl condition based on status
 }
 
@@ -99,6 +99,7 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
         case CH_WAIT_2:
             CanLog(ctx, "Enter W%d\n", new_state == CH_WAIT_1 ? 1 : 2);
             for (int i = 0; i < N_SIDES; i++) {
+                memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
                 memset(ctx->charging.pre_bal_accumulator, 0, sizeof(ctx->charging.pre_bal_accumulator));
             }
             ctx->charging.pre_bal_sample_count = 0;
@@ -202,6 +203,7 @@ void ChargingUpdate(DbmsCtx* ctx)
     case CH_BALANCING_EVENS:
         ctx->led_state = LED_BALANCING_EVENS;
         SendElconRequest(ctx, 0, 0, 1);
+        SendCellsToBalance(ctx);
 
         // Check if we actually have cells to balance
         bool balance_evens = StackNeedsToBalance(ctx, false, GetSetting(ctx, CH_BAL_DELTA_END));
@@ -220,6 +222,7 @@ void ChargingUpdate(DbmsCtx* ctx)
     case CH_BALANCING_ODDS:
         ctx->led_state = LED_BALANCING_ODDS;
         SendElconRequest(ctx, 0, 0, 1);
+        SendCellsToBalance(ctx);
 
         // Check if we actually have cells to balance
         bool balance_odds = StackNeedsToBalance(ctx, true, GetSetting(ctx, CH_BAL_DELTA_END));
