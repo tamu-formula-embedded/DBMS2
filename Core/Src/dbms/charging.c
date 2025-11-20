@@ -149,7 +149,7 @@ void ChargingUpdate(DbmsCtx* ctx)
     switch (ctx->charging.state) // Main state switch
     {
     case CH_NO_CONN:
-        SendElconRequest(ctx, 0, 0, 0);
+        SendElconRequest(ctx, 0, 0, 1);
 
         if (ctx->charging.conn) ChargingEnterState(ctx, CH_CHARGING);
 
@@ -160,7 +160,7 @@ void ChargingUpdate(DbmsCtx* ctx)
 
         ctx->elcon.v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600000) / 1000;
         ctx->elcon.i_req = MIN(MIN(GetSetting(ctx, CH_I), ctx->j1772.maxCurrentSupply), 25);
-        //SendElconRequest(ctx, v_req, i_req, 1);
+        SendElconRequest(ctx, ctx->elcon.v_req, ctx->elcon.i_req, 0);
         CanLog(ctx, "Elcon V=%d I=%d\n", ctx->elcon.v_req, ctx->elcon.i_req);
 
         if (TIME_IN_STATE_MS(ctx) > 1000)   // TODO:?
@@ -198,7 +198,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         break;
     case CH_BALANCING_EVENS:
         ctx->led_state = LED_BALANCING_EVENS;
-        SendElconRequest(ctx, 0, 0, 0);
+        SendElconRequest(ctx, 0, 0, 1);
 
         // Check if we actually have cells to balance
         bool balance_evens = StackNeedsToBalance(ctx, false, GetSetting(ctx, CH_BAL_DELTA_END));
@@ -216,7 +216,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         break;
     case CH_BALANCING_ODDS:
         ctx->led_state = LED_BALANCING_ODDS;
-        SendElconRequest(ctx, 0, 0, 0);
+        SendElconRequest(ctx, 0, 0, 1);
 
         // Check if we actually have cells to balance
         bool balance_odds = StackNeedsToBalance(ctx, true, GetSetting(ctx, CH_BAL_DELTA_END));
@@ -234,7 +234,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         break;
     case CH_COMPLETE:
         ctx->led_state = LED_CHARGING_COMPLETE;
-        SendElconRequest(ctx, 0, 0, 0);
+        SendElconRequest(ctx, 0, 0, 1);
 
         break;
     }
