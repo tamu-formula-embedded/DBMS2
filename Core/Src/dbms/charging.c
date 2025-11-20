@@ -170,6 +170,7 @@ void ChargingUpdate(DbmsCtx* ctx)
 
         break;
     case CH_WAIT_1:
+        SendElconRequest(ctx, 0, 0, 1);
         ctx->led_state = LED_CHARGING_WAIT;
         if (TIME_IN_STATE_MS(ctx) > 10000)
         {
@@ -178,10 +179,12 @@ void ChargingUpdate(DbmsCtx* ctx)
         }
         else
         {
-            ChargingAccumulateVoltages(ctx);
+            if(TIME_IN_STATE_MS(ctx) > 1000)
+                ChargingAccumulateVoltages(ctx);
         }
         break;
     case CH_WAIT_2:
+        SendElconRequest(ctx, 0, 0, 1);
         ctx->led_state = LED_CHARGING_WAIT;
         if (TIME_IN_STATE_MS(ctx) > 10000)
         {
