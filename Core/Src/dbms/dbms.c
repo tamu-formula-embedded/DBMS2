@@ -304,6 +304,9 @@ void DbmsIter(DbmsCtx* ctx)
     // Blackbox handler
     BlackboxSwapAndUpdate(ctx);
 
+    // Handle ObjStore Requests
+    ObjStoreIter(ctx);
+
     /**
      * Save faults and blackbox data to eeprom
      */
@@ -418,6 +421,13 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_BLACKBOX_REQUEST:
     CanLog(ctx, "hi");
         ctx->blackbox.requested = true;
+        break;
+    
+    case CANID_RX_OBJSTORE_REQUEST:
+        ObjStoreHandleReq(ctx, rx_data);
+        break;
+    case CANID_RX_OBJSTORE_SAVE:
+        ObjStoreHandleSave(ctx, rx_data);
         break;
 
 // TODO: remove this

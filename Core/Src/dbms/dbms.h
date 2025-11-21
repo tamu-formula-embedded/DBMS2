@@ -33,7 +33,7 @@
 #include "isense.h"
 #include "elcon.h"
 #include "charging.h"
-
+#include "objstore.h"
 
 // Called before the main loop but strictly used for memory allocation
 void DbmsAlloc(DbmsCtx* ctx);

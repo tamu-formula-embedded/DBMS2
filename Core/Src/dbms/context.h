@@ -62,6 +62,13 @@ typedef enum _ChargingState
     CH_COMPLETE
 } ChargingState;
 
+typedef enum _ObjStoreReq
+{
+    OBJSTORE_REQ_NONE = 0,
+    OBJSTORE_REQ_READ,
+    OBJSTORE_REQ_WRITE
+} ObjStoreReq;
+
 // fwd definition -- perf_counters.h
 typedef struct _PerfCounters PerfCounters;
 
@@ -267,6 +274,12 @@ typedef struct _DbmsCtx
         Snapshot* new_data;
         bool requested;
     } blackbox;
+
+    struct {
+        ObjStoreReq req;
+        uint8_t     req_id;
+        uint32_t    req_val;
+    } objstore;
 
     struct
     {
