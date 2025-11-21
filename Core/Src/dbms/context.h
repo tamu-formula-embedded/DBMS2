@@ -221,6 +221,8 @@ typedef struct _DbmsCtx
         int32_t voltage1_mv;
         int32_t power_w;
         int32_t charge_as;
+        float q_offset;
+        bool has_q_offset;
         int32_t energy_wh;
 
         struct {
