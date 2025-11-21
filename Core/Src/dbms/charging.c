@@ -59,6 +59,18 @@ void ChargingComputePreBalanceAverages(DbmsCtx* ctx)
             ctx->charging.pre_bal_average_v[side][group] = ctx->charging.pre_bal_accumulator[side][group] / ctx->charging.pre_bal_sample_count;
         }
     }
+
+    ctx->charging.pre_bal_min_v = 99999999.0f;
+    ctx->charging.pre_bal_max_v = 0.0f;
+
+    for (size_t side = 0; side < N_SIDES; side++)
+    {
+        for (size_t group = 0; group < N_GROUPS_PER_SIDE; group++)
+        {
+            ctx->charging.pre_bal_min_v = MIN(ctx->charging.pre_bal_min_v, ctx->charging.pre_bal_average_v[side][group]);
+            ctx->charging.pre_bal_max_v = MAX(ctx->charging.pre_bal_max_v, ctx->charging.pre_bal_average_v[side][group]);
+        }
+    }
 }
 
 static uint32_t bal_times[] = { 0, 10, 30, 60 };
