@@ -166,29 +166,28 @@ void DbmsHandleActive(DbmsCtx* ctx)
     
     HAL_Delay(GROUP_MSG_DELAY);
 
-    // for (uint8_t i = 0; i < N_SIDES; i++)
-    // {
-    //     // todo: think abt switching these
-    //     #if SPLIT_STACK_OPS 
-    //     StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
-    //     HAL_Delay(SINGLE_MSG_DELAY);
-    //     #else
-    //     StackUpdateTempReadingSingle(ctx, i, false);
-    //     HAL_Delay(SINGLE_MSG_DELAY);
-    //     StackUpdateTempReadingSingle(ctx, i, true);
-    //     HAL_Delay(SINGLE_MSG_DELAY);
-    //     #endif
-    // }
-    StackUpdateAllTempReadings(ctx);
+    for (uint8_t i = 0; i < N_SIDES; i++)
+    {
+        // todo: think abt switching these
+        if (i % N_SIDES == ctx->stats.iter % N_SIDES)
+        {
+            StackUpdateTempReadingSingle(ctx, i, false);
+            HAL_Delay(SINGLE_MSG_DELAY);
+            StackUpdateTempReadingSingle(ctx, i, false);
+            HAL_Delay(SINGLE_MSG_DELAY);
+        }
 
-    HAL_Delay(GROUP_MSG_DELAY);
+    }
+    // StackUpdateAllTempReadings(ctx);
+
+    // HAL_Delay(GROUP_MSG_DELAY);
 
     if (GetSetting(ctx, IGNORE_BAD_THERMS))
     {
         FillMissingTempReadings(ctx);
     }
     StackCalcStats(ctx);
-    HAL_Delay(GROUP_MSG_DELAY);
+    // HAL_Delay(GROUP_MSG_DELAY);
 
 
     if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
@@ -198,11 +197,11 @@ void DbmsHandleActive(DbmsCtx* ctx)
         CheckTemperatureFaults(ctx);
 
         // PollFaultSummary(ctx);
-        HAL_Delay(SINGLE_MSG_DELAY);
+        // HAL_Delay(SINGLE_MSG_DELAY);
     }
 
     ThrowHardFault(ctx);                // this can override fault state
-    HAL_Delay(GROUP_MSG_DELAY);
+    // HAL_Delay(GROUP_MSG_DELAY);
 }
 
 
@@ -331,8 +330,8 @@ void DbmsIter(DbmsCtx* ctx)
     if (HAL_GetTick() - ctx->last_rx_telembeat < 5000)// < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         SendMetrics(ctx);               // TODO: resolve conflicting metrics
-        SendCellVoltages(ctx);
-        SendCellTemps(ctx);
+        // SendCellVoltages(ctx);
+        // SendCellTemps(ctx);
     }
 
     /**
@@ -349,8 +348,8 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     
-    HAL_Delay(ctx->stats.end_delay / 1000);
-    DelayUs(ctx, ctx->stats.end_delay % 1000);
+    // HAL_Delay(ctx->stats.end_delay / 1000);
+    // DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
