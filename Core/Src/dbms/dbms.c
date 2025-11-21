@@ -152,32 +152,36 @@ void DbmsHandleActive(DbmsCtx* ctx)
 {
     if (!ctx->active) return;
 
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        #if SPLIT_STACK_OPS
-        if (ctx->stats.iters % 2 == i % 2)
-        #endif
-        {
-            StackUpdateVoltReadingSingle(ctx, i);   
-            HAL_Delay(SINGLE_MSG_DELAY);            
-        }
-    }        
+    // for (int i = 0; i < N_SIDES; i++)
+    // {
+    //     #if SPLIT_STACK_OPS
+    //     if (ctx->stats.iters % 2 == i % 2)
+    //     #endif
+    //     {
+    //         StackUpdateVoltReadingSingle(ctx, i);   
+    //         HAL_Delay(SINGLE_MSG_DELAY);            
+    //     }
+    // } 
+    StackUpdateAllVoltReadings(ctx);
     
     HAL_Delay(GROUP_MSG_DELAY);
 
-    for (uint8_t i = 0; i < N_SIDES; i++)
-    {
-        // todo: think abt switching these
-        #if SPLIT_STACK_OPS 
-        StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
-        HAL_Delay(SINGLE_MSG_DELAY);
-        #else
-        StackUpdateTempReadingSingle(ctx, i, false);
-        HAL_Delay(SINGLE_MSG_DELAY);
-        StackUpdateTempReadingSingle(ctx, i, true);
-        HAL_Delay(SINGLE_MSG_DELAY);
-        #endif
-    }
+    // for (uint8_t i = 0; i < N_SIDES; i++)
+    // {
+    //     // todo: think abt switching these
+    //     #if SPLIT_STACK_OPS 
+    //     StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
+    //     HAL_Delay(SINGLE_MSG_DELAY);
+    //     #else
+    //     StackUpdateTempReadingSingle(ctx, i, false);
+    //     HAL_Delay(SINGLE_MSG_DELAY);
+    //     StackUpdateTempReadingSingle(ctx, i, true);
+    //     HAL_Delay(SINGLE_MSG_DELAY);
+    //     #endif
+    // }
+    StackUpdateAllTempReadings(ctx);
+
+    HAL_Delay(GROUP_MSG_DELAY);
 
     if (GetSetting(ctx, IGNORE_BAD_THERMS))
     {
