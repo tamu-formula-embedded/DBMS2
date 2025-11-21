@@ -233,6 +233,7 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
 void CanLog(DbmsCtx* ctx, const char* fmt, ...)
 {
+    if (HAL_GetTick() - ctx->last_rx_telembeat < 5000) return;
     char buffer[CAN_LOG_BUFFER_SIZE];
     va_list args;
     va_start(args, fmt);
