@@ -165,6 +165,7 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 59, F2I_K(ctx->stats.max_v - ctx->stats.min_v, 1e4));
     
+    CanLog(ctx, "sending times");
     SendMetric(ctx, 60, ctx->times.T1 - ctx->times.T0);
     SendMetric(ctx, 61, ctx->times.T2 - ctx->times.T1);
     SendMetric(ctx, 62, ctx->times.T3 - ctx->times.T2);
