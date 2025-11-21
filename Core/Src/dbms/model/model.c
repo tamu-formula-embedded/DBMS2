@@ -146,7 +146,7 @@ void UpdateModel(DbmsCtx* ctx)
 
     float v_pack = (ctx->isense.voltage1_mv / 1e3f) / (N_SIDES * N_GROUPS_PER_SIDE);
     float current = (ctx->isense.current_ma / 1000.0) / N_P_GROUP;
-    ctx->qstats.accumulated_loss = ctx->isense.charge_as / 3600.0;    // convert to Ah
+    ctx->qstats.accumulated_loss = (ctx->isense.charge_as - ctx->isense.q_offset) / 3600.0;    // convert to Ah
 
     float total_accumulated_loss = (ctx->qstats.historic_accumulated_loss + ctx->qstats.accumulated_loss) / 3.0;
 
