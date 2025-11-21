@@ -166,18 +166,10 @@ void DbmsHandleActive(DbmsCtx* ctx)
     
     HAL_Delay(GROUP_MSG_DELAY);
 
-    for (uint8_t i = 0; i < N_SIDES; i++)
-    {
-        // todo: think abt switching these
-        if (i % N_SIDES == ctx->stats.iter % N_SIDES)
-        {
-            StackUpdateTempReadingSingle(ctx, i, false);
-            HAL_Delay(SINGLE_MSG_DELAY);
-            StackUpdateTempReadingSingle(ctx, i, false);
-            HAL_Delay(SINGLE_MSG_DELAY);
-        }
-
-    }
+    StackUpdateTempReadingSingle(ctx, ctx->stats.iter % N_SIDES, false);
+    HAL_Delay(SINGLE_MSG_DELAY);
+    StackUpdateTempReadingSingle(ctx, ctx->stats.iter % N_SIDES, true);
+    HAL_Delay(SINGLE_MSG_DELAY);
     // StackUpdateAllTempReadings(ctx);
 
     // HAL_Delay(GROUP_MSG_DELAY);
@@ -210,6 +202,7 @@ void DbmsIter(DbmsCtx* ctx)
     int status = 0;
     ctx->stats.iters++;
     ctx->iter_start_us = GetUs(ctx);
+    ctx->times.T0 = GetUs(ctx);
     
     /**
      * Handle blackbox data requested
@@ -230,9 +223,10 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->blackbox.requested = false;
     }
 
+    ctx->times.T1 = GetUs(ctx);
 
     ConfigCurrentSensor(ctx, 10);
-
+    ctx->times.T2 = GetUs(ctx);
     // Store the settings when required
     if (ctx->need_to_sync_settings)
     {
@@ -247,6 +241,7 @@ void DbmsIter(DbmsCtx* ctx)
         }
         ctx->need_to_sync_settings = false;
     }
+    ctx->times.T3 = GetUs(ctx);
 
     // Store the Q0 value when required
     if (ctx->need_to_reset_qstats)
@@ -261,7 +256,7 @@ void DbmsIter(DbmsCtx* ctx)
 
     // Let everybody know that we are alive
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
-
+    ctx->times.T4 = GetUs(ctx);
     /**
      * Active/shutdown switch based on main heartbeat
      * If it's been too long since we have recived a frame, we need to force a shutdown
@@ -298,6 +293,7 @@ void DbmsIter(DbmsCtx* ctx)
             ctx->led_state = LED_IDLE;
     }
 
+    ctx->times.T5 = GetUs(ctx);
 
     ChargingUpdate(ctx);
 
@@ -306,6 +302,7 @@ void DbmsIter(DbmsCtx* ctx)
 
     // Blackbox handler
     BlackboxSwapAndUpdate(ctx);
+    ctx->times.T6 = GetUs(ctx);
 
     /**
      * Save faults and blackbox data to eeprom
@@ -322,17 +319,20 @@ void DbmsIter(DbmsCtx* ctx)
         }
         ctx->need_to_save_faults = false;
     }
+    ctx->times.T7 = GetUs(ctx);
 
     /**
      * Transmit telemetry
      */
     SendPlexMetrics(ctx);
+        CanLog(ctx, "hi");
     if (HAL_GetTick() - ctx->last_rx_telembeat < 5000)// < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     {
         SendMetrics(ctx);               // TODO: resolve conflicting metrics
-        // SendCellVoltages(ctx);
-        // SendCellTemps(ctx);
+        SendCellVoltages(ctx);
+        SendCellTemps(ctx);
     }
+    ctx->times.T8 = GetUs(ctx);
 
     /**
      * Handle LED states and such
@@ -347,7 +347,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->iter_end_us = GetUs(ctx);
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
-    
+    ctx->times.T9 = GetUs(ctx);
     // HAL_Delay(ctx->stats.end_delay / 1000);
     // DelayUs(ctx, ctx->stats.end_delay % 1000);
 }

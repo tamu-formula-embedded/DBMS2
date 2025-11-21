@@ -164,7 +164,16 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 58, ctx->elcon.i_req);
 
     SendMetric(ctx, 59, F2I_K(ctx->stats.max_v - ctx->stats.min_v, 1e4));
-
+    
+    SendMetric(ctx, 60, ctx->times.T1 - ctx->times.T0);
+    SendMetric(ctx, 61, ctx->times.T2 - ctx->times.T1);
+    SendMetric(ctx, 62, ctx->times.T3 - ctx->times.T2);
+    SendMetric(ctx, 63, ctx->times.T4 - ctx->times.T3);
+    SendMetric(ctx, 64, ctx->times.T5 - ctx->times.T4);
+    SendMetric(ctx, 65, ctx->times.T6 - ctx->times.T5);
+    SendMetric(ctx, 66, ctx->times.T7 - ctx->times.T6);
+    SendMetric(ctx, 67, ctx->times.T8 - ctx->times.T6);
+    SendMetric(ctx, 68, ctx->times.T9 - ctx->times.T8);
     return 0;
 }
 
@@ -233,7 +242,7 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
 void CanLog(DbmsCtx* ctx, const char* fmt, ...)
 {
-    if (HAL_GetTick() - ctx->last_rx_telembeat < 5000) return;
+    // if (HAL_GetTick() - ctx->last_rx_telembeat < 5000) return;
     char buffer[CAN_LOG_BUFFER_SIZE];
     va_list args;
     va_start(args, fmt);

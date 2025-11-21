@@ -38,9 +38,9 @@ void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time)
     }
 
     CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_stop_mode);
-    HAL_Delay(2);
+    // HAL_Delay(2);
     CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
-    HAL_Delay(2);
+    // HAL_Delay(2);
     CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_run_mode);
 }
 
