@@ -279,7 +279,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         if (f_crc != c_crc) 
         {
             ctx->stats.n_rx_stack_bad_crcs++;
-            CanLog(ctx, "bad %d\n", i);
+            // CanLog(ctx, "bad %d\n", i);
             continue;
         }
 
@@ -287,6 +287,10 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         {
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
             ctx->cell_states[i / 2].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+            if (ctx->cell_states[i / 2].voltages[j]  > 4500)
+            {
+                CanLog(ctx, "%d", i + 1);
+            }
         }
     }
 }
