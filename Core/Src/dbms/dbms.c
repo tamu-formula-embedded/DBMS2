@@ -180,27 +180,27 @@ void DbmsHandleActive(DbmsCtx* ctx)
     {
         FillMissingTempReadings(ctx);
     }
-        ctx->times.T4 = GetUs(ctx);
+    ctx->times.T4 = GetUs(ctx);
 
     StackCalcStats(ctx);
-        ctx->times.T5 = GetUs(ctx);
+    ctx->times.T5 = GetUs(ctx);
 
     if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
     {               
         CheckVoltageFaults(ctx);
-            ctx->times.T6 = GetUs(ctx);
+        ctx->times.T6 = GetUs(ctx);
 
         CheckCurrentFaults(ctx);
-            ctx->times.T7 = GetUs(ctx);
+        ctx->times.T7 = GetUs(ctx);
 
         CheckTemperatureFaults(ctx);
-    ctx->times.T8 = GetUs(ctx);
+        ctx->times.T8 = GetUs(ctx);
 
         // PollFaultSummary(ctx);
     }
 
     ThrowHardFault(ctx);                // this can override fault state
-        ctx->times.T9 = GetUs(ctx);
+    ctx->times.T9 = GetUs(ctx);
 }
 
 
