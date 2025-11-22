@@ -171,5 +171,14 @@ void StackDumpCellsToBalance(DbmsCtx* ctx);
  */
 void StackReadBalStat(DbmsCtx* ctx, uint16_t addr);
 
+/*****************************
+ *   GPIO CONTROL
+ *****************************/
+
+int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel);
+
+int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, uint16_t* oa1, uint16_t* ob1, uint16_t* oa2, uint16_t* ob2);
+
+int ReadMuxOutputs8x1(DbmsCtx* ctx, uint8_t dev_number, uint16_t* o1, uint16_t* o2);
 
 #endif

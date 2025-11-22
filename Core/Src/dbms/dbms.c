@@ -339,6 +339,15 @@ void DbmsIter(DbmsCtx* ctx)
     ProcessLedAction(ctx);
     MonitorLedBlink(ctx);
 
+    if(ctx->stats.iters < 100){
+        uint16_t oa1, oa2, ob1, ob2;
+        //uint16_t o1, o2;
+        SetMuxChannel(ctx, 1, 0);
+        HAL_Delay(10);
+        ReadMuxOutputs4x1(ctx, 0, &oa1, &ob1, &oa2, &ob2);
+        //ReadMuxOutputs8x1(ctx, 0, &o1, &o2);
+        CanLog(ctx, "Mux test: %d %d %d %d\n", oa1, oa2, ob1, ob2);
+    }
     /**
      * Schedule the next loop
      */
@@ -417,7 +426,6 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
 
     case CANID_RX_BLACKBOX_REQUEST:
-    CanLog(ctx, "hi");
         ctx->blackbox.requested = true;
         break;
 

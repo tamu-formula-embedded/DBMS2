@@ -736,3 +736,87 @@ void StackReadBalStat(DbmsCtx* ctx, uint16_t addr)
 
     CanLog(ctx, "BAL Stat = %X\n", data[0]);
 }
+
+/*****************************
+ *  GPIO
+ *****************************/
+
+int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel)
+{
+    int status = 0;
+
+    uint8_t gpio_value;
+
+    switch(channel)
+    {
+        case 0:
+            gpio_value = 0x2D; // 00101101
+            break;
+        case 1:
+            gpio_value = 0x2C; // 00101100
+            break;
+        case 2:
+            gpio_value = 0x25; // 00100101
+            break;
+        case 3:
+            gpio_value = 0x24; // 00100100
+            break;
+    }
+    uint8_t mux_select_cmd[] = {0x90, dev_number, 0x00, 0x0E, gpio_value, 0x00, 0x00};
+    
+    if ((status = SendStackFrameSetCrc(ctx, mux_select_cmd, sizeof(mux_select_cmd))) != 0)
+    {
+        return status;
+    }
+    return status;
+}
+
+int ReadMonitorOutputGpio(DbmsCtx* ctx, uint8_t dev_number, uint16_t start_reg, uint16_t* response_1, uint16_t* response_2)
+{
+    int status = 0;
+    uint8_t data[10];
+
+    uint8_t read_cmd[] = {0x80, dev_number, start_reg >> 8, start_reg & 0xFF, 0x03, 0x00, 0x00}; // esxpecting 4 bytes
+    if ((status = SendStackFrameSetCrc(ctx, read_cmd, sizeof(read_cmd))) != 0)
+        return status;
+    
+    if ((status = HAL_UART_Receive(ctx->hw.uart, data, sizeof(data), STACK_RECV_TIMEOUT)) != 0)
+        return status;
+    ctx->stats.n_rx_stack_frames++;
+
+    CanLog(ctx, "%X %X %X %X", data[0], data[1], data[2], data[3] );
+
+    *response_1 = (data[4] << 8) | data[5];
+    *response_2 = (data[6] << 8) | data[7];
+
+    return status;
+}
+
+int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, uint16_t* oa1, uint16_t* ob1, uint16_t* oa2, uint16_t* ob2)
+{
+    // oa1 -> gpio3
+    // oa2 -> gpio4
+    // ob1 -> gpio5
+    // ob2 -> gpio6
+
+    // read only regs for gpio: 0x58E - 0x59D with 16 bits each, lower 8 high, upper 8 low
+    int status = 0;
+
+    if((status = ReadMonitorOutputGpio(ctx, dev_number, 0x592, oa1, oa2) != 0))
+        return status;
+    if((status = ReadMonitorOutputGpio(ctx, dev_number, 0x596, ob1, ob2) != 0))
+        return status;
+    
+    return status;
+}
+
+int ReadMuxOutputs8x1(DbmsCtx* ctx, uint8_t dev_number, uint16_t* o1, uint16_t* o2)
+{
+    int status = 0;
+    
+    if((status = ReadMonitorOutputGpio(ctx, dev_number, 0x597, o1, o2) != 0))
+        return status;
+
+    return status;
+}
+
