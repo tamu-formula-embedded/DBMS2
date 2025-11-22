@@ -247,7 +247,7 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
     int status = 0;
-    static uint8_t rx_buffer_v[2048];
+    static uint8_t rx_buffer_v[1024];
 
     uint8_t frame[] = {0xA0, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1, 0x00, 0x00};
 
@@ -262,16 +262,13 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     for (int i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
-        if (i % 2 == 0) continue;
-        int j = 0;
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
-        while (data[0] != frame[2])
+        for (int j = 0; data[0] != frame[2] && j < 1024; j++)
         {
-            if (j >= 1024) return;
-            j++;
             data++;
         }
         data++;
+        uint8_t addr = *(data-3);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
 
         uint16_t c_crc = CalcCrc16(data - 4, data_size+4);
@@ -282,15 +279,16 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
             // CanLog(ctx, "bad %d\n", i);
             continue;
         }
-
+        
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
+            if (addr % 2 == 0) break;
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-            ctx->cell_states[i / 2].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
-            if (ctx->cell_states[i / 2].voltages[j]  > 4500)
-            {
-                CanLog(ctx, "%d", i + 1);
-            }
+            ctx->cell_states[addr / 2].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+            // if (ctx->cell_states[addr / 2].voltages[j]  > 4500)
+            // {
+            //     CanLog(ctx, "%d", i + 1);
+            // }
         }
     }
 }
