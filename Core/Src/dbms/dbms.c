@@ -327,6 +327,10 @@ void DbmsIter(DbmsCtx* ctx)
     }
     // ctx->times.T7 = GetUs(ctx);
 
+    if (ctx->stats.iters % 25 == 0)
+    {
+        ctx->stats.percent_bad_stack_crcs = (float) ctx->stats.n_rx_stack_bad_crcs / (float) ctx->stats.n_rx_stack_frames;
+    }
     /**
      * Transmit telemetry
      */

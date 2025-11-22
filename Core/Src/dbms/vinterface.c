@@ -173,6 +173,8 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 66, ctx->times.T7 - ctx->times.T6);
     SendMetric(ctx, 67, ctx->times.T8 - ctx->times.T7);
     SendMetric(ctx, 68, ctx->times.T9 - ctx->times.T8);
+
+    SendMetric(ctx, 70, ctx->stats.percent_bad_stack_crcs * 100.0);
     return 0;
 }
 
@@ -220,8 +222,8 @@ void SendPlexMetrics(DbmsCtx* ctx)
     SendPlex32(ctx, 0x1a, ctx->pl_pulse_t);
     SendPlex32(ctx, 0x1b, pack_v);
     SendPlex32(ctx, 0x1c, ctx->stats.iters);
-    SendPlex32(ctx, 0x1d, ctx->stats.avg_t);
-    SendPlex32(ctx, 0x1e, ctx->stats.max_t);
+    SendPlex32(ctx, 0x1d, (ctx->stats.percent_bad_stack_crcs) * 100.0);
+    SendPlex32(ctx, 0x1e, ctx->cell_states[0].voltages[0] / 1000.0);
 
 #ifndef F2I_K
 #define F2I_K(F, K) ((int)((F) * (K)))
