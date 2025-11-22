@@ -257,8 +257,10 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
     // TODO: what the fuck is the +2 for?
     // TODO: redo the RX path for stack
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size, STACK_RECV_TIMEOUT)) != 0) { } 
-
+    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size, STACK_RECV_TIMEOUT)) != 0) {
+        CanLog(ctx, "shit\n");
+    } 
+    HAL_Delay(8);
     for (int i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
@@ -271,7 +273,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         data++;
         uint8_t addr = *(data-3);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-
+        // CanLog(ctx, "%X\n", addr);
         uint16_t c_crc = CalcCrc16(data - 4, data_size+4);
         // CanLog(ctx,"%X != %X", f_crc, c_crc);
         if (f_crc != c_crc) 

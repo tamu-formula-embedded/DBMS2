@@ -22,7 +22,7 @@
 
 // TODO: optimize the shit out of this
 #define STACK_SEND_TIMEOUT 6
-#define STACK_RECV_TIMEOUT 8
+#define STACK_RECV_TIMEOUT 50
 
 #define APBxCLK 42000000    // TODO: fix legacy name
 

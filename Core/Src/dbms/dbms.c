@@ -98,13 +98,21 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
         ctx->led_state = LED_FIRMWARE_FAULT;
         return status; // we are cooked
     }
+    HAL_Delay(2);
 
     StackAutoAddr(ctx);
+    HAL_Delay(2);
     StackSetNumActiveCells(ctx, 0x0A);
+        HAL_Delay(2);
+
     StackSetupGpio(ctx);
+    HAL_Delay(2);
+
     StackSetupVoltReadings(ctx); // todo: rn start
+    HAL_Delay(2);
 
     StackBalancingConfig(ctx);
+    HAL_Delay(2);
 
     ctx->isense.q_offset = 0.0f;
     ctx->isense.has_q_offset = false;
@@ -160,7 +168,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ctx->times.T0 = GetUs(ctx);
 
     StackUpdateAllVoltReadings(ctx);
-    HAL_Delay(6);
+    HAL_Delay(8);
 
     ctx->times.T1 = GetUs(ctx);
 
