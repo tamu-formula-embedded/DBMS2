@@ -274,7 +274,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         if (f_crc != c_crc) 
         {
             ctx->stats.n_rx_stack_bad_crcs++;
-            return;
+            continue;
         }
 
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
@@ -380,7 +380,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         if (f_crc != c_crc) 
         {
             ctx->stats.n_rx_stack_bad_crcs++;
-            return;
+            continue;
         }
         uint8_t offset = (i + 1) % 2 == 0 ? N_TEMPS_PER_MONITOR : 0;
         for (size_t j = 0; j < N_TEMPS_PER_MONITOR; j++)
