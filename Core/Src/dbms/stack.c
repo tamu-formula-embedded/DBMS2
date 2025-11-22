@@ -249,7 +249,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     int status = 0;
     static uint8_t rx_buffer_v[1024];
 
-    uint8_t frame[] = {0xB0, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1, 0x00, 0x00};
+    uint8_t frame[] = {0xA0, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1, 0x00, 0x00};
 
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
@@ -266,10 +266,12 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         while (data[0] != frame[2]) data++;
         data++;
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-        *(data-1) = frame[2];
-        *(data-2) = frame[1];
-        *(data-3) = i + 1;
-        *(data-4) = frame[3];
+        CanLog(ctx, "%X, %X, %X, %X\n", *(data-1), *(data-2), *(data-3), *(data-4));
+        // *(data-1) = frame[2];
+        // *(data-2) = frame[1];
+        // *(data-3) = i + 1;
+        // *(data-4) = frame[3];
+         CanLog(ctx, "%X, %X, %X, %X\n", *(data-1), *(data-2), *(data-3), *(data-4));
         uint16_t c_crc = CalcCrc16(data-4, data_size+4);
         if (f_crc != c_crc) 
         {
@@ -355,7 +357,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     int status = 0;
     static uint8_t rx_buffer_t[1024];
 
-    uint8_t frame[] = {0xB0, 0x05, 0x8E, N_TEMPS_PER_MONITOR, 0x00, 0x00};
+    uint8_t frame[] = {0xA0, 0x05, 0x8E, N_TEMPS_PER_MONITOR, 0x00, 0x00};
 
     size_t data_size = N_TEMPS_PER_MONITOR * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
