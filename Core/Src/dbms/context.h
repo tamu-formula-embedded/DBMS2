@@ -16,8 +16,6 @@
 // USER DEFINED
 #define ITER_TARGET_HZ      10      // ho	w many iterations per second to target
 
-#define SINGLE_MSG_DELAY    10       // ms delay between individual stack messages 
-#define GROUP_MSG_DELAY     20       // ms delay between groups of stack message 
 #define SPLIT_STACK_OPS     1       // 1 = divide stack ops in half, every-other-iter, 0 = do not
 
 #define N_SEGMENTS          5       // number of segments in the stack
