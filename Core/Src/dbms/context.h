@@ -123,8 +123,12 @@ typedef struct _Stats
     float max_t;
     float avg_t;
 
-    float percent_bad_stack_crcs;
-
+    uint32_t n_stack_frames; // for testing
+    uint32_t n_stack_bad_crcs;
+    float avg_percent_bad_crcs;
+    float* bad_crc_avgs[25];
+    float total;
+    
     uint32_t elcon_rx;
 
     uint64_t n_logging_frames;

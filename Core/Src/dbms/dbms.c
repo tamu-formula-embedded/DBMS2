@@ -327,10 +327,17 @@ void DbmsIter(DbmsCtx* ctx)
     }
     // ctx->times.T7 = GetUs(ctx);
 
+    //TESTING
+    ctx->stats.total += ((float) ctx->stats.n_stack_bad_crcs / (float) ctx->stats.n_stack_frames) * 100.0;
+    ctx->stats.n_stack_frames = 0;
+    ctx->stats.n_stack_bad_crcs = 0;
     if (ctx->stats.iters % 25 == 0)
     {
-        ctx->stats.percent_bad_stack_crcs = (float) ctx->stats.n_rx_stack_bad_crcs / (float) ctx->stats.n_rx_stack_frames;
+        ctx->stats.avg_percent_bad_crcs = ctx->stats.total / 25.0;
+        ctx->stats.total = 0;
     }
+//TESTING
+
     /**
      * Transmit telemetry
      */

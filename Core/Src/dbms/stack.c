@@ -262,6 +262,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     for (int i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
+        ctx->stats.n_stack_frames++;
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
         for (int j = 0; data[0] != frame[2] && j < 1024; j++)
         {
@@ -277,6 +278,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         {
             ctx->stats.n_rx_stack_bad_crcs++;
             // CanLog(ctx, "bad %d\n", i);
+            ctx->stats.n_stack_bad_crcs++;
             continue;
         }
         
@@ -335,6 +337,8 @@ void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick)
     if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
     ctx->stats.n_rx_stack_frames++;
+    ctx->stats.n_stack_frames++;
+
 
     uint8_t* data = rx_buffer_t;
     while (data[0] != frame[3]) data++;
@@ -348,6 +352,7 @@ void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick)
     if (f_crc != c_crc) 
     {
         ctx->stats.n_rx_stack_bad_crcs++;
+        ctx->stats.n_stack_bad_crcs++;
         return;
     }
 
@@ -375,6 +380,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     for (int i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
+        ctx->stats.n_stack_frames++;
 
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
         while (data[0] != frame2[2]) data++;
@@ -388,6 +394,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         if (f_crc != c_crc) 
         {
             ctx->stats.n_rx_stack_bad_crcs++;
+            ctx->stats.n_stack_bad_crcs++;
             continue;
         }
         uint8_t offset = (i + 1) % 2 == 0 ? N_TEMPS_PER_MONITOR : 0;
