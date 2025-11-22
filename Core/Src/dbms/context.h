@@ -308,6 +308,21 @@ typedef struct _DbmsCtx
         size_t pre_bal_sample_count;
     } charging;
 
+    struct
+    {
+        uint64_t T0;
+        uint64_t T1;
+        uint64_t T2;
+        uint64_t T3;
+        uint64_t T4;
+        uint64_t T5;
+        uint64_t T6;
+        uint64_t T7;
+        uint64_t T8;
+        uint64_t T9;
+        uint64_t T10;
+    } times;
+    
     bool has_balanced;
 } DbmsCtx;
 
