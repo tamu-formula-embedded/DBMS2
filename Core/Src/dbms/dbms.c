@@ -119,6 +119,8 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     // DelayUs(ctx, 5000);
     // Stack_Dev_Conf_FAULT_EN(ctx);
 
+    ConfigCurrentSensor(ctx, 10);
+
     DelayUs(ctx, 5000);
     SetFaultMasks(ctx);
 
@@ -226,7 +228,6 @@ void DbmsIter(DbmsCtx* ctx)
     }
     // ctx->times.T1 = GetUs(ctx);
 
-    // ConfigCurrentSensor(ctx, 10);
     HAL_Delay(6);
     // ctx->times.T2 = GetUs(ctx);
     // Store the settings when required
