@@ -155,17 +155,20 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ctx->times.T0 = GetUs(ctx);
 
     StackUpdateAllVoltReadings(ctx);
-    ctx->times.T1 = GetUs(ctx);
-
     HAL_Delay(6);
 
-    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
-        ctx->times.T2 = GetUs(ctx);
-    HAL_Delay(1);
-    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
-        ctx->times.T3 = GetUs(ctx);
+    ctx->times.T1 = GetUs(ctx);
 
+
+    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
     HAL_Delay(1);
+
+    ctx->times.T2 = GetUs(ctx);
+    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
+    HAL_Delay(1);
+
+    ctx->times.T3 = GetUs(ctx);
+
 
 
     if (GetSetting(ctx, IGNORE_BAD_THERMS))
@@ -223,7 +226,8 @@ void DbmsIter(DbmsCtx* ctx)
     }
     // ctx->times.T1 = GetUs(ctx);
 
-    ConfigCurrentSensor(ctx, 10);
+    // ConfigCurrentSensor(ctx, 10);
+    HAL_Delay(6);
     // ctx->times.T2 = GetUs(ctx);
     // Store the settings when required
     if (ctx->need_to_sync_settings)
