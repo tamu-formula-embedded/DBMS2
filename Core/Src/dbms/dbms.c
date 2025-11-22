@@ -88,6 +88,7 @@ void DbmsInit(DbmsCtx* ctx)
 int DbmsPerformWakeup(DbmsCtx* ctx)
 {
     int status = 0;
+    ctx->done = false;
     HAL_Delay(2000);
 
     // TODO: check these all and make a critical couldnt wake stack fault
@@ -162,8 +163,9 @@ void DbmsHandleActive(DbmsCtx* ctx)
     //         HAL_Delay(SINGLE_MSG_DELAY);            
     //     }
     // } 
+    // if (!ctx->done)
     StackUpdateAllVoltReadings(ctx);
-    
+    // ctx->done = true;
     HAL_Delay(GROUP_MSG_DELAY);
 
     // for (uint8_t i = 0; i < N_SIDES; i++)
