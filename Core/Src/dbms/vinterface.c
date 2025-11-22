@@ -165,7 +165,6 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 59, F2I_K(ctx->stats.max_v - ctx->stats.min_v, 1e4));
     
-    CanLog(ctx, "sending times");
     SendMetric(ctx, 60, ctx->times.T1 - ctx->times.T0);
     SendMetric(ctx, 61, ctx->times.T2 - ctx->times.T1);
     SendMetric(ctx, 62, ctx->times.T3 - ctx->times.T2);
@@ -173,7 +172,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 64, ctx->times.T5 - ctx->times.T4);
     SendMetric(ctx, 65, ctx->times.T6 - ctx->times.T5);
     SendMetric(ctx, 66, ctx->times.T7 - ctx->times.T6);
-    SendMetric(ctx, 67, ctx->times.T8 - ctx->times.T6);
+    SendMetric(ctx, 67, ctx->times.T8 - ctx->times.T7);
     SendMetric(ctx, 68, ctx->times.T9 - ctx->times.T8);
     return 0;
 }
