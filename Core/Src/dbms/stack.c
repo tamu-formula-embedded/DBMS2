@@ -247,7 +247,7 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
     int status = 0;
-    static uint8_t rx_buffer_v[1024];
+    static uint8_t rx_buffer_v[2048];
 
     uint8_t frame[] = {0xA0, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1, 0x00, 0x00};
 
@@ -263,19 +263,26 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         ctx->stats.n_rx_stack_frames++;
 
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
-        while (data[0] != frame[2]) data++;
+        int i = 0;
+        while (data[0] != frame[2])
+        {
+            if (i >= 1024) return;
+            data++;
+        } 
         data++;
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-        CanLog(ctx, "%X, %X, %X, %X\n", *(data-1), *(data-2), *(data-3), *(data-4));
-        // *(data-1) = frame[2];
-        // *(data-2) = frame[1];
-        // *(data-3) = i + 1;
-        // *(data-4) = frame[3];
-         CanLog(ctx, "%X, %X, %X, %X\n", *(data-1), *(data-2), *(data-3), *(data-4));
+        // CanLog(ctx, "%X, %X, %X, %X\n", *(data-4), *(data-3), *(data-2), *(data-1));
+        *(data-1) = frame[2];
+        *(data-2) = frame[1];
+        *(data-3) = i + 1;
+        *(data-4) = frame[3];
+        //  CanLog(ctx, "%X, %X, %X, %X\n", *(data-4), *(data-3), *(data-2), *(data-1));
         uint16_t c_crc = CalcCrc16(data-4, data_size+4);
+        // CanLog(ctx,"%X != %X", f_crc, c_crc);
         if (f_crc != c_crc) 
         {
             ctx->stats.n_rx_stack_bad_crcs++;
+            CanLog(ctx, "bad\n");
             continue;
         }
 
@@ -357,12 +364,12 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     int status = 0;
     static uint8_t rx_buffer_t[1024];
 
-    uint8_t frame[] = {0xA0, 0x05, 0x8E, N_TEMPS_PER_MONITOR, 0x00, 0x00};
+    uint8_t frame2[] = {0xA0, 0x05, 0x8E, N_TEMPS_PER_MONITOR, 0x00, 0x00};
 
     size_t data_size = N_TEMPS_PER_MONITOR * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
-    if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
+    if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
     // TODO: what the fuck is the +2 for?
     // TODO: redo the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size, STACK_RECV_TIMEOUT)) != 0) { } 
@@ -371,13 +378,13 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         ctx->stats.n_rx_stack_frames++;
 
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
-        while (data[0] != frame[2]) data++;
+        while (data[0] != frame2[2]) data++;
         data++;
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-        *(data-1) = frame[2];
-        *(data-2) = frame[1];
+        *(data-1) = frame2[2];
+        *(data-2) = frame2[1];
         *(data-3) = i + 1;
-        *(data-4) = frame[3];
+        *(data-4) = frame2[3];
         uint16_t c_crc = CalcCrc16(data-4, data_size+4);
         if (f_crc != c_crc) 
         {

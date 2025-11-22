@@ -175,11 +175,11 @@ void DbmsHandleActive(DbmsCtx* ctx)
     //     #else
     //     StackUpdateTempReadingSingle(ctx, i, false);
     //     HAL_Delay(SINGLE_MSG_DELAY);
-    //     StackUpdateTempReadingSingle(ctx, i, true);
+    //     StackUpdateTempReadingSingle(ctx, i, true);x`
     //     HAL_Delay(SINGLE_MSG_DELAY);
     //     #endif
     // }
-    StackUpdateAllTempReadings(ctx);
+    // StackUpdateAllTempReadings(ctx);
 
     HAL_Delay(GROUP_MSG_DELAY);
 
