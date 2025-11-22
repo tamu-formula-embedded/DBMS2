@@ -322,7 +322,7 @@ typedef struct _DbmsCtx
         uint64_t T9;
         uint64_t T10;
     } times;
-    
+    bool done;
     bool has_balanced;
 } DbmsCtx;
 

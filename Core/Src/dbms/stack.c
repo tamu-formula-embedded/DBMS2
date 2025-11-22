@@ -258,38 +258,35 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     // TODO: what the fuck is the +2 for?
     // TODO: redo the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size, STACK_RECV_TIMEOUT)) != 0) { } 
+
     for (int i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
-
+        if (i % 2 == 0) continue;
+        int j = 0;
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
-        int i = 0;
         while (data[0] != frame[2])
         {
-            if (i >= 1024) return;
+            if (j >= 1024) return;
+            j++;
             data++;
-        } 
+        }
         data++;
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-        // CanLog(ctx, "%X, %X, %X, %X\n", *(data-4), *(data-3), *(data-2), *(data-1));
-        *(data-1) = frame[2];
-        *(data-2) = frame[1];
-        *(data-3) = i + 1;
-        *(data-4) = frame[3];
-        //  CanLog(ctx, "%X, %X, %X, %X\n", *(data-4), *(data-3), *(data-2), *(data-1));
-        uint16_t c_crc = CalcCrc16(data-4, data_size+4);
+
+        uint16_t c_crc = CalcCrc16(data - 4, data_size+4);
         // CanLog(ctx,"%X != %X", f_crc, c_crc);
         if (f_crc != c_crc) 
         {
             ctx->stats.n_rx_stack_bad_crcs++;
-            CanLog(ctx, "bad\n");
+            CanLog(ctx, "bad %d\n", i);
             continue;
         }
 
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-            ctx->cell_states[i].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+            ctx->cell_states[i / 2].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
         }
     }
 }
