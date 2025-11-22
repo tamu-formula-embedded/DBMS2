@@ -295,7 +295,7 @@ void StackSetupGpio(DbmsCtx* ctx)
     // Note 2: Also configures GPIO8 even though we dont need to, hence just setting GPIO8 to output low
     uint8_t frame_gpio_configs[] = {0xB3, 0x00, 0x0E, 0x09, 0x09, 0x09, 0x21, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_gpio_configs, sizeof(frame_gpio_configs));
-
+    
     // Setting up TSREF to active
     uint8_t frame_tsref_setup[] = {0xB0, 0x03, 0x0A, 0x01, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_tsref_setup, sizeof(frame_tsref_setup));
@@ -771,28 +771,30 @@ int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel)
     return status;
 }
 
-int ReadMonitorOutputGpio(DbmsCtx* ctx, uint8_t dev_number, uint16_t start_reg, uint16_t* response_1, uint16_t* response_2)
+int ReadMonitorOutputGpio(DbmsCtx* ctx, uint8_t dev_number, uint16_t start_reg, float* response_1, float* response_2)
 {
     int status = 0;
     uint8_t data[10];
 
     uint8_t read_cmd[] = {0x80, dev_number, start_reg >> 8, start_reg & 0xFF, 0x03, 0x00, 0x00}; // esxpecting 4 bytes
     if ((status = SendStackFrameSetCrc(ctx, read_cmd, sizeof(read_cmd))) != 0)
-        return status;
+    {
+    }
     
     if ((status = HAL_UART_Receive(ctx->hw.uart, data, sizeof(data), STACK_RECV_TIMEOUT)) != 0)
-        return status;
+    {
+    }
     ctx->stats.n_rx_stack_frames++;
 
-    CanLog(ctx, "%X %X %X %X", data[0], data[1], data[2], data[3] );
+    CanLog(ctx, "d: %X, %X, %X, %X\n", data[4], data[5], data[6], data[7] );
 
-    *response_1 = (data[4] << 8) | data[5];
-    *response_2 = (data[6] << 8) | data[7];
+    *response_1 = ThermVoltToTemp(ctx, MAX(0, (((data[4] << 8) | data[5]) * STACK_T_UV_PER_BIT) / 1000000.0));
+    *response_2 = ThermVoltToTemp(ctx, MAX(0, (((data[6] << 8) | data[7]) * STACK_T_UV_PER_BIT) / 1000000.0));
 
     return status;
 }
 
-int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, uint16_t* oa1, uint16_t* ob1, uint16_t* oa2, uint16_t* ob2)
+int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, float* oa1, float* ob1, float* oa2, float* ob2)
 {
     // oa1 -> gpio3
     // oa2 -> gpio4
@@ -810,7 +812,7 @@ int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, uint16_t* oa1, uint16_t*
     return status;
 }
 
-int ReadMuxOutputs8x1(DbmsCtx* ctx, uint8_t dev_number, uint16_t* o1, uint16_t* o2)
+int ReadMuxOutputs8x1(DbmsCtx* ctx, uint8_t dev_number, float* o1, float* o2)
 {
     int status = 0;
     

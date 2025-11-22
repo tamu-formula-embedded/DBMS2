@@ -177,8 +177,8 @@ void StackReadBalStat(DbmsCtx* ctx, uint16_t addr);
 
 int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel);
 
-int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, uint16_t* oa1, uint16_t* ob1, uint16_t* oa2, uint16_t* ob2);
+int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, float* oa1, float* ob1, float* oa2, float* ob2);
 
-int ReadMuxOutputs8x1(DbmsCtx* ctx, uint8_t dev_number, uint16_t* o1, uint16_t* o2);
+int ReadMuxOutputs8x1(DbmsCtx* ctx, uint8_t dev_number, float* o1, float* o2);
 
 #endif

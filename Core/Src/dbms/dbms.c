@@ -166,10 +166,10 @@ void DbmsHandleActive(DbmsCtx* ctx)
     
     HAL_Delay(GROUP_MSG_DELAY);
 
-    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
-    HAL_Delay(SINGLE_MSG_DELAY);
-    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
-    HAL_Delay(SINGLE_MSG_DELAY);
+    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
+    // HAL_Delay(SINGLE_MSG_DELAY);
+    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
+    // HAL_Delay(SINGLE_MSG_DELAY);
     // StackUpdateAllTempReadings(ctx);
 
     // HAL_Delay(GROUP_MSG_DELAY);
@@ -339,8 +339,8 @@ void DbmsIter(DbmsCtx* ctx)
     ProcessLedAction(ctx);
     MonitorLedBlink(ctx);
 
-    if(ctx->stats.iters < 100){
-        uint16_t oa1, oa2, ob1, ob2;
+    if(ctx->stats.iters < 50){
+        float oa1, oa2, ob1, ob2 = 0;
         //uint16_t o1, o2;
         SetMuxChannel(ctx, 1, 0);
         HAL_Delay(10);
