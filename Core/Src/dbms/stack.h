@@ -79,6 +79,8 @@ void StackSetupVoltReadings(DbmsCtx* ctx);
  */
 void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr);
 
+void StackUpdateAllVoltReadings(DbmsCtx* ctx);
+
 /**
  * @brief Configure GPIOs for temp readings
  * 
@@ -96,6 +98,8 @@ void StackSetupGpio(DbmsCtx* ctx);
  * @param sidekick Read the main chip or the sidekick chip
  */
 void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick);
+
+void StackUpdateAllTempReadings(DbmsCtx* ctx);
 
 /**
  * @brief Replace missing thermistor readings with the average of the valid cells
@@ -154,6 +158,8 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds,
         StackBalanceTimes bal_time_idx);
 
 void StackComputeCellsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv);
+
+bool StackNeedsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv);
 
 void StackDumpCellsToBalance(DbmsCtx* ctx);
 

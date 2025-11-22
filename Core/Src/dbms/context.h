@@ -16,8 +16,6 @@
 // USER DEFINED
 #define ITER_TARGET_HZ      10      // ho	w many iterations per second to target
 
-#define SINGLE_MSG_DELAY    2       // ms delay between individual stack messages 
-#define GROUP_MSG_DELAY     8       // ms delay between groups of stack message 
 #define SPLIT_STACK_OPS     1       // 1 = divide stack ops in half, every-other-iter, 0 = do not
 
 #define N_SEGMENTS          5       // number of segments in the stack
@@ -57,8 +55,10 @@ typedef enum _ChargingState
 {
     CH_NO_CONN = 0,
     CH_CHARGING,
+    CH_WAIT_1,
     CH_BALANCING_ODDS,
     CH_BALANCING_EVENS,
+    CH_WAIT_2,
     CH_COMPLETE
 } ChargingState;
 
@@ -297,11 +297,32 @@ typedef struct _DbmsCtx
         int64_t state_enter_ts;
         ChargingState prev_state;
         ChargingState state;
-        float pre_bal_min_v;
+
         bool allowed;
         bool conn;
+
+        float pre_bal_accumulator[N_SIDES][N_GROUPS_PER_SIDE];
+        float pre_bal_average_v[N_SIDES][N_GROUPS_PER_SIDE];
+        float pre_bal_min_v;
+        float pre_bal_max_v;
+        size_t pre_bal_sample_count;
     } charging;
 
+    struct
+    {
+        uint64_t T0;
+        uint64_t T1;
+        uint64_t T2;
+        uint64_t T3;
+        uint64_t T4;
+        uint64_t T5;
+        uint64_t T6;
+        uint64_t T7;
+        uint64_t T8;
+        uint64_t T9;
+        uint64_t T10;
+    } times;
+    bool done;
     bool has_balanced;
 } DbmsCtx;
 
