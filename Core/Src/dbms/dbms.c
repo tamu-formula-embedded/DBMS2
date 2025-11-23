@@ -99,13 +99,19 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
         return status; // we are cooked
     }
 
+    HAL_Delay(2);
     StackAutoAddr(ctx);
+    HAL_Delay(2);
     StackSetNumActiveCells(ctx, 0x0A);
+    HAL_Delay(2);
     StackSetupGpio(ctx);
+    HAL_Delay(2);
     StackSetupVoltReadings(ctx); // todo: rn start
 
+    HAL_Delay(2);
     StackBalancingConfig(ctx);
 
+    HAL_Delay(2);
     if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
     {
         // todo: check an error here

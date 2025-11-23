@@ -555,20 +555,21 @@ int SetFaultMasks(DbmsCtx* ctx)
 
 int PollFaultSummary(DbmsCtx* ctx)
 {
-    int status;
-    uint8_t dev_addr;
-    uint8_t response[25];
-    uint8_t sendframe[] = {0x80, dev_addr, 0x05, 0x2D, 0x00, 0x00, 0x00};
+    // int status;
+    // uint8_t dev_addr;
+    // uint8_t response[25];
+    // uint8_t sendframe[] = {0x80, dev_addr, 0x05, 0x2D, 0x00, 0x00, 0x00};
 
-    if ((status = SendStackFrameSetCrc(ctx, sendframe, sizeof(sendframe))) != 0)
-    {
-        //who cares
-    }
+    // if ((status = SendStackFrameSetCrc(ctx, sendframe, sizeof(sendframe))) != 0)
+    // {
+    //     //who cares
+    // }
 
-    if ((status = HAL_UART_Receive(ctx->hw.uart, response, RX_FRAME_SIZE(1), STACK_RECV_TIMEOUT)) != 0) { } 
-    ctx->stats.n_rx_stack_frames++;
+    // if ((status = HAL_UART_Receive(ctx->hw.uart, response, RX_FRAME_SIZE(1), STACK_RECV_TIMEOUT)) != 0) { } 
+    // ctx->stats.n_rx_stack_frames++;
 
-    ctx->bridge_fault_summary = response[4];
+    // ctx->bridge_fault_summary = response[4];
+    return 0;
 }
 
 /*****************************
