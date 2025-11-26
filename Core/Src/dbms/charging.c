@@ -40,6 +40,15 @@ bool ChargingComplete(DbmsCtx* ctx)
         && 1000 * (ctx->stats.max_v - ctx->stats.min_v) < GetSetting(ctx, CH_BAL_DELTA_END);
 }
 
+void ChargingComputeElconReq(DbmsCtx* ctx) 
+{
+    ctx->elcon.v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600000) / 1000;
+    uint32_t ac_current = MIN(ctx->j1772.maxCurrentSupply, GetSetting(ctx, CH_I));
+    uint32_t elcon_eff = CLAMP(GetSetting(ctx, CH_ELCON_EFF), 0, 100) / 100.0;
+    uint32_t power_lim = ac_current * GetSetting(ctx, CH_AC_VOLTAGE) * elcon_eff;
+    ctx->elcon.i_req = power_lim / ctx->elcon.v_req;
+}
+
 void ChargingAccumulateVoltages(DbmsCtx* ctx)
 {
     for (size_t side = 0; side < N_SIDES; side++) {
@@ -171,8 +180,7 @@ void ChargingUpdate(DbmsCtx* ctx)
     case CH_CHARGING:
         ctx->led_state = LED_CHARGING;
 
-        ctx->elcon.v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600000) / 1000;
-        ctx->elcon.i_req = MIN(MIN(GetSetting(ctx, CH_I), ctx->j1772.maxCurrentSupply), 25);
+        ChargingComputeElconReq(ctx);
         SendElconRequest(ctx, ctx->elcon.v_req, ctx->elcon.i_req, 0);
         CanLog(ctx, "Elcon V=%d I=%d\n", ctx->elcon.v_req, ctx->elcon.i_req);
 

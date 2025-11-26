@@ -43,6 +43,8 @@ enum _UserSettingIndex
     CH_BAL_T_IDX,
     CH_TARGET_V,
     CH_I,
+    CH_AC_VOLTAGE,
+    CH_ELCON_EFF,
 
     FAN_T_TH,
     FAN_DUTY,
