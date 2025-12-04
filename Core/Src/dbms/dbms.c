@@ -162,7 +162,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     //         HAL_Delay(SINGLE_MSG_DELAY);            
     //     }
     // } 
-    StackUpdateAllVoltReadings(ctx);
+    // StackUpdateAllVoltReadings(ctx);
     
     HAL_Delay(GROUP_MSG_DELAY);
 
@@ -338,7 +338,7 @@ void DbmsIter(DbmsCtx* ctx)
     UpdateFan(ctx);
     ProcessLedAction(ctx);
     MonitorLedBlink(ctx);
-
+    HAL_Delay(2);
     if(ctx->stats.iters < 50){
         float oa1, oa2, ob1, ob2 = 0;
         //uint16_t o1, o2;
