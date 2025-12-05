@@ -800,7 +800,8 @@ int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, float* oa1, float* ob1, 
     // oa2 -> gpio4
     // ob1 -> gpio5
     // ob2 -> gpio6
-
+    // 00 000 100 = 04 on
+    //00 000 101  = 05 off
     // read only regs for gpio: 0x58E - 0x59D with 16 bits each, lower 8 high, upper 8 low
     int status = 0;
 
