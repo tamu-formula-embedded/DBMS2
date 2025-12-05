@@ -20,9 +20,9 @@
 #define GROUP_MSG_DELAY     8       // ms delay between groups of stack message 
 #define SPLIT_STACK_OPS     1       // 1 = divide stack ops in half, every-other-iter, 0 = do not
 
-#define N_SEGMENTS          1       // number of segments in the stack
-#define N_SIDES_PER_SEG     1       // number of sides per segment
-#define N_MONITORS_PER_SIDE 1       // number of monitors per side
+#define N_SEGMENTS          5       // number of segments in the stack
+#define N_SIDES_PER_SEG     2       // number of sides per segment
+#define N_MONITORS_PER_SIDE 2       // number of monitors per side
 #define N_GROUPS_PER_SIDE   14      // number of voltages per side
 #define N_TEMPS_PER_MONITOR 7       // number of temps per monitor chip 
 #define N_P_GROUP           3       // number of cells per parallel group
@@ -223,6 +223,8 @@ typedef struct _DbmsCtx
         int32_t voltage1_mv;
         int32_t power_w;
         int32_t charge_as;
+        float q_offset;
+        bool has_q_offset;
         int32_t energy_wh;
 
         struct {
@@ -303,25 +305,10 @@ typedef struct _DbmsCtx
 
         float pre_bal_accumulator[N_SIDES][N_GROUPS_PER_SIDE];
         float pre_bal_average_v[N_SIDES][N_GROUPS_PER_SIDE];
-        float pre_bal_min_v;
-        float pre_bal_max_v;
         size_t pre_bal_sample_count;
+        float pre_bal_min_v;
     } charging;
 
-    struct
-    {
-        uint64_t T0;
-        uint64_t T1;
-        uint64_t T2;
-        uint64_t T3;
-        uint64_t T4;
-        uint64_t T5;
-        uint64_t T6;
-        uint64_t T7;
-        uint64_t T8;
-        uint64_t T9;
-        uint64_t T10;
-    } times;
     bool has_balanced;
 } DbmsCtx;
 

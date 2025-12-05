@@ -152,27 +152,27 @@ void DbmsHandleActive(DbmsCtx* ctx)
 {
     if (!ctx->active) return;
 
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        #if SPLIT_STACK_OPS
-        if (ctx->stats.iters % 2 == i % 2)
-        #endif
-        {
-            StackUpdateVoltReadingSingle(ctx, i);   
-            HAL_Delay(SINGLE_MSG_DELAY);            
-        }
-    } 
+    // for (int i = 0; i < N_SIDES; i++)
+    // {
+    //     #if SPLIT_STACK_OPS
+    //     if (ctx->stats.iters % 2 == i % 2)
+    //     #endif
+    //     {
+    //         StackUpdateVoltReadingSingle(ctx, i);   
+    //         HAL_Delay(SINGLE_MSG_DELAY);            
+    //     }
+    // } 
     StackUpdateAllVoltReadings(ctx);
     
     HAL_Delay(GROUP_MSG_DELAY);
 
-    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
-    // HAL_Delay(SINGLE_MSG_DELAY);
-    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
-    // HAL_Delay(SINGLE_MSG_DELAY);
-    // StackUpdateAllTempReadings(ctx);
+    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
+    HAL_Delay(SINGLE_MSG_DELAY);
+    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
+    HAL_Delay(SINGLE_MSG_DELAY);
+    StackUpdateAllTempReadings(ctx);
 
-    // HAL_Delay(GROUP_MSG_DELAY);
+    HAL_Delay(GROUP_MSG_DELAY);
 
     if (GetSetting(ctx, IGNORE_BAD_THERMS))
     {
