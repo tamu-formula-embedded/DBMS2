@@ -32,7 +32,7 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
 int StackWake(DbmsCtx* ctx)
 {
     static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
-
+    
     int status = 0;
     for (int i = 0; i < 2; i++)
     {

@@ -152,17 +152,17 @@ void DbmsHandleActive(DbmsCtx* ctx)
 {
     if (!ctx->active) return;
 
-    // for (int i = 0; i < N_SIDES; i++)
-    // {
-    //     #if SPLIT_STACK_OPS
-    //     if (ctx->stats.iters % 2 == i % 2)
-    //     #endif
-    //     {
-    //         StackUpdateVoltReadingSingle(ctx, i);   
-    //         HAL_Delay(SINGLE_MSG_DELAY);            
-    //     }
-    // } 
-    // StackUpdateAllVoltReadings(ctx);
+    for (int i = 0; i < N_SIDES; i++)
+    {
+        #if SPLIT_STACK_OPS
+        if (ctx->stats.iters % 2 == i % 2)
+        #endif
+        {
+            StackUpdateVoltReadingSingle(ctx, i);   
+            HAL_Delay(SINGLE_MSG_DELAY);            
+        }
+    } 
+    StackUpdateAllVoltReadings(ctx);
     
     HAL_Delay(GROUP_MSG_DELAY);
 
@@ -339,15 +339,15 @@ void DbmsIter(DbmsCtx* ctx)
     ProcessLedAction(ctx);
     MonitorLedBlink(ctx);
     HAL_Delay(2);
-    if(ctx->stats.iters < 50){
-        float oa1, oa2, ob1, ob2 = 0;
-        //uint16_t o1, o2;
-        SetMuxChannel(ctx, 1, 0);
-        HAL_Delay(10);
-        ReadMuxOutputs4x1(ctx, 0, &oa1, &ob1, &oa2, &ob2);
-        //ReadMuxOutputs8x1(ctx, 0, &o1, &o2);
-        CanLog(ctx, "Mux test: %d %d %d %d\n", oa1, oa2, ob1, ob2);
-    }
+    // if(ctx->stats.iters < 50){
+    //     float oa1, oa2, ob1, ob2 = 0;
+    //     //uint16_t o1, o2;
+    //     SetMuxChannel(ctx, 1, 0);
+    //     HAL_Delay(10);
+    //     ReadMuxOutputs4x1(ctx, 0, &oa1, &ob1, &oa2, &ob2);
+    //     //ReadMuxOutputs8x1(ctx, 0, &o1, &o2);
+    //     CanLog(ctx, "Mux test: %d %d %d %d\n", oa1, oa2, ob1, ob2);
+    // }
     /**
      * Schedule the next loop
      */
