@@ -105,6 +105,9 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
 
     StackBalancingConfig(ctx);
 
+    ctx->isense.q_offset = 0.0f;
+    ctx->isense.has_q_offset = false;
+
     if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
     {
         // todo: check an error here
@@ -396,6 +399,11 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
     case CANID_ISENSE_CHARGE:
         ctx->isense.charge_as = (int32_t)UnpackCurrentSensorData(rx_data);
+        if (!ctx->isense.has_q_offset) {
+            ctx->isense.q_offset = ctx->isense.charge_as;
+            ctx->isense.has_q_offset = true;
+            CanLog(ctx, "q_offset %d\nmAs", (int)(ctx->isense.q_offset * 1000));
+        }
         // CanLog(ctx, "Got charge measurement\n");
         break;
     case CANID_ISENSE_ENERGY:
