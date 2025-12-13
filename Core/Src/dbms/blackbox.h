@@ -14,7 +14,7 @@
 
 void BlackboxInit(DbmsCtx* ctx);
 
-void BlackboxSwapAndUpdate(DbmsCtx* ctx);
+void BlackboxUpdate(DbmsCtx* ctx);
 
 void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox);
 

@@ -305,7 +305,7 @@ void DbmsIter(DbmsCtx* ctx)
     UpdateModel(ctx);   // TODO: add condition for when we update this
 
     // Blackbox handler
-    BlackboxSwapAndUpdate(ctx);
+    BlackboxUpdate(ctx);
 
     /**
      * Save faults and blackbox data to eeprom
