@@ -267,8 +267,8 @@ typedef struct _DbmsCtx
     bool m_led_on;
 
     struct {
-        Snapshot* old_data;
-        Snapshot* new_data;
+        uint8_t head;
+        uint8_t count;
         bool requested;
     } blackbox;
 

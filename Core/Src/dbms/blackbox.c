@@ -10,25 +10,29 @@
 #include "context.h"
 #include "storage.h"
 #include "can.h"
-#include "utils/common.h"
 
-static Snapshot snapshot_storage[2];
+#define BLACKBOX_QUEUE_SIZE 10
+
+static Snapshot snapshot_queue[BLACKBOX_QUEUE_SIZE];
 
 void BlackboxInit(DbmsCtx* ctx)
 {
-    memset(snapshot_storage, 0, sizeof(snapshot_storage));
-    
-    ctx->blackbox.old_data = &snapshot_storage[0];
-    ctx->blackbox.new_data = &snapshot_storage[1];
+    memset(snapshot_queue, 0, sizeof(snapshot_queue));
+
+    ctx->blackbox.head = 0;
+    ctx->blackbox.count = 0;
 }
 
-void BlackboxSwapAndUpdate(DbmsCtx* ctx)
+void BlackboxUpdate(DbmsCtx* ctx)
 {
-    Snapshot* temp = ctx->blackbox.old_data;
-    ctx->blackbox.old_data = ctx->blackbox.new_data;
-    ctx->blackbox.new_data = temp;
+    ctx->blackbox.head = (ctx->blackbox.head + 1) % BLACKBOX_QUEUE_SIZE;
     
-    PopulateBlackboxInfo(ctx, ctx->blackbox.new_data);
+    if(ctx->blackbox.count < BLACKBOX_QUEUE_SIZE)
+    {
+        ctx->blackbox.count++;
+    }
+
+    PopulateBlackboxInfo(ctx, &snapshot_queue[ctx->blackbox.head]);
 }
 
 void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
@@ -72,17 +76,12 @@ void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
     }
 }
 
-int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
+int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
 {
-    int status = 0;
+    int status;
     Snapshot temp_snapshot;
-    
-    // load from EEPROM into temporary buffer
-    status = LoadStoredObject(ctx, old ? EEPROM_BLACKBOX_OLD_ADDR : EEPROM_BLACKBOX_NEW_ADDR, 
-                             &temp_snapshot, sizeof(Snapshot));
-    
-    if(status != HAL_OK){
-        //todo
+    if((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_BASE_ADDR + (idx * sizeof(Snapshot)), &temp_snapshot, sizeof(Snapshot))) != HAL_OK){
+        return status;
     }
     
     uint8_t* blackbox_ptr = (uint8_t*)&temp_snapshot;
@@ -91,9 +90,10 @@ int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
     {
         uint8_t frame[8] = {0};
         
-        // first 2 bytes are the frame number
-        frame[0] = (i / 6) & 0xFF;
-        frame[1] = (i / 6) >> 8;
+        frame[0] = idx;
+        
+        // frame number for this snapshot
+        frame[1] = (i / 6) & 0xFF;
 
         // copy next 6 bytes
         for(uint8_t j = 0; j < 6; j++)
@@ -101,7 +101,7 @@ int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
             frame[j + 2] = blackbox_ptr[i + j];
         }
         
-        status = CanTransmit(ctx, old ? CANID_TX_BLACKBOX_OLD : CANID_TX_BLACKBOX_NEW, frame);
+        status = CanTransmit(ctx, CANID_TX_BLACKBOX, frame);
         if(status != HAL_OK)
         {
             return status;
@@ -113,34 +113,51 @@ int SendIndividualBlackbox(DbmsCtx* ctx, bool old)
 
 int BlackboxSend(DbmsCtx* ctx)
 {
-    int status = 0;
+    int status;
 
-    status = SendIndividualBlackbox(ctx, true);
-    if (status != HAL_OK)
+    struct {
+        uint8_t head;
+        uint8_t count;
+        bool requested;
+    } blackbox_meta;
+    
+    if((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &blackbox_meta, sizeof(blackbox_meta))) != HAL_OK)
     {
         return status;
     }
-    status = SendIndividualBlackbox(ctx, false);
-    if (status != HAL_OK)
+
+    // Send all snapshots in chronological order
+    for(uint8_t i = 0; i < blackbox_meta.count; ++i)
     {
-        return status;
+        if((status = SendSnapshot(ctx, i)) != HAL_OK)
+        {
+            return status;
+        }
     }
+    
     return status;
 }
 
 int BlackboxSaveOnFault(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_blackbox)
 {
-    // save to eeprom
     int status = 0;
-    status = SaveStoredObject(ctx, EEPROM_BLACKBOX_OLD_ADDR, old_blackbox, sizeof(Snapshot));
-    if (status != HAL_OK)
+    
+    for(uint8_t i = 0; i < ctx->blackbox.count; ++i)
     {
-        return status;
+        // index in q
+        uint8_t idx = (ctx->blackbox.head + 1 + i) % BLACKBOX_QUEUE_SIZE;
+
+        uint32_t addr = EEPROM_BLACKBOX_BASE_ADDR + (i * sizeof(Snapshot));
+
+        if ((status = SaveStoredObject(ctx, addr, &snapshot_queue[idx], sizeof(Snapshot))) != HAL_OK)
+        {
+            return status;
+        }
     }
-    status = SaveStoredObject(ctx, EEPROM_BLACKBOX_NEW_ADDR, new_blackbox, sizeof(Snapshot));
-    if (status != HAL_OK)
-    {
-        return status;
-    }
+    
+    // save metadata (head, count) when done
+    status = SaveStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, 
+                             &ctx->blackbox, sizeof(ctx->blackbox));
+    
     return status;
 }
