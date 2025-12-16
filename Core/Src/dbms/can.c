@@ -197,21 +197,6 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     return HAL_OK;
 }
 
-void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan)
-{
-    SendFromQueue(hcan);
-}
-
-void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef *hcan)
-{
-    SendFromQueue(hcan);
-}
-
-void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef *hcan)
-{
-    SendFromQueue(hcan);
-}
-
 static void SendFromQueue(CAN_HandleTypeDef *hcan)
 {
     if (tx_queue.count == 0)
@@ -238,4 +223,19 @@ static void SendFromQueue(CAN_HandleTypeDef *hcan)
             g_can_ctx->last_can_err = HAL_CAN_GetError(hcan);
         }
     }
+}
+
+void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+    SendFromQueue(hcan);
+}
+
+void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+    SendFromQueue(hcan);
+}
+
+void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+    SendFromQueue(hcan);
 }
