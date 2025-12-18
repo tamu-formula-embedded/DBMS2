@@ -651,3 +651,83 @@ void StackReadBalStat(DbmsCtx* ctx, uint16_t addr)
 
     CanLog(ctx, "BAL Stat = %X\n", data[0]);
 }
+
+/*****************************
+ *  GPIO
+ *****************************/
+
+int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel)
+{
+    uint8_t gpio_value;
+
+    switch(channel)
+    {
+        case 0:
+            gpio_value = 0x2D; // 00101101
+            break;
+        case 1:
+            gpio_value = 0x2C; // 00101100
+            break;
+        case 2:
+            gpio_value = 0x25; // 00100101
+            break;
+        case 3:
+            gpio_value = 0x24; // 00100100
+            break;
+        default:
+            return -1; // Invalid channel
+    }
+    uint8_t mux_select_cmd[] = {0x90, dev_number, 0x00, 0x0E, gpio_value, 0x00, 0x00};
+    
+    return SendStackFrameSetCrc(ctx, mux_select_cmd, sizeof(mux_select_cmd));
+}
+
+int ReadMuxGpioPair(DbmsCtx* ctx, uint8_t dev_number, uint16_t start_reg, float* temp_out1, float* temp_out2)
+{
+    int status = 0;
+    uint8_t data[10];
+
+    if (!temp_out1 || !temp_out2)
+    {
+        return -1; // Null pointer check
+    }
+
+    uint8_t read_cmd[] = {0x80, dev_number, start_reg >> 8, start_reg & 0xFF, 0x03, 0x00, 0x00}; // expecting 4 bytes
+    if ((status = SendStackFrameSetCrc(ctx, read_cmd, sizeof(read_cmd))) != 0)
+    {
+        return status;
+    }
+    
+    if ((status = HAL_UART_Receive(ctx->hw.uart, data, sizeof(data), STACK_RECV_TIMEOUT)) != 0)
+    {
+        return status;
+    }
+    ctx->stats.n_rx_stack_frames++;
+
+    CanLog(ctx, "d: %X, %X, %X, %X\n", data[4], data[5], data[6], data[7] );
+
+    *temp_out1 = ThermVoltToTemp(ctx, MAX(0, (((data[4] << 8) | data[5]) * STACK_T_UV_PER_BIT) / 1000000.0));
+    *temp_out2 = ThermVoltToTemp(ctx, MAX(0, (((data[6] << 8) | data[7]) * STACK_T_UV_PER_BIT) / 1000000.0));
+
+    return status;
+}
+
+int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, float* gpio3, float* gpio4, float* gpio5, float* gpio6)
+{
+    // gpio3, gpio4 -> mux A outputs
+    // gpio5, gpio6 -> mux B outputs
+    // read only regs for gpio: 0x58E - 0x59D with 16 bits each, lower 8 high, upper 8 low
+    int status = 0;
+
+    if (!gpio3 || !gpio4 || !gpio5 || !gpio6)
+    {
+        return -1; // Null pointer check
+    }
+
+    if ((status = ReadMuxGpioPair(ctx, dev_number, 0x592, gpio3, gpio4)) != 0)
+        return status;
+    if ((status = ReadMuxGpioPair(ctx, dev_number, 0x596, gpio5, gpio6)) != 0)
+        return status;
+    
+    return status;
+}
