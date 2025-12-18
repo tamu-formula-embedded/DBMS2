@@ -10,6 +10,7 @@
  */
 #include "dbms.h"
 #include "context.h"
+#include "faults/faults.h"
 #include "ledctl.h"
 #include "can.h"
 #include "blackbox.h"
@@ -144,7 +145,7 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
 
     ctx->qstats.historic_accumulated_loss += ctx->qstats.accumulated_loss;
     ctx->qstats.accumulated_loss = 0;
-    CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
+    //CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
     SaveQStats(ctx);
 
     HAL_Delay(200);
@@ -271,9 +272,24 @@ void DbmsIter(DbmsCtx* ctx)
      * otherwise we want to be active
      */
     uint64_t cur_time = HAL_GetTick();
+    
     uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
-    if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
+    // Handle GPIO-triggered shutdown immediately
+    if (ctx->shutdown_requested)
+    {
+        if (ctx->active)
+        {
+            DbmsPerformShutdown(ctx);
+            ctx->active = false;
+            uint64_t duration = GetUs(ctx) - ctx->stats.shutdown_start_us;
+            CanLog(ctx, "Shutdown duration: %d us\n", (uint32_t)duration);
+        }
+        // keep shutdown_requested = true to prevent waking back up
+        SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
+        ctx->led_state = LED_IDLE;
+    }
+    else if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
     {
         if (!ctx->active)
         {
@@ -291,9 +307,11 @@ void DbmsIter(DbmsCtx* ctx)
     else 
     {
         if (ctx->active)
+        {
             DbmsPerformShutdown(ctx);
+        }
         ctx->active = false;
-        SetFaultLine(ctx, true);
+        SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
         ctx->need_to_save_faults = false;
         if (CtrlHasAnyFaults(ctx))
             ctx->led_state = LED_IDLE_FAULT;
@@ -342,11 +360,14 @@ void DbmsIter(DbmsCtx* ctx)
      */
     UpdateFan(ctx);
     ProcessLedAction(ctx);
-    MonitorLedBlink(ctx);
 
-    float oa1, oa2, ob1, ob2 = 0;    
-    ReadMuxOutputs4x1(ctx, 1, &oa1, &oa2, &ob1, &ob2);
-    CanLog(ctx, "Mux test: %d %d %d %d\n", (int)oa1, (int)oa2, (int)ob1, (int)ob2);
+    if (ctx->active){
+        MonitorLedBlink(ctx);
+    }
+
+    // float oa1, oa2, ob1, ob2 = 0;    
+    // ReadMuxOutputs4x1(ctx, 1, &oa1, &oa2, &ob1, &ob2);
+    // CanLog(ctx, "Mux test: %d %d %d %d\n", (int)oa1, (int)oa2, (int)ob1, (int)ob2);
     /**
      * Schedule the next loop
      */
