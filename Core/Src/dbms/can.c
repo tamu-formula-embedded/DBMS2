@@ -189,9 +189,8 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
         return HAL_ERROR;
     }
 
-    CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.head];
-    entry->header = *hdr;
-    memcpy(entry->data, data, 8);
+    tx_queue.buffer[tx_queue.head].header = *hdr;
+    memcpy(tx_queue.buffer[tx_queue.head].data, data, 8);
     tx_queue.head = (tx_queue.head + 1) % CAN_TX_QUEUE_SIZE;
     tx_queue.count++;
     return HAL_OK;
