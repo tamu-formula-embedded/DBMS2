@@ -125,6 +125,9 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     SetFaultMasks(ctx);
 
     ctx->wakeup_ts = HAL_GetTick();
+
+    SetMuxChannel(ctx, 1, 0);
+    HAL_Delay(10);
     return status;
 }
 
@@ -341,6 +344,9 @@ void DbmsIter(DbmsCtx* ctx)
     ProcessLedAction(ctx);
     MonitorLedBlink(ctx);
 
+    float oa1, oa2, ob1, ob2 = 0;    
+    ReadMuxOutputs4x1(ctx, 1, &oa1, &oa2, &ob1, &ob2);
+    CanLog(ctx, "Mux test: %d %d %d %d\n", (int)oa1, (int)oa2, (int)ob1, (int)ob2);
     /**
      * Schedule the next loop
      */

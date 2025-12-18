@@ -245,7 +245,7 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
 }
 
 /**
- * @brief Configure GPIOs for temp readings
+ * @brief Configure's for temp readings
  * 
  * @param ctx Context pointer 
  */
