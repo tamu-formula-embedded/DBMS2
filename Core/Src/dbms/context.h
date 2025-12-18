@@ -103,6 +103,8 @@ typedef struct _Stats
     //         wrap_queue_t looptimes_q;
     //         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
 
+    uint32_t shutdown_start_us;
+
     uint32_t n_tx_can_frames;
     uint32_t n_rx_can_frames;
     uint32_t n_unmatched_can_frames;
@@ -310,6 +312,8 @@ typedef struct _DbmsCtx
     } charging;
 
     bool has_balanced;
+
+    bool shutdown_requested;
 } DbmsCtx;
 
 
