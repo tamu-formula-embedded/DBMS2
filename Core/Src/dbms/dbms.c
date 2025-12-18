@@ -307,6 +307,8 @@ void DbmsIter(DbmsCtx* ctx)
     // Blackbox handler
     BlackboxUpdate(ctx);
 
+
+    // pin thath as an interrupt, then throw shutdown signal
     /**
      * Save faults and blackbox data to eeprom
      */
