@@ -70,10 +70,7 @@ int SendStackBlip(DbmsCtx* ctx, uint64_t brr);
  */
 int StackWake(DbmsCtx* ctx);
 
-/**
- * Config heartbeat timeout
- */
-void StackConfigTimeout(DbmsCtx* ctx);
+
 
 /**
  * Full auto addressing procedure
