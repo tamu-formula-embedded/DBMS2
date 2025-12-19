@@ -103,6 +103,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     StackSetNumActiveCells(ctx, 0x0A);
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx); // todo: rn start
+    StackConfigTimeout(ctx);
 
     StackBalancingConfig(ctx);
 

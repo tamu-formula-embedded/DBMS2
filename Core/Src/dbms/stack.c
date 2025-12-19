@@ -261,6 +261,21 @@ void StackSetupGpio(DbmsCtx* ctx)
     DelayUs(ctx, 10);
 }
 
+/**
+ * @brief Configure the heartbeat timeout
+ * 
+ * @param ctx Context pointer 
+ */
+void StackConfigTimeout(DbmsCtx* ctx)
+{
+    uint8_t hbcfg_frame[] = {0xD0, 0x00, 0x19, 0x0A, 0xB3, 0x73};
+    SendStackFrame(ctx, hbcfg_frame, sizeof(hbcfg_frame));          // crc already encoded 
+    //SendStackFrameSetCrc(ctx, hbcfg_frame, sizeof(hbcfg_frame));
+
+    DelayUs(ctx, 10);
+}
+
+
 
 /**
  * @brief Read temperatures from a monitor by side-addr and if/if not it is the sidekick monitor
