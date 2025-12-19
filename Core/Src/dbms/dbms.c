@@ -362,7 +362,7 @@ void DbmsIter(DbmsCtx* ctx)
     UpdateFan(ctx);
     ProcessLedAction(ctx);
 
-    if (ctx->active){
+    if (ctx->active) {
         MonitorLedBlink(ctx);
     }
 

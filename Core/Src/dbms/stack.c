@@ -450,7 +450,7 @@ void MonitorLedBlink(DbmsCtx* ctx)
     {
         if (curr_ts > 100000)
         {
-            ToggleAllMonitorChipLeds(ctx, false);
+            ToggleAllMonitorChipLeds(ctx, true);    //hack
             ctx->m_led_on = false;
             ctx->m_led_blink_ts = GetUs(ctx);
         }
