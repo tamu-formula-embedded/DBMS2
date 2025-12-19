@@ -605,6 +605,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         
         if (pin_state == GPIO_PIN_RESET)
         {
+            ctx->qstats.historic_accumulated_loss += ctx->qstats.accumulated_loss;
+            ctx->qstats.accumulated_loss = 0;
+            CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
+            SaveQStats(ctx);
+
             dbms_ctx.shutdown_requested = true;
             dbms_ctx.stats.shutdown_start_us = GetUs(&dbms_ctx);
         }
