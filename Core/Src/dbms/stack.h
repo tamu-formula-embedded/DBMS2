@@ -155,6 +155,8 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds,
 
 void StackComputeCellsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv);
 
+bool StackNeedsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv);
+
 void StackDumpCellsToBalance(DbmsCtx* ctx);
 
 /**
@@ -165,5 +167,7 @@ void StackDumpCellsToBalance(DbmsCtx* ctx);
  */
 void StackReadBalStat(DbmsCtx* ctx, uint16_t addr);
 
+int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel);
 
+int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, float* gpio3, float* gpio4, float* gpio5, float* gpio6);
 #endif

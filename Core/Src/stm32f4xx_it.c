@@ -214,6 +214,34 @@ void TIM2_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles EXTI line[15:10] interrupts.
+  */
+void EXTI15_10_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI15_10_IRQn 0 */
+
+  /* USER CODE END EXTI15_10_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_12);
+  /* USER CODE BEGIN EXTI15_10_IRQn 1 */
+
+  /* USER CODE END EXTI15_10_IRQn 1 */
+}
+
+/**
+  * @brief This function handles CAN2 TX interrupt.
+  */
+void CAN2_TX_IRQHandler(void)
+{
+  /* USER CODE BEGIN CAN2_TX_IRQn 0 */
+
+  /* USER CODE END CAN2_TX_IRQn 0 */
+  HAL_CAN_IRQHandler(&hcan2);
+  /* USER CODE BEGIN CAN2_TX_IRQn 1 */
+
+  /* USER CODE END CAN2_TX_IRQn 1 */
+}
+
+/**
   * @brief This function handles CAN2 RX0 interrupt.
   */
 void CAN2_RX0_IRQHandler(void)

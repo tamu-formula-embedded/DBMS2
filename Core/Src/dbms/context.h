@@ -57,8 +57,10 @@ typedef enum _ChargingState
 {
     CH_NO_CONN = 0,
     CH_CHARGING,
+    CH_WAIT_1,
     CH_BALANCING_ODDS,
     CH_BALANCING_EVENS,
+    CH_WAIT_2,
     CH_COMPLETE
 } ChargingState;
 
@@ -100,6 +102,8 @@ typedef struct _Stats
     // #define N_HISTORIC_LOOPTIMES 16
     //         wrap_queue_t looptimes_q;
     //         uint32_t looptimes_d[N_HISTORIC_LOOPTIMES];
+
+    uint32_t shutdown_start_us;
 
     uint32_t n_tx_can_frames;
     uint32_t n_rx_can_frames;
@@ -297,12 +301,19 @@ typedef struct _DbmsCtx
         int64_t state_enter_ts;
         ChargingState prev_state;
         ChargingState state;
-        float pre_bal_min_v;
+
         bool allowed;
         bool conn;
+
+        float pre_bal_accumulator[N_SIDES][N_GROUPS_PER_SIDE];
+        float pre_bal_average_v[N_SIDES][N_GROUPS_PER_SIDE];
+        size_t pre_bal_sample_count;
+        float pre_bal_min_v;
     } charging;
 
     bool has_balanced;
+
+    bool shutdown_requested;
 } DbmsCtx;
 
 
