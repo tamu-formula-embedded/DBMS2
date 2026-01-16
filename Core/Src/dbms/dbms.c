@@ -328,8 +328,10 @@ void DbmsIter(DbmsCtx* ctx)
     UpdateModel(ctx);   // TODO: add condition for when we update this
 
     // Blackbox handler
-    BlackboxSwapAndUpdate(ctx);
+    BlackboxUpdate(ctx);
 
+
+    // pin thath as an interrupt, then throw shutdown signal
     /**
      * Save faults and blackbox data to eeprom
      */
@@ -339,7 +341,7 @@ void DbmsIter(DbmsCtx* ctx)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
-        if ((status = BlackboxSaveOnFault(ctx, ctx->blackbox.old_data, ctx->blackbox.new_data)) != HAL_OK)
+        if ((status = BlackboxSaveOnFault(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
         }

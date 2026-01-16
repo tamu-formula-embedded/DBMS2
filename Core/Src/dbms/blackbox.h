@@ -14,13 +14,13 @@
 
 void BlackboxInit(DbmsCtx* ctx);
 
-void BlackboxSwapAndUpdate(DbmsCtx* ctx);
+void BlackboxUpdate(DbmsCtx* ctx);
 
 void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox);
 
 int BlackboxSend(DbmsCtx* ctx);
 
-int BlackboxSaveOnFault(DbmsCtx* ctx, Snapshot* old_blackbox, Snapshot* new_blackbox);
+int BlackboxSaveOnFault(DbmsCtx* ctx);
 
 
 #endif
