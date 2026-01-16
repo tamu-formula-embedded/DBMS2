@@ -307,8 +307,9 @@ typedef struct _DbmsCtx
 
         float pre_bal_accumulator[N_SIDES][N_GROUPS_PER_SIDE];
         float pre_bal_average_v[N_SIDES][N_GROUPS_PER_SIDE];
-        size_t pre_bal_sample_count;
         float pre_bal_min_v;
+        float pre_bal_max_v;
+        size_t pre_bal_sample_count;
     } charging;
 
     bool has_balanced;
