@@ -70,6 +70,8 @@ int SendStackBlip(DbmsCtx* ctx, uint64_t brr);
  */
 int StackWake(DbmsCtx* ctx);
 
+
+
 /**
  * Full auto addressing procedure
  */
@@ -113,6 +115,7 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr);
  * Configure GPIOs for temp readings
  */
 void StackSetupGpio(DbmsCtx* ctx);
+
 
 
 /**
