@@ -95,8 +95,9 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
         // frame number for this snapshot
         frame[1] = (i / 6) & 0xFF;
 
-        // copy next 6 bytes
-        for(uint8_t j = 0; j < 6; j++)
+        // copy next 6 bytes (or remaining bytes if less than 6)
+        uint8_t bytes_to_copy = (i + 6 <= sizeof(Snapshot)) ? 6 : (sizeof(Snapshot) - i);
+        for(uint8_t j = 0; j < bytes_to_copy; j++)
         {
             frame[j + 2] = blackbox_ptr[i + j];
         }
