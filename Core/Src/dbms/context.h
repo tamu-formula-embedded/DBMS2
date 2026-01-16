@@ -108,7 +108,7 @@ typedef struct _Stats
     uint32_t n_tx_can_frames;
     uint32_t n_rx_can_frames;
     uint32_t n_unmatched_can_frames;
-    uint32_t n_tx_can_drop_timeout;
+    uint32_t n_tx_can_drop_queue_full;
     uint32_t n_tx_can_fail;
 
     uint32_t looptime;
@@ -269,8 +269,8 @@ typedef struct _DbmsCtx
     bool m_led_on;
 
     struct {
-        Snapshot* old_data;
-        Snapshot* new_data;
+        uint8_t head;
+        uint8_t count;
         bool requested;
     } blackbox;
 
