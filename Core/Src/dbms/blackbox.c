@@ -80,16 +80,18 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
 {
     int status;
     Snapshot temp_snapshot;
+    
+    CanLog(ctx, "[BB] Loading snapshot %d from EEPROM addr 0x%lx\n", idx, EEPROM_BLACKBOX_BASE_ADDR + (idx * sizeof(Snapshot)));
+    
     if((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_BASE_ADDR + (idx * sizeof(Snapshot)), &temp_snapshot, sizeof(Snapshot))) != HAL_OK){
+        CanLog(ctx, "[BB] Failed to load snapshot %d, status=%d\n", idx, status);
         return status;
     }
     
     uint8_t* blackbox_ptr = (uint8_t*)&temp_snapshot;
+    uint16_t total_frames = (sizeof(Snapshot) + 5) / 6;
     
-    // Log actual size on first snapshot only
-    if(idx == 0) {
-        CanLog(ctx, "Snapshot size: %d bytes, frames: %d\n", sizeof(Snapshot), (sizeof(Snapshot) + 5) / 6);
-    }
+    CanLog(ctx, "[BB] Sending snapshot %d: size=%d bytes, frames=%d\n", idx, sizeof(Snapshot), total_frames);
 
     for(uint16_t i = 0; i < sizeof(Snapshot); i += 6)
     {
@@ -110,10 +112,13 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
         status = CanTransmit(ctx, CANID_TX_BLACKBOX, frame);
         if(status != HAL_OK)
         {
+            CanLog(ctx, "[BB] Failed to send frame %d of snapshot %d, status=%d\n", frame[1], idx, status);
             return status;
         }
         HAL_Delay(1);
     }
+    
+    CanLog(ctx, "[BB] Successfully sent all %d frames for snapshot %d\n", total_frames, idx);
     return status;
 }
 
@@ -127,20 +132,29 @@ int BlackboxSend(DbmsCtx* ctx)
         bool requested;
     } blackbox_meta;
     
+    CanLog(ctx, "[BB] Loading blackbox metadata from EEPROM\n");
+    
     if((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &blackbox_meta, sizeof(blackbox_meta))) != HAL_OK)
     {
+        CanLog(ctx, "[BB] Failed to load metadata, status=%d\n", status);
         return status;
     }
+    
+    CanLog(ctx, "[BB] Metadata loaded: head=%d, count=%d, requested=%d\n", blackbox_meta.head, blackbox_meta.count, blackbox_meta.requested);
 
     // Send all snapshots in chronological order
+    CanLog(ctx, "[BB] Starting to send %d snapshots\n", blackbox_meta.count);
+    
     for(uint8_t i = 0; i < blackbox_meta.count; ++i)
     {
         if((status = SendSnapshot(ctx, i)) != HAL_OK)
         {
+            CanLog(ctx, "[BB] Transmission failed at snapshot %d\n", i);
             return status;
         }
     }
     
+    CanLog(ctx, "[BB] All %d snapshots sent successfully\n", blackbox_meta.count);
     return status;
 }
 
