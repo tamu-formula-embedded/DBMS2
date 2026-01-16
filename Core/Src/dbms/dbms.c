@@ -222,7 +222,7 @@ void DbmsIter(DbmsCtx* ctx)
      */
     if (ctx->blackbox.requested)
     {
-        CanLog(ctx, "sending");
+        CanLog(ctx, "sending\n");
         if ((status = BlackboxSend(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
