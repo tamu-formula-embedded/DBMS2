@@ -314,7 +314,8 @@ typedef struct _DbmsCtx
 
     bool has_balanced;
 
-    bool shutdown_requested;
+    bool shutdown_requested;        // Saves non-volatile values, doesn't send stack blip
+    bool shutdown_stack_requested;  // Full shutdown
 } DbmsCtx;
 
 
