@@ -132,14 +132,16 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     return status;
 }
 
-int DbmsPerformShutdown(DbmsCtx* ctx)
+int DbmsPerformShutdown(DbmsCtx* ctx, bool shutdown_stack)
 {
     int status = 0;
-    if ((status = StackShutdown(ctx)) != 0)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = LED_FIRMWARE_FAULT;
-        return status;
+    if (shutdown_stack) {
+        if ((status = StackShutdown(ctx)) != 0)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+            ctx->led_state = LED_FIRMWARE_FAULT;
+            return status;
+        }
     }
     ctx->led_state = LED_IDLE;
 
@@ -271,16 +273,16 @@ void DbmsIter(DbmsCtx* ctx)
      * If it's been too long since we have recived a frame, we need to force a shutdown
      * otherwise we want to be active
      */
-    uint64_t cur_time = HAL_GetTick();
+    // uint64_t cur_time = HAL_GetTick();
     
-    uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+    // uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
     // Handle GPIO-triggered shutdown immediately
     if (ctx->shutdown_requested)
     {
         if (ctx->active)
         {
-            DbmsPerformShutdown(ctx);
+            DbmsPerformShutdown(ctx, ctx->shutdown_stack_requested);
             ctx->active = false;
             uint64_t duration = GetUs(ctx) - ctx->stats.shutdown_start_us;
             CanLog(ctx, "Shutdown duration: %d us\n", (uint32_t)duration);
@@ -289,7 +291,7 @@ void DbmsIter(DbmsCtx* ctx)
         SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
         ctx->led_state = LED_IDLE;
     }
-    else if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
+    else
     {
         if (!ctx->active)
         {
@@ -304,20 +306,20 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->active = true;
         DbmsHandleActive(ctx);
     }
-    else 
-    {
-        if (ctx->active)
-        {
-            DbmsPerformShutdown(ctx);
-        }
-        ctx->active = false;
-        SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
-        ctx->need_to_save_faults = false;
-        if (CtrlHasAnyFaults(ctx))
-            ctx->led_state = LED_IDLE_FAULT;
-        else
-            ctx->led_state = LED_IDLE;
-    }
+    // else 
+    // {
+    //     if (ctx->active)
+    //     {
+    //         DbmsPerformShutdown(ctx);
+    //     }
+    //     ctx->active = false;
+    //     SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
+    //     ctx->need_to_save_faults = false;
+    //     if (CtrlHasAnyFaults(ctx))
+    //         ctx->led_state = LED_IDLE_FAULT;
+    //     else
+    //         ctx->led_state = LED_IDLE;
+    // }
 
 
     ChargingUpdate(ctx);
@@ -395,6 +397,10 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         uint64_t remote_ts = be64_to_u64(rx_data);
         SyncRealTime(ctx, remote_ts);
 
+        break;
+    case CANID_RX_SHUTDOWN_STACK:
+        ctx->shutdown_requested = true;
+        ctx->shutdown_stack_requested = true;
         break;
     case CANID_RX_TELEMBEAT:
         ctx->last_rx_telembeat = HAL_GetTick();
@@ -487,7 +493,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 void DbmsErr(DbmsCtx* ctx)
 {
     ctx->led_state = LED_FIRMWARE_FAULT;
-    DbmsPerformShutdown(ctx);    
+    DbmsPerformShutdown(ctx, true);    
 }
 
 void DbmsClose(DbmsCtx* ctx)
