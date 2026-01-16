@@ -402,6 +402,10 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->shutdown_requested = true;
         ctx->shutdown_stack_requested = true;
         break;
+    case CANID_RX_CLEAR_SHUTDOWN:
+        ctx->shutdown_requested = false;
+        ctx->shutdown_stack_requests = false;
+        break;
     case CANID_RX_TELEMBEAT:
         ctx->last_rx_telembeat = HAL_GetTick();
         break;
