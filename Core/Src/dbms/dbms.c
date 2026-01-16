@@ -127,7 +127,6 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
 
     ctx->wakeup_ts = HAL_GetTick();
 
-    SetMuxChannel(ctx, 1, 0);
     HAL_Delay(10);
     return status;
 }
