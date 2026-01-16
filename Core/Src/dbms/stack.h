@@ -50,6 +50,11 @@ void StackAutoAddr(DbmsCtx* ctx);
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells);
 
 /**
+ * Config heartbeat timeout
+ */
+void StackConfigTimeout(DbmsCtx* ctx);
+
+/**
  * @brief Shuts down the battery stack
  * Use this when we turn the vehicle off, or when going to sleep
  * We could also use this in response to a critical fault
