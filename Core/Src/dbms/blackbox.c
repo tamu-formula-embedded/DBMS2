@@ -123,6 +123,7 @@ int BlackboxSend(DbmsCtx* ctx)
     
     if((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &blackbox_meta, sizeof(blackbox_meta))) != HAL_OK)
     {
+        CanLog(ctx, "failed to get blackbox meta %d\n", status);
         return status;
     }
 
@@ -131,6 +132,7 @@ int BlackboxSend(DbmsCtx* ctx)
     {
         if((status = SendSnapshot(ctx, i)) != HAL_OK)
         {
+            CanLog(ctx, "failed to send snapshot %d %d\n", i, status);
             return status;
         }
     }
