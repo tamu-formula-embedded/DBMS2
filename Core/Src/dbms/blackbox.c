@@ -105,6 +105,7 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
         status = CanTransmit(ctx, CANID_TX_BLACKBOX, frame);
         if(status != HAL_OK)
         {
+            CanLog(ctx, "failed to send snapshot %d %d\n", idx, status);
             return status;
         }
         HAL_Delay(1);
