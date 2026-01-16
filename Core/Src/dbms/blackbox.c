@@ -81,10 +81,15 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
     int status;
     Snapshot temp_snapshot;
     
-    CanLog(ctx, "[BB] Loading snapshot %d from EEPROM addr 0x%lx\n", idx, EEPROM_BLACKBOX_BASE_ADDR + (idx * sizeof(Snapshot)));
+    uint32_t snapshot_addr = EEPROM_BLACKBOX_BASE_ADDR + (idx * sizeof(Snapshot));
+    CanLog(ctx, "[BB] Loading snapshot %d from EEPROM addr 0x%lx\n", idx, snapshot_addr);
     
-    if((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_BASE_ADDR + (idx * sizeof(Snapshot)), &temp_snapshot, sizeof(Snapshot))) != HAL_OK){
-        CanLog(ctx, "[BB] Failed to load snapshot %d, status=%d\n", idx, status);
+    if((status = LoadStoredObject(ctx, snapshot_addr, &temp_snapshot, sizeof(Snapshot))) != HAL_OK){
+        if(status == ERR_CRC_MISMATCH) {
+            CanLog(ctx, "[BB] CRC mismatch for snapshot %d - data may not be saved yet\n", idx);
+        } else {
+            CanLog(ctx, "[BB] Failed to load snapshot %d, I2C status=%d\n", idx, status);
+        }
         return status;
     }
     
