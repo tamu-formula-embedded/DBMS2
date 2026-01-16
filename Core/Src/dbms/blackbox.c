@@ -85,6 +85,10 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
     }
     
     uint8_t* blackbox_ptr = (uint8_t*)&temp_snapshot;
+    uint16_t snapshot_size = sizeof(Snapshot);
+    uint16_t num_frames = (snapshot_size + 5) / 6;
+    
+    CanLog(ctx, "Sending snapshot %d: size=%d bytes, frames=%d\n", idx, snapshot_size, num_frames);
 
     for(uint16_t i = 0; i < sizeof(Snapshot); i += 6)
     {
@@ -105,10 +109,10 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
         status = CanTransmit(ctx, CANID_TX_BLACKBOX, frame);
         if(status != HAL_OK)
         {
-            CanLog(ctx, "failed to send snapshot %d %d\n", idx, status);
+            CanLog(ctx, "failed to send snapshot %d frame %d status %d\n", idx, frame[1], status);
             return status;
         }
-        HAL_Delay(1);
+        HAL_Delay(5);
     }
     return status;
 }

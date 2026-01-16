@@ -103,7 +103,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 10, ctx->isense.energy_wh);
 
     SendMetric(ctx, 11, ctx->stats.n_tx_can_fail);
-    SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_queue_full);
+    SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_timeout);
 
     SendMetric(ctx, 13, ctx->stats.looptime);
     SendMetric(ctx, 14, ctx->stats.end_delay);
