@@ -115,7 +115,7 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
             CanLog(ctx, "[BB] Failed to send frame %d of snapshot %d, status=%d\n", frame[1], idx, status);
             return status;
         }
-        HAL_Delay(1);
+        HAL_Delay(10);
     }
     
     CanLog(ctx, "[BB] Successfully sent all %d frames for snapshot %d\n", total_frames, idx);
