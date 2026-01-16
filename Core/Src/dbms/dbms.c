@@ -336,10 +336,13 @@ void DbmsIter(DbmsCtx* ctx)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
+        CanLog(ctx, "SAVRING BB!\n");
         if ((status = BlackboxSaveOnFault(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
+            CanLog(ctx, "failed bb data, %d\n", status);
         }
+        
         ctx->need_to_save_faults = false;
     }
 
