@@ -245,7 +245,7 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
 }
 
 /**
- * @brief Configure GPIOs for temp readings
+ * @brief Configure's for temp readings
  * 
  * @param ctx Context pointer 
  */
@@ -413,8 +413,8 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on)
     // Turns on or off LED connected to GPIO8 on all monitor chips
     // Note for future:
     int status = 0;
-    uint8_t on_off_value = 0x29; // On = 0x20, Off = 0x28
-    if (on) on_off_value = 0x21;
+    uint8_t on_off_value = 0x05; // On = 0x20, Off = 0x28
+    if (on) on_off_value = 0x04;
     uint8_t leds_change_write_com[] = {0xB0, 0x00, 0x11, on_off_value, 0x00, 0x00};
 
     // Send stack device write command frame
@@ -541,15 +541,28 @@ void StackComputeCellsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv)
     // if any segment needs balancing - if this is false at the end we can skip balancing
     float balance_threshold = 1000 * ctx->stats.min_v + threshold_mv;
     // if (ctx->stats.max_v > balance_threshold) return false;
-
     for (size_t side = 0; side < N_SIDES; side++)
     {
         for (size_t group = 0; group < N_GROUPS_PER_SIDE; group++)
         {
-            float voltage = ctx->cell_states[side].voltages[group];
+            float voltage = ctx->charging.pre_bal_average_v[side][group];
             ctx->cell_states[side].cells_to_balance[group] = voltage > balance_threshold && group % 2 == odds;
         }   
     }
+}
+
+bool StackNeedsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv)
+{
+    float balance_threshold = 1000 * ctx->stats.min_v + threshold_mv;
+    for (size_t side = 0; side < N_SIDES; side++)
+    {
+        for (size_t group = 0; group < N_GROUPS_PER_SIDE; group++)
+        {
+            float voltage = ctx->charging.pre_bal_average_v[side][group];
+            if(voltage > balance_threshold && group % 2 == odds) return true;
+        }
+    }
+    return false;
 }
 
 void StackDumpCellsToBalance(DbmsCtx* ctx)
@@ -637,4 +650,136 @@ void StackReadBalStat(DbmsCtx* ctx, uint16_t addr)
     }
 
     CanLog(ctx, "BAL Stat = %X\n", data[0]);
+}
+
+/*****************************
+ *  ANALOG MUX CONTROL
+ *****************************/
+
+/**
+ * @brief Set the active channel on the analog multiplexers
+ * 
+ * Each monitor chip has two 4:1 analog multiplexers (Mux A and Mux B) that expand
+ * the number of thermistors that can be read. The mux select lines are controlled
+ * via GPIO pins on the monitor ics.
+ * 
+ * GPIO Configuration (register 0x0E):
+ * - Bits [1:0]: Mux A select (S0, S1)
+ * - Bits [3:2]: Mux B select (S0, S1) 
+ * - Bits [7:4]: Other GPIO config (kept constant)
+ * 
+ * @param ctx Context pointer
+ * @param dev_number Monitor chip device address
+ * @param channel Mux channel to select (0-3)
+ * @return 0 on success, -1 on invalid channel
+ */
+int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel)
+{
+    uint8_t gpio_value;
+
+    switch(channel)
+    {
+        case 0:
+            gpio_value = 0x2D; // 0b00101101 - Channel 0: S1=0, S0=1 for both muxes
+            break;
+        case 1:
+            gpio_value = 0x2C; // 0b00101100 - Channel 1: S1=0, S0=0 for both muxes
+            break;
+        case 2:
+            gpio_value = 0x25; // 0b00100101 - Channel 2: S1=1, S0=1 for both muxes
+            break;
+        case 3:
+            gpio_value = 0x24; // 0b00100100 - Channel 3: S1=1, S0=0 for both muxes
+            break;
+        default:
+            return -1;
+    }
+    
+    uint8_t mux_select_cmd[] = {0x90, dev_number, 0x00, 0x0E, gpio_value, 0x00, 0x00};
+    return SendStackFrameSetCrc(ctx, mux_select_cmd, sizeof(mux_select_cmd));
+}
+
+/**
+ * @brief Read a pair of GPIO voltage measurements and convert to temperature
+ * 
+ * Reads two consecutive 16-bit ADC registers from the monitor chip, converts to temps
+ * 
+ * @param ctx Context pointer
+ * @param dev_number Monitor chip device address
+ * @param start_reg Starting register address (reads 4 bytes: 2 registers × 16 bits)
+ * @param temp_out1 Output pointer for first temperature (°C)
+ * @param temp_out2 Output pointer for second temperature (°C)
+ * @return Error code (0 on success, -1 on null pointer, HAL error otherwise)
+ */
+int ReadMuxGpioPair(DbmsCtx* ctx, uint8_t dev_number, uint16_t start_reg, float* temp_out1, float* temp_out2)
+{
+    int status = 0;
+    uint8_t data[10];
+
+    if (!temp_out1 || !temp_out2)
+    {
+        return -1;
+    }
+
+    uint8_t read_cmd[] = {0x80, dev_number, start_reg >> 8, start_reg & 0xFF, 0x03, 0x00, 0x00};
+    if ((status = SendStackFrameSetCrc(ctx, read_cmd, sizeof(read_cmd))) != 0)
+    {
+        return status;
+    }
+    
+    if ((status = HAL_UART_Receive(ctx->hw.uart, data, sizeof(data), STACK_RECV_TIMEOUT)) != 0)
+    {
+        return status;
+    }
+    ctx->stats.n_rx_stack_frames++;
+
+    uint16_t raw_adc1 = (data[4] << 8) | data[5];
+    uint16_t raw_adc2 = (data[6] << 8) | data[7];
+    
+    float voltage1 = (raw_adc1 * STACK_T_UV_PER_BIT) / 1000000.0;
+    float voltage2 = (raw_adc2 * STACK_T_UV_PER_BIT) / 1000000.0;
+    
+    *temp_out1 = ThermVoltToTemp(ctx, MAX(0, voltage1));
+    *temp_out2 = ThermVoltToTemp(ctx, MAX(0, voltage2));
+
+    return status;
+}
+
+/**
+ * @brief Read all four mux-connected thermistor temperatures for the current channel
+ * 
+ * Each monitor chip has 2 analog muxes (A and B), each with 2 output lines routed to
+ * GPIO pins. This reads all 4 GPIO ADC values for the selected mux channel
+ * 
+ * Hardware mapping:
+ * - GPIO3 (reg 0x592): Mux A, Output Y0
+ * - GPIO4 (reg 0x594): Mux A, Output Y1  
+ * - GPIO5 (reg 0x596): Mux B, Output Y0
+ * - GPIO6 (reg 0x598): Mux B, Output Y1
+ * 
+ * must call setmuxchannel func first
+ * 
+ * @param ctx Context pointer
+ * @param dev_number Monitor chip device address
+ * @param gpio3 Output pointer for GPIO3 temperature (Mux A, Y0)
+ * @param gpio4 Output pointer for GPIO4 temperature (Mux A, Y1)
+ * @param gpio5 Output pointer for GPIO5 temperature (Mux B, Y0)
+ * @param gpio6 Output pointer for GPIO6 temperature (Mux B, Y1)
+ * @return Error code (0 on success, -1 on null pointer, HAL error otherwise)
+ */
+int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, float* gpio3, float* gpio4, float* gpio5, float* gpio6)
+{
+    int status = 0;
+
+    if (!gpio3 || !gpio4 || !gpio5 || !gpio6)
+    {
+        return -1;
+    }
+
+    if ((status = ReadMuxGpioPair(ctx, dev_number, 0x592, gpio3, gpio4)) != 0)
+        return status;
+    if ((status = ReadMuxGpioPair(ctx, dev_number, 0x596, gpio5, gpio6)) != 0)
+        return status;
+    
+    return status;
 }
