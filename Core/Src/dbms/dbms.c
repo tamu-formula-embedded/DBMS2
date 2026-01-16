@@ -227,11 +227,6 @@ void DbmsIter(DbmsCtx* ctx)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
-        uint8_t frame[8] = {0};
-        if ((status = CanTransmit(ctx, CANID_TX_BLACKBOX_READY, frame)) != HAL_OK)
-        {
-            CAN_REPORT_FAULT(ctx, status);
-        }
 
         ctx->blackbox.requested = false;
     }
