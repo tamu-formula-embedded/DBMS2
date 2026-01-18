@@ -340,8 +340,8 @@ void DbmsIter(DbmsCtx* ctx)
         if ((status = BlackboxSaveOnFault(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
-            CanLog(ctx, "failed bb data, %d\n", status);
         }
+        
         
         ctx->need_to_save_faults = false;
     }
@@ -461,7 +461,6 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
 
     case CANID_RX_BLACKBOX_REQUEST:
-    CanLog(ctx, "hi");
         ctx->blackbox.requested = true;
         break;
 

@@ -82,21 +82,12 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
     Snapshot temp_snapshot;
     
     uint32_t snapshot_addr = EEPROM_BLACKBOX_BASE_ADDR + (idx * sizeof(Snapshot));
-    CanLog(ctx, "[BB] Loading snapshot %d from EEPROM addr 0x%lx\n", idx, snapshot_addr);
-    
+
     if((status = LoadStoredObject(ctx, snapshot_addr, &temp_snapshot, sizeof(Snapshot))) != HAL_OK){
-        if(status == ERR_CRC_MISMATCH) {
-            CanLog(ctx, "[BB] CRC mismatch for snapshot %d - data may not be saved yet\n", idx);
-        } else {
-            CanLog(ctx, "[BB] Failed to load snapshot %d, I2C status=%d\n", idx, status);
-        }
         return status;
     }
     
     uint8_t* blackbox_ptr = (uint8_t*)&temp_snapshot;
-    uint16_t total_frames = (sizeof(Snapshot) + 5) / 6;
-    
-    CanLog(ctx, "[BB] Sending snapshot %d: size=%d bytes, frames=%d\n", idx, sizeof(Snapshot), total_frames);
 
     for(uint16_t i = 0; i < sizeof(Snapshot); i += 6)
     {
@@ -117,13 +108,11 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
         status = CanTransmit(ctx, CANID_TX_BLACKBOX, frame);
         if(status != HAL_OK)
         {
-            CanLog(ctx, "[BB] Failed to send frame %d of snapshot %d, status=%d\n", frame[1], idx, status);
             return status;
         }
         HAL_Delay(10);
     }
     
-    CanLog(ctx, "[BB] Successfully sent all %d frames for snapshot %d\n", total_frames, idx);
     return status;
 }
 
@@ -137,29 +126,20 @@ int BlackboxSend(DbmsCtx* ctx)
         bool requested;
     } blackbox_meta;
     
-    CanLog(ctx, "[BB] Loading blackbox metadata from EEPROM\n");
     
     if((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &blackbox_meta, sizeof(blackbox_meta))) != HAL_OK)
     {
-        CanLog(ctx, "[BB] Failed to load metadata, status=%d\n", status);
         return status;
     }
     
-    CanLog(ctx, "[BB] Metadata loaded: head=%d, count=%d, requested=%d\n", blackbox_meta.head, blackbox_meta.count, blackbox_meta.requested);
-
     // Send all snapshots in chronological order
-    CanLog(ctx, "[BB] Starting to send %d snapshots\n", blackbox_meta.count);
-    
     for(uint8_t i = 0; i < blackbox_meta.count; ++i)
     {
         if((status = SendSnapshot(ctx, i)) != HAL_OK)
         {
-            CanLog(ctx, "[BB] Transmission failed at snapshot %d\n", i);
             return status;
         }
     }
-    
-    CanLog(ctx, "[BB] All %d snapshots sent successfully\n", blackbox_meta.count);
     return status;
 }
 
@@ -183,6 +163,15 @@ int BlackboxSaveOnFault(DbmsCtx* ctx)
     // save metadata (head, count) when done
     status = SaveStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, 
                              &ctx->blackbox, sizeof(ctx->blackbox));
+
+    // show the app that blackbox data is available, send size
+    uint16_t snapshot_size = sizeof(Snapshot);
+    uint8_t ready_frame[8] = {
+        snapshot_size & 0xFF, 
+        (snapshot_size >> 8) & 0xFF,
+        0, 0, 0, 0, 0, 0
+    };
+    CanTransmit(ctx, CANID_TX_BLACKBOX_READY, ready_frame);
     
     return status;
 }
