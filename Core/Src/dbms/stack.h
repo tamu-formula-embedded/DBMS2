@@ -84,6 +84,8 @@ void StackSetupVoltReadings(DbmsCtx* ctx);
  */
 void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr);
 
+void StackUpdateAllVoltReadings(DbmsCtx* ctx);
+
 /**
  * @brief Configure GPIOs for temp readings
  * 
@@ -101,6 +103,8 @@ void StackSetupGpio(DbmsCtx* ctx);
  * @param sidekick Read the main chip or the sidekick chip
  */
 void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick);
+
+void StackUpdateAllTempReadings(DbmsCtx* ctx);
 
 /**
  * @brief Replace missing thermistor readings with the average of the valid cells
