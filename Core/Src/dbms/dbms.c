@@ -78,6 +78,7 @@ void DbmsInit(DbmsCtx* ctx)
     {
         // CanLog(ctx, "error loading initial charge %d\n", status);
     }   
+    ctx->initial_historic_accumulated_loss = ctx->qstats.historic_accumulated_loss;
     ctx->need_to_reset_qstats = false;
 
     ctx->last_rx_heartbeat = -GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
@@ -145,7 +146,7 @@ int DbmsPerformShutdown(DbmsCtx* ctx, bool shutdown_stack)
     }
     ctx->led_state = LED_IDLE;
 
-    ctx->qstats.historic_accumulated_loss += ctx->qstats.accumulated_loss;
+    ctx->qstats.historic_accumulated_loss = ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss;
     ctx->qstats.accumulated_loss = 0;
     //CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
     SaveQStats(ctx);
@@ -258,6 +259,11 @@ void DbmsIter(DbmsCtx* ctx)
             ctx->led_state = LED_FIRMWARE_FAULT;
         }
         ctx->need_to_reset_qstats = false;
+    }
+
+    if (ctx->iters % 400 == 0 && ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss - ctx->qstats.historic_accumulated_loss > 0.1) {
+        ctx->qstats.historic_accumulated_loss = ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss;
+        SaveQStats(ctx);
     }
 
     // Let everybody know that we are alive
@@ -455,6 +461,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         CanLog(ctx, "Q0: %d", be32_to_u32(rx_data));
         ctx->qstats.accumulated_loss = 0;
         ctx->qstats.historic_accumulated_loss = 0;
+        ctx->qstats.initial_historic_accumulated_loss = 0;
         // ctx->qstats.initial_set_ts = (int32_t)(GetRealTime(ctx) / 1000);
         ctx->qstats.initial_set_ts = 0;
         ctx->need_to_reset_qstats = true;
