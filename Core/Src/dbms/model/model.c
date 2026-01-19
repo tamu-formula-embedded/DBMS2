@@ -148,7 +148,7 @@ void UpdateModel(DbmsCtx* ctx)
     float current = (ctx->isense.current_ma / 1000.0) / N_P_GROUP;
     ctx->qstats.accumulated_loss = (ctx->isense.charge_as - ctx->isense.q_offset) / 3600.0;    // convert to Ah
 
-    float total_accumulated_loss = (ctx->qstats.historic_accumulated_loss + ctx->qstats.accumulated_loss) / 3.0;
+    float total_accumulated_loss = (ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss) / 3.0;
 
     // CanLog("DY %d\n", GetSetting(ctx, DYNAMIC_V_MIN));
     float V_dyn_min = GetSetting(ctx, DYNAMIC_V_MIN) / 1000.0f;
