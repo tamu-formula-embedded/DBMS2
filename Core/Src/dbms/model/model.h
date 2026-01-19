@@ -15,6 +15,7 @@
 #include "data.h"
 #include "../utils/lut.h"
 #include "../storage.h"
+#include "../vinterface.h"
 
 #define Q_BOUND_L_OC    4.3696    
 #define Q_BOUND_H_OC    4.3967
@@ -27,5 +28,6 @@ void UpdateModel(DbmsCtx* ctx);
 
 int LoadQStats(DbmsCtx* ctx);
 int SaveQStats(DbmsCtx* ctx);
+int PeriodicSaveQStats(DbmsCtx *ctx);
 
 #endif
