@@ -81,9 +81,10 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
     int status;
     Snapshot temp_snapshot;
     
-    uint32_t snapshot_addr = EEPROM_BLACKBOX_BASE_ADDR + (idx * sizeof(Snapshot));
+    uint32_t snapshot_addr = EEPROM_BLACKBOX_BASE_ADDR + idx * 100;
 
     if((status = LoadStoredObject(ctx, snapshot_addr, &temp_snapshot, sizeof(Snapshot))) != HAL_OK){
+        CanLog(ctx, "here %d", idx);
         return status;
     }
     
@@ -152,7 +153,7 @@ int BlackboxSaveOnFault(DbmsCtx* ctx)
         // index in q
         uint8_t idx = (ctx->blackbox.head + 1 + i) % BLACKBOX_QUEUE_SIZE;
 
-        uint32_t addr = EEPROM_BLACKBOX_BASE_ADDR + (i * sizeof(Snapshot));
+        uint32_t addr = EEPROM_BLACKBOX_BASE_ADDR + i * 100;
 
         if ((status = SaveStoredObject(ctx, addr, &snapshot_queue[idx], sizeof(Snapshot))) != HAL_OK)
         {
@@ -161,6 +162,7 @@ int BlackboxSaveOnFault(DbmsCtx* ctx)
     }
     
     // save metadata (head, count) when done
+    
     status = SaveStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, 
                              &ctx->blackbox, sizeof(ctx->blackbox));
 
