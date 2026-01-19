@@ -11,7 +11,7 @@
 #include "can.h"
 #include "context.h"
 
-#define CAN_TX_QUEUE_SIZE 32
+#define CAN_TX_QUEUE_SIZE 512
 
 typedef struct 
 {
@@ -28,9 +28,9 @@ typedef struct {
 
 typedef struct {
     CanTxQueueItem buffer[CAN_TX_QUEUE_SIZE];
-    volatile uint8_t head;
-    volatile uint8_t tail;
-    volatile uint8_t count;
+    volatile uint32_t head;
+    volatile uint32_t tail;
+    volatile uint32_t count;
 } CanTxQueue;
 
 static CanTxQueue tx_queue = {0};
@@ -126,10 +126,8 @@ int ConfigCan(DbmsCtx* ctx)
     }
 
     // Enable interrupts
-    if ((status = HAL_CAN_ActivateNotification(ctx->hw.can,
-                                            CAN_IT_RX_FIFO0_MSG_PENDING |
-                                            CAN_IT_RX_FIFO1_MSG_PENDING |
-                                            CAN_IT_TX_MAILBOX_COMPLETE)) != HAL_OK)
+    if ((status = HAL_CAN_ActivateNotification(ctx->hw.can, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING |
+                                                                    CAN_IT_TX_MAILBOX_EMPTY)) != HAL_OK)
     {
         ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
@@ -193,6 +191,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     memcpy(tx_queue.buffer[tx_queue.head].data, data, 8);
     tx_queue.head = (tx_queue.head + 1) % CAN_TX_QUEUE_SIZE;
     tx_queue.count++;
+    ctx->stats.n_tx_queued = tx_queue.count;
     return HAL_OK;
 }
 
@@ -209,7 +208,7 @@ static void SendFromQueue(CAN_HandleTypeDef *hcan)
         {
             tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
             tx_queue.count--;
-            
+
             if (g_can_ctx)
                 g_can_ctx->stats.n_tx_can_frames++;
         }
