@@ -16,8 +16,6 @@
 // USER DEFINED
 #define ITER_TARGET_HZ      10      // ho	w many iterations per second to target
 
-#define SINGLE_MSG_DELAY    2       // ms delay between individual stack messages 
-#define GROUP_MSG_DELAY     8       // ms delay between groups of stack message 
 #define SPLIT_STACK_OPS     1       // 1 = divide stack ops in half, every-other-iter, 0 = do not
 
 #define N_SEGMENTS          5       // number of segments in the stack
@@ -313,6 +311,21 @@ typedef struct _DbmsCtx
         size_t pre_bal_sample_count;
     } charging;
 
+    struct
+    {
+        uint64_t T0;
+        uint64_t T1;
+        uint64_t T2;
+        uint64_t T3;
+        uint64_t T4;
+        uint64_t T5;
+        uint64_t T6;
+        uint64_t T7;
+        uint64_t T8;
+        uint64_t T9;
+        uint64_t T10;
+    } times;
+    bool done;
     bool has_balanced;
 
     bool shutdown_requested;        // Saves non-volatile values, doesn't send stack blip
