@@ -129,7 +129,7 @@ int ConfigCan(DbmsCtx* ctx)
     if ((status = HAL_CAN_ActivateNotification(ctx->hw.can,
                                             CAN_IT_RX_FIFO0_MSG_PENDING |
                                             CAN_IT_RX_FIFO1_MSG_PENDING |
-                                            CAN_IT_TX_MAILBOX_EMPTY)) != HAL_OK)
+                                            CAN_IT_TX_MAILBOX_COMPLETE)) != HAL_OK)
     {
         ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
@@ -198,28 +198,29 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 
 static void SendFromQueue(CAN_HandleTypeDef *hcan)
 {
-    if (tx_queue.count == 0)
-        return;
-
-    CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail] ;
-    
-    uint32_t mailbox;
-    int32_t result = HAL_CAN_AddTxMessage(hcan, &entry->header, entry->data, &mailbox);
-
-    if (result == HAL_OK)
+    while (tx_queue.count > 0 && HAL_CAN_GetTxMailboxesFreeLevel(hcan) > 0)
     {
-        tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
-        tx_queue.count--;
+        CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail];
         
-        if (g_can_ctx)
-            g_can_ctx->stats.n_tx_can_frames++;
-    }
-    else
-    {
-        if (g_can_ctx)
+        uint32_t mailbox;
+        int32_t result = HAL_CAN_AddTxMessage(hcan, &entry->header, entry->data, &mailbox);
+
+        if (result == HAL_OK)
         {
-            g_can_ctx->stats.n_tx_can_fail++;
-            g_can_ctx->last_can_err = HAL_CAN_GetError(hcan);
+            tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
+            tx_queue.count--;
+            
+            if (g_can_ctx)
+                g_can_ctx->stats.n_tx_can_frames++;
+        }
+        else
+        {
+            if (g_can_ctx)
+            {
+                g_can_ctx->stats.n_tx_can_fail++;
+                g_can_ctx->last_can_err = HAL_CAN_GetError(hcan);
+            }
+            break;
         }
     }
 }
