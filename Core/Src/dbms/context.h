@@ -249,7 +249,6 @@ typedef struct _DbmsCtx
         uint32_t    initial_set_ts;
     } qstats;                                     // charge stats
     float initial_historic_accumulated_loss;
-    long last_qstats_save;
     bool need_to_reset_qstats;
  
     struct

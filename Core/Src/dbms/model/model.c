@@ -170,10 +170,30 @@ int LoadQStats(DbmsCtx* ctx)
     {
         // crc mismatch
     }
+    ctx->initial_historic_accumulated_loss = ctx->qstats.historic_accumulated_loss;
+    ctx->qstats.accumulated_loss = 0;
+
+    CanLog(ctx, "load hist: %d\n", (int)(ctx->qstats.historic_accumulated_loss * 1000));
+
     return status;
 }
 
 int SaveQStats(DbmsCtx* ctx)
 {
-    return SaveStoredObject(ctx, EEPROM_INITIAL_CHARGE, &ctx->qstats, sizeof(ctx->qstats));
+    ctx->qstats.historic_accumulated_loss = ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss;
+    CanLog(ctx, "saving hist: %d\n", (int)(ctx->qstats.historic_accumulated_loss * 1000));
+    return SaveStoredObject(
+            ctx, EEPROM_INITIAL_CHARGE, &ctx->qstats, sizeof(ctx->qstats));
+}
+
+int PeriodicSaveQStats(DbmsCtx* ctx) {
+    CanLog(ctx, "psave\n");
+    CanLog(ctx, "hist0: %d hist: %d acc: %d\n", 
+        (int) (ctx->initial_historic_accumulated_loss * 1000), 
+        (int) (ctx->qstats.historic_accumulated_loss * 1000), 
+        (int) (ctx->qstats.accumulated_loss * 1000));
+    if (ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss - ctx->qstats.historic_accumulated_loss > 0.001) {
+        return SaveQStats(ctx);
+    }
+    return 0;
 }
