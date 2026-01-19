@@ -126,8 +126,10 @@ int ConfigCan(DbmsCtx* ctx)
     }
 
     // Enable interrupts
-    if ((status = HAL_CAN_ActivateNotification(ctx->hw.can, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING |
-                                                                    CAN_IT_TX_MAILBOX_EMPTY)) != HAL_OK)
+    if ((status = HAL_CAN_ActivateNotification(ctx->hw.can,
+                                            CAN_IT_RX_FIFO0_MSG_PENDING |
+                                            CAN_IT_RX_FIFO1_MSG_PENDING |
+                                            CAN_IT_TX_MAILBOX_EMPTY)) != HAL_OK)
     {
         ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
