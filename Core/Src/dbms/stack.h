@@ -41,6 +41,9 @@ int StackWake(DbmsCtx* ctx);
  */
 void StackAutoAddr(DbmsCtx* ctx);
 
+void StackReverseAutoAddr(DbmsCtx* ctx);
+void SendReverseAutoAddr(DbmsCtx* ctx);
+void StackReverseCommDir(DbmsCtx* ctx, bool reverse_direction);
 /**
  * @brief Set the number of active cells in the stack
  * 

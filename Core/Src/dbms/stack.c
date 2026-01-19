@@ -104,11 +104,13 @@ void SendOtpEccDatain(DbmsCtx* ctx)
 void SendAutoAddr(DbmsCtx* ctx)
 {
     // 0xB0 at first
-    uint8_t frame_addr_dev[] = {0xD0, 0x03, 0x06, 0x00, 0x00, 0x00};
+    uint8_t frame_addr_dev[] = {0xD1, 0x03, 0x06, 0x00, N_STACKDEVS, 0x00, 0x00};
+    // uint8_t frame_addr_dev[] = {0xD0, 0x03, 0x06, 0x00, 0x00, 0x00};
     for (int i = 0; i <= N_STACKDEVS; i++)
     {
         SendStackFrameSetCrc(ctx, frame_addr_dev, sizeof(frame_addr_dev));
         frame_addr_dev[3]++;
+        frame_addr_dev[4]--;
     }
 }
 
@@ -145,7 +147,6 @@ void ReadOtpEccDatain(DbmsCtx* ctx)
     // frame_otp_ecc_datain[2]++;
 }
 
-
 /**
  * @brief Full auto addressing procedure
  * 
@@ -172,6 +173,35 @@ void StackAutoAddr(DbmsCtx* ctx)
 
     // static uint8_t FRAME_CONF1_READ[] = { 0x80, 0x00, 0x20, 0x01, 0x01, 0x00, 0x00 };
     // SendStackFrameSetCrc(ctx, FRAME_CONF1_READ, sizeof(FRAME_CONF1_READ));
+}
+
+void StackReverseAutoAddr(DbmsCtx* ctx)
+{
+    uint8_t frame_change_base_dev_dir[] = {0x90, 0x30, 0x09, 0x80, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, frame_change_base_dev_dir, sizeof(frame_change_base_dev_dir));
+    CanLog(ctx, "sdc");
+    uint8_t frame_reverse_broadcast_dir[] = {0xE0, 0x30, 0x09, 0x80, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, frame_reverse_broadcast_dir, sizeof(frame_reverse_broadcast_dir));
+    CanLog(ctx, "br");
+    static uint8_t FRAME_ENABLE_REVERSE_AUTO_ADDR[] = {0xD0, 0x03, 0x09, 0x81, 0x0F, 0x74};
+    SendStackFrameSetCrc(ctx, FRAME_ENABLE_REVERSE_AUTO_ADDR, sizeof(FRAME_ENABLE_REVERSE_AUTO_ADDR));
+    CanLog(ctx, "ea");
+    SendReverseAutoAddr(ctx);
+    CanLog(ctx, "addresses");
+    SendSetStackTop(ctx);
+    CanLog(ctx, "tos");
+}
+
+void StackReverseCommDir(DbmsCtx* ctx, bool reverse_direction)
+{
+    uint8_t dir = reverse_direction ? 0x80 : 0x00;
+    uint8_t frame_change_base_dev_dir[] = {0x90, 0x00, 0x30, 0x09, dir, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, frame_change_base_dev_dir, sizeof(frame_change_base_dev_dir));
+
+    uint8_t frame_reverse_broadcast_dir[] = {0xE0, 0x30, 0x09, dir, 0x00, 0x00};
+    SendStackFrameSetCrc(ctx, frame_reverse_broadcast_dir, sizeof(frame_reverse_broadcast_dir));
+
+    SendSetStackTop(ctx);
 }
 
 /**

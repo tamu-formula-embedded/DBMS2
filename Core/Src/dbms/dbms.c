@@ -100,6 +100,8 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     }
 
     StackAutoAddr(ctx);
+    HAL_Delay(10);
+    // StackReverseAutoAddr(ctx);
     StackSetNumActiveCells(ctx, 0x0A);
     StackSetupGpio(ctx);
     StackSetupVoltReadings(ctx); // todo: rn start
