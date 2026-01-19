@@ -134,11 +134,8 @@ void ReadOtpEccDatain(DbmsCtx* ctx)
 {
     // uint8_t frame_otp_ecc_datain[] = { 0xA0, 0x03, 0x43, 0x00, 0x00, 0x00};
     uint8_t frame_otp_ecc_datain[] = {0xC0, 0x03, 0x4C, 0x00, 0x00, 0x00};
-    for (int i = 0; i < 8; i++)
-    {
-        SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
-        frame_otp_ecc_datain[2]++;
-    }
+    SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
+    frame_otp_ecc_datain[2]++;
 }
 
 
