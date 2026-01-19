@@ -129,7 +129,7 @@ int ConfigCan(DbmsCtx* ctx)
     if ((status = HAL_CAN_ActivateNotification(ctx->hw.can,
                                             CAN_IT_RX_FIFO0_MSG_PENDING |
                                             CAN_IT_RX_FIFO1_MSG_PENDING |
-                                            CAN_IT_TX_MAILBOX_COMPLETE)) != HAL_OK)
+                                            CAN_IT_TX_MAILBOX_EMPTY)) != HAL_OK)
     {
         ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
