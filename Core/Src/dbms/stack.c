@@ -195,13 +195,14 @@ void StackReverseAutoAddr(DbmsCtx* ctx)
 void StackReverseCommDir(DbmsCtx* ctx, bool reverse_direction)
 {
     uint8_t dir = reverse_direction ? 0x80 : 0x00;
-    uint8_t frame_change_base_dev_dir[] = {0x90, 0x00, 0x30, 0x09, dir, 0x00, 0x00};
+    uint8_t frame_change_base_dev_dir[] = {0x90, 0x00, 0x03, 0x09, dir, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_change_base_dev_dir, sizeof(frame_change_base_dev_dir));
 
-    uint8_t frame_reverse_broadcast_dir[] = {0xE0, 0x30, 0x09, dir, 0x00, 0x00};
+    uint8_t frame_reverse_broadcast_dir[] = {0xE0, 0x03, 0x09, dir, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, frame_reverse_broadcast_dir, sizeof(frame_reverse_broadcast_dir));
 
     SendSetStackTop(ctx);
+    CanLog(ctx, "rev??");
 }
 
 /**

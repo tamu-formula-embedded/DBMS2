@@ -128,7 +128,6 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     SetFaultMasks(ctx);
 
     ctx->wakeup_ts = HAL_GetTick();
-
     HAL_Delay(10);
     return status;
 }
@@ -187,9 +186,18 @@ void DbmsHandleActive(DbmsCtx* ctx)
         #endif
     }
 
+    uint8_t test_frame[] = {0x80, 0x01, 0x03, 0x06, 0x03, 0x00, 0x00};
+    if (SendStackFrameSetCrc(ctx, test_frame, sizeof(test_frame))) { }
+    static uint8_t rx[100];
+    if (HAL_UART_Receive(ctx->hw.uart, rx, 10, STACK_RECV_TIMEOUT)){ } 
+    CanLog(ctx, "dir0 %X\n", rx[4]);
+    CanLog(ctx, "dir1 %X\n", rx[5]);
+    CanLog(ctx, "commctrl %X\n", rx[6]);
+    CanLog(ctx, "cntrl1 %X\n", rx[7]);
+
     if (GetSetting(ctx, IGNORE_BAD_THERMS))
     {
-        FillMissingTempReadings(ctx);
+        // FillMissingTempReadings(ctx);
     }
     StackCalcStats(ctx);
     HAL_Delay(GROUP_MSG_DELAY);
@@ -207,6 +215,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
 
     ThrowHardFault(ctx);                // this can override fault state
     HAL_Delay(GROUP_MSG_DELAY);
+    // if (ctx->stats.iters %  == 0)
+    //     StackReverseCommDir(ctx, (ctx->stats.iters / 100) % 2);
 }
 
 
