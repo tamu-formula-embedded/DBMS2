@@ -183,6 +183,8 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
         return result;
     }
 
+    __disable_irq();
+    
     if (tx_queue.count >= CAN_TX_QUEUE_SIZE)
     {
         tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
@@ -195,6 +197,8 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     tx_queue.head = (tx_queue.head + 1) % CAN_TX_QUEUE_SIZE;
     tx_queue.count++;
     ctx->stats.n_tx_queued = tx_queue.count;
+    
+    __enable_irq();
     return HAL_OK;
 }
 
