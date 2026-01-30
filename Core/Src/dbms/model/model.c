@@ -192,7 +192,7 @@ int PeriodicSaveQStats(DbmsCtx* ctx) {
         (int) (ctx->initial_historic_accumulated_loss * 1000), 
         (int) (ctx->qstats.historic_accumulated_loss * 1000), 
         (int) (ctx->qstats.accumulated_loss * 1000));
-    if (ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss - ctx->qstats.historic_accumulated_loss > 0.001) {
+    if (ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss - ctx->qstats.historic_accumulated_loss > 0.1) {
         return SaveQStats(ctx);
     }
     return 0;

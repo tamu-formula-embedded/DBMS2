@@ -221,7 +221,7 @@ void SendPlexMetrics(DbmsCtx* ctx)
     SendPlex32(ctx, 0x1b, pack_v);
     SendPlex32(ctx, 0x1c, ctx->stats.iters);
     SendPlex32(ctx, 0x1d, ctx->stats.avg_t);
-    SendPlex32(ctx, 0x1e, ctx->stats.max_t);
+    SendPlex32(ctx, 0x1e, ctx->isense.charge_as);
 
 #ifndef F2I_K
 #define F2I_K(F, K) ((int)((F) * (K)))
@@ -241,6 +241,8 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
 void CanLog(DbmsCtx* ctx, const char* fmt, ...)
 {
+    if (!ctx->telem_enable) return;
+    
     char buffer[CAN_LOG_BUFFER_SIZE];
     va_list args;
     va_start(args, fmt);
