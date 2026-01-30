@@ -106,8 +106,9 @@ typedef struct _Stats
     uint32_t n_tx_can_frames;
     uint32_t n_rx_can_frames;
     uint32_t n_unmatched_can_frames;
-    uint32_t n_tx_can_drop_timeout;
+    uint32_t n_tx_can_drop_queue_full;
     uint32_t n_tx_can_fail;
+    uint32_t n_tx_queued;
 
     uint32_t looptime;
     uint32_t end_delay;
@@ -266,7 +267,7 @@ typedef struct _DbmsCtx
     Model model;
 
     uint16_t can_log_ordering_index;
-    uint8_t last_can_err;
+    uint32_t last_can_err;
     bool need_to_sync_settings;
     bool m_led_on;
 
