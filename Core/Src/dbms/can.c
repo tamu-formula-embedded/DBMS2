@@ -185,8 +185,9 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 
     if (tx_queue.count >= CAN_TX_QUEUE_SIZE)
     {
+        tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
+        tx_queue.count--;
         ctx->stats.n_tx_can_drop_queue_full++;
-        return HAL_ERROR;
     }
 
     tx_queue.buffer[tx_queue.head].header = *hdr;
