@@ -616,7 +616,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         }
         else
         {
-            dbms_ctx.shutdown_requested = false;
+            dbms_ctx.flags.shutdown_requested = false;
         }
     }
 }

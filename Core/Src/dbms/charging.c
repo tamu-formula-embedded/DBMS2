@@ -16,7 +16,7 @@ bool ChargingTimeout(DbmsCtx* ctx)
 
 bool ChargingConnected(DbmsCtx* ctx)
 {
-    return ctx->active && /*ctx->charging.allowed &&*/ ElconConnected(ctx) && ctx->j1772.pp_connect;
+    return ctx->flags.active && /*ctx->charging.allowed &&*/ ElconConnected(ctx) && ctx->j1772.pp_connect;
 }
 
 bool NeedsToBalance(DbmsCtx* ctx)   // TODO: this is the start condition
