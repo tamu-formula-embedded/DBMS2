@@ -205,7 +205,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
             CtrlClearAllFaults(ctx);
             ctx->req_fault_clear = false;
         }
-        
+
         CheckVoltageFaults(ctx);
             ctx->times.T6 = GetUs(ctx);
 
@@ -373,7 +373,7 @@ void DbmsIter(DbmsCtx* ctx)
      */
     SendPlexMetrics(ctx);
     ctx->telem_enable = HAL_GetTick() - ctx->last_rx_telembeat < 5000; // < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
-    if (ctx->telem_enable)
+    if (ctx->telem_enable && ctx->stats.iters % 10 == 0)
     {
         SendMetrics(ctx);               // TODO: resolve conflicting metrics
         SendCellVoltages(ctx);
