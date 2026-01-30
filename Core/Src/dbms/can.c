@@ -163,7 +163,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     }
 
     hdr->RTR = CAN_RTR_DATA;
-    hdr->DLC = 8; // or customize if you have variable payloads
+    hdr->DLC = 8;
     hdr->TransmitGlobalTime = DISABLE;
 
     __disable_irq();
