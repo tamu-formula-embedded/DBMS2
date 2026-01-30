@@ -29,7 +29,7 @@ bool CtrlHasAnyFaults(DbmsCtx* ctx)
 void CtrlClearAllFaults(DbmsCtx* ctx)
 {
     ctx->faults.controller_mask = 0;
-    ctx->need_to_save_faults = true;
+    ctx->flags.need_to_save_faults = true;
 }
 
 void SetFaultLine(DbmsCtx* ctx, bool faulted)
@@ -56,7 +56,7 @@ void ThrowHardFault(DbmsCtx* ctx)
     
     if (!ctx->faults.had_fault && CtrlHasAnyFaults(ctx))
     {
-        ctx->need_to_save_faults = true;
+        ctx->flags.need_to_save_faults = true;
     }
     ctx->faults.had_fault = CtrlHasAnyFaults(ctx);
 }

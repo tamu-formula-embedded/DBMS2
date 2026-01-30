@@ -187,134 +187,24 @@ typedef struct _Snapshot
     
 } Snapshot;
 
-typedef struct _DbmsCtx
-{
-
-    HwCtx hw; // Holds points to hardware peripherals
-
-    struct {
-        LTE lut_therm_v_to_t[N_THERM_V_TO_T_ENTRIES];
-    } data;
-
-    LedState led_state;  // the state of the LEDs
-    bool active;
-
-    DbmsSettings* settings; // struct fwd defs has to be a ptr
-
-    CellMonitorState cell_states[N_SIDES];
+typedef struct _CurrentSensor {
+    int32_t current_ma;
+    int32_t voltage1_mv;
+    int32_t power_w;
+    int32_t charge_as;
+    float q_offset;
+    bool has_q_offset;
+    int32_t energy_wh;
 
     struct {
-        uint64_t global_ts;
-        uint64_t local_ts;
-    } realtime;
+        ma_t ma;
+        int32_t buf[N_I_MA_MEMORIZED];
+        int32_t current_mavg_ma;
+    } ima;      // charge = I, ma = moving average (ang milliamps, so sometimes mavg)
 
-    int64_t last_rx_heartbeat;      // lets keep this signed to start it with a -value
-    uint64_t last_rx_telembeat;
-    uint64_t iter_start_us;
-    uint64_t iter_end_us;
-    uint64_t m_led_blink_ts;
-    uint64_t batch_telem_ts;
-    uint64_t wakeup_ts;
+} CurrentSensor;
 
-    bool telem_enable;
-
-    Stats stats;
-
-    struct
-    {
-        int32_t current_ma;
-        int32_t voltage1_mv;
-        int32_t power_w;
-        int32_t charge_as;
-        float q_offset;
-        bool has_q_offset;
-        int32_t energy_wh;
-
-        struct {
-            ma_t ma;
-            int32_t buf[N_I_MA_MEMORIZED];
-            int32_t current_mavg_ma;
-        } ima;      // charge = I, ma = moving average (ang milliamps, so sometimes mavg)
-
-    } isense; // current = I, sense = sensor
-    uint32_t max_current_ma;
-
-    uint64_t pl_last_ok_ts;
-    uint64_t pl_pulse_t;
-    uint64_t overtemp_last_ok_ts;
-
-    struct {
-        float       initial;                      // Q0
-        float       historic_accumulated_loss;    // QD
-        float       accumulated_loss;             // Qd
-        uint32_t    initial_set_ts;
-    } qstats;                                     // charge stats
-    float initial_historic_accumulated_loss;
-    bool need_to_reset_qstats;
- 
-    struct
-    {
-        uint32_t controller_mask;
-        uint8_t bridge_fault_summary;
-        uint32_t bridge_faults;
-        uint8_t monitor_fault_summary[N_MONITORS];
-        bool had_fault;
-    } faults;
-    bool need_to_save_faults;
-    bool req_fault_clear;
-    uint16_t faults_crc;
-
-    Model model;
-
-    uint16_t can_log_ordering_index;
-    uint32_t last_can_err;
-    bool need_to_sync_settings;
-    bool m_led_on;
-
-    struct {
-        uint8_t head;
-        uint8_t count;
-        bool requested;
-    } blackbox;
-
-    struct
-    {
-        uint64_t    heartbeat;
-        int32_t     voltage_out;
-        int32_t     current_out;
-        uint8_t     status_flags;
-        int16_t     v_req;
-        int16_t     i_req;
-    } elcon;
-
-    struct {
-        uint32_t    cp_duty_cycle;
-        uint32_t    pp_raw_voltage;
-        bool        pp_connect;
-        bool        charge_en_req;
-        int64_t     last_cp_pwm_read;
-        int64_t     pwm_ts;
-        bool        pwm_recieved;
-        uint32_t    maxCurrentSupply;
-    } j1772;
-
-    struct
-    {
-        int64_t heartbeat; 
-        int64_t state_enter_ts;
-        ChargingState prev_state;
-        ChargingState state;
-
-        bool allowed;
-        bool conn;
-
-        float pre_bal_accumulator[N_SIDES][N_GROUPS_PER_SIDE];
-        float pre_bal_average_v[N_SIDES][N_GROUPS_PER_SIDE];
-        float pre_bal_min_v;
-        float pre_bal_max_v;
-        size_t pre_bal_sample_count;
-    } charging;
-
+typedef struct _Profiling {
     struct
     {
         uint64_t T0;
@@ -329,11 +219,123 @@ typedef struct _DbmsCtx
         uint64_t T9;
         uint64_t T10;
     } times;
-    bool done;
-    bool has_balanced;
+} Profiling;
 
-    bool shutdown_requested;        // Saves non-volatile values, doesn't send stack blip
-    bool shutdown_stack_requested;  // Full shutdown
+typedef struct _LutData {
+    LTE lut_therm_v_to_t[N_THERM_V_TO_T_ENTRIES];
+} LutData;
+
+typedef struct _Realtime {
+    uint64_t global_ts;
+    uint64_t local_ts;
+} Realtime;
+
+typedef struct _Timing {
+    int64_t last_rx_heartbeat;
+    uint64_t last_rx_telembeat;
+    uint64_t iter_start_us;
+    uint64_t iter_end_us;
+    uint64_t m_led_blink_ts;
+    uint64_t batch_telem_ts;
+    uint64_t wakeup_ts;
+    uint64_t pl_last_ok_ts;
+    uint64_t pl_pulse_t;
+    uint64_t overtemp_last_ok_ts;
+} Timing;
+
+typedef struct _Flags {
+    bool active;
+    bool need_to_reset_qstats;
+    bool telem_enable;
+    bool need_to_save_faults;
+    bool req_fault_clear;
+    bool need_to_sync_settings;
+    bool m_led_on;
+    bool has_balanced;
+    bool shutdown_requested;
+    bool shutdown_stack_requested;
+} Flags;
+
+typedef struct _ChargeStats {
+    float initial;
+    float historic_accumulated_loss;
+    float accumulated_loss;
+    uint32_t initial_set_ts;
+} ChargeStats;
+
+typedef struct _FaultState {
+    uint32_t controller_mask;
+    uint8_t bridge_fault_summary;
+    uint32_t bridge_faults;
+    uint8_t monitor_fault_summary[N_MONITORS];
+    bool had_fault;
+} FaultState;
+
+typedef struct _Blackbox {
+    uint8_t head;
+    uint8_t count;
+    bool requested;
+} Blackbox;
+
+typedef struct _Elcon {
+    uint64_t heartbeat;
+    int32_t voltage_out;
+    int32_t current_out;
+    uint8_t status_flags;
+    int16_t v_req;
+    int16_t i_req;
+} Elcon;
+
+typedef struct _J1772 {
+    uint32_t cp_duty_cycle;
+    uint32_t pp_raw_voltage;
+    bool pp_connect;
+    bool charge_en_req;
+    int64_t last_cp_pwm_read;
+    int64_t pwm_ts;
+    bool pwm_recieved;
+    uint32_t maxCurrentSupply;
+} J1772;
+
+typedef struct _Charging {
+    int64_t heartbeat;
+    int64_t state_enter_ts;
+    ChargingState prev_state;
+    ChargingState state;
+    bool allowed;
+    bool conn;
+    float pre_bal_accumulator[N_SIDES][N_GROUPS_PER_SIDE];
+    float pre_bal_average_v[N_SIDES][N_GROUPS_PER_SIDE];
+    float pre_bal_min_v;
+    float pre_bal_max_v;
+    size_t pre_bal_sample_count;
+} Charging;
+
+typedef struct _DbmsCtx
+{
+    HwCtx hw;
+    LutData data;
+    LedState led_state;
+    DbmsSettings* settings;
+    CellMonitorState cell_states[N_SIDES];
+    Realtime realtime;
+    Timing timing;
+    Flags flags;
+    Stats stats;
+    CurrentSensor current_sensor;
+    uint32_t max_current_ma;
+    ChargeStats qstats;
+    float initial_historic_accumulated_loss;
+    FaultState faults;
+    uint16_t faults_crc;
+    Model model;
+    uint16_t can_log_ordering_index;
+    uint32_t last_can_err;
+    Blackbox blackbox;
+    Elcon elcon;
+    J1772 j1772;
+    Charging charging;
+    Profiling profiling;
 } DbmsCtx;
 
 
