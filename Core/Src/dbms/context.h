@@ -14,7 +14,7 @@
 #include "utils/common.h"
 
 // USER DEFINED
-#define ITER_TARGET_HZ      10      // ho	w many iterations per second to target
+#define ITER_TARGET_HZ      20      // ho	w many iterations per second to target
 
 #define SPLIT_STACK_OPS     1       // 1 = divide stack ops in half, every-other-iter, 0 = do not
 
@@ -215,6 +215,8 @@ typedef struct _DbmsCtx
     uint64_t batch_telem_ts;
     uint64_t wakeup_ts;
 
+    bool telem_enable;
+
     Stats stats;
 
     struct
@@ -258,6 +260,7 @@ typedef struct _DbmsCtx
         bool had_fault;
     } faults;
     bool need_to_save_faults;
+    bool req_fault_clear;
     uint16_t faults_crc;
 
     Model model;

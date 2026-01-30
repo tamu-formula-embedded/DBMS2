@@ -201,6 +201,11 @@ void DbmsHandleActive(DbmsCtx* ctx)
 
     if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
     {               
+        if (ctx->req_fault_clear) {
+            CtrlClearAllFaults(ctx);
+            ctx->req_fault_clear = false;
+        }
+        
         CheckVoltageFaults(ctx);
             ctx->times.T6 = GetUs(ctx);
 
@@ -208,7 +213,9 @@ void DbmsHandleActive(DbmsCtx* ctx)
             ctx->times.T7 = GetUs(ctx);
 
         CheckTemperatureFaults(ctx);
-    ctx->times.T8 = GetUs(ctx);
+        ctx->times.T8 = GetUs(ctx);
+
+        SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
 
         // PollFaultSummary(ctx);
     }
@@ -269,7 +276,7 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->need_to_reset_qstats = false;
     }
 
-    if (ctx->stats.iters % 50 == 0) {
+    if (ctx->stats.iters % 400 == 0) {
         PeriodicSaveQStats(ctx);
     }
 
@@ -296,7 +303,7 @@ void DbmsIter(DbmsCtx* ctx)
             CanLog(ctx, "Shutdown duration: %d us\n", (uint32_t)duration);
         }
         // keep shutdown_requested = true to prevent waking back up
-        SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
+        SetFaultLine(ctx, true);
         ctx->led_state = LED_IDLE;
     }
     else
@@ -365,7 +372,8 @@ void DbmsIter(DbmsCtx* ctx)
      * Transmit telemetry
      */
     SendPlexMetrics(ctx);
-    if (HAL_GetTick() - ctx->last_rx_telembeat < 5000)// < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    ctx->telem_enable = HAL_GetTick() - ctx->last_rx_telembeat < 5000; // < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    if (ctx->telem_enable)
     {
         SendMetrics(ctx);               // TODO: resolve conflicting metrics
         SendCellVoltages(ctx);
@@ -393,8 +401,8 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     // ctx->times.T9 = GetUs(ctx);
-    // HAL_Delay(ctx->stats.end_delay / 1000);
-    // DelayUs(ctx, ctx->stats.end_delay % 1000);
+    HAL_Delay(ctx->stats.end_delay / 1000);
+    DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
 
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
@@ -463,7 +471,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
         break;
     case CANID_RX_CLEAR_FAULTS:
-        CtrlClearAllFaults(ctx);
+        ctx->req_fault_clear = true;
         break;
 
     case CANID_RX_SET_INITIAL_CHARGE:
