@@ -532,17 +532,17 @@ int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on)
 
 void MonitorLedBlink(DbmsCtx* ctx)
 {
-    //if (!ctx->active) return;
+    //if (!ctx->flags.active) return;
 
-    uint64_t curr_ts = GetUs(ctx) - ctx->m_led_blink_ts;
+    uint64_t curr_ts = GetUs(ctx) - ctx->timing.m_led_blink_ts;
 
-    if (ctx->m_led_on)
+    if (ctx->flags.m_led_on)
     {
         if (curr_ts > 100000)
         {
             ToggleAllMonitorChipLeds(ctx, false);
-            ctx->m_led_on = false;
-            ctx->m_led_blink_ts = GetUs(ctx);
+            ctx->flags.m_led_on = false;
+            ctx->timing.m_led_blink_ts = GetUs(ctx);
         }
     }
     else
@@ -550,8 +550,8 @@ void MonitorLedBlink(DbmsCtx* ctx)
         if (curr_ts > 1000000)
         {
             ToggleAllMonitorChipLeds(ctx, true);
-            ctx->m_led_on = true;
-            ctx->m_led_blink_ts = GetUs(ctx);
+            ctx->flags.m_led_on = true;
+            ctx->timing.m_led_blink_ts = GetUs(ctx);
         }
     }
 }

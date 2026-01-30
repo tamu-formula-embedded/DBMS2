@@ -44,8 +44,8 @@ void PopulateBlackboxInfo(DbmsCtx* ctx, Snapshot* blackbox)
         blackbox->iter = ctx->stats.iters;
         
         // Current sensor data
-        blackbox->current_ma = ctx->isense.current_ma;
-        blackbox->voltage_mv = ctx->isense.voltage1_mv;
+        blackbox->current_ma = ctx->current_sensor.current_ma;
+        blackbox->voltage_mv = ctx->current_sensor.voltage1_mv;
         
         // Charge stats
         blackbox->qd = ctx->qstats.accumulated_loss;
