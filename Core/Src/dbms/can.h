@@ -60,7 +60,6 @@
 #define CANID_TX_BLACKBOX           0x0B007000
 #define CANID_TX_BLACKBOX_READY     0x0B009000
 
-
 /* Extended IDs */
 
 #define CANID_CELLSTATE_VOLTS       0x0B002000
