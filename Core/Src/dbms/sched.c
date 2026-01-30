@@ -69,7 +69,7 @@ uint32_t CalcIterDelay(DbmsCtx* ctx, uint32_t hz)
     const uint64_t period_us = (1000000ull + (hz / 2u)) / hz;
 
     // Elapsed time this iteration
-    const uint64_t elapsed_us = ctx->iter_end_us - ctx->iter_start_us;
+    const uint64_t elapsed_us = ctx->timing.iter_end_us - ctx->timing.iter_start_us;
 
     // Remaining time (saturate at 0)
     if (elapsed_us >= period_us) return 0;
