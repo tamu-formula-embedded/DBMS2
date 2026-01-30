@@ -166,7 +166,9 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     hdr->DLC = 8; // or customize if you have variable payloads
     hdr->TransmitGlobalTime = DISABLE;
 
-    if (HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) > 0U)
+    __disable_irq();
+    
+    if (tx_queue.count == 0 && HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) > 0U)
     {
         int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, hdr, data, &ctx->hw.can_tx_mailbox);
 
@@ -180,10 +182,9 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
         {
             ctx->stats.n_tx_can_frames++;
         }
+        __enable_irq();
         return result;
     }
-
-    __disable_irq();
     
     if (tx_queue.count >= CAN_TX_QUEUE_SIZE)
     {
