@@ -200,6 +200,9 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     ctx->stats.n_tx_queued = tx_queue.count;
     
     __enable_irq();
+
+    SendFromQueue(ctx->hw.can);
+    
     return HAL_OK;
 }
 
