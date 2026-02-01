@@ -132,7 +132,6 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
             break;
         case CH_BALANCING_ODDS:
             CanLog(ctx, "Enter BalO\n");
-            ctx->charging.pre_bal_min_v = ctx->stats.min_v;
             StackComputeCellsToBalance(ctx, true, GetSetting(ctx, CH_BAL_DELTA_END)); 
             // Sends balance timers and starts charging:
             StackStartBalancing(ctx, true, GetSetting(ctx, CH_BAL_T_IDX));
