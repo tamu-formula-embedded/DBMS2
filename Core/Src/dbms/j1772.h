@@ -16,9 +16,10 @@
 #include "storage.h"
 #include "vinterface.h"
 
-// TODO: make this a setting?
-#define PP_GOOD_THRESHOLD_MV    1600
-#define PWM_READ_TIMEOUT        500
+// TODO: make this a setting
+void J1772SetPPGoodThresholdMv(DbmsCtx* ctx, int threshold);
+
+void J1772SetPWMReadTimeout(DbmsCtx* ctx, int num);
 
 void J1772SetChargeEnable(DbmsCtx* ctx, bool en);
 

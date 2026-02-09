@@ -284,16 +284,18 @@ typedef struct _Elcon {
     int16_t i_req;
 } Elcon;
 
-typedef struct _J1772 {
-    uint32_t cp_duty_cycle;
-    uint32_t pp_raw_voltage;
-    bool pp_connect;
-    bool charge_en_req;
-    int64_t last_cp_pwm_read;
-    int64_t pwm_ts;
-    bool pwm_recieved;
-    uint32_t maxCurrentSupply;
-} J1772;
+    struct {
+        uint32_t    cp_duty_cycle;
+        uint32_t    pp_raw_voltage;
+        bool        pp_connect;
+        bool        charge_en_req;
+        int64_t     pp_good_threshold_mv;
+        int64_t     pwm_read_timeout;
+        int64_t     last_cp_pwm_read;
+        int64_t     pwm_ts;
+        bool        pwm_recieved;
+        uint32_t    maxCurrentSupply;
+    } j1772;
 
 typedef struct _Charging {
     int64_t heartbeat;

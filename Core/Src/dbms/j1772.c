@@ -16,7 +16,12 @@ void J1772SetChargeEnable(DbmsCtx* ctx, bool en)
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, en);
     ctx->j1772.charge_en_req = en;
 }
-
+void J1772SetPPGoodThresholdMv(DbmsCtx* ctx, int threshold){
+    ctx->j1772.pp_good_threshold_mv = threshold;
+}
+void J1772SetPWMReadTimeout(DbmsCtx* ctx, int timeout){
+    ctx->j1772.pwm_read_timeout = timeout;
+}
 void J1772ReadState(DbmsCtx* ctx)
 {
     // Legacy: read PP digital in
