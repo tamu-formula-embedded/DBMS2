@@ -1,10 +1,13 @@
-/** 
- * 
+/**
+ *
  * Distributed BMS      CAN Current Sensor
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #include "can.h"
 
@@ -18,16 +21,18 @@ void ConfigCurrentSensor(DbmsCtx* ctx, uint16_t cycle_time)
     frame_set_metric_cycle[2] = (cycle_time & 0xFF00) >> 8;
     frame_set_metric_cycle[3] = (cycle_time & 0x00FF) >> 0;
 
-    for (int j = 0; j < 2; ++j) {
+    for (int j = 0; j < 2; ++j)
+    {
         CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_stop_mode);
         HAL_Delay(2);
 
-        for (int i = 0; i < sizeof(ivt_msg_ids); ++i) {
+        for (int i = 0; i < sizeof(ivt_msg_ids); ++i)
+        {
             frame_set_metric_cycle[0] = ivt_msg_ids[i];
             CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_metric_cycle);
             HAL_Delay(2);
         }
-        
+
         CanTransmit(ctx, CANID_ISENSE_COMMAND, frame_set_run_mode);
         HAL_Delay(2);
     }

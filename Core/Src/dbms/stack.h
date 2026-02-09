@@ -1,14 +1,13 @@
-/**
- * Distributed BMS Stack Module
+/** 
  * 
- * @file stack.h
- * @copyright (C) 2025 Texas A&M University
- * @author Justus Languell <justus@tamu.edu>
- *         Cam Stone        <cameron28202@tamu.edu>
- *         Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ * Distributed BMS      Stack Controller Module
+ *
+ * Copyright (C) 2025   Texas A&M University
  * 
- * @brief Exposes interface for controlling 
- * the stack through the bridge module.
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #ifndef _STACK_H_
 #define _STACK_H_
@@ -81,9 +80,16 @@ void StackSetupVoltReadings(DbmsCtx* ctx);
  * 
  * @param ctx Context pointer 
  * @param addr Index of the side to read for
+ * 
+ * @deprecated
  */
 void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr);
 
+/**
+ * @brief Request and populate voltage readings for the whole stack
+ * 
+ * @param ctx Context pointer 
+ */
 void StackUpdateAllVoltReadings(DbmsCtx* ctx);
 
 /**

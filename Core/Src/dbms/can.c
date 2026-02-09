@@ -7,6 +7,7 @@
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #include "can.h"
 #include "context.h"
@@ -39,7 +40,7 @@ static CanTxQueue tx_queue = {0};
 static DbmsCtx* g_can_ctx = NULL;
 
 /**
- * 
+ * Configure CAN RX filters
  */
 int ConfigCanFilters(CAN_HandleTypeDef *hcan, const CanFilterMask *filters, size_t count)
 {

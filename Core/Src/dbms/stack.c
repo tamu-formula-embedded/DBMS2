@@ -1,14 +1,13 @@
-/**
- * Distributed BMS Stack Module
+/** 
  * 
- * @file stack.c
- * @copyright (C) 2025 Texas A&M University
- * @author Justus Languell <justus@tamu.edu>
- *         Cam Stone        <cameron28202@tamu.edu>
- *         Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ * Distributed BMS      Stack Controller Module
+ *
+ * Copyright (C) 2025   Texas A&M University
  * 
- * @brief Exposes interface for controlling 
- * the stack through the bridge module.
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #include "stack.h"
 
@@ -205,6 +204,8 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
  * 
  * @param ctx Context pointer 
  * @param addr Index of the side to read for
+ * 
+ * @deprecated
  */
 void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
 {
@@ -218,7 +219,6 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
 
     if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
     // TODO: what the fuck is the +2 for?
-    // TODO: redo the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
     ctx->stats.n_rx_stack_frames++;
 
@@ -244,6 +244,11 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
     }
 }
 
+/**
+ * @brief Request and populate voltage readings for the whole stack
+ * 
+ * @param ctx Context pointer 
+ */
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
     int status = 0;
@@ -255,8 +260,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
-    // TODO: what the fuck is the +2 for?
-    // TODO: redo the RX path for stack
+    // TODO: abstract away the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size, STACK_RECV_TIMEOUT)) != 0) { } 
 
     for (int i = 0; i < N_MONITORS; i++)
@@ -384,7 +388,6 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
-    // TODO: what the fuck is the +2 for?
     // TODO: redo the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size, STACK_RECV_TIMEOUT)) != 0) { } 
     for (int i = 0; i < N_MONITORS; i++)
