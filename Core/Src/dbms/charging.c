@@ -55,7 +55,7 @@ void ChargingComputeElconReq(DbmsCtx* ctx)
 {
     ctx->elcon.v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600000) / 1000;
     uint32_t ac_current = MIN(ctx->j1772.maxCurrentSupply, GetSetting(ctx, CH_I));
-    uint32_t elcon_eff = CLAMP(GetSetting(ctx, CH_ELCON_EFF), 0, 100) / 100.0;
+    uint32_t elcon_eff = CLAMP((int32_t)GetSetting(ctx, CH_ELCON_EFF), 0, 100) / 100.0;
     uint32_t power_lim = ac_current * GetSetting(ctx, CH_AC_VOLTAGE) * elcon_eff;
     ctx->elcon.i_req = power_lim / ctx->elcon.v_req;
 }
