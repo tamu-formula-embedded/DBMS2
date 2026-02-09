@@ -146,6 +146,35 @@ int ConfigCan(DbmsCtx* ctx)
     return status;
 }
 
+static void SendFromQueue(CAN_HandleTypeDef *hcan)
+{
+    while (tx_queue.count > 0 && HAL_CAN_GetTxMailboxesFreeLevel(hcan) > 0)
+    {
+        CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail];
+        
+        uint32_t mailbox;
+        int32_t result = HAL_CAN_AddTxMessage(hcan, &entry->header, entry->data, &mailbox);
+
+        if (result == HAL_OK)
+        {
+            tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
+            tx_queue.count--;
+
+            if (g_can_ctx)
+                g_can_ctx->stats.n_tx_can_frames++;
+        }
+        else
+        {
+            if (g_can_ctx)
+            {
+                g_can_ctx->stats.n_tx_can_fail++;
+                g_can_ctx->last_can_err = HAL_CAN_GetError(hcan);
+            }
+            break;
+        }
+    }
+}
+
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
@@ -205,35 +234,6 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     SendFromQueue(ctx->hw.can);
     
     return HAL_OK;
-}
-
-static void SendFromQueue(CAN_HandleTypeDef *hcan)
-{
-    while (tx_queue.count > 0 && HAL_CAN_GetTxMailboxesFreeLevel(hcan) > 0)
-    {
-        CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail];
-        
-        uint32_t mailbox;
-        int32_t result = HAL_CAN_AddTxMessage(hcan, &entry->header, entry->data, &mailbox);
-
-        if (result == HAL_OK)
-        {
-            tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
-            tx_queue.count--;
-
-            if (g_can_ctx)
-                g_can_ctx->stats.n_tx_can_frames++;
-        }
-        else
-        {
-            if (g_can_ctx)
-            {
-                g_can_ctx->stats.n_tx_can_fail++;
-                g_can_ctx->last_can_err = HAL_CAN_GetError(hcan);
-            }
-            break;
-        }
-    }
 }
 
 void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan)
