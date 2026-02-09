@@ -1,21 +1,15 @@
 /* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file         stm32f4xx_hal_msp.c
-  * @brief        This file provides code for the MSP Initialization
-  *               and de-Initialization codes.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+/** 
+ * 
+ * Distributed BMS      STM32 Generated File
+ *
+ * Copyright (C) 2025   Texas A&M University
+ * 
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/

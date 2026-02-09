@@ -4,7 +4,10 @@
  *
  * Copyright (C) 2025   Texas A&M University
  * 
- *                      Cam Stone <cameron28202@tamu.edu>
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #include "blackbox.h"
 #include "context.h"
@@ -27,7 +30,7 @@ void BlackboxUpdate(DbmsCtx* ctx)
 {
     ctx->blackbox.head = (ctx->blackbox.head + 1) % BLACKBOX_QUEUE_SIZE;
     
-    if(ctx->blackbox.count < BLACKBOX_QUEUE_SIZE)
+    if (ctx->blackbox.count < BLACKBOX_QUEUE_SIZE)
     {
         ctx->blackbox.count++;
     }
@@ -83,14 +86,15 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
     
     uint32_t snapshot_addr = EEPROM_BLACKBOX_BASE_ADDR + idx * 100;
 
-    if((status = LoadStoredObject(ctx, snapshot_addr, &temp_snapshot, sizeof(Snapshot))) != HAL_OK){
+    if ((status = LoadStoredObject(ctx, snapshot_addr, &temp_snapshot, sizeof(Snapshot))) != HAL_OK)
+    {
         CanLog(ctx, "here %d", idx);
         return status;
     }
     
     uint8_t* blackbox_ptr = (uint8_t*)&temp_snapshot;
 
-    for(uint16_t i = 0; i < sizeof(Snapshot); i += 6)
+    for (uint16_t i = 0; i < sizeof(Snapshot); i += 6)
     {
         uint8_t frame[8] = {0};
         
@@ -101,13 +105,13 @@ int SendSnapshot(DbmsCtx* ctx, uint8_t idx)
 
         // copy next 6 bytes (or remaining bytes if less than 6)
         uint8_t bytes_to_copy = (i + 6 <= sizeof(Snapshot)) ? 6 : (sizeof(Snapshot) - i);
-        for(uint8_t j = 0; j < bytes_to_copy; j++)
+        for (uint8_t j = 0; j < bytes_to_copy; j++)
         {
             frame[j + 2] = blackbox_ptr[i + j];
         }
         
         status = CanTransmit(ctx, CANID_TX_BLACKBOX, frame);
-        if(status != HAL_OK)
+        if (status != HAL_OK)
         {
             return status;
         }
@@ -128,15 +132,15 @@ int BlackboxSend(DbmsCtx* ctx)
     } blackbox_meta;
     
     
-    if((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &blackbox_meta, sizeof(blackbox_meta))) != HAL_OK)
+    if ((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &blackbox_meta, sizeof(blackbox_meta))) != HAL_OK)
     {
         return status;
     }
     
     // Send all snapshots in chronological order
-    for(uint8_t i = 0; i < blackbox_meta.count; ++i)
+    for (uint8_t i = 0; i < blackbox_meta.count; ++i)
     {
-        if((status = SendSnapshot(ctx, i)) != HAL_OK)
+        if ((status = SendSnapshot(ctx, i)) != HAL_OK)
         {
             return status;
         }
@@ -148,7 +152,7 @@ int BlackboxSaveOnFault(DbmsCtx* ctx)
 {
     int status = 0;
     
-    for(uint8_t i = 0; i < ctx->blackbox.count; ++i)
+    for (uint8_t i = 0; i < ctx->blackbox.count; ++i)
     {
         // index in q
         uint8_t idx = (ctx->blackbox.head + 1 + i) % BLACKBOX_QUEUE_SIZE;

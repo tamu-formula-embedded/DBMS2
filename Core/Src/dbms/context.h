@@ -7,6 +7,7 @@
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #ifndef _H_CTX_
 #define _H_CTX_
@@ -14,7 +15,7 @@
 #include "utils/common.h"
 
 // USER DEFINED
-#define ITER_TARGET_HZ      20      // ho	w many iterations per second to target
+#define ITER_TARGET_HZ      20      // how many iterations per second to target
 
 #define SPLIT_STACK_OPS     1       // 1 = divide stack ops in half, every-other-iter, 0 = do not
 
@@ -61,9 +62,6 @@ typedef enum _ChargingState
     CH_WAIT_2,
     CH_COMPLETE
 } ChargingState;
-
-// fwd definition -- perf_counters.h
-typedef struct _PerfCounters PerfCounters;
 
 // Hardware context stores prts
 // to peripheral interfaces

@@ -1,12 +1,13 @@
-/**
- * Distributed BMS Bridge Module
+/** 
  * 
- * @file bridge.h
- * @copyright (C) 2025 Texas A&M University
- * @author Justus Languell <justus@tamu.edu>
+ * Distributed BMS      Bridge I/O Interface
+ *
+ * Copyright (C) 2025   Texas A&M University
  * 
- * @brief Low level interface with the bridge chip,
- * and then to the stack, over UART.
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #ifndef _BRIDGE_H_
 #define _BRIDGE_H_
