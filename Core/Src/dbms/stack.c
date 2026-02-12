@@ -177,10 +177,11 @@ void StackAutoAddr(DbmsCtx* ctx)
 
 void StackReverseAutoAddr(DbmsCtx* ctx)
 {
-    uint8_t frame_change_base_dev_dir[] = {0x90, 0x30, 0x09, 0x80, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, frame_change_base_dev_dir, sizeof(frame_change_base_dev_dir));
+    // uint8_t frame_change_base_dev_dir[] = {0x90, 0x30, 0x09, 0x80, 0x00, 0x00};
+    // SendStackFrameSetCrc(ctx, frame_change_base_dev_dir, sizeof(frame_change_base_dev_dir));
     CanLog(ctx, "sdc");
     uint8_t frame_reverse_broadcast_dir[] = {0xE0, 0x30, 0x09, 0x80, 0x00, 0x00};
+    HAL_Delay(1);
     SendStackFrameSetCrc(ctx, frame_reverse_broadcast_dir, sizeof(frame_reverse_broadcast_dir));
     CanLog(ctx, "br");
     static uint8_t FRAME_ENABLE_REVERSE_AUTO_ADDR[] = {0xD0, 0x03, 0x09, 0x81, 0x0F, 0x74};
