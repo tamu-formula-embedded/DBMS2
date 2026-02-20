@@ -329,54 +329,6 @@ void StackConfigTimeout(DbmsCtx* ctx)
 }
 
 
-
-/**
- * @brief Read temperatures from a monitor by side-addr and if/if not it is the sidekick monitor
- * 
- * @todo More explaination
- * 
- * @param ctx Context pointer 
- * @param addr Index of the side to read for
- * @param sidekick Read the main chip or the sidekick chip
- */
-void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick)
-{
-    static uint8_t rx_buffer_t[1024];
-    int status = 0;
-
-    uint8_t in_addr = addr * 2 + 1 + (sidekick ? 1 : 0);
-    uint8_t offset = sidekick ? N_TEMPS_PER_MONITOR : 0;
-    uint8_t frame[] = {0x80, in_addr, 0x05, 0x8E, 0x0D, 0x00, 0x00}; // Reading 14 bytes
-
-    size_t data_size = N_TEMPS_PER_MONITOR * sizeof(int16_t);
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size);
-
-    if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
-    ctx->stats.n_rx_stack_frames++;
-
-    uint8_t* data = rx_buffer_t;
-    while (data[0] != frame[3]) data++;
-    data++;
-    uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-    *(data-1) = frame[3];
-    *(data-2) = frame[2];
-    *(data-3) = in_addr;
-    *(data-4) = frame[4];
-    uint16_t c_crc = CalcCrc16(data-4, data_size+4);
-    if (f_crc != c_crc) 
-    {
-        ctx->stats.n_rx_stack_bad_crcs++;
-        return;
-    }
-
-    for (size_t j = 0; j < N_TEMPS_PER_MONITOR; j++)
-    {
-        uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-        ctx->cell_states[addr].temps[j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
-    }
-}
-
 void StackUpdateAllTempReadings(DbmsCtx* ctx)
 {
     int status = 0;
