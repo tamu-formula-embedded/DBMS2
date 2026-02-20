@@ -57,6 +57,9 @@ enum _UserSettingIndex
     FAN_T_TH,
     FAN_DUTY,
 
+    LOW_PLAUSIBLE_TEMP,
+    HIGH_PLAUSIBLE_TEMP,
+
     __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
 };
 

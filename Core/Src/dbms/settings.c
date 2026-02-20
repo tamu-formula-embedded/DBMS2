@@ -73,4 +73,7 @@ void LoadFallbackSettings(DbmsCtx* ctx)
 
     ctx->settings->user_defined[FAN_T_TH] = 30; // todo: ?
     ctx->settings->user_defined[FAN_DUTY] = 100;
+
+    ctx->settings->user_defined[LOW_PLAUSIBLE_TEMP] = 0; // 0 deg C, todo: Change to more reasonable value
+    ctx->settings->user_defined[HIGH_PLAUSIBLE_TEMP] = 120.0; // 120 deg C
 }
