@@ -144,6 +144,17 @@ int BlackboxSend(DbmsCtx* ctx)
             return status;
         }
     }
+
+    // send snapshot size so the app can reconstruct frames
+    uint16_t snapshot_size = sizeof(Snapshot);
+    uint8_t size_frame[8] = {
+        snapshot_size & 0xFF,
+        (snapshot_size >> 8) & 0xFF,
+        0, 0, 0, 0, 0, 0
+    };
+    CanTransmit(ctx, CANID_TX_BLACKBOX_SIZE, size_frame);
+
+
     return status;
 }
 
