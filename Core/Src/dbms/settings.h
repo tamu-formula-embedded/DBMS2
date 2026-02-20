@@ -57,6 +57,8 @@ enum _UserSettingIndex
     FAN_T_TH,
     FAN_DUTY,
 
+    PRECHARGE_TH,
+
     __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
 };
 
