@@ -157,7 +157,6 @@ int DbmsPerformShutdown(DbmsCtx* ctx, bool shutdown_stack)
     ctx->led_state = LED_IDLE;
 
     SaveQStats(ctx);
-    PrechargeSet(ctx, false);
 
     ctx->initial_historic_accumulated_loss = 0;
     //CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
@@ -307,6 +306,7 @@ void DbmsIter(DbmsCtx* ctx)
         }
         // keep shutdown_requested = true to prevent waking back up
         SetFaultLine(ctx, true);
+        PrechargeSet(ctx, false);
         ctx->led_state = LED_IDLE;
     }
     else
@@ -324,20 +324,6 @@ void DbmsIter(DbmsCtx* ctx)
         ctx->flags.active = true;
         DbmsHandleActive(ctx);
     }
-    // else
-    // {
-    //     if (ctx->flags.active)
-    //     {
-    //         DbmsPerformShutdown(ctx);
-    //     }
-    //     ctx->flags.active = false;
-    //     SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
-    //     ctx->flags.need_to_save_faults = false;
-    //     if (CtrlHasAnyFaults(ctx))
-    //         ctx->led_state = LED_IDLE_FAULT;
-    //     else
-    //         ctx->led_state = LED_IDLE;
-    // }
 
     // ctx->profiling.profiling.times.T5 = GetUs(ctx);
 

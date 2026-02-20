@@ -15,6 +15,7 @@
 #include "utils/common.h"
 #include "context.h"
 #include "settings.h"
+#include "faults/faults.h"
 
 void PrechargeSet(DbmsCtx *ctx, bool high);
 void PrechargeUpdate(DbmsCtx *ctx);
