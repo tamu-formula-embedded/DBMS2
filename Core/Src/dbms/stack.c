@@ -408,11 +408,10 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             ctx->stats.n_rx_stack_bad_crcs++;
             continue;
         }
-        uint8_t offset = ctx->cell_states[i].mux_selector;
+        uint8_t offset = ctx->mux_selector;
         uint8_t temps = offset == 0 ? 4 : 3;
         for (size_t j = 0; j < temps; j++)
         {
-            
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
             ctx->cell_states[i].temps[4 * j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
         }
@@ -823,7 +822,7 @@ int SetMuxChannels(DbmsCtx* ctx, uint8_t channel)
     }
     
     uint8_t mux_select_cmd[] = {0xB0, 0x00, 0x0E, gpio_value, 0x00, 0x00};
-    ctx->cell_states[dev_number-1].mux_selector = channel;
+    ctx->mux_selector = channel;
     return SendStackFrameSetCrc(ctx, mux_select_cmd, sizeof(mux_select_cmd));
 }
 
