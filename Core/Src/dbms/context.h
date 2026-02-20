@@ -276,6 +276,7 @@ typedef struct _Blackbox {
     uint8_t head;
     uint8_t count;
     bool requested;
+    bool ready;
 } Blackbox;
 
 typedef struct _Elcon {
