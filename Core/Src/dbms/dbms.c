@@ -1,9 +1,9 @@
-/** 
- * 
+/**
+ *
  * Distributed BMS      DBMS Main Controller
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
@@ -78,7 +78,7 @@ void DbmsInit(DbmsCtx* ctx)
     if ((status = LoadQStats(ctx)) != 0)
     {
         // CanLog(ctx, "error loading initial charge %d\n", status);
-    }   
+    }
     ctx->initial_historic_accumulated_loss = ctx->qstats.historic_accumulated_loss;
     ctx->flags.need_to_reset_qstats = false;
 
@@ -199,8 +199,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
     StackCalcStats(ctx);
         ctx->profiling.times.T5 = GetUs(ctx);
 
-    if (HAL_GetTick() - ctx->timing.wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
-    {               
+    if (HAL_GetTick() - ctx->timing.wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS))
+    {
         if (ctx->flags.req_fault_clear) {
             CtrlClearAllFaults(ctx);
             ctx->flags.req_fault_clear = false;
@@ -231,7 +231,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->timing.iter_start_us = GetUs(ctx);
     // ctx->profiling.profiling.times.T0 = GetUs(ctx);
-    
+
     /**
      * Handle blackbox data requested
      */
@@ -289,7 +289,7 @@ void DbmsIter(DbmsCtx* ctx)
      * otherwise we want to be active
      */
     // uint64_t cur_time = HAL_GetTick();
-    
+
     // uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
     // Handle GPIO-triggered shutdown immediately
@@ -314,14 +314,14 @@ void DbmsIter(DbmsCtx* ctx)
             ProcessLedAction(ctx);
             DbmsPerformWakeup(ctx);
         }
-        if (CtrlHasAnyFaults(ctx)) 
+        if (CtrlHasAnyFaults(ctx))
             ctx->led_state = LED_ACTIVE_FAULT;
-        else 
+        else
             ctx->led_state = LED_ACTIVE;
         ctx->flags.active = true;
         DbmsHandleActive(ctx);
     }
-    // else 
+    // else
     // {
     //     if (ctx->flags.active)
     //     {
@@ -357,14 +357,17 @@ void DbmsIter(DbmsCtx* ctx)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
+
+        ctx->flags.need_to_save_faults = false;
+    }
+    if (ctx->flags.need_to_save_blackbox)
+    {
         CanLog(ctx, "SAVRING BB!\n");
         if ((status = BlackboxSaveOnFault(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
-        
-        
-        ctx->flags.need_to_save_faults = false;
+        ctx->flags.need_to_save_blackbox = false;
     }
     // ctx->profiling.profiling.times.T7 = GetUs(ctx);
 
@@ -391,7 +394,7 @@ void DbmsIter(DbmsCtx* ctx)
         MonitorLedBlink(ctx);
     }
 
-    // float oa1, oa2, ob1, ob2 = 0;    
+    // float oa1, oa2, ob1, ob2 = 0;
     // ReadMuxOutputs4x1(ctx, 1, &oa1, &oa2, &ob1, &ob2);
     // CanLog(ctx, "Mux test: %d %d %d %d\n", (int)oa1, (int)oa2, (int)ob1, (int)ob2);
     /**
@@ -417,7 +420,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_HEARTBEAT:
 
         ctx->timing.last_rx_heartbeat = HAL_GetTick();
-        
+
         uint64_t remote_ts = be64_to_u64(rx_data);
         SyncRealTime(ctx, remote_ts);
 
@@ -521,7 +524,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 void DbmsErr(DbmsCtx* ctx)
 {
     ctx->led_state = LED_FIRMWARE_FAULT;
-    DbmsPerformShutdown(ctx, true);    
+    DbmsPerformShutdown(ctx, true);
 }
 
 void DbmsClose(DbmsCtx* ctx)
