@@ -375,13 +375,7 @@ void DbmsIter(DbmsCtx* ctx)
         // send a blackbox ready frame UNTIL the app requests. flag is set true when saved, false when app requests
         if(ctx->blackbox.ready)
         {
-            // show the app that blackbox data is available, send size
-            uint16_t snapshot_size = sizeof(Snapshot);
-            uint8_t ready_frame[8] = {
-                snapshot_size & 0xFF,
-                (snapshot_size >> 8) & 0xFF,
-                0, 0, 0, 0, 0, 0
-            };
+            uint8_t ready_frame[8] = {0};
             CanTransmit(ctx, CANID_TX_BLACKBOX_READY, ready_frame);
         }
 
