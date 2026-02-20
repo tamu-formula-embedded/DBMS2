@@ -1,9 +1,9 @@
-/** 
- * 
+/**
+ *
  * Distributed BMS      Fault-Handling System
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
@@ -51,7 +51,7 @@ void SetFaultLine(DbmsCtx* ctx, bool faulted)
 
 void ThrowHardFault(DbmsCtx* ctx)
 {
-    if (CtrlHasAnyFaults(ctx)) 
+    if (CtrlHasAnyFaults(ctx))
     {
 #ifdef USE_FAULT_LED
         ctx->led_state = LED_ACTIVE_FAULT;
@@ -59,15 +59,16 @@ void ThrowHardFault(DbmsCtx* ctx)
         // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);
         SetFaultLine(ctx, true);
     }
-    else 
+    else
     {
         // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);
         SetFaultLine(ctx, false);
     }
-    
+
     if (!ctx->faults.had_fault && CtrlHasAnyFaults(ctx))
     {
         ctx->flags.need_to_save_faults = true;
+        ctx->flags.need_to_save_blackbox = true;
     }
     ctx->faults.had_fault = CtrlHasAnyFaults(ctx);
 }
@@ -86,9 +87,9 @@ int SaveFaultState(DbmsCtx* ctx)
 int LoadFaultState(DbmsCtx* ctx)
 {
     int status;
-    // Right now this only references the controller mask. When "smart" / "verbose" faults 
+    // Right now this only references the controller mask. When "smart" / "verbose" faults
     // for other components on the bus are implemented, we will deal with this.
-    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, 
+    if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR,
             &(ctx->faults.controller_mask), sizeof(ctx->faults.controller_mask))))
     {
         // todo: check an error here
