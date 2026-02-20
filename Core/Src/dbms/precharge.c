@@ -19,6 +19,5 @@ void PrechargeSet(DbmsCtx *ctx, bool enabled) {
 
 void PrechargeUpdate(DbmsCtx *ctx) {
   float threshold = GetSetting(ctx, PRECHARGE_TH) / 100.0;
-  // PrechargeSet(ctx, (ctx->current_sensor.voltage1_mv >= threshold * ctx->stats.pack_v));
-  PrechargeSet(ctx, false);
+  PrechargeSet(ctx, (ctx->current_sensor.voltage1_mv / 1000.0f >= threshold * ctx->stats.pack_v) && !ctx->stats.fault_line_faulted);
 }
