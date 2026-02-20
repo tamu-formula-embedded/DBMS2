@@ -382,9 +382,9 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     int status = 0;
     static uint8_t rx_buffer_t[1024];
 
-    uint8_t frame2[] = {0xA0, 0x05, 0x92, 8, 0x00, 0x00}; //TODO: change 8 to n temps per side * 2
+    uint8_t frame2[] = {0xA0, 0x05, 0x92, N_TEMPS_PER_MONITOR * 2 - 1, 0x00, 0x00};
 
-    size_t data_size = 8 * sizeof(int8_t);
+    size_t data_size = N_TEMPS_PER_MONITOR * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
@@ -409,7 +409,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             continue;
         }
         uint8_t offset = ctx->cell_states[i].mux_selector * 4;
-        uint8_t temps_to_read = offset == 12 ? 2 : 4;
+        uint8_t temps_to_read = offset == 12 ? 1 : 4; // 13 temps per monitor, 3 reads of 4 temps, and last read is 1 temp only
         for (size_t j = 0; j < temps_to_read; j++)
         {
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);

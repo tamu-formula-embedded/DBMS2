@@ -179,12 +179,13 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ctx->profiling.times.T1 = GetUs(ctx);
 
 
-    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
-    HAL_Delay(1);
+    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
+    // HAL_Delay(1);
 
-    ctx->profiling.times.T2 = GetUs(ctx);
-    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
-    HAL_Delay(1);
+    // ctx->profiling.times.T2 = GetUs(ctx);
+    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
+    // HAL_Delay(1);
+    StackUpdateAllTempReadings(ctx);
 
     ctx->profiling.times.T3 = GetUs(ctx);
 
