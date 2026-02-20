@@ -382,9 +382,9 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     int status = 0;
     static uint8_t rx_buffer_t[1024];
 
-    uint8_t frame2[] = {0xA0, 0x05, 0x92, N_TEMPS_PER_MONITOR * 2 - 1, 0x00, 0x00};
+    uint8_t frame2[] = {0xA0, 0x05, 0x92, 4 * 2 - 1, 0x00, 0x00};
 
-    size_t data_size = N_TEMPS_PER_MONITOR * sizeof(int16_t);
+    size_t data_size = 4 * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
@@ -408,12 +408,11 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             ctx->stats.n_rx_stack_bad_crcs++;
             continue;
         }
-        uint8_t offset = ctx->cell_states[i].mux_selector * 4;
-        uint8_t temps_to_read = offset == 12 ? 1 : 4; // 13 temps per monitor, 3 reads of 4 temps, and last read is 1 temp only
-        for (size_t j = 0; j < temps_to_read; j++)
+        uint8_t offset = ctx->cell_states[i].mux_selector;
+        for (size_t j = 0; j < 4; j++)
         {
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-            ctx->cell_states[i].temps[j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
+            ctx->cell_states[i].temps[4 * j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
         }
     }
 }
