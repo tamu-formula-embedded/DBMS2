@@ -124,6 +124,8 @@ typedef struct _Stats
     float max_t;
     float avg_t;
 
+    float pack_v;
+
     uint32_t elcon_rx;
 
     uint64_t n_logging_frames;
@@ -330,6 +332,7 @@ typedef struct _DbmsCtx
     Model model;
     uint16_t can_log_ordering_index;
     uint32_t last_can_err;
+    bool precharged;
     Blackbox blackbox;
     Elcon elcon;
     J1772 j1772;
