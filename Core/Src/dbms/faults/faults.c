@@ -45,7 +45,7 @@ void CtrlClearAllFaults(DbmsCtx* ctx)
 
 void SetFaultLine(DbmsCtx* ctx, bool faulted)
 {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, !((bool)faulted));
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, !((bool)faulted));
     ctx->stats.fault_line_faulted = faulted;
 }
 
