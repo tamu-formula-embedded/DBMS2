@@ -25,6 +25,8 @@
 #define N_GROUPS_PER_SIDE   14      // number of voltages per side
 #define N_TEMPS_PER_MONITOR 7       // number of temps per monitor chip
 #define N_P_GROUP           3       // number of cells per parallel group
+
+// #define HAS_FAN
 // DONT CHANGE AFTER THIS
 
 #define N_TEMPS_PER_SIDE (N_MONITORS_PER_SIDE * N_TEMPS_PER_MONITOR)

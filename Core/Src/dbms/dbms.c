@@ -84,7 +84,9 @@ void DbmsInit(DbmsCtx* ctx)
 
     ctx->timing.last_rx_heartbeat = -GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
+    #ifdef HAS_FAN
     InitFan(ctx);
+    #endif
     DataInit(ctx);
 }
 
@@ -391,7 +393,9 @@ void DbmsIter(DbmsCtx* ctx)
     /**
      * Handle LED states and such
      */
+    #ifdef HAS_FAN
     UpdateFan(ctx);
+    #endif
     ProcessLedAction(ctx);
 
     if (ctx->flags.active) {
