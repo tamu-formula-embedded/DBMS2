@@ -426,18 +426,21 @@ void FillMissingTempReadings(DbmsCtx* ctx)
 {
     int n = 0;
     float sum = 0;
+
+    uint32_t low_plaus = GetSetting(ctx, LOW_PLAUSIBLE_TEMP);
+    uint32_t high_plaus = GetSetting(ctx, HIGH_PLAUSIBLE_TEMP);
+
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
             float t = ctx->cell_states[i].temps[j];
             // TODO: remove (3, 7) blacklisted
-            if ((t >= 18 && t < 120.0f) || (i == 3 && j == 7))
+            if ((t >= low_plaus && t < high_plaus) || (i == 3 && j == 7))
             {
                 n++;
                 sum += t;
             }
-
         }
     }
 
@@ -447,7 +450,7 @@ void FillMissingTempReadings(DbmsCtx* ctx)
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
              float t = ctx->cell_states[i].temps[j];
-            if ((t < 18 || t >= 120.0f) || (i == 3 && j == 7))
+            if ((t < low_plaus || t >= high_plaus) || (i == 3 && j == 7))
             {
                 ctx->cell_states[i].temps[j] = avg;
             }
