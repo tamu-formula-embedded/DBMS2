@@ -83,6 +83,7 @@ typedef struct _CellMonitorState
     float voltages[N_GROUPS_PER_SIDE];
     float temps[N_TEMPS_PER_SIDE];
     bool cells_to_balance[N_GROUPS_PER_SIDE];   // TODO: change to bitmask? prob not
+    int mux_selector;
 } CellMonitorState;
 
 // fwd definition -- settings.h
