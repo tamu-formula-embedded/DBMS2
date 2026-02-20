@@ -174,6 +174,9 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 66, ctx->profiling.times.T7 - ctx->profiling.times.T6);
     SendMetric(ctx, 67, ctx->profiling.times.T8 - ctx->profiling.times.T7);
     SendMetric(ctx, 68, ctx->profiling.times.T9 - ctx->profiling.times.T8);
+
+    SendMetric(ctx, 69, F2I_K(ctx->stats.pack_v, 1e4));
+    SendMetric(ctx, 70, ctx->precharged);
     return 0;
 }
 

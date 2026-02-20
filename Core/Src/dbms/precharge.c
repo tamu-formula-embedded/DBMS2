@@ -14,7 +14,7 @@
 
 void PrechargeSet(DbmsCtx *ctx, bool enabled) {
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, enabled);
-  ctx->precharge.precharged = enabled;
+  ctx->precharged = enabled;
 }
 
 void PrechargeUpdate(DbmsCtx *ctx) {

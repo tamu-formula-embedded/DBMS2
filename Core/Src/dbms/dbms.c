@@ -157,6 +157,7 @@ int DbmsPerformShutdown(DbmsCtx* ctx, bool shutdown_stack)
     ctx->led_state = LED_IDLE;
 
     SaveQStats(ctx);
+    PrechargeSet(ctx, false);
 
     ctx->initial_historic_accumulated_loss = 0;
     //CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
@@ -219,6 +220,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
 
         // PollFaultSummary(ctx);
     }
+
+    PrechargeUpdate(ctx);
 
     ThrowHardFault(ctx);                // this can override fault state
         ctx->profiling.times.T9 = GetUs(ctx);
