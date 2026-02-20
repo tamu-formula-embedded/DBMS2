@@ -409,8 +409,10 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             continue;
         }
         uint8_t offset = ctx->cell_states[i].mux_selector;
-        for (size_t j = 0; j < 4; j++)
+        uint8_t temps = offset == 0 ? 4 : 3;
+        for (size_t j = 0; j < temps; j++)
         {
+            
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
             ctx->cell_states[i].temps[4 * j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
         }
