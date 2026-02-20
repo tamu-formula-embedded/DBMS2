@@ -186,7 +186,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
     // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
     // HAL_Delay(1);
     StackUpdateAllTempReadings(ctx);
-
+    HAL_Delay(10);
+    
     ctx->profiling.times.T3 = GetUs(ctx);
 
 
@@ -402,6 +403,8 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->timing.iter_end_us - ctx->timing.iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     // ctx->profiling.profiling.times.T9 = GetUs(ctx);
+    SetMuxChannels(ctx, ctx->stats.iters % 4);
+    HAL_Delay(1);
     HAL_Delay(ctx->stats.end_delay / 1000);
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }

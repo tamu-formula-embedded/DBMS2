@@ -799,7 +799,7 @@ void StackReadBalStat(DbmsCtx* ctx, uint16_t addr)
  * @param channel Mux channel to select (0-3)
  * @return 0 on success, -1 on invalid channel
  */
-int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel)
+int SetMuxChannels(DbmsCtx* ctx, uint8_t channel)
 {
     uint8_t gpio_value;
 
@@ -821,7 +821,7 @@ int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel)
             return -1;
     }
     
-    uint8_t mux_select_cmd[] = {0x90, dev_number, 0x00, 0x0E, gpio_value, 0x00, 0x00};
+    uint8_t mux_select_cmd[] = {0xB0, 0x00, 0x0E, gpio_value, 0x00, 0x00};
     ctx->cell_states[dev_number-1].mux_selector = channel;
     return SendStackFrameSetCrc(ctx, mux_select_cmd, sizeof(mux_select_cmd));
 }
