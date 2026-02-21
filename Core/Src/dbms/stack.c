@@ -105,7 +105,6 @@ void SendOtpEccDatain(DbmsCtx* ctx)
 
 void SendAutoAddr(DbmsCtx* ctx)
 {
-    // 0xB0 at first
     uint8_t frame_addr_dev[] = {0xD0, 0x03, 0x06, 0x00, 0x00, 0x00};
     for (int i = 0; i <= N_STACKDEVS; i++)
     {
@@ -131,7 +130,6 @@ void SendSetStackTop(DbmsCtx* ctx)
 
 void ReadOtpEccDatain(DbmsCtx* ctx)
 {
-    // uint8_t frame_otp_ecc_datain[] = { 0xA0, 0x03, 0x43, 0x00, 0x00, 0x00};
     uint8_t frame_otp_ecc_datain[] = {0xC0, 0x03, 0x4C, 0x00, 0x00, 0x00};
     for (int i = 0; i < 8; i++)
     {
@@ -161,12 +159,6 @@ void StackAutoAddr(DbmsCtx* ctx)
     SendSetStackTop(ctx); // step 5
 
     ReadOtpEccDatain(ctx); // step 6
-
-    // static uint8_t FRAME_READ_DIR0_ADDR[] = { 0xA0, 0x00, 0x03, 0x06, 0x01, 0x00, 0x00 };
-    // SendStackFrameSetCrc(ctx, FRAME_READ_DIR0_ADDR, sizeof(FRAME_READ_DIR0_ADDR));
-
-    // static uint8_t FRAME_CONF1_READ[] = { 0x80, 0x00, 0x20, 0x01, 0x01, 0x00, 0x00 };
-    // SendStackFrameSetCrc(ctx, FRAME_CONF1_READ, sizeof(FRAME_CONF1_READ));
 }
 
 /**
@@ -196,52 +188,6 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
 {
     static uint8_t FRAME_SET_ADC_CONT_RUN[] = {0xD0, 0x03, 0x0D, 0x06, 0x00, 0x00};
     SendStackFrameSetCrc(ctx, FRAME_SET_ADC_CONT_RUN, sizeof(FRAME_SET_ADC_CONT_RUN));
-}
-
-
-/**
- * @brief Request and populate voltage readings for a monitor by side-addr
- * 
- * @param ctx Context pointer 
- * @param addr Index of the side to read for
- * 
- * @deprecated
- */
-void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr)
-{
-    int status = 0;
-    static uint8_t rx_buffer_v[1024];
-    uint8_t in_addr = addr * 2 + 1;
-    uint8_t frame[] = {0x80, in_addr & 0xff, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1, 0x00, 0x00};
-
-    size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
-    size_t expected_rx_size = RX_FRAME_SIZE(data_size);
-
-    if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
-    // TODO: what the fuck is the +2 for?
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
-    ctx->stats.n_rx_stack_frames++;
-
-    uint8_t* data = rx_buffer_v;
-    while (data[0] != frame[3]) data++;
-    data++;
-    uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-    *(data-1) = frame[3];
-    *(data-2) = frame[2];
-    *(data-3) = in_addr;
-    *(data-4) = frame[4];
-    uint16_t c_crc = CalcCrc16(data-4, data_size+4);
-    if (f_crc != c_crc) 
-    {
-        ctx->stats.n_rx_stack_bad_crcs++;
-        return;
-    }
-
-    for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
-    {
-        uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-        ctx->cell_states[addr].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
-    }
 }
 
 /**
@@ -449,30 +395,13 @@ void StackCalcStats(DbmsCtx* ctx)
     ctx->stats.avg_t = t_sum / (N_SIDES * N_TEMPS_PER_SIDE);
 }
 
-
 /*****************************
  *   LED CONTROL
  *****************************/
 
 // TODO: document + reeval confusing names
 
-int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number)
-{
-    // Turns on or off LED connected to GPIO8 on the specified monitor chip
-    int status = 0;
-    uint8_t on_off_value = 0x5; // On = 0x20, Off = 0x28
-    if (on) on_off_value = 0x4;
-    uint8_t led_change_write_com[] = {0x90, dev_number, 0x00, 0x11, on_off_value, 0x00, 0x00};
-
-    // Send single device write command frame
-    if ((status = SendStackFrameSetCrc(ctx, led_change_write_com, sizeof(led_change_write_com))) != 0)
-    {
-        return status;
-    }
-    return status;
-}
-
-int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on)
+int ToggleMonitorLeds(DbmsCtx* ctx, bool on)
 {
     // Turns on or off LED connected to GPIO8 on all monitor chips
     // Note for future:
@@ -513,37 +442,6 @@ void MonitorLedBlink(DbmsCtx* ctx)
             ctx->timing.m_led_blink_ts = GetUs(ctx);
         }
     }
-}
-
-/*****************************
- *   FAULT READING
- *****************************/
-
-// TODO: clean this one up when we look into this stuff more
-//       there all very legacy
-
-int SetFaultMasks(DbmsCtx* ctx)
-{
-    return 0;
-}
-
-int PollFaultSummary(DbmsCtx* ctx)
-{
-    // int status;
-    // uint8_t dev_addr;
-    // uint8_t response[25];
-    // uint8_t sendframe[] = {0x80, dev_addr, 0x05, 0x2D, 0x00, 0x00, 0x00};
-
-    // if ((status = SendStackFrameSetCrc(ctx, sendframe, sizeof(sendframe))) != 0)
-    // {
-    //     //who cares
-    // }
-
-    // if ((status = HAL_UART_Receive(ctx->hw.uart, response, RX_FRAME_SIZE(1), STACK_RECV_TIMEOUT)) != 0) { } 
-    // ctx->stats.n_rx_stack_frames++;
-
-    // ctx->bridge_fault_summary = response[4];
-    return 0;
 }
 
 /*****************************
@@ -684,55 +582,6 @@ void StackDumpCellsToBalance(DbmsCtx* ctx)
     }
 }
 
-
-/**
- * @brief Request and populate voltage readings for a monitor by side-addr.
- * 
- * @param ctx Context pointer
- * @param addr Index of side to poll 
- */
-void StackReadBalStat(DbmsCtx* ctx, uint16_t addr)
-{
-    int status = 0;
-    static uint8_t rx_buffer[1024];
-    uint8_t in_addr = addr * 2 + 1;
-    uint8_t frame[] = {0x80, in_addr & 0xff, 0x05, 0x2B, 0, 0x00, 0x00};
-
-    size_t expected_rx_size = RX_FRAME_SIZE(1);
-
-    if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
-
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer, expected_rx_size+2, STACK_RECV_TIMEOUT)) != 0) { } 
-    ctx->stats.n_rx_stack_frames++;
-
-    // CanLog(ctx, "Frame:");
-    // for (int i = 0; i < 12; i++)
-    // {
-    //     CanLog(ctx, "%02X ", rx_buffer[i]);
-    // }
-    // CanLog(ctx, "\n");
-
-    uint8_t* data = rx_buffer;
-    while (data[0] != frame[3]) data++;
-    data++;
-    uint16_t f_crc = (data[1]) + (data[1+1] << 8);
-    *(data-1) = frame[3];
-    *(data-2) = frame[2];
-    *(data-3) = in_addr;
-    *(data-4) = frame[4]; 
-
-    // CanLog(ctx, "CRC = %04X\n", f_crc); 
-    uint16_t c_crc = CalcCrc16(data-4, 1+4);
-    if (f_crc != c_crc) 
-    {
-        // CanLog(ctx, "CRC! %X %X\n", c_crc, f_crc);
-        ctx->stats.n_rx_stack_bad_crcs++;
-        return;
-    }
-
-    CanLog(ctx, "BAL Stat = %X\n", data[0]);
-}
-
 /*****************************
  *  ANALOG MUX CONTROL
  *****************************/
@@ -779,89 +628,4 @@ int SetMuxChannels(DbmsCtx* ctx, uint8_t channel)
     uint8_t mux_select_cmd[] = {0xB0, 0x00, 0x0E, gpio_value, 0x00, 0x00};
     ctx->mux_selector = channel;
     return SendStackFrameSetCrc(ctx, mux_select_cmd, sizeof(mux_select_cmd));
-}
-
-/**
- * @brief Read a pair of GPIO voltage measurements and convert to temperature
- * 
- * Reads two consecutive 16-bit ADC registers from the monitor chip, converts to temps
- * 
- * @param ctx Context pointer
- * @param dev_number Monitor chip device address
- * @param start_reg Starting register address (reads 4 bytes: 2 registers × 16 bits)
- * @param temp_out1 Output pointer for first temperature (°C)
- * @param temp_out2 Output pointer for second temperature (°C)
- * @return Error code (0 on success, -1 on null pointer, HAL error otherwise)
- */
-int ReadMuxGpioPair(DbmsCtx* ctx, uint8_t dev_number, uint16_t start_reg, float* temp_out1, float* temp_out2)
-{
-    int status = 0;
-    uint8_t data[10];
-
-    if (!temp_out1 || !temp_out2)
-    {
-        return -1;
-    }
-
-    uint8_t read_cmd[] = {0x80, dev_number, start_reg >> 8, start_reg & 0xFF, 0x03, 0x00, 0x00};
-    if ((status = SendStackFrameSetCrc(ctx, read_cmd, sizeof(read_cmd))) != 0)
-    {
-        return status;
-    }
-    
-    if ((status = HAL_UART_Receive(ctx->hw.uart, data, sizeof(data), STACK_RECV_TIMEOUT)) != 0)
-    {
-        return status;
-    }
-    ctx->stats.n_rx_stack_frames++;
-
-    uint16_t raw_adc1 = (data[4] << 8) | data[5];
-    uint16_t raw_adc2 = (data[6] << 8) | data[7];
-    
-    float voltage1 = (raw_adc1 * STACK_T_UV_PER_BIT) / 1000000.0;
-    float voltage2 = (raw_adc2 * STACK_T_UV_PER_BIT) / 1000000.0;
-    
-    *temp_out1 = ThermVoltToTemp(ctx, MAX(0, voltage1));
-    *temp_out2 = ThermVoltToTemp(ctx, MAX(0, voltage2));
-
-    return status;
-}
-
-/**
- * @brief Read all four mux-connected thermistor temperatures for the current channel
- * 
- * Each monitor chip has 2 analog muxes (A and B), each with 2 output lines routed to
- * GPIO pins. This reads all 4 GPIO ADC values for the selected mux channel
- * 
- * Hardware mapping:
- * - GPIO3 (reg 0x592): Mux A, Output Y0
- * - GPIO4 (reg 0x594): Mux A, Output Y1  
- * - GPIO5 (reg 0x596): Mux B, Output Y0
- * - GPIO6 (reg 0x598): Mux B, Output Y1
- * 
- * must call setmuxchannel func first
- * 
- * @param ctx Context pointer
- * @param dev_number Monitor chip device address
- * @param gpio3 Output pointer for GPIO3 temperature (Mux A, Y0)
- * @param gpio4 Output pointer for GPIO4 temperature (Mux A, Y1)
- * @param gpio5 Output pointer for GPIO5 temperature (Mux B, Y0)
- * @param gpio6 Output pointer for GPIO6 temperature (Mux B, Y1)
- * @return Error code (0 on success, -1 on null pointer, HAL error otherwise)
- */
-int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, float* gpio3, float* gpio4, float* gpio5, float* gpio6)
-{
-    int status = 0;
-
-    if (!gpio3 || !gpio4 || !gpio5 || !gpio6)
-    {
-        return -1;
-    }
-
-    if ((status = ReadMuxGpioPair(ctx, dev_number, 0x592, gpio3, gpio4)) != 0)
-        return status;
-    if ((status = ReadMuxGpioPair(ctx, dev_number, 0x596, gpio5, gpio6)) != 0)
-        return status;
-    
-    return status;
 }
