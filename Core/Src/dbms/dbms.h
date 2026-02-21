@@ -34,6 +34,7 @@
 #include "isense.h"
 #include "elcon.h"
 #include "charging.h"
+#include "precharge.h"
 
 
 // Called before the main loop but strictly used for memory allocation
