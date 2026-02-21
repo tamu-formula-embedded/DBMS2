@@ -176,6 +176,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ctx->profiling.times.T0 = GetUs(ctx);
 
     StackUpdateAllVoltReadings(ctx);
+    // StackUpdateVoltReadingSingle(ctx, 1);
     HAL_Delay(6);
 
     ctx->profiling.times.T1 = GetUs(ctx);
@@ -187,8 +188,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
     // ctx->profiling.times.T2 = GetUs(ctx);
     // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
     // HAL_Delay(1);
-    StackUpdateAllTempReadings(ctx);
-    HAL_Delay(10);
+    // StackUpdateAllTempReadings(ctx);
+    // HAL_Delay(10);
     
     ctx->profiling.times.T3 = GetUs(ctx);
 

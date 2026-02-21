@@ -274,19 +274,21 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         data++;
         uint8_t addr = *(data-3);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-
+        // CanLog(ctx, "%X, %X, %X\n", f_crc, data[data_size], data[data_size+1]);
         uint16_t c_crc = CalcCrc16(data - 4, data_size+4);
         // CanLog(ctx,"%X != %X", f_crc, c_crc);
-        if (f_crc != c_crc) 
+        if (f_crc != c_crc)
         {
             ctx->stats.n_rx_stack_bad_crcs++;
-            // CanLog(ctx, "bad %d\n", i);
+            CanLog(ctx, "bad %X, %X\n", f_crc, c_crc);
+            // CanLog(ctx, "%X %X %X %X\n", data[data_size-1], data[data_size], data[data_size+1], data[data_size+2]);
+            CanLog(ctx, "%X", f_crc & c_crc);
             continue;
         }
         
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
-            if (addr % 2 == 0) break;
+            // if (addr % 2 == 0) break;
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
             ctx->cell_states[addr / 2].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
             // if (ctx->cell_states[addr / 2].voltages[j]  > 4500)
