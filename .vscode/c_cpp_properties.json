@@ -1,23 +1,24 @@
 {
-    "configurations": [
-        {
-            "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/Core/**",
-                "${workspaceFolder}/Debug/**",
-                "${workspaceFolder}/Drivers/**"
-            ],
-            "defines": [
-                "__vscode__",
-                "DEBUG",
-                "USE_HAL_DRIVER",
-                "STM32F446xx"
-            ],
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "linux-gcc-arm"
-        }
-    ],
-    "version": 4
+  "configurations": [
+    {
+      "name": "windows-gcc-x64",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/Core/**",
+        "${workspaceFolder}/Debug/**",
+        "${workspaceFolder}/Drivers/**"
+      ],
+      "defines": [
+        "__vscode__",
+        "DEBUG",
+        "USE_HAL_DRIVER",
+        "STM32F446xx"
+      ],
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-gcc-x64",
+      "compilerPath": "C:/msys64/ucrt64/bin/gcc.exe"
+    }
+  ],
+  "version": 4
 }

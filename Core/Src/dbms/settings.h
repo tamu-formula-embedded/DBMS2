@@ -56,6 +56,8 @@ enum _UserSettingIndex
 
     FAN_T_TH,
     FAN_DUTY,
+    PP_GOOD_THRESHOLD_MV,
+    PWM_READ_TIMEOUT,
 
     __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
 };

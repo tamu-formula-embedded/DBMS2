@@ -73,4 +73,7 @@ void LoadFallbackSettings(DbmsCtx* ctx)
 
     ctx->settings->user_defined[FAN_T_TH] = 30; // todo: ?
     ctx->settings->user_defined[FAN_DUTY] = 100;
+    ctx->settings->user_defined[PP_GOOD_THRESHOLD_MV]=1600;
+    ctx->settings->user_defined[PWM_READ_TIMEOUT]=500;
+
 }
