@@ -440,6 +440,7 @@ void StackCalcStats(DbmsCtx* ctx)
     ctx->stats.min_v = v_min / 1000.0f;
     ctx->stats.max_v = v_max / 1000.0f;
     ctx->stats.avg_v = v_sum / (N_SIDES * N_GROUPS_PER_SIDE) / 1000.0f;
+    ctx->stats.pack_v = v_sum;
 
     ctx->stats.min_t = t_min;
     ctx->stats.max_t = t_max;

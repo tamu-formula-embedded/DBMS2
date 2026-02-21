@@ -73,4 +73,6 @@ void LoadFallbackSettings(DbmsCtx* ctx)
 
     ctx->settings->user_defined[FAN_T_TH] = 30; // todo: ?
     ctx->settings->user_defined[FAN_DUTY] = 100;
+
+    ctx->settings->user_defined[PRECHARGE_TH] = 90;
 }
