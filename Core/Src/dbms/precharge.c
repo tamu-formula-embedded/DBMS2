@@ -12,12 +12,18 @@
 
 #include "precharge.h"
 
-void PrechargeSet(DbmsCtx *ctx, bool enabled) {
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, enabled);
-  ctx->precharged = enabled;
+void PrechargeSet(DbmsCtx* ctx)
+{
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, ctx->precharged);
 }
 
-void PrechargeUpdate(DbmsCtx *ctx) {
-  float threshold = GetSetting(ctx, PRECHARGE_TH) / 100.0;
-  PrechargeSet(ctx, (ctx->current_sensor.voltage1_mv / 1000.0f >= threshold * ctx->stats.pack_v) && !ctx->stats.fault_line_faulted);
+void PrechargeUpdate(DbmsCtx* ctx)
+{
+  int ivt_mv = ctx->current_sensor.voltage1_mv;
+  int pack_mv = ctx->stats.pack_v * 1000;
+  int threshold = GetSetting(ctx, ctx->precharged ? PRECHARGE_OFF_TH : PRECHARGE_ON_TH);
+
+  ctx->precharged = ivt_mv > pack_mv * threshold / 100 && !ctx->stats.fault_line_faulted;
+
+  PrechargeSet(ctx);
 }
