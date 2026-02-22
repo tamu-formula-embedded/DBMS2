@@ -222,10 +222,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
         // PollFaultSummary(ctx);
     }
 
-    PrechargeUpdate(ctx);
-
     ThrowHardFault(ctx);                // this can override fault state
-        ctx->profiling.times.T9 = GetUs(ctx);
+    ctx->profiling.times.T9 = GetUs(ctx);
 }
 
 
@@ -309,7 +307,6 @@ void DbmsIter(DbmsCtx* ctx)
         }
         // keep shutdown_requested = true to prevent waking back up
         SetFaultLine(ctx, true);
-        PrechargeSet(ctx, false);
         ctx->led_state = LED_IDLE;
     }
     else
@@ -338,6 +335,8 @@ void DbmsIter(DbmsCtx* ctx)
     // Blackbox handler
     BlackboxUpdate(ctx);
 
+    // Precharge handler
+    PrechargeUpdate(ctx);
 
     // pin thath as an interrupt, then throw shutdown signal
     /**
