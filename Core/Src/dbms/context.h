@@ -1,9 +1,9 @@
-/** 
- * 
+/**
+ *
  * Distributed BMS      Global BMS Context
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
@@ -23,8 +23,10 @@
 #define N_SIDES_PER_SEG     2       // number of sides per segment
 #define N_MONITORS_PER_SIDE 2       // number of monitors per side
 #define N_GROUPS_PER_SIDE   14      // number of voltages per side
-#define N_TEMPS_PER_MONITOR 7       // number of temps per monitor chip 
+#define N_TEMPS_PER_MONITOR 7       // number of temps per monitor chip
 #define N_P_GROUP           3       // number of cells per parallel group
+
+// #define HAS_FAN
 // DONT CHANGE AFTER THIS
 
 #define N_TEMPS_PER_SIDE (N_MONITORS_PER_SIDE * N_TEMPS_PER_MONITOR)
@@ -124,6 +126,8 @@ typedef struct _Stats
     float max_t;
     float avg_t;
 
+    float pack_v;
+
     uint32_t elcon_rx;
 
     uint64_t n_logging_frames;
@@ -133,7 +137,7 @@ typedef struct _Stats
 
 typedef struct _Model   // Outputs from the ECM model
 {
-    float Q;            // Charge 
+    float Q;            // Charge
     float z_oc;         // % Charge (OC path)
     float z_rc;         // % Charge (RC path)
     float V_oc;         // Open Circuit Voltage
@@ -151,38 +155,38 @@ typedef struct _Model   // Outputs from the ECM model
 typedef struct _Snapshot
 {
     uint64_t iter;
-    
+
     // Current sensor data
     int32_t current_ma;
     int32_t voltage_mv;
-    
+
     // Charge stats
     float qd;
-    
+
     // Current limits and resistance
     float current_limit_a;
     float dcir;
     float total_resistance;
-    
+
     // Temperature stats
     float avg_temp;
     float max_temp;
     float min_temp;
-    
+
     // Cell voltage delta
     float cell_delta_v;
-    
+
     // Voltage stats
     float high_voltage;
     float low_voltage;
     float avg_voltage;
-    
+
     // Faults
     uint32_t controller_mask;
     uint8_t bridge_fault_summary;
     uint32_t bridge_faults;
     uint8_t monitor_fault_summary[N_MONITORS];
-    
+
 } Snapshot;
 
 typedef struct _CurrentSensor {
@@ -246,6 +250,7 @@ typedef struct _Flags {
     bool need_to_reset_qstats;
     bool telem_enable;
     bool need_to_save_faults;
+    bool need_to_save_blackbox;
     bool req_fault_clear;
     bool need_to_sync_settings;
     bool m_led_on;
@@ -273,6 +278,7 @@ typedef struct _Blackbox {
     uint8_t head;
     uint8_t count;
     bool requested;
+    bool ready;
 } Blackbox;
 
 typedef struct _Elcon {
@@ -329,6 +335,7 @@ typedef struct _DbmsCtx
     Model model;
     uint16_t can_log_ordering_index;
     uint32_t last_can_err;
+    bool precharged;
     Blackbox blackbox;
     Elcon elcon;
     J1772 j1772;
