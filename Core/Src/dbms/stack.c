@@ -206,6 +206,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
+    
     // TODO: abstract away the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } //TODO: fix +1?
 
@@ -221,32 +222,18 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         data++;
         uint8_t addr = *(data-3);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-        // CanLog(ctx, "%X, %X, %X\n", f_crc, data[data_size], data[data_size+1]);
         uint16_t c_crc = CalcCrc16(data - 4, data_size+4);
-        // CanLog(ctx,"%X != %X", f_crc, c_crc);
         if (f_crc != c_crc)
         {
             ctx->stats.n_rx_stack_bad_crcs++;
             ctx->stats.n_rx_stack_bad_crcs_itvl++;
-            // for (int k = -4; k < data_size + 2; k++)
-            // {
-            //     CanLog(ctx, "%d: %X\n", k, *(data+k));
-            //     HAL_Delay(5);
-            // }
-            // CanLog(ctx, "%X", f_crc & c_crc);
-            break;
+            continue;
         }
         
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
-            // if (addr % 2 == 0) break;
-            // CanLog(ctx, "%X\n", data[j]);
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
             ctx->cell_states[addr / 2].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
-            // if (ctx->cell_states[addr / 2].voltages[j]  > 4500)
-            // {
-            //     CanLog(ctx, "%d", i + 1);
-            // }
         }
     }
 }
@@ -294,6 +281,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
+    
     // TODO: redo the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } 
     for (int i = 0; i < N_MONITORS; i++)
@@ -314,7 +302,6 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         {
             ctx->stats.n_rx_stack_bad_crcs++;
             ctx->stats.n_rx_stack_bad_crcs_itvl++;
-            // CanLog(ctx, "%X %X %X %X\n", data[data_size-1], data[data_size], data[data_size+1], data[data_size+2]);
             continue;
         }
         uint8_t offset = ctx->mux_selector;
@@ -322,7 +309,6 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         for (size_t j = 0; j < temps; j++)
         {
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-            // CanLog(ctx, "%X\n", raw);
             ctx->cell_states[i].temps[4 * (addr-1) + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
         }
     }
