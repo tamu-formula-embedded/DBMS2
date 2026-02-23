@@ -177,7 +177,7 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 69, F2I_K(ctx->stats.pack_v, 1e4));
     SendMetric(ctx, 70, ctx->precharged);
-    SendMetric(ctx, 71, (double) ctx->stats.n_rx_stack_bad_crcs_itvl / (double) ctx->stats.n_rx_stack_frames_itvl);
+    SendMetric(ctx, 71, ((double) ctx->stats.n_rx_stack_bad_crcs_itvl / (double) ctx->stats.n_rx_stack_frames_itvl) * 100.0);
     return 0;
 }
 
@@ -225,7 +225,7 @@ void SendPlexMetrics(DbmsCtx* ctx)
     SendPlex32(ctx, 0x1a, ctx->timing.pl_pulse_t);
     SendPlex32(ctx, 0x1b, pack_v);
     SendPlex32(ctx, 0x1c, ctx->stats.iters);
-    SendPlex32(ctx, 0x1d, ctx->stats.avg_t);
+    SendPlex32(ctx, 0x1d, ((double) ctx->stats.n_rx_stack_bad_crcs_itvl / (double) ctx->stats.n_rx_stack_frames_itvl) * 100.0);
     SendPlex32(ctx, 0x1e, ctx->current_sensor.charge_as);
 
 #ifndef F2I_K
