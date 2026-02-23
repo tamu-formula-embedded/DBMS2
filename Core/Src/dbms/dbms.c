@@ -137,7 +137,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     ConfigCurrentSensor(ctx, 10);
 
     DelayUs(ctx, 5000);
-    SetFaultMasks(ctx);
+    // SetFaultMasks(ctx);
 
     ctx->timing.wakeup_ts = HAL_GetTick();
 
@@ -176,21 +176,28 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ctx->profiling.times.T0 = GetUs(ctx);
 
     StackUpdateAllVoltReadings(ctx);
+    // StackUpdateVoltReadingSingle(ctx, 1);
     HAL_Delay(6);
 
     ctx->profiling.times.T1 = GetUs(ctx);
 
 
-    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
-    HAL_Delay(1);
+    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
+    // HAL_Delay(1);
 
-    ctx->profiling.times.T2 = GetUs(ctx);
-    StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
-    HAL_Delay(1);
-
+    // ctx->profiling.times.T2 = GetUs(ctx);
+    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
+    // HAL_Delay(1);
+    StackUpdateAllTempReadings(ctx);
+    // HAL_Delay(10);
+    
     ctx->profiling.times.T3 = GetUs(ctx);
 
-
+    for (int i = 8; i < N_TEMPS_PER_MONITOR; i++)
+    {
+        CanLog(ctx, "%d: %d\n", i, ctx->cell_states[0].temps[i]);
+        HAL_Delay(1);
+    }
 
     if (GetSetting(ctx, IGNORE_BAD_THERMS))
     {
@@ -405,6 +412,8 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.looptime = ctx->timing.iter_end_us - ctx->timing.iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     // ctx->profiling.profiling.times.T9 = GetUs(ctx);
+    SetMuxChannels(ctx, ctx->stats.iters % 4);
+    HAL_Delay(1);
     HAL_Delay(ctx->stats.end_delay / 1000);
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
