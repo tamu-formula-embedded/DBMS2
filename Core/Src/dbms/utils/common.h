@@ -1,10 +1,13 @@
 /** 
  * 
- * Distributed BMS      Common Utilities 
+ * Distributed BMS      Common Utilities
  *
  * Copyright (C) 2025   Texas A&M University
  * 
- *                      Justus Languell <justus@tamu.edu>
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #ifndef _COMMON_H_
 #define _COMMON_H_
@@ -32,7 +35,7 @@
 /**
  * Clamp x between low and high
  */
-#define CLAMP(X, LOW, HIGH) X < LOW ? LOW : (X > HIGH ? HIGH : X);
+#define CLAMP(X, LOW, HIGH) X < LOW ? LOW : (X > HIGH ? HIGH : X)
 
 
 /**
@@ -40,15 +43,6 @@
  */
 #define ARRAY_LEN(ARR) (sizeof(ARR) / sizeof(*ARR))
 
-
-#ifdef __vscode__
-
-// typedef int int32_t;
-// typedef unsigned int uint32_t;
-#define int32_t     int
-#define uint32_t    unsigned int
-
-#endif
 
 #include "stm32f4xx_hal.h"
 

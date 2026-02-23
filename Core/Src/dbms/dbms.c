@@ -1,12 +1,13 @@
-/** 
- * 
- * Distributed BMS      DBMS Main Function
+/**
+ *
+ * Distributed BMS      DBMS Main Controller
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #include "dbms.h"
 #include "context.h"
@@ -35,7 +36,7 @@ void DbmsAlloc(DbmsCtx* ctx)
 void DbmsInit(DbmsCtx* ctx)
 {
     int status = 0;
-    ctx->active = false;
+    ctx->flags.active = false;
     ctx->led_state = LED_INIT;
 
     if ((status = LoadSettings(ctx)) != HAL_OK)
@@ -47,7 +48,7 @@ void DbmsInit(DbmsCtx* ctx)
             // by loading fallback settings? Ideally these should
             // be updated enough to be ok
             LoadFallbackSettings(ctx);
-            ctx->need_to_sync_settings = true; // queue up a write
+            ctx->flags.need_to_sync_settings = true; // queue up a write
         }
         else
         {
@@ -77,12 +78,15 @@ void DbmsInit(DbmsCtx* ctx)
     if ((status = LoadQStats(ctx)) != 0)
     {
         // CanLog(ctx, "error loading initial charge %d\n", status);
-    }   
-    ctx->need_to_reset_qstats = false;
+    }
+    ctx->initial_historic_accumulated_loss = ctx->qstats.historic_accumulated_loss;
+    ctx->flags.need_to_reset_qstats = false;
 
-    ctx->last_rx_heartbeat = -GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+    ctx->timing.last_rx_heartbeat = -GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
+    #ifdef HAS_FAN
     InitFan(ctx);
+    #endif
     DataInit(ctx);
 }
 
@@ -99,15 +103,23 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
         return status; // we are cooked
     }
 
+    HAL_Delay(2);
     StackAutoAddr(ctx);
+    HAL_Delay(2);
     StackSetNumActiveCells(ctx, 0x0A);
+    HAL_Delay(2);
     StackSetupGpio(ctx);
+    HAL_Delay(2);
     StackSetupVoltReadings(ctx); // todo: rn start
+    StackConfigTimeout(ctx);
 
+    HAL_Delay(2);
     StackBalancingConfig(ctx);
 
-    ctx->isense.q_offset = 0.0f;
-    ctx->isense.has_q_offset = false;
+    HAL_Delay(2);
+
+    ctx->current_sensor.q_offset = 0.0f;
+    ctx->current_sensor.has_q_offset = false;
 
     if ((status = LoadStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults))))
     {
@@ -122,30 +134,34 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     // DelayUs(ctx, 5000);
     // Stack_Dev_Conf_FAULT_EN(ctx);
 
-    DelayUs(ctx, 5000);
-    SetFaultMasks(ctx);
+    ConfigCurrentSensor(ctx, 10);
 
-    ctx->wakeup_ts = HAL_GetTick();
+    DelayUs(ctx, 5000);
+    // SetFaultMasks(ctx);
+
+    ctx->timing.wakeup_ts = HAL_GetTick();
 
     HAL_Delay(10);
     return status;
 }
 
-int DbmsPerformShutdown(DbmsCtx* ctx)
+int DbmsPerformShutdown(DbmsCtx* ctx, bool shutdown_stack)
 {
     int status = 0;
-    if ((status = StackShutdown(ctx)) != 0)
-    {
-        CAN_REPORT_FAULT(ctx, status);
-        ctx->led_state = LED_FIRMWARE_FAULT;
-        return status;
+    if (shutdown_stack) {
+        if ((status = StackShutdown(ctx)) != 0)
+        {
+            CAN_REPORT_FAULT(ctx, status);
+            ctx->led_state = LED_FIRMWARE_FAULT;
+            return status;
+        }
     }
     ctx->led_state = LED_IDLE;
 
-    ctx->qstats.historic_accumulated_loss += ctx->qstats.accumulated_loss;
-    ctx->qstats.accumulated_loss = 0;
-    //CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
     SaveQStats(ctx);
+
+    ctx->initial_historic_accumulated_loss = 0;
+    //CanLog(ctx, "QD = %d\n", (uint32_t)(ctx->qstats.historic_accumulated_loss * 1000));
 
     HAL_Delay(200);
     return status;
@@ -156,55 +172,65 @@ int DbmsPerformShutdown(DbmsCtx* ctx)
  */
 void DbmsHandleActive(DbmsCtx* ctx)
 {
-    if (!ctx->active) return;
+    if (!ctx->flags.active) return;
+    ctx->profiling.times.T0 = GetUs(ctx);
 
-    for (int i = 0; i < N_SIDES; i++)
-    {
-        #if SPLIT_STACK_OPS
-        if (ctx->stats.iters % 2 == i % 2)
-        #endif
-        {
-            StackUpdateVoltReadingSingle(ctx, i);   
-            HAL_Delay(SINGLE_MSG_DELAY);            
-        }
-    }        
+    StackUpdateAllVoltReadings(ctx);
+    // StackUpdateVoltReadingSingle(ctx, 1);
+    HAL_Delay(6);
+
+    ctx->profiling.times.T1 = GetUs(ctx);
+
+
+    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
+    // HAL_Delay(1);
+
+    // ctx->profiling.times.T2 = GetUs(ctx);
+    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
+    // HAL_Delay(1);
+    StackUpdateAllTempReadings(ctx);
+    // HAL_Delay(10);
     
-    HAL_Delay(GROUP_MSG_DELAY);
+    ctx->profiling.times.T3 = GetUs(ctx);
 
-    for (uint8_t i = 0; i < N_SIDES; i++)
+    for (int i = 8; i < N_TEMPS_PER_MONITOR; i++)
     {
-        // todo: think abt switching these
-        #if SPLIT_STACK_OPS 
-        StackUpdateTempReadingSingle(ctx, i, ctx->stats.iters % 2 == 0);
-        HAL_Delay(SINGLE_MSG_DELAY);
-        #else
-        StackUpdateTempReadingSingle(ctx, i, false);
-        HAL_Delay(SINGLE_MSG_DELAY);
-        StackUpdateTempReadingSingle(ctx, i, true);
-        HAL_Delay(SINGLE_MSG_DELAY);
-        #endif
+        CanLog(ctx, "%d: %d\n", i, ctx->cell_states[0].temps[i]);
+        HAL_Delay(1);
     }
 
     if (GetSetting(ctx, IGNORE_BAD_THERMS))
     {
         FillMissingTempReadings(ctx);
     }
+        ctx->profiling.times.T4 = GetUs(ctx);
+
     StackCalcStats(ctx);
-    HAL_Delay(GROUP_MSG_DELAY);
+        ctx->profiling.times.T5 = GetUs(ctx);
 
+    if (HAL_GetTick() - ctx->timing.wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS))
+    {
+        if (ctx->flags.req_fault_clear) {
+            CtrlClearAllFaults(ctx);
+            ctx->flags.req_fault_clear = false;
+        }
 
-    if (HAL_GetTick() - ctx->wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS)) 
-    {               
         CheckVoltageFaults(ctx);
+            ctx->profiling.times.T6 = GetUs(ctx);
+
         CheckCurrentFaults(ctx);
+            ctx->profiling.times.T7 = GetUs(ctx);
+
         CheckTemperatureFaults(ctx);
+        ctx->profiling.times.T8 = GetUs(ctx);
+
+        SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
 
         // PollFaultSummary(ctx);
-        HAL_Delay(SINGLE_MSG_DELAY);
     }
 
     ThrowHardFault(ctx);                // this can override fault state
-    HAL_Delay(GROUP_MSG_DELAY);
+    ctx->profiling.times.T9 = GetUs(ctx);
 }
 
 
@@ -212,32 +238,29 @@ void DbmsIter(DbmsCtx* ctx)
 {
     int status = 0;
     ctx->stats.iters++;
-    ctx->iter_start_us = GetUs(ctx);
-    
+    ctx->timing.iter_start_us = GetUs(ctx);
+    // ctx->profiling.profiling.times.T0 = GetUs(ctx);
+
     /**
      * Handle blackbox data requested
      */
     if (ctx->blackbox.requested)
     {
-        CanLog(ctx, "sending");
+        CanLog(ctx, "sending\n");
         if ((status = BlackboxSend(ctx)) != HAL_OK)
-        {
-            CAN_REPORT_FAULT(ctx, status);
-        }
-        uint8_t frame[8] = {0};
-        if ((status = CanTransmit(ctx, CANID_TX_BLACKBOX_READY, frame)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
 
         ctx->blackbox.requested = false;
+        ctx->blackbox.ready = false;
     }
+    // ctx->profiling.profiling.times.T1 = GetUs(ctx);
 
-
-    ConfigCurrentSensor(ctx, 10);
-
+    HAL_Delay(6);
+    // ctx->profiling.profiling.times.T2 = GetUs(ctx);
     // Store the settings when required
-    if (ctx->need_to_sync_settings)
+    if (ctx->flags.need_to_sync_settings)
     {
         // should we also check that we are awake?
         // should we allow the user to configure
@@ -248,76 +271,68 @@ void DbmsIter(DbmsCtx* ctx)
             CAN_REPORT_FAULT(ctx, status);
             ctx->led_state = LED_FIRMWARE_FAULT;
         }
-        ctx->need_to_sync_settings = false;
+        ctx->flags.need_to_sync_settings = false;
     }
+    // ctx->profiling.profiling.times.T3 = GetUs(ctx);
 
     // Store the Q0 value when required
-    if (ctx->need_to_reset_qstats)
+    if (ctx->flags.need_to_reset_qstats)
     {
         if ((status = SaveQStats(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
             ctx->led_state = LED_FIRMWARE_FAULT;
         }
-        ctx->need_to_reset_qstats = false;
+        ctx->flags.need_to_reset_qstats = false;
+    }
+
+    if (ctx->stats.iters % 400 == 0) {
+        PeriodicSaveQStats(ctx);
     }
 
     // Let everybody know that we are alive
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
-
+    // ctx->profiling.profiling.times.T4 = GetUs(ctx);
     /**
      * Active/shutdown switch based on main heartbeat
      * If it's been too long since we have recived a frame, we need to force a shutdown
      * otherwise we want to be active
      */
-    uint64_t cur_time = HAL_GetTick();
-    
-    uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
+    // uint64_t cur_time = HAL_GetTick();
+
+    // uint32_t quiet_ms = GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
     // Handle GPIO-triggered shutdown immediately
-    if (ctx->shutdown_requested)
+    if (ctx->flags.shutdown_requested)
     {
-        if (ctx->active)
+        if (ctx->flags.active)
         {
-            DbmsPerformShutdown(ctx);
-            ctx->active = false;
+            DbmsPerformShutdown(ctx, ctx->flags.shutdown_stack_requested);
+            ctx->flags.active = false;
             uint64_t duration = GetUs(ctx) - ctx->stats.shutdown_start_us;
             CanLog(ctx, "Shutdown duration: %d us\n", (uint32_t)duration);
         }
         // keep shutdown_requested = true to prevent waking back up
-        SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
+        SetFaultLine(ctx, true);
         ctx->led_state = LED_IDLE;
     }
-    else if (cur_time - ctx->last_rx_heartbeat < quiet_ms)
+    else
     {
-        if (!ctx->active)
+        if (!ctx->flags.active)
         {
             ctx->led_state = LED_INIT;
             ProcessLedAction(ctx);
             DbmsPerformWakeup(ctx);
         }
-        if (CtrlHasAnyFaults(ctx)) 
+        if (CtrlHasAnyFaults(ctx))
             ctx->led_state = LED_ACTIVE_FAULT;
-        else 
+        else
             ctx->led_state = LED_ACTIVE;
-        ctx->active = true;
+        ctx->flags.active = true;
         DbmsHandleActive(ctx);
     }
-    else 
-    {
-        if (ctx->active)
-        {
-            DbmsPerformShutdown(ctx);
-        }
-        ctx->active = false;
-        SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
-        ctx->need_to_save_faults = false;
-        if (CtrlHasAnyFaults(ctx))
-            ctx->led_state = LED_IDLE_FAULT;
-        else
-            ctx->led_state = LED_IDLE;
-    }
 
+    // ctx->profiling.profiling.times.T5 = GetUs(ctx);
 
     ChargingUpdate(ctx);
 
@@ -325,55 +340,80 @@ void DbmsIter(DbmsCtx* ctx)
     UpdateModel(ctx);   // TODO: add condition for when we update this
 
     // Blackbox handler
-    BlackboxSwapAndUpdate(ctx);
+    BlackboxUpdate(ctx);
 
+    // Precharge handler
+    PrechargeUpdate(ctx);
+
+    // pin thath as an interrupt, then throw shutdown signal
     /**
      * Save faults and blackbox data to eeprom
      */
-    if (ctx->need_to_save_faults)
+    if (ctx->flags.need_to_save_faults)
     {
         if ((status = SaveFaultState(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
-        if ((status = BlackboxSaveOnFault(ctx, ctx->blackbox.old_data, ctx->blackbox.new_data)) != HAL_OK)
+
+        ctx->flags.need_to_save_faults = false;
+    }
+    if (ctx->flags.need_to_save_blackbox)
+    {
+        CanLog(ctx, "SAVRING BB!\n");
+        if ((status = BlackboxSaveOnFault(ctx)) != HAL_OK)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
-        ctx->need_to_save_faults = false;
+        ctx->flags.need_to_save_blackbox = false;
     }
+    // ctx->profiling.profiling.times.T7 = GetUs(ctx);
 
     /**
      * Transmit telemetry
      */
     SendPlexMetrics(ctx);
-    if (HAL_GetTick() - ctx->last_rx_telembeat < 5000)// < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    ctx->flags.telem_enable = HAL_GetTick() - ctx->timing.last_rx_telembeat < 5000; // < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
+    if (ctx->flags.telem_enable && ctx->stats.iters % 10 == 0)
     {
         SendMetrics(ctx);               // TODO: resolve conflicting metrics
+
+        // send a blackbox ready frame UNTIL the app requests. flag is set true when saved, false when app requests
+        if(ctx->blackbox.ready)
+        {
+            uint8_t ready_frame[8] = {0};
+            CanTransmit(ctx, CANID_TX_BLACKBOX_READY, ready_frame);
+        }
+
         SendCellVoltages(ctx);
         SendCellTemps(ctx);
     }
+    // ctx->profiling.profiling.times.T8 = GetUs(ctx);
 
     /**
      * Handle LED states and such
      */
+    #ifdef HAS_FAN
     UpdateFan(ctx);
+    #endif
     ProcessLedAction(ctx);
 
-    if (ctx->active){
+    if (ctx->flags.active) {
         MonitorLedBlink(ctx);
     }
 
-    // float oa1, oa2, ob1, ob2 = 0;    
+    // float oa1, oa2, ob1, ob2 = 0;
     // ReadMuxOutputs4x1(ctx, 1, &oa1, &oa2, &ob1, &ob2);
     // CanLog(ctx, "Mux test: %d %d %d %d\n", (int)oa1, (int)oa2, (int)ob1, (int)ob2);
     /**
      * Schedule the next loop
      */
-    ctx->iter_end_us = GetUs(ctx);
-    ctx->stats.looptime = ctx->iter_end_us - ctx->iter_start_us;
+    ctx->timing.iter_end_us = GetUs(ctx);
+    ctx->stats.looptime = ctx->timing.iter_end_us - ctx->timing.iter_start_us;
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
-    
+    // ctx->profiling.profiling.times.T9 = GetUs(ctx);
+    SetMuxChannels(ctx, ctx->stats.iters % 4);
+    HAL_Delay(1);
     HAL_Delay(ctx->stats.end_delay / 1000);
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
@@ -389,14 +429,22 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_OLD_HEARTBEAT:
     case CANID_RX_HEARTBEAT:
 
-        ctx->last_rx_heartbeat = HAL_GetTick();
-        
+        ctx->timing.last_rx_heartbeat = HAL_GetTick();
+
         uint64_t remote_ts = be64_to_u64(rx_data);
         SyncRealTime(ctx, remote_ts);
 
         break;
+    case CANID_RX_SHUTDOWN_STACK:
+        ctx->flags.shutdown_requested = true;
+        ctx->flags.shutdown_stack_requested = true;
+        break;
+    case CANID_RX_CLEAR_SHUTDOWN:
+        ctx->flags.shutdown_requested = false;
+        ctx->flags.shutdown_stack_requested = false;
+        break;
     case CANID_RX_TELEMBEAT:
-        ctx->last_rx_telembeat = HAL_GetTick();
+        ctx->timing.last_rx_telembeat = HAL_GetTick();
         break;
     case CANID_RX_SET_CONFIG:
         if ((status = HandleCanConfig(ctx, rx_data, CFG_SET)) != 0)
@@ -415,42 +463,42 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         }
         break;
     case CANID_ISENSE_CURRENT:
-        ctx->isense.current_ma = (int32_t)UnpackCurrentSensorData(rx_data);
+        ctx->current_sensor.current_ma = (int32_t)UnpackCurrentSensorData(rx_data);
         break;
     case CANID_ISENSE_VOLTAGE1:
-        ctx->isense.voltage1_mv = (int32_t)UnpackCurrentSensorData(rx_data);
+        ctx->current_sensor.voltage1_mv = (int32_t)UnpackCurrentSensorData(rx_data);
         break;
     case CANID_ISENSE_POWER:
-        ctx->isense.power_w = (int32_t)UnpackCurrentSensorData(rx_data);
+        ctx->current_sensor.power_w = (int32_t)UnpackCurrentSensorData(rx_data);
         break;
     case CANID_ISENSE_CHARGE:
-        ctx->isense.charge_as = (int32_t)UnpackCurrentSensorData(rx_data);
-        if (!ctx->isense.has_q_offset) {
-            ctx->isense.q_offset = ctx->isense.charge_as;
-            ctx->isense.has_q_offset = true;
-            CanLog(ctx, "q_offset %d\nmAs", (int)(ctx->isense.q_offset * 1000));
+        ctx->current_sensor.charge_as = (int32_t)UnpackCurrentSensorData(rx_data);
+        if (!ctx->current_sensor.has_q_offset) {
+            ctx->current_sensor.q_offset = ctx->current_sensor.charge_as;
+            ctx->current_sensor.has_q_offset = true;
+            CanLog(ctx, "q_offset %d\nmAs", (int)(ctx->current_sensor.q_offset * 1000));
         }
         // CanLog(ctx, "Got charge measurement\n");
         break;
     case CANID_ISENSE_ENERGY:
-        ctx->isense.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
+        ctx->current_sensor.energy_wh = (int32_t)UnpackCurrentSensorData(rx_data);
         break;
     case CANID_RX_CLEAR_FAULTS:
-        CtrlClearAllFaults(ctx);
+        ctx->flags.req_fault_clear = true;
         break;
 
     case CANID_RX_SET_INITIAL_CHARGE:
         ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;
-        CanLog(ctx, "Q0: %d", be32_to_u32(rx_data));
+        CanLog(ctx, "Q0: %d\n", be32_to_u32(rx_data));
         ctx->qstats.accumulated_loss = 0;
         ctx->qstats.historic_accumulated_loss = 0;
+        ctx->initial_historic_accumulated_loss = 0;
         // ctx->qstats.initial_set_ts = (int32_t)(GetRealTime(ctx) / 1000);
         ctx->qstats.initial_set_ts = 0;
-        ctx->need_to_reset_qstats = true;
+        ctx->flags.need_to_reset_qstats = true;
         break;
 
     case CANID_RX_BLACKBOX_REQUEST:
-    CanLog(ctx, "hi");
         ctx->blackbox.requested = true;
         break;
 
@@ -486,7 +534,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 void DbmsErr(DbmsCtx* ctx)
 {
     ctx->led_state = LED_FIRMWARE_FAULT;
-    DbmsPerformShutdown(ctx);    
+    DbmsPerformShutdown(ctx, true);
 }
 
 void DbmsClose(DbmsCtx* ctx)

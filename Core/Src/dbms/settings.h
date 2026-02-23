@@ -1,6 +1,14 @@
-//
-//  Copyright (c) Texas A&M University.
-//
+/** 
+ * 
+ * Distributed BMS      Configuration/Setting System
+ *
+ * Copyright (C) 2025   Texas A&M University
+ * 
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
+ */
 #ifndef _H_SETTINGS_H
 #define _H_SETTINGS_H
 
@@ -43,9 +51,17 @@ enum _UserSettingIndex
     CH_BAL_T_IDX,
     CH_TARGET_V,
     CH_I,
+    CH_AC_VOLTAGE,
+    CH_ELCON_EFF,
 
     FAN_T_TH,
     FAN_DUTY,
+
+    LOW_PLAUSIBLE_TEMP,
+    HIGH_PLAUSIBLE_TEMP,
+  
+    PRECHARGE_ON_TH,
+    PRECHARGE_OFF_TH,
 
     __NUM_USER_DEFINED_SETTINGS // ALWAYS LAST
 };

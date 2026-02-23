@@ -1,6 +1,14 @@
-//
-//  Copyright (c) Texas A&M University.
-//
+/** 
+ * 
+ * Distributed BMS      EEPROM Storage Interface
+ *
+ * Copyright (C) 2025   Texas A&M University
+ * 
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
+ */
 #include "storage.h"
 
 extern I2C_HandleTypeDef hi2c1;

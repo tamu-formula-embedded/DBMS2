@@ -1,12 +1,13 @@
 /** 
  * 
- * Distributed BMS      DBMS Main Function
+ * Distributed BMS      DBMS Main Controller
  *
  * Copyright (C) 2025   Texas A&M University
  * 
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #ifndef _DBMS_H_
 #define _DBMS_H_
@@ -33,6 +34,7 @@
 #include "isense.h"
 #include "elcon.h"
 #include "charging.h"
+#include "precharge.h"
 
 
 // Called before the main loop but strictly used for memory allocation
