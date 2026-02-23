@@ -57,6 +57,9 @@ enum _UserSettingIndex
     FAN_T_TH,
     FAN_DUTY,
 
+    LOW_PLAUSIBLE_TEMP,
+    HIGH_PLAUSIBLE_TEMP,
+  
     PRECHARGE_ON_TH,
     PRECHARGE_OFF_TH,
 
