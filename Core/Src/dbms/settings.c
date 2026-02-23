@@ -74,6 +74,9 @@ void LoadFallbackSettings(DbmsCtx* ctx)
     ctx->settings->user_defined[FAN_T_TH] = 30; // todo: ?
     ctx->settings->user_defined[FAN_DUTY] = 100;
 
+    ctx->settings->user_defined[LOW_PLAUSIBLE_TEMP] = 10;
+    ctx->settings->user_defined[HIGH_PLAUSIBLE_TEMP] = 120;
+  
     ctx->settings->user_defined[PRECHARGE_ON_TH] = 90;
     ctx->settings->user_defined[PRECHARGE_OFF_TH] = 10;
 }
