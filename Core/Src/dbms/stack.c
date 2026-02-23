@@ -227,7 +227,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         if (f_crc != c_crc)
         {
             ctx->stats.n_rx_stack_bad_crcs++;
-            ctx->stats.n_rx_stack_bad_crcs_itvl++:
+            ctx->stats.n_rx_stack_bad_crcs_itvl++;
             // for (int k = -4; k < data_size + 2; k++)
             // {
             //     CanLog(ctx, "%d: %X\n", k, *(data+k));
@@ -323,7 +323,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         {
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
             // CanLog(ctx, "%X\n", raw);
-            ctx->cell_states[i].temps[4 * j + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
+            ctx->cell_states[i].temps[4 * (addr-1) + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
         }
     }
 }

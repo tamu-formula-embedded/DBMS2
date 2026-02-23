@@ -177,7 +177,7 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 69, F2I_K(ctx->stats.pack_v, 1e4));
     SendMetric(ctx, 70, ctx->precharged);
-    SentMetric(ctx, 71, (double) ctx->stats.n_rx_stack_bad_crcs_itvl / (double) ctx->stats.n_rx_stack_frames_itvl);
+    SendMetric(ctx, 71, (double) ctx->stats.n_rx_stack_bad_crcs_itvl / (double) ctx->stats.n_rx_stack_frames_itvl);
     return 0;
 }
 
