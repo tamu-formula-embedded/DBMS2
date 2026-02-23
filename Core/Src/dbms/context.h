@@ -115,6 +115,8 @@ typedef struct _Stats
 
     uint32_t n_rx_stack_frames;
     uint32_t n_rx_stack_bad_crcs;
+    uint32_t n_rx_stack_frames_itvl;
+    uint32_t n_rx_stack_bad_crcs_itvl;
     // uint32_t n_overruns;
 
     uint32_t n_eeprom_writes;
