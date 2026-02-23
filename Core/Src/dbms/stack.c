@@ -212,6 +212,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     for (int i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
+        ctx->stats.n_rx_stack_frames_itvl++;
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
         for (int j = 0; data[0] != frame[2] && j < 1024; j++)
         {
@@ -226,6 +227,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         if (f_crc != c_crc)
         {
             ctx->stats.n_rx_stack_bad_crcs++;
+            ctx->stats.n_rx_stack_bad_crcs_itvl++:
             // for (int k = -4; k < data_size + 2; k++)
             // {
             //     CanLog(ctx, "%d: %X\n", k, *(data+k));
@@ -297,6 +299,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     for (int i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
+        ctx->stats.n_rx_stack_frames_itvl++;
 
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
         for (int j = 0; data[0] != frame2[2] && j < 1024; j++)
@@ -310,6 +313,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         if (f_crc != c_crc)
         {
             ctx->stats.n_rx_stack_bad_crcs++;
+            ctx->stats.n_rx_stack_bad_crcs_itvl++;
             // CanLog(ctx, "%X %X %X %X\n", data[data_size-1], data[data_size], data[data_size+1], data[data_size+2]);
             continue;
         }
