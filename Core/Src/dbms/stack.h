@@ -76,16 +76,6 @@ int StackShutdown(DbmsCtx* ctx);
 void StackSetupVoltReadings(DbmsCtx* ctx); 
 
 /**
- * @brief Request and populate voltage readings for a monitor by side-addr
- * 
- * @param ctx Context pointer 
- * @param addr Index of the side to read for
- * 
- * @deprecated
- */
-void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr);
-
-/**
  * @brief Request and populate voltage readings for the whole stack
  * 
  * @param ctx Context pointer 
@@ -98,17 +88,6 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx);
  * @param ctx Context pointer 
  */
 void StackSetupGpio(DbmsCtx* ctx);
-
-/**
- * @brief Read temperatures from a monitor by side-addr and if/if not it is the sidekick monitor
- * 
- * @todo More explaination
- * 
- * @param ctx Context pointer 
- * @param addr Index of the side to read for
- * @param sidekick Read the main chip or the sidekick chip
- */
-void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick);
 
 void StackUpdateAllTempReadings(DbmsCtx* ctx);
 
@@ -132,22 +111,9 @@ void StackCalcStats(DbmsCtx* ctx);
 
 // TODO: document + reeval confusing names
 
-int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number);
-
-int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on);
+int ToggleMonitorLeds(DbmsCtx* ctx, bool on);
 
 void MonitorLedBlink(DbmsCtx* ctx);
-
-/*****************************
- *   FAULT READING
- *****************************/
-
-// TODO: clean this one up when we look into this stuff more
-//       there all very legacy
-
-int SetFaultMasks(DbmsCtx* ctx);
-
-int PollFaultSummary(DbmsCtx* ctx);
 
 /*****************************
  *  BALANCING 
@@ -174,15 +140,7 @@ bool StackNeedsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv);
 
 void StackDumpCellsToBalance(DbmsCtx* ctx);
 
-/**
- * @brief Request and populate voltage readings for a monitor by side-addr.
- * 
- * @param ctx Context pointer
- * @param addr Index of side to poll 
- */
-void StackReadBalStat(DbmsCtx* ctx, uint16_t addr);
-
-int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel);
+int SetMuxChannels(DbmsCtx* ctx, uint8_t channel);
 
 int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, float* gpio3, float* gpio4, float* gpio5, float* gpio6);
 #endif
