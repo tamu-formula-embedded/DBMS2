@@ -4,8 +4,10 @@
  *
  * Copyright (C) 2025   Texas A&M University
  * 
- *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
  *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #ifndef _ELCON_H_
 #define _ELCON_H_

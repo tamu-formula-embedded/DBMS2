@@ -1,3 +1,14 @@
+/** 
+ * 
+ * Distributed BMS      Configuration/Setting System
+ *
+ * Copyright (C) 2025   Texas A&M University
+ * 
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
+ */
 #include "settings.h"
 
 uint32_t GetSetting(DbmsCtx* ctx, UserSettingIndex index)
@@ -57,7 +68,15 @@ void LoadFallbackSettings(DbmsCtx* ctx)
     ctx->settings->user_defined[CH_BAL_T_IDX] = 2;
     ctx->settings->user_defined[CH_TARGET_V] = 4200;
     ctx->settings->user_defined[CH_I] = 18;
+    ctx->settings->user_defined[CH_AC_VOLTAGE] = 240;
+    ctx->settings->user_defined[CH_ELCON_EFF] = 90;
 
     ctx->settings->user_defined[FAN_T_TH] = 30; // todo: ?
     ctx->settings->user_defined[FAN_DUTY] = 100;
+
+    ctx->settings->user_defined[LOW_PLAUSIBLE_TEMP] = 10;
+    ctx->settings->user_defined[HIGH_PLAUSIBLE_TEMP] = 120;
+  
+    ctx->settings->user_defined[PRECHARGE_ON_TH] = 90;
+    ctx->settings->user_defined[PRECHARGE_OFF_TH] = 10;
 }

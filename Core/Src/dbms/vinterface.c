@@ -1,12 +1,13 @@
 /** 
  * 
- * Distributed BMS      CAN-based Telemtery
+ * Distributed BMS      CAN-Based Vehicle Interface
  *
  * Copyright (C) 2025   Texas A&M University
  * 
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #include "vinterface.h"
 
@@ -49,7 +50,7 @@ int HandleCanConfig(DbmsCtx* ctx, uint8_t* rx_data, CanConfigAction action)
     {
         CanLog(ctx, "CFG %d %d\n", cfg_id, cfg_set);
         SetSetting(ctx, cfg_id, cfg_set);
-        ctx->need_to_sync_settings = true;
+        ctx->flags.need_to_sync_settings = true;
     }
     else
     {
@@ -93,17 +94,17 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
     SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
 
-    SendMetric(ctx, 4, ctx->isense.current_ma);
-    SendMetric(ctx, 5, ctx->isense.voltage1_mv);
+    SendMetric(ctx, 4, ctx->current_sensor.current_ma);
+    SendMetric(ctx, 5, ctx->current_sensor.voltage1_mv);
 
     // SendMetric(ctx, 6, 0);
     // SendMetric(ctx, 7, 0);
-    SendMetric(ctx, 8, ctx->isense.power_w);
-    SendMetric(ctx, 9, ctx->isense.charge_as);
-    SendMetric(ctx, 10, ctx->isense.energy_wh);
+    SendMetric(ctx, 8, ctx->current_sensor.power_w);
+    SendMetric(ctx, 9, ctx->current_sensor.charge_as);
+    SendMetric(ctx, 10, ctx->current_sensor.energy_wh);
 
     SendMetric(ctx, 11, ctx->stats.n_tx_can_fail);
-    SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_timeout);
+    SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_queue_full);
 
     SendMetric(ctx, 13, ctx->stats.looptime);
     SendMetric(ctx, 14, ctx->stats.end_delay);
@@ -142,8 +143,8 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 41, F2I_K(ctx->qstats.historic_accumulated_loss, 1e6));
 
-    SendMetric(ctx, 42, ctx->pl_pulse_t);
-    SendMetric(ctx, 43, ctx->pl_last_ok_ts);
+    SendMetric(ctx, 42, ctx->timing.pl_pulse_t);
+    SendMetric(ctx, 43, ctx->timing.pl_last_ok_ts);
     SendMetric(ctx, 44, ctx->max_current_ma);
 
     SendMetric(ctx, 45, ctx->elcon.heartbeat);
@@ -164,7 +165,18 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 58, ctx->elcon.i_req);
 
     SendMetric(ctx, 59, F2I_K(ctx->stats.max_v - ctx->stats.min_v, 1e4));
+    SendMetric(ctx, 60, ctx->profiling.times.T1 - ctx->profiling.times.T0);
+    SendMetric(ctx, 61, ctx->profiling.times.T2 - ctx->profiling.times.T1);
+    SendMetric(ctx, 62, ctx->profiling.times.T3 - ctx->profiling.times.T2);
+    SendMetric(ctx, 63, ctx->profiling.times.T4 - ctx->profiling.times.T3);
+    SendMetric(ctx, 64, ctx->profiling.times.T5 - ctx->profiling.times.T4);
+    SendMetric(ctx, 65, ctx->profiling.times.T6 - ctx->profiling.times.T5);
+    SendMetric(ctx, 66, ctx->profiling.times.T7 - ctx->profiling.times.T6);
+    SendMetric(ctx, 67, ctx->profiling.times.T8 - ctx->profiling.times.T7);
+    SendMetric(ctx, 68, ctx->profiling.times.T9 - ctx->profiling.times.T8);
 
+    SendMetric(ctx, 69, F2I_K(ctx->stats.pack_v, 1e4));
+    SendMetric(ctx, 70, ctx->precharged);
     return 0;
 }
 
@@ -207,13 +219,13 @@ void SendPlexMetrics(DbmsCtx* ctx)
     int32_t pack_v = ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE);
 
     SendPlex32(ctx, 0x17, ctx->faults.controller_mask);
-    SendPlex32(ctx, 0x18, ctx->isense.current_ma / 1000);
-    SendPlex32(ctx, 0x19, ctx->isense.ima.current_mavg_ma / 1000);
-    SendPlex32(ctx, 0x1a, ctx->pl_pulse_t);
+    SendPlex32(ctx, 0x18, ctx->current_sensor.current_ma / 1000);
+    SendPlex32(ctx, 0x19, ctx->current_sensor.ima.current_mavg_ma / 1000);
+    SendPlex32(ctx, 0x1a, ctx->timing.pl_pulse_t);
     SendPlex32(ctx, 0x1b, pack_v);
     SendPlex32(ctx, 0x1c, ctx->stats.iters);
     SendPlex32(ctx, 0x1d, ctx->stats.avg_t);
-    SendPlex32(ctx, 0x1e, ctx->stats.max_t);
+    SendPlex32(ctx, 0x1e, ctx->current_sensor.charge_as);
 
 #ifndef F2I_K
 #define F2I_K(F, K) ((int)((F) * (K)))
@@ -233,6 +245,8 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
 void CanLog(DbmsCtx* ctx, const char* fmt, ...)
 {
+    if (!ctx->flags.telem_enable) return;
+    
     char buffer[CAN_LOG_BUFFER_SIZE];
     va_list args;
     va_start(args, fmt);

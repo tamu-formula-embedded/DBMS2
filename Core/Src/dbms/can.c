@@ -7,8 +7,12 @@
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #include "can.h"
+#include "context.h"
+
+#define CAN_TX_QUEUE_SIZE 512
 
 typedef struct 
 {
@@ -17,9 +21,26 @@ typedef struct
     bool extended;      // true = extended (29-bit)
 } CanFilterMask;
 
+typedef struct {
+    CAN_TxHeaderTypeDef header;
+    uint8_t data[8];
+    //uint8_t prio ??
+} CanTxQueueItem;
+
+typedef struct {
+    CanTxQueueItem buffer[CAN_TX_QUEUE_SIZE];
+    volatile uint32_t head;
+    volatile uint32_t tail;
+    volatile uint32_t count;
+} CanTxQueue;
+
+static CanTxQueue tx_queue = {0};
+
+// cant change the interrupt function sigantures, store a global ctx ptr and set on init
+static DbmsCtx* g_can_ctx = NULL;
 
 /**
- * 
+ * Configure CAN RX filters
  */
 int ConfigCanFilters(CAN_HandleTypeDef *hcan, const CanFilterMask *filters, size_t count)
 {
@@ -82,6 +103,7 @@ int ConfigCanFilters(CAN_HandleTypeDef *hcan, const CanFilterMask *filters, size
 
 int ConfigCan(DbmsCtx* ctx)
 {
+    g_can_ctx = ctx;
     int status = 0;
     CanFilterMask masks[] = 
     {
@@ -107,7 +129,8 @@ int ConfigCan(DbmsCtx* ctx)
     // Enable interrupts
     if ((status = HAL_CAN_ActivateNotification(ctx->hw.can,
                                             CAN_IT_RX_FIFO0_MSG_PENDING |
-                                            CAN_IT_RX_FIFO1_MSG_PENDING)) != HAL_OK)
+                                            CAN_IT_RX_FIFO1_MSG_PENDING |
+                                            CAN_IT_TX_MAILBOX_EMPTY)) != HAL_OK)
     {
         ctx->led_state = LED_FIRMWARE_FAULT;
         return status;
@@ -121,6 +144,35 @@ int ConfigCan(DbmsCtx* ctx)
     ctx->hw.can_tx_header.TransmitGlobalTime = DISABLE;
 
     return status;
+}
+
+static void SendFromQueue(CAN_HandleTypeDef *hcan)
+{
+    while (tx_queue.count > 0 && HAL_CAN_GetTxMailboxesFreeLevel(hcan) > 0)
+    {
+        CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail];
+        
+        uint32_t mailbox;
+        int32_t result = HAL_CAN_AddTxMessage(hcan, &entry->header, entry->data, &mailbox);
+
+        if (result == HAL_OK)
+        {
+            tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
+            tx_queue.count--;
+
+            if (g_can_ctx)
+                g_can_ctx->stats.n_tx_can_frames++;
+        }
+        else
+        {
+            if (g_can_ctx)
+            {
+                g_can_ctx->stats.n_tx_can_fail++;
+                g_can_ctx->last_can_err = HAL_CAN_GetError(hcan);
+            }
+            break;
+        }
+    }
 }
 
 
@@ -141,35 +193,60 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     }
 
     hdr->RTR = CAN_RTR_DATA;
-    hdr->DLC = 8; // or customize if you have variable payloads
+    hdr->DLC = 8;
     hdr->TransmitGlobalTime = DISABLE;
 
-    // Wait for a free mailbox
-    uint32_t waited = 0;
-    while (HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) == 0U)
+    __disable_irq();
+    
+    if (tx_queue.count == 0 && HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) > 0U)
     {
-        if (waited >= CAN_TX_TIMEOUT_US)
+        int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, hdr, data, &ctx->hw.can_tx_mailbox);
+
+        if (result != HAL_OK)
         {
-            ctx->stats.n_tx_can_drop_timeout++;
-            return HAL_TIMEOUT;
+            ctx->stats.n_tx_can_fail++;
+            // ctx->led_state = LED_COMM_ERROR;
+            ctx->last_can_err = HAL_CAN_GetError(ctx->hw.can);
         }
-        DelayUs(ctx, CAN_TX_WAIT_US);
-        waited += CAN_TX_WAIT_US;
+        else
+        {
+            ctx->stats.n_tx_can_frames++;
+        }
+        __enable_irq();
+        return result;
     }
-
-    int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, hdr, data, &ctx->hw.can_tx_mailbox);
-
-    if (result != HAL_OK)
+    
+    if (tx_queue.count >= CAN_TX_QUEUE_SIZE)
     {
-        ctx->stats.n_tx_can_fail++;
-        // ctx->led_state = LED_COMM_ERROR;
-        ctx->last_can_err = HAL_CAN_GetError(ctx->hw.can);
-    }
-    else
-    {
-        ctx->stats.n_tx_can_frames++;
+        tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
+        tx_queue.count--;
+        ctx->stats.n_tx_can_drop_queue_full++;
     }
 
-    return result;
+    tx_queue.buffer[tx_queue.head].header = *hdr;
+    memcpy(tx_queue.buffer[tx_queue.head].data, data, 8);
+    tx_queue.head = (tx_queue.head + 1) % CAN_TX_QUEUE_SIZE;
+    tx_queue.count++;
+    ctx->stats.n_tx_queued = tx_queue.count;
+    
+    __enable_irq();
+
+    SendFromQueue(ctx->hw.can);
+    
+    return HAL_OK;
 }
 
+void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+    SendFromQueue(hcan);
+}
+
+void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+    SendFromQueue(hcan);
+}
+
+void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+    SendFromQueue(hcan);
+}

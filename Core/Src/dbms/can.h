@@ -1,12 +1,13 @@
 /** 
  * 
- * Distributed BMS      CAN Interface
+ * Distributed BMS      CAN I/O Interface
  *
  * Copyright (C) 2025   Texas A&M University
  * 
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #ifndef _CAN_H_
 #define _CAN_H_
@@ -53,11 +54,13 @@
 
 #define CANID_RX_TELEMBEAT          0x0BF
 
-#define CANID_RX_BLACKBOX_REQUEST   0x0B006000
-#define CANID_TX_BLACKBOX_OLD       0x0B007000
-#define CANID_TX_BLACKBOX_NEW       0x0B008000
-#define CANID_TX_BLACKBOX_READY     0x0B009000
+#define CANID_RX_SHUTDOWN_STACK     0x0BA
+#define CANID_RX_CLEAR_SHUTDOWN     0x0BB
 
+#define CANID_RX_BLACKBOX_REQUEST   0x0B006000
+#define CANID_TX_BLACKBOX           0x0B007000
+#define CANID_TX_BLACKBOX_SIZE      0x0B008000
+#define CANID_TX_BLACKBOX_READY     0x0B009000
 
 /* Extended IDs */
 

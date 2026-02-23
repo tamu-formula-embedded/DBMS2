@@ -1,14 +1,13 @@
-/**
- * Distributed BMS Stack Module
+/** 
  * 
- * @file stack.h
- * @copyright (C) 2025 Texas A&M University
- * @author Justus Languell <justus@tamu.edu>
- *         Cam Stone        <cameron28202@tamu.edu>
- *         Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ * Distributed BMS      Stack Controller Module
+ *
+ * Copyright (C) 2025   Texas A&M University
  * 
- * @brief Exposes interface for controlling 
- * the stack through the bridge module.
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #ifndef _STACK_H_
 #define _STACK_H_
@@ -50,6 +49,11 @@ void StackAutoAddr(DbmsCtx* ctx);
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells);
 
 /**
+ * Config heartbeat timeout
+ */
+void StackConfigTimeout(DbmsCtx* ctx);
+
+/**
  * @brief Shuts down the battery stack
  * Use this when we turn the vehicle off, or when going to sleep
  * We could also use this in response to a critical fault
@@ -72,12 +76,11 @@ int StackShutdown(DbmsCtx* ctx);
 void StackSetupVoltReadings(DbmsCtx* ctx); 
 
 /**
- * @brief Request and populate voltage readings for a monitor by side-addr
+ * @brief Request and populate voltage readings for the whole stack
  * 
  * @param ctx Context pointer 
- * @param addr Index of the side to read for
  */
-void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr);
+void StackUpdateAllVoltReadings(DbmsCtx* ctx);
 
 /**
  * @brief Configure GPIOs for temp readings
@@ -86,16 +89,7 @@ void StackUpdateVoltReadingSingle(DbmsCtx* ctx, uint16_t addr);
  */
 void StackSetupGpio(DbmsCtx* ctx);
 
-/**
- * @brief Read temperatures from a monitor by side-addr and if/if not it is the sidekick monitor
- * 
- * @todo More explaination
- * 
- * @param ctx Context pointer 
- * @param addr Index of the side to read for
- * @param sidekick Read the main chip or the sidekick chip
- */
-void StackUpdateTempReadingSingle(DbmsCtx* ctx, uint16_t addr, bool sidekick);
+void StackUpdateAllTempReadings(DbmsCtx* ctx);
 
 /**
  * @brief Replace missing thermistor readings with the average of the valid cells
@@ -117,22 +111,9 @@ void StackCalcStats(DbmsCtx* ctx);
 
 // TODO: document + reeval confusing names
 
-int ToggleMonitorChipLed(DbmsCtx* ctx, bool on, uint8_t dev_number);
-
-int ToggleAllMonitorChipLeds(DbmsCtx* ctx, bool on);
+int ToggleMonitorLeds(DbmsCtx* ctx, bool on);
 
 void MonitorLedBlink(DbmsCtx* ctx);
-
-/*****************************
- *   FAULT READING
- *****************************/
-
-// TODO: clean this one up when we look into this stuff more
-//       there all very legacy
-
-int SetFaultMasks(DbmsCtx* ctx);
-
-int PollFaultSummary(DbmsCtx* ctx);
 
 /*****************************
  *  BALANCING 
@@ -159,15 +140,7 @@ bool StackNeedsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv);
 
 void StackDumpCellsToBalance(DbmsCtx* ctx);
 
-/**
- * @brief Request and populate voltage readings for a monitor by side-addr.
- * 
- * @param ctx Context pointer
- * @param addr Index of side to poll 
- */
-void StackReadBalStat(DbmsCtx* ctx, uint16_t addr);
-
-int SetMuxChannel(DbmsCtx* ctx, uint8_t dev_number, uint8_t channel);
+int SetMuxChannels(DbmsCtx* ctx, uint8_t channel);
 
 int ReadMuxOutputs4x1(DbmsCtx* ctx, uint8_t dev_number, float* gpio3, float* gpio4, float* gpio5, float* gpio6);
 #endif
