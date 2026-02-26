@@ -193,11 +193,11 @@ void DbmsHandleActive(DbmsCtx* ctx)
     
     ctx->profiling.times.T3 = GetUs(ctx);
 
-    for (int i = 8; i < N_TEMPS_PER_MONITOR; i++)
-    {
-        CanLog(ctx, "%d: %d\n", i, ctx->cell_states[0].temps[i]);
-        HAL_Delay(1);
-    }
+    // for (int i = 8; i < N_TEMPS_PER_MONITOR; i++)
+    // {
+    //     CanLog(ctx, "%d: %d\n", i, ctx->cell_states[0].temps[i]);
+    //     HAL_Delay(1);
+    // }
 
     if (GetSetting(ctx, IGNORE_BAD_THERMS))
     {

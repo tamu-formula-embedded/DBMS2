@@ -277,9 +277,9 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     int status = 0;
     static uint8_t rx_buffer_t[1024];
 
-    uint8_t frame2[] = {0xA0, 0x05, 0x8E, 12 * 2 - 1, 0x00, 0x00};
+    uint8_t frame2[] = {0xA0, 0x05, 0x8E, 6 * 2 - 1, 0x00, 0x00};
 
-    size_t data_size = 12 * sizeof(int16_t);
+    size_t data_size = 6 * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
@@ -297,7 +297,8 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             data++;
         }
         data++;
-        uint8_t addr = *(data-3);
+        // uint8_t addr = *(data-3);
+        // CanLog(ctx, "addr: %d\n", addr);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
         uint16_t c_crc = CalcCrc16(data-4, data_size+4);
         if (f_crc != c_crc)
@@ -306,13 +307,23 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             ctx->stats.n_rx_stack_bad_crcs_itvl++;
             continue;
         }
+        for (int j = 0; j < data_size; j++){
+            CanLog(ctx, "%X ", data[j]);
+        }
+        CanLog(ctx, "\n");
+        for (int j = 0; j < 4; j++){
+            // CanLog(ctx, "%X, %X\n", data[j]);
+            data[j + 4] = data[j];
+        }
+        data += 4;
         uint8_t offset = ctx->mux_selector;
-        uint8_t temps = (offset == 0 ? 4 : 3) + 2;
+        uint8_t temps = (offset == 0 ? 4 : 3);
         for (size_t j = 0; j < temps; j++)
         {
-            if (j == 2 || j == 3) continue;
-            uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-            ctx->cell_states[i].temps[4 * (addr-1) + offset] = ThermVoltToTemp(ctx, MAX(0, (raw * STACK_T_UV_PER_BIT) / 1000000.0));
+            uint16_t raw = (data[j * sizeof(uint16_t)] << 8) + (data[j * sizeof(uint16_t) + 1]);
+            CanLog(ctx, "t %X, %X\n", data[j * sizeof(uint16_t)], data[j * sizeof(uint16_t) + 1]);
+            ctx->cell_states[i].temps[4 * j + offset] = ThermVoltToTemp(ctx, raw * STACK_T_UV_PER_BIT / 1000.0);
+            // CanLog(ctx, "%f\n", (raw * STACK_T_UV_PER_BIT) / 1000000.0);
         }
     }
 }
