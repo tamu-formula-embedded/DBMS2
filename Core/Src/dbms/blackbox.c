@@ -136,15 +136,7 @@ int BlackboxSend(DbmsCtx* ctx)
         return status;
     }
 
-    // Send all snapshots in chronological order
-    for (uint8_t i = 0; i < blackbox_meta.count; ++i)
-    {
-        if ((status = SendSnapshot(ctx, i)) != HAL_OK)
-        {
-            return status;
-        }
-    }
-
+    
     // send snapshot size so the app can reconstruct frames
     uint16_t snapshot_size = sizeof(Snapshot);
     uint8_t size_frame[8] = {
@@ -153,6 +145,15 @@ int BlackboxSend(DbmsCtx* ctx)
         0, 0, 0, 0, 0, 0
     };
     CanTransmit(ctx, CANID_TX_BLACKBOX_SIZE, size_frame);
+
+    // Send all snapshots in chronological order
+    for (uint8_t i = 0; i < blackbox_meta.count; ++i)
+    {
+        if ((status = SendSnapshot(ctx, i)) != HAL_OK)
+        {
+            return status;
+        }
+    }
 
 
     return status;
