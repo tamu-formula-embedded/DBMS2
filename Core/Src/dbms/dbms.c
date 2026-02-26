@@ -190,7 +190,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     // HAL_Delay(1);
     StackUpdateAllTempReadings(ctx);
     // HAL_Delay(10);
-    
+
     ctx->profiling.times.T3 = GetUs(ctx);
 
     for (int i = 8; i < N_TEMPS_PER_MONITOR; i++)
@@ -499,6 +499,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
 
     case CANID_RX_BLACKBOX_REQUEST:
+        CanLog(ctx, "req\n");
         ctx->blackbox.requested = true;
         break;
 
