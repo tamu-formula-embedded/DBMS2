@@ -297,7 +297,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             data++;
         }
         data++;
-        // uint8_t addr = *(data-3);
+        uint8_t addr = *(data-3);
         // CanLog(ctx, "addr: %d\n", addr);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
         uint16_t c_crc = CalcCrc16(data-4, data_size+4);
@@ -307,10 +307,10 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             ctx->stats.n_rx_stack_bad_crcs_itvl++;
             continue;
         }
-        for (int j = 0; j < data_size; j++){
-            CanLog(ctx, "%X ", data[j]);
-        }
-        CanLog(ctx, "\n");
+        // for (int j = 0; j < data_size; j++){
+        //     CanLog(ctx, "%X ", data[j]);
+        // }
+        // CanLog(ctx, "\n");
         for (int j = 0; j < 4; j++){
             // CanLog(ctx, "%X, %X\n", data[j]);
             data[j + 4] = data[j];
@@ -321,10 +321,10 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         for (size_t j = 0; j < temps; j++)
         {
             uint16_t raw = (data[j * sizeof(uint16_t)] << 8) + (data[j * sizeof(uint16_t) + 1]);
-            CanLog(ctx, "t %X, %X\n", data[j * sizeof(uint16_t)], data[j * sizeof(uint16_t) + 1]);
-            CanLog(ctx, "raw: %d\n", raw);
-            CanLog(ctx, "conv: %d\n", raw * STACK_T_UV_PER_BIT / 1000000.0);
-            ctx->cell_states[i].temps[4 * j + offset] = ThermVoltToTemp(ctx, raw * STACK_T_UV_PER_BIT / 1000000.0);
+            // CanLog(ctx, "t %X, %X\n", data[j * sizeof(uint16_t)], data[j * sizeof(uint16_t) + 1]);
+            // CanLog(ctx, "raw: %d\n", raw);
+            CanLog(ctx, "V: %d\n", raw * STACK_T_UV_PER_BIT / 1000000.0);
+            ctx->cell_states[addr-1].temps[4 * j + offset] = ThermVoltToTemp(ctx, MAX(0, raw * STACK_T_UV_PER_BIT / 1000000.0));
             // CanLog(ctx, "%f\n", (raw * STACK_T_UV_PER_BIT) / 1000000.0);
         }
     }
