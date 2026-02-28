@@ -274,6 +274,8 @@ typedef struct _FaultState {
     uint32_t bridge_faults;
     uint8_t monitor_fault_summary[N_MONITORS];
     bool had_fault;
+    uint8_t monitor_bad_crcs[N_MONITORS];
+    uint8_t monitor_total_frames[N_MONITORS];
 } FaultState;
 
 typedef struct _Blackbox {

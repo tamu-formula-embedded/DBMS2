@@ -290,6 +290,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     {
         ctx->stats.n_rx_stack_frames++;
         ctx->stats.n_rx_stack_frames_itvl++;
+        ctx->faults.monitor_total_frames[i]++;
 
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
         for (int j = 0; data[0] != frame2[2] && j < 1024; j++)
@@ -304,6 +305,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         {
             ctx->stats.n_rx_stack_bad_crcs++;
             ctx->stats.n_rx_stack_bad_crcs_itvl++;
+            ctx->faults.monitor_bad_crcs[i]++;
             continue;
         }
         for (int j = 0; j < 4; j++){ // GPIO1 = GPIO3, GPIO2 = GPIO4
