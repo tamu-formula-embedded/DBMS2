@@ -250,6 +250,7 @@ typedef struct _Flags {
     bool need_to_reset_qstats;
     bool telem_enable;
     bool need_to_save_faults;
+    bool need_to_save_blackbox;
     bool req_fault_clear;
     bool need_to_sync_settings;
     bool m_led_on;
