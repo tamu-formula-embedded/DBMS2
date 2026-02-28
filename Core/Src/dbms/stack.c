@@ -214,6 +214,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     {
         ctx->stats.n_rx_stack_frames++;
         ctx->stats.n_rx_stack_frames_itvl++;
+        ctx->faults.monitor_total_frames[i]++;
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
         for (int j = 0; data[0] != frame[2] && j < 1024; j++)
         {
@@ -227,6 +228,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         {
             ctx->stats.n_rx_stack_bad_crcs++;
             ctx->stats.n_rx_stack_bad_crcs_itvl++;
+            ctx->faults.monitor_bad_crcs[i]++;
             continue;
         }
         
