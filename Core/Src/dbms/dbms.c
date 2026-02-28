@@ -84,6 +84,8 @@ void DbmsInit(DbmsCtx* ctx)
 
     ctx->timing.last_rx_heartbeat = -GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
+    memset(&ctx->faults.monitor_total_frames, 0, sizeof(ctx->faults.monitor_total_frames));
+    memset(&ctx->faults.monitor_bad_crcs, 0, sizeof(ctx->faults.monitor_bad_crcs));
     #ifdef HAS_FAN
     InitFan(ctx);
     #endif
