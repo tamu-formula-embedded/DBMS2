@@ -279,7 +279,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
 
     uint8_t frame2[] = {0xA0, 0x05, 0x8E, ((N_TEMPS_PER_MONITOR / 3) + 2) * 2 - 1, 0x00, 0x00};
 
-    size_t data_size = 6 * sizeof(int16_t);
+    size_t data_size = ((N_TEMPS_PER_MONITOR / 3) + 2) * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
