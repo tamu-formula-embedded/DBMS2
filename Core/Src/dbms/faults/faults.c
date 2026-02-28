@@ -40,6 +40,7 @@ bool CtrlHasAnyFaults(DbmsCtx* ctx)
 void CtrlClearAllFaults(DbmsCtx* ctx)
 {
     ctx->faults.controller_mask = 0;
+    ctx->faults.had_fault = false;
     ctx->flags.need_to_save_faults = true;
 }
 
@@ -68,9 +69,6 @@ void ThrowHardFault(DbmsCtx* ctx)
     if (!ctx->faults.had_fault && CtrlHasAnyFaults(ctx))
     {
         ctx->flags.need_to_save_faults = true;
-    }
-    if (!ctx->blackbox.ready && CtrlHasAnyFaults(ctx))
-    {
         ctx->flags.need_to_save_blackbox = true;
     }
     ctx->faults.had_fault = CtrlHasAnyFaults(ctx);
@@ -98,6 +96,6 @@ int LoadFaultState(DbmsCtx* ctx)
         // todo: check an error here
     }
     ctx->faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
-    //ctx->faults.had_fault = CtrlHasAnyFaults(ctx);
+    ctx->faults.had_fault = CtrlHasAnyFaults(ctx);
     return status;
 }
