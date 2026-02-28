@@ -65,6 +65,7 @@ void ThrowHardFault(DbmsCtx* ctx)
         SetFaultLine(ctx, false);
     }
 
+    CanLog(ctx, "thf hf=%d any=%d\n", ctx->faults.had_fault, CtrlHasAnyFaults(ctx));
     if (!ctx->faults.had_fault && CtrlHasAnyFaults(ctx))
     {
         ctx->flags.need_to_save_faults = true;
