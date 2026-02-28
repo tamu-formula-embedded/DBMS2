@@ -176,28 +176,12 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ctx->profiling.times.T0 = GetUs(ctx);
 
     StackUpdateAllVoltReadings(ctx);
-    // StackUpdateVoltReadingSingle(ctx, 1);
-    HAL_Delay(6);
 
     ctx->profiling.times.T1 = GetUs(ctx);
-
-
-    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, false);
-    // HAL_Delay(1);
-
-    // ctx->profiling.times.T2 = GetUs(ctx);
-    // StackUpdateTempReadingSingle(ctx, ctx->stats.iters % N_SIDES, true);
-    // HAL_Delay(1);
-    StackUpdateAllTempReadings(ctx);
-    // HAL_Delay(10);
     
+    StackUpdateAllTempReadings(ctx);
+    ctx->profiling.times.T2 = GetUs(ctx);
     ctx->profiling.times.T3 = GetUs(ctx);
-
-    // for (int i = 8; i < N_TEMPS_PER_MONITOR; i++)
-    // {
-    //     CanLog(ctx, "%d: %d\n", i, ctx->cell_states[0].temps[i]);
-    //     HAL_Delay(1);
-    // }
 
     if (GetSetting(ctx, IGNORE_BAD_THERMS))
     {
