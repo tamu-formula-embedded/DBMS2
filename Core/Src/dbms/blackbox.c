@@ -16,6 +16,11 @@
 
 #define BLACKBOX_QUEUE_SIZE 10
 
+typedef struct {
+    uint8_t head;
+    uint8_t count;
+} blackbox_meta;
+
 static Snapshot snapshot_queue[BLACKBOX_QUEUE_SIZE];
 
 void BlackboxInit(DbmsCtx* ctx)
@@ -125,11 +130,7 @@ int BlackboxSend(DbmsCtx* ctx)
 {
     int status;
 
-    struct {
-        uint8_t head;
-        uint8_t count;
-    } blackbox_meta;
-
+    blackbox_meta meta;
 
     // send snapshot size so the app can reconstruct frames
     uint16_t snapshot_size = sizeof(Snapshot);
@@ -140,20 +141,22 @@ int BlackboxSend(DbmsCtx* ctx)
     };
     CanTransmit(ctx, CANID_TX_BLACKBOX_SIZE, size_frame);
 
-    if ((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &blackbox_meta, sizeof(blackbox_meta))) != HAL_OK)
+    if ((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &meta, sizeof(blackbox_meta))) != HAL_OK)
     {
+        CanLog(ctx, "bb meta err %d\n", status);
         return status;
     }
 
+    CanLog(ctx, "bb cnt=%d\n", meta.count);
+
     // Send all snapshots in chronological order
-    for (uint8_t i = 0; i < blackbox_meta.count; ++i)
+    for (uint8_t i = 0; i < meta.count; ++i)
     {
         if ((status = SendSnapshot(ctx, i)) != HAL_OK)
         {
             return status;
         }
     }
-
 
     return status;
 }
@@ -164,21 +167,31 @@ int BlackboxSaveOnFault(DbmsCtx* ctx)
 
     for (uint8_t i = 0; i < ctx->blackbox.count; ++i)
     {
-        // index in q
-        uint8_t idx = (ctx->blackbox.head + 1 + i) % BLACKBOX_QUEUE_SIZE;
+        // chronological oldest-first index into the ring buffer
+        uint8_t idx = (ctx->blackbox.head - ctx->blackbox.count + 1 + i + BLACKBOX_QUEUE_SIZE) % BLACKBOX_QUEUE_SIZE;
 
         uint32_t addr = EEPROM_BLACKBOX_BASE_ADDR + i * 100;
 
+        CanLog(ctx, "bb sv%d\n", i);
         if ((status = SaveStoredObject(ctx, addr, &snapshot_queue[idx], sizeof(Snapshot))) != HAL_OK)
         {
+            CanLog(ctx, "bb sv err %d\n", status);
             return status;
         }
     }
 
     // save metadata (head, count) when done
-    struct { uint8_t head; uint8_t count; } meta = { ctx->blackbox.head, ctx->blackbox.count };
-    status = SaveStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &meta, sizeof(meta));
-
-    ctx->blackbox.ready = true;
+    blackbox_meta meta = {
+        ctx->blackbox.head, ctx->blackbox.count
+    };
+    CanLog(ctx, "bb meta wr\n");
+    if ((status = SaveStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &meta, sizeof(meta))) == HAL_OK)
+    {
+        ctx->blackbox.ready = true;
+    }
+    else
+    {
+        CanLog(ctx, "bb meta wr err %d\n", status);
+    }
     return status;
 }
