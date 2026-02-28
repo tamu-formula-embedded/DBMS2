@@ -323,7 +323,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             uint16_t raw = (data[j * sizeof(uint16_t)] << 8) + (data[j * sizeof(uint16_t) + 1]);
             // CanLog(ctx, "t %X, %X\n", data[j * sizeof(uint16_t)], data[j * sizeof(uint16_t) + 1]);
             // CanLog(ctx, "raw: %d\n", raw);
-            CanLog(ctx, "V: %d\n", raw * STACK_T_UV_PER_BIT / 1000000.0);
+            // CanLog(ctx, "V: %d\n", raw * STACK_T_UV_PER_BIT / 1000000.0);
             ctx->cell_states[addr-1].temps[4 * j + offset] = ThermVoltToTemp(ctx, MAX(0, raw * STACK_T_UV_PER_BIT / 1000000.0));
             // CanLog(ctx, "%f\n", (raw * STACK_T_UV_PER_BIT) / 1000000.0);
         }
