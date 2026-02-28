@@ -402,7 +402,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.end_delay = CalcIterDelay(ctx, ITER_TARGET_HZ);
     // ctx->profiling.profiling.times.T9 = GetUs(ctx);
     SetMuxChannels(ctx, ctx->stats.iters % 4);
-    HAL_Delay(1);
+    // HAL_Delay(1);
     HAL_Delay(ctx->stats.end_delay / 1000);
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
