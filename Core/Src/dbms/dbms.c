@@ -176,7 +176,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ctx->profiling.times.T0 = GetUs(ctx);
 
     StackUpdateAllVoltReadings(ctx);
-
+    HAL_Delay(1);
     ctx->profiling.times.T1 = GetUs(ctx);
     
     StackUpdateAllTempReadings(ctx);
@@ -213,10 +213,10 @@ void DbmsHandleActive(DbmsCtx* ctx)
         // PollFaultSummary(ctx);
     }
 
-    if (ctx->stats.iters % 20 == 0){
+    // if (ctx->stats.iters % 2 == 0){
         ctx->stats.n_rx_stack_frames_itvl = 0;
         ctx->stats.n_rx_stack_bad_crcs_itvl = 0;
-    }
+    // }
 
     ThrowHardFault(ctx);                // this can override fault state
     ctx->profiling.times.T9 = GetUs(ctx);
