@@ -69,7 +69,6 @@ void ThrowHardFault(DbmsCtx* ctx)
     if (!ctx->faults.had_fault && CtrlHasAnyFaults(ctx))
     {
         ctx->flags.need_to_save_faults = true;
-        ctx->flags.need_to_save_blackbox = true;
     }
     ctx->faults.had_fault = CtrlHasAnyFaults(ctx);
 }

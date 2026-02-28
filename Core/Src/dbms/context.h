@@ -23,7 +23,7 @@
 #define N_SIDES_PER_SEG     2       // number of sides per segment
 #define N_MONITORS_PER_SIDE 1       // number of monitors per side
 #define N_GROUPS_PER_SIDE   13      // number of voltages per side
-#define N_TEMPS_PER_MONITOR 13       // number of temps per monitor chip 
+#define N_TEMPS_PER_MONITOR 13       // number of temps per monitor chip
 #define N_P_GROUP           3       // number of cells per parallel group
 
 // #define HAS_FAN
@@ -250,7 +250,6 @@ typedef struct _Flags {
     bool need_to_reset_qstats;
     bool telem_enable;
     bool need_to_save_faults;
-    bool need_to_save_blackbox;
     bool req_fault_clear;
     bool need_to_sync_settings;
     bool m_led_on;

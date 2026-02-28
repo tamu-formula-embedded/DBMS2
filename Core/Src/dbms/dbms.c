@@ -357,16 +357,13 @@ void DbmsIter(DbmsCtx* ctx)
             CanLog(ctx, "fault st sv err %d\n", status);
         }
 
-        ctx->flags.need_to_save_faults = false;
-    }
-    if (ctx->flags.need_to_save_blackbox)
-    {
         CanLog(ctx, "SAVRING BB!\n");
         if ((status = BlackboxSaveOnFault(ctx)) != HAL_OK)
         {
             CanLog(ctx, "bb sv err %d\n", status);
         }
-        ctx->flags.need_to_save_blackbox = false;
+
+        ctx->flags.need_to_save_faults = false;
     }
     // ctx->profiling.profiling.times.T7 = GetUs(ctx);
 
