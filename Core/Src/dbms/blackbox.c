@@ -16,11 +16,6 @@
 
 #define BLACKBOX_QUEUE_SIZE 10
 
-typedef struct {
-    uint8_t head;
-    uint8_t count;
-} blackbox_meta;
-
 static Snapshot snapshot_queue[BLACKBOX_QUEUE_SIZE];
 
 void BlackboxInit(DbmsCtx* ctx)
@@ -130,7 +125,7 @@ int BlackboxSend(DbmsCtx* ctx)
 {
     int status;
 
-    blackbox_meta meta;
+    Blackbox meta;
 
     // send snapshot size so the app can reconstruct frames
     uint16_t snapshot_size = sizeof(Snapshot);
@@ -141,7 +136,7 @@ int BlackboxSend(DbmsCtx* ctx)
     };
     CanTransmit(ctx, CANID_TX_BLACKBOX_SIZE, size_frame);
 
-    if ((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &meta, sizeof(blackbox_meta))) != HAL_OK)
+    if ((status = LoadStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &meta, sizeof(Blackbox))) != HAL_OK)
     {
         CanLog(ctx, "bb meta err %d\n", status);
         return status;
@@ -181,8 +176,8 @@ int BlackboxSaveOnFault(DbmsCtx* ctx)
     }
 
     // save metadata (head, count) when done
-    blackbox_meta meta = {
-        ctx->blackbox.head, ctx->blackbox.count
+    Blackbox meta = {
+        ctx->blackbox.head, ctx->blackbox.count, true, true
     };
     CanLog(ctx, "bb meta wr\n");
     if ((status = SaveStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &meta, sizeof(meta))) == HAL_OK)
