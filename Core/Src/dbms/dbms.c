@@ -363,7 +363,7 @@ void DbmsIter(DbmsCtx* ctx)
      */
     SendPlexMetrics(ctx);
     ctx->flags.telem_enable = HAL_GetTick() - ctx->timing.last_rx_telembeat < 5000; // < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
-    if (ctx->flags.telem_enable && ctx->stats.iters % 10 == 0)
+    if (ctx->flags.telem_enable)
     {
         SendMetrics(ctx);               // TODO: resolve conflicting metrics
 
