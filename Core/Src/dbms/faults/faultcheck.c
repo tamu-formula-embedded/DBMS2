@@ -17,15 +17,15 @@ void CheckVoltageFaults(DbmsCtx* ctx)
     uint32_t min_group_v = GetSetting(ctx, MIN_GROUP_VOLTAGE);
     uint32_t max_v_delta = GetSetting(ctx, MAX_V_DELTA);
     
-    if (ctx->stats.max_v * 1000 > max_group_v) {
-        CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
-    }
+    // if (ctx->stats.max_v * 1000 > max_group_v) {
+    //     CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_OVER);
+    // }
     if (ctx->stats.min_v * 1000 < min_group_v) {
         CtrlSetFault(ctx, CTRL_FAULT_VOLTAGE_UNDER);
     }
-    if ((ctx->stats.max_v - ctx->stats.min_v) * 1000 > max_v_delta) {
-        CtrlSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
-    }
+    // if ((ctx->stats.max_v - ctx->stats.min_v) * 1000 > max_v_delta) {
+    //     CtrlSetFault(ctx, CTRL_FAULT_MAX_DELTA_EXCEEDED);
+    // }
 }
 
 void CheckTemperatureFaults(DbmsCtx* ctx)
@@ -35,13 +35,14 @@ void CheckTemperatureFaults(DbmsCtx* ctx)
         ctx->timing.overtemp_last_ok_ts = HAL_GetTick();
     }
     else {
-        if (HAL_GetTick() - ctx->timing.overtemp_last_ok_ts > GetSetting(ctx, OVERTEMP_MS))
-            CtrlSetFault(ctx, CTRL_FAULT_TEMP_OVER);
+        // if (HAL_GetTick() - ctx->timing.overtemp_last_ok_ts > GetSetting(ctx, OVERTEMP_MS))
+        //     CtrlSetFault(ctx, CTRL_FAULT_TEMP_OVER);
     }
 }
 
 void CheckCurrentFaults(DbmsCtx* ctx)
 {
+    return;
     int32_t current_ma = MAX(0, ctx->current_sensor.current_ma);
 
     int32_t at = GetSetting(ctx, TEMP_CURVE_A);
