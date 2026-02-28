@@ -351,6 +351,7 @@ void DbmsIter(DbmsCtx* ctx)
      */
     if (ctx->flags.need_to_save_faults)
     {
+        CanLog(ctx, "saving faults\n");
         if ((status = SaveFaultState(ctx)) != HAL_OK)
         {
             CanLog(ctx, "fault st sv err %d\n", status);

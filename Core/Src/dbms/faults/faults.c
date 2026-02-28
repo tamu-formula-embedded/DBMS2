@@ -95,6 +95,6 @@ int LoadFaultState(DbmsCtx* ctx)
         // todo: check an error here
     }
     ctx->faults_crc = CalcCrc16((uint8_t*)&ctx->faults, sizeof(ctx->faults));
-    ctx->faults.had_fault = CtrlHasAnyFaults(ctx);
+    //ctx->faults.had_fault = CtrlHasAnyFaults(ctx);
     return status;
 }
