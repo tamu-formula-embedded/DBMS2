@@ -353,7 +353,7 @@ void DbmsIter(DbmsCtx* ctx)
     {
         if ((status = SaveFaultState(ctx)) != HAL_OK)
         {
-            CAN_REPORT_FAULT(ctx, status);
+            CanLog(ctx, "fault st sv err %d\n", status);
         }
 
         ctx->flags.need_to_save_faults = false;
@@ -363,7 +363,7 @@ void DbmsIter(DbmsCtx* ctx)
         CanLog(ctx, "SAVRING BB!\n");
         if ((status = BlackboxSaveOnFault(ctx)) != HAL_OK)
         {
-            CAN_REPORT_FAULT(ctx, status);
+            CanLog(ctx, "bb sv err %d\n", status);
         }
         ctx->flags.need_to_save_blackbox = false;
     }
