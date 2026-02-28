@@ -179,7 +179,6 @@ int BlackboxSaveOnFault(DbmsCtx* ctx)
     Blackbox meta = {
         ctx->blackbox.head, ctx->blackbox.count, true, true
     };
-    CanLog(ctx, "bb meta wr\n");
     if ((status = SaveStoredObject(ctx, EEPROM_BLACKBOX_META_ADDR, &meta, sizeof(meta))) == HAL_OK)
     {
         ctx->blackbox.ready = true;

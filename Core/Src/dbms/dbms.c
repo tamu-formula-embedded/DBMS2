@@ -251,7 +251,6 @@ void DbmsIter(DbmsCtx* ctx)
         {
             CAN_REPORT_FAULT(ctx, status);
         }
-
         ctx->blackbox.requested = false;
         ctx->blackbox.ready = false;
     }
