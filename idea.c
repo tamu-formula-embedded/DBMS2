@@ -114,7 +114,7 @@ int Example1(DbmsCtx* ctx)
  * So if your host is big endian, the function does nothing,
  * otherwise it bswaps. Good for portability, but obviously
  * doesn't matter on STM32.
- */
+ * 
 short htons(short); // host-to-network-short
                     // 16-bit little endian -> big endian
 long htonl(long);   // host-to-network-long 
@@ -123,3 +123,4 @@ short ntohs(short); // network-to-host-short
                     // 16-bit big endian -> little endian
 long ntohl(long);   // network-to-host-long
                     // 32-bit big endian -> little endian
+*/
