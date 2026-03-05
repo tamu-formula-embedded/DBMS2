@@ -1,9 +1,9 @@
-/** 
- * 
+/**
+ *
  * Distributed BMS      CAN I/O Interface
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
@@ -72,20 +72,20 @@
 
 /* Undefined yet */
 
-#define CANID_FATAL_ERROR           0x50B 
+#define CANID_FATAL_ERROR           0x50B
 
 #define CANID_DEBUG_OVERWRITE_TEMPS     0x581
 
 #define CANID_ELCON_TX                  0x1806E5F4
 #define CANID_ELCON_RX                  0x18FF50E5
 
-typedef enum 
+typedef enum
 {
-    CAN_RX_0, 
+    CAN_RX_0,
     CAN_RX_1,
 } CanRxChannel;
 
-typedef enum 
+typedef enum
 {
     CFG_SET,
     CFG_GET
@@ -94,5 +94,7 @@ typedef enum
 int ConfigCan(DbmsCtx* ctx);
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8]);
+
+void ClearCanTxQueue();
 
 #endif
