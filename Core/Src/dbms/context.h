@@ -120,6 +120,7 @@ typedef struct _Stats
     // uint32_t n_overruns;
 
     uint32_t n_eeprom_writes;
+    uint8_t n_int_shutdowns;
 
     float min_v;
     float max_v;
