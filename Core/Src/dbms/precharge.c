@@ -20,10 +20,10 @@ void PrechargeSet(DbmsCtx* ctx)
 void PrechargeUpdate(DbmsCtx* ctx)
 {
   int ivt_mv = ctx->current_sensor.voltage1_mv;
-  int pack_mv = ctx->stats.pack_v * 1000;
-  int threshold = GetSetting(ctx, ctx->precharged ? PRECHARGE_OFF_TH : PRECHARGE_ON_TH);
-
-  ctx->precharged = ivt_mv > pack_mv * threshold / 100 && !ctx->stats.fault_line_faulted;
-
+  float pack_mv = ctx->stats.pack_v;
+  float threshold = 0.9; //GetSetting(ctx, ctx->precharged ? PRECHARGE_OFF_TH : PRECHARGE_ON_TH);
+ 
+  ctx->precharged = (ivt_mv > pack_mv * threshold) && !ctx->stats.fault_line_faulted;
+ 
   PrechargeSet(ctx);
 }
