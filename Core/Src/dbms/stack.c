@@ -235,7 +235,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-            ctx->cell_states[addr / 2].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+            ctx->cell_states[addr-1].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
         }
     }
 }
