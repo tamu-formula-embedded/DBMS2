@@ -86,6 +86,9 @@ void DbmsInit(DbmsCtx* ctx)
 
     memset(&ctx->faults.monitor_total_frames, 0, sizeof(ctx->faults.monitor_total_frames));
     memset(&ctx->faults.monitor_bad_crcs, 0, sizeof(ctx->faults.monitor_bad_crcs));
+
+    ReadEEPROM(ctx, EEPROM_DEBUG, &ctx->stats.n_int_shutdowns, 1);
+
     #ifdef HAS_FAN
     InitFan(ctx);
     #endif
@@ -105,20 +108,21 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
         return status; // we are cooked
     }
 
-    HAL_Delay(2);
+    HAL_Delay(5);
     StackAutoAddr(ctx);
-    HAL_Delay(2);
+    HAL_Delay(5);
     StackSetNumActiveCells(ctx, 0x0A);
-    HAL_Delay(2);
+    HAL_Delay(5);
     StackSetupGpio(ctx);
-    HAL_Delay(2);
+    HAL_Delay(5);
     StackSetupVoltReadings(ctx); // todo: rn start
+    HAL_Delay(5);
     StackConfigTimeout(ctx);
 
-    HAL_Delay(2);
+    HAL_Delay(5);
     StackBalancingConfig(ctx);
 
-    HAL_Delay(2);
+    HAL_Delay(5);
 
     ctx->current_sensor.q_offset = 0.0f;
     ctx->current_sensor.has_q_offset = false;
@@ -178,10 +182,11 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ctx->profiling.times.T0 = GetUs(ctx);
 
     StackUpdateAllVoltReadings(ctx);
-    HAL_Delay(1);
+    HAL_Delay(10);
     ctx->profiling.times.T1 = GetUs(ctx);
     
     StackUpdateAllTempReadings(ctx);
+    HAL_Delay(10);
     ctx->profiling.times.T2 = GetUs(ctx);
     ctx->profiling.times.T3 = GetUs(ctx);
 

@@ -178,6 +178,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 69, F2I_K(ctx->stats.pack_v, 1e4));
     SendMetric(ctx, 70, ctx->precharged);
     SendMetric(ctx, 71, (ctx->stats.n_rx_stack_bad_crcs_itvl * 100) / ctx->stats.n_rx_stack_frames_itvl);
+    SendMetric(ctx, 72, ctx->stats.n_int_shutdowns);
 
     for (int i = 0; i < N_MONITORS; i++)
     {
@@ -237,9 +238,9 @@ void SendPlexMetrics(DbmsCtx* ctx)
 #define F2I_K(F, K) ((int)((F) * (K)))
 #endif
 
-    SendPlex16x4(ctx, 1, F2I_K(ctx->stats.max_t, 1), F2I_K(ctx->stats.min_t, 1), F2I_K(ctx->stats.avg_t, 1), 0);
+    SendPlex16x4(ctx, 0x011, F2I_K(ctx->stats.max_t, 1), F2I_K(ctx->stats.min_t, 1), F2I_K(ctx->stats.avg_t, 1), 0);
 
-    SendPlex16x4(ctx, 2, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
+    SendPlex16x4(ctx, 0x012, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
                  F2I_K(pack_v, 10));
 }
 
