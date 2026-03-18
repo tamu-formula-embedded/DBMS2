@@ -25,6 +25,38 @@
 #define STACK_V_UV_PER_BIT 190.73
 #define STACK_T_UV_PER_BIT 152.59
 
+#define INIT_SNG_R      0x80
+#define INIT_SNG_W      0x90
+#define INIT_STK_R      0xA0
+#define INIT_STK_W      0xB0
+#define INIT_BRC_R      0xC0
+#define INIT_BRC_W      0xD0
+#define INIT_BRC_WR     0xE0
+
+#define PACKED __attribute__((packed))
+
+// typedef struct PACKED _SingleWrite {
+//     uint8_t init;
+//     uint8_t dev;
+//     uint16_t reg;
+//     uint8_t data[];
+// } SingleWrite;
+
+#define eswap16(X) __builtin_bswap16(X)
+
+#define DATASIZE(...) (sizeof((uint8_t[]) {__VA_ARGS__}) - 1)
+#define BYTES16(x) (x) >> 8, (x) & 0xFF
+
+#define MAKE_SNG_R(DEV, REG, LEN) {INIT_SNG_R, DEV, BYTES16(REG), LEN, 0x00, 0x00}
+#define MAKE_SNG_W(DEV, REG, ...) {INIT_SNG_W + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+
+#define MAKE_STK_R(REG, LEN) {INIT_STK_R, BYTES16(REG), LEN, 0x00, 0x00}
+#define MAKE_STK_W(REG, ...) {INIT_STK_W + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+
+#define MAKE_BRC_R(REG, LEN) {INIT_BRC_R, BYTES16(REG), LEN, 0x00, 0x00}
+#define MAKE_BRC_W(REG, ...) {INIT_BRC_W + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+#define MAKE_BRC_WR(REG, ...) {INIT_BRC_WR + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+
 /**
  * @brief Wake the battery stack
  * 

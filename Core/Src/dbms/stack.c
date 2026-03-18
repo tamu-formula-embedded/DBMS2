@@ -41,7 +41,7 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
  */
 int StackWake(DbmsCtx* ctx)
 {
-    static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
+    static uint8_t FRAME_WAKE_STACK[] = MAKE_SNG_W(0x00, 0x0309, 0x20);
 
     int status = 0;
     for (int i = 0; i < 2; i++)
@@ -72,7 +72,7 @@ int StackWake(DbmsCtx* ctx)
  */
 int StackShutdown(DbmsCtx* ctx)
 {
-    static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
+    static uint8_t FRAME_SHUTDOWN_STACK[] = MAKE_BRC_W(0x0309, 0x08);
 
     int status = 0;
     for (int i = 0; i < 2; i++)
@@ -94,13 +94,8 @@ int StackShutdown(DbmsCtx* ctx)
 
 void SendOtpEccDatain(DbmsCtx* ctx)
 {
-    uint8_t frame_otp_ecc_datain[] = {0xD0, 0x03, 0x43, 0x00, 0x00, 0x00};
-    // uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x4C, 0x00, 0x00, 0x00 };
-    for (int i = 0; i < 8; i++)
-    {
-        SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
-        frame_otp_ecc_datain[2]++;
-    }
+    uint8_t frame_otp_ecc_datain[] = MAKE_BRC_W(0x0343, 0, 0, 0, 0, 0, 0, 0, 0);
+    SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
 }
 
 void SendAutoAddr(DbmsCtx* ctx)
