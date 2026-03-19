@@ -55,52 +55,13 @@ typedef struct PACKED _TxStackFrameDEV
                                                 is at f->data + f->len */
 } TxStackFrameDEV;
 
-typedef struct PACKED _TxStackFrameSTACK 
-{
-    uint8_t     __cmd   : 1;                /* must be set to 1 */
-    uint8_t     reqtype : 3;                /* one of REQ_* */
-    uint8_t     __res   : 1;                /* reserved bit */
-    uint8_t     len     : 3;                
-    uint16_t    regaddr;
-    uint8_t     data[MAX_TX_DATA];
-    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
-                                                are used. So the real location of CRC
-                                                is at f->data + f->len */
-} TxStackFrameSTACK;
-
 #define CRC_VALUE(F)          *((uint16_t*)((F).data + (F).len + 1))
 
 #define CALC_CRC(F)     CalcCrc((uint8_t*)(&F), ((F).reqtype < 2 ? 4 + (F).len + 1 : 3 + (F).len + 1))
 
-#define FRAME_LEN(F)    ((F).len + 6 + 1)
+#define FRAME_LEN(F)    ((F).len + 6)
 
 #define DATA(...) __VA_ARGS__
-
-// TX frame for single device commands, devaddr needed
-#define MAKE_TX_FRAME_SINGLE_DEV(REQTYPE, DEVADDR, REGADDR, ...)   \
-((TxStackFrameDEV){                                         \
-    .__cmd   = 1,                                           \
-    .reqtype = (REQTYPE),                                   \
-    .__res   = 0,                                           \
-    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,        \
-    .devaddr = (DEVADDR),                                   \
-    .regaddr = ESWAP16(REGADDR),                            \
-    .data    = { __VA_ARGS__ },                             \
-    .__crc   = 0                                            \
-})
-
-// TX frame for stack commands, no devaddr needed
-#define MAKE_TX_FRAME_STACK(REQTYPE, REGADDR, ...)          \
-((TxStackFrameSTACK){                                       \
-    .__cmd   = 1,                                           \
-    .reqtype = (REQTYPE),                                   \
-    .__res   = 0,                                           \
-    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,        \
-    .regaddr = ESWAP16(REGADDR),                            \
-    .data    = { __VA_ARGS__ },                             \
-    .__crc   = 0                                            \
-})
-
 
 /**
  * @brief Wake the battery stack
