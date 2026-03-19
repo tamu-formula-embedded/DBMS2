@@ -41,7 +41,7 @@
 #define REQ_BROADCAST_WRITE         5   // 0x0D
 #define REQ_BROADCAST_WRITE_REV     6   // 0x0E
 
-typedef struct PACKED _TxStackFrame 
+typedef struct PACKED _TxStackFrameDEV 
 {
     uint8_t     __cmd   : 1;                /* must be set to 1 */
     uint8_t     reqtype : 3;                /* one of REQ_* */
@@ -55,7 +55,7 @@ typedef struct PACKED _TxStackFrame
                                                 is at f->data + f->len */
 } TxStackFrameDEV;
 
-typedef struct PACKED _TxStackFrame 
+typedef struct PACKED _TxStackFrameSTACK 
 {
     uint8_t     __cmd   : 1;                /* must be set to 1 */
     uint8_t     reqtype : 3;                /* one of REQ_* */
@@ -68,9 +68,9 @@ typedef struct PACKED _TxStackFrame
                                                 is at f->data + f->len */
 } TxStackFrameSTACK;
 
-#define CRC(F)          *((uint16_t*)((F).data + (F).len + 1))
+#define CRC_VALUE(F)          *((uint16_t*)((F).data + (F).len + 1))
 
-#define CALC_CRC(F)     CalcCrc((uint8_t*)(&F), (4 + (F).len + 1))
+#define CALC_CRC(F)     CalcCrc((uint8_t*)(&F), ((F).reqtype < 2 ? 4 + (F).len + 1 : 3 + (F).len + 1))
 
 #define FRAME_LEN(F)    ((F).len + 6 + 1)
 
@@ -82,7 +82,7 @@ typedef struct PACKED _TxStackFrame
     .__cmd   = 1,                                           \
     .reqtype = (REQTYPE),                                   \
     .__res   = 0,                                           \
-    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,          \
+    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,        \
     .devaddr = (DEVADDR),                                   \
     .regaddr = ESWAP16(REGADDR),                            \
     .data    = { __VA_ARGS__ },                             \
@@ -95,7 +95,7 @@ typedef struct PACKED _TxStackFrame
     .__cmd   = 1,                                           \
     .reqtype = (REQTYPE),                                   \
     .__res   = 0,                                           \
-    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,          \
+    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,        \
     .regaddr = ESWAP16(REGADDR),                            \
     .data    = { __VA_ARGS__ },                             \
     .__crc   = 0                                            \
