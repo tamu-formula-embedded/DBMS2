@@ -30,32 +30,32 @@
 #define ESWAP16(x) __builtin_bswap16((uint16_t)(x))
 #define ESWAP32(x) __builtin_bswap32((uint32_t)(x))
 
-#define MAX_TX_DATA 8
 #define MAX_RX_DATA 128
 
-#define REQ_SINGLE_DEV_READ         0   // 0x08
-#define REQ_SINGLE_DEV_WRITE        1   // 0x09
-#define REQ_STACK_READ              2   // 0x0A
-#define REQ_STACK_WRITE             3   // 0x0B
-#define REQ_BROADCAST_READ          4   // 0x0C
-#define REQ_BROADCAST_WRITE         5   // 0x0D
-#define REQ_BROADCAST_WRITE_REV     6   // 0x0E
+#define SINGLE_DEV_READ         0x80
+#define SINGLE_DEV_WRITE        0x90
+#define STACK_READ              0xA0  
+#define STACK_WRITE             0xB0 
+#define BROADCAST_READ          0xC0  
+#define BROADCAST_WRITE         0xD0   
+#define BROADCAST_WRITE_REV     0xE0   
 
-typedef struct PACKED _TxStackFrameDEV 
-{
-    uint8_t     __cmd   : 1;                /* must be set to 1 */
-    uint8_t     reqtype : 3;                /* one of REQ_* */
-    uint8_t     __res   : 1;                /* reserved bit */
-    uint8_t     len     : 3;                
-    uint8_t     devaddr;
-    uint16_t    regaddr;
-    uint8_t     data[MAX_TX_DATA];
-    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
-                                                are used. So the real location of CRC
-                                                is at f->data + f->len */
-} TxStackFrameDEV;
+#define PACKED __attribute__((packed))
 
-#define CRC_VALUE(F)          *((uint16_t*)((F).data + (F).len + 1))
+#define DATASIZE(...) (sizeof((uint8_t[]) {__VA_ARGS__}) - 1)
+#define BYTES16(x) (x) >> 8, (x) & 0xFF
+
+#define MAKE_SINGLE_R(DEV, REG, LEN) {SINGLE_DEV_READ, DEV, BYTES16(REG), LEN, 0x00, 0x00}
+#define MAKE_SINGLE_W(DEV, REG, ...) {SINGLE_DEV_WRITE + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+
+#define MAKE_STACK_R(REG, LEN) {STACK_READ, BYTES16(REG), LEN, 0x00, 0x00}
+#define MAKE_STACK_W(REG, ...) {STACK_WRITE + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+
+#define MAKE_BROADCAST_R(REG, LEN) {BROADCAST_READ, BYTES16(REG), LEN, 0x00, 0x00}
+#define MAKE_BROADCAST_W(REG, ...) {BROADCAST_WRITE + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+#define MAKE_BROADCAST_WR(REG, ...) {BROADCAST_WRITE_REV + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+
+#define CRC_VALUE(F)          *((uint16_t*)(sizeof(F) - 2)
 
 #define CALC_CRC(F)     CalcCrc((uint8_t*)(&F), ((F).reqtype < 2 ? 4 + (F).len + 1 : 3 + (F).len + 1))
 

@@ -41,9 +41,8 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
  */
 int StackWake(DbmsCtx* ctx)
 {
-    // static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
-    static uint8_t FRAME_WAKE_STACK[] = MAKE_TX_FRAME_SINGLE_DEV(REQ_SINGLE_DEV_WRITE, 0, 0x0390, DATA(0x20, 0x13, 0x95));
-
+    static uint8_t FRAME_WAKE_STACK[] = MAKE_SINGLE_W(0, 0x0309, 0x20, 0x13, 0x95);
+    
     int status = 0;
     for (int i = 0; i < 2; i++)
     {
@@ -52,12 +51,12 @@ int StackWake(DbmsCtx* ctx)
             CAN_REPORT_FAULT(ctx, status);
             return status;
         }
-        if ((status = SendStackFrame(ctx, FRAME_WAKE_STACK, sizeof(FRAME_WAKE_STACK))) != 0)
+        if ((status = SendStackFrameSetCrc(ctx, FRAME_WAKE_STACK, sizeof(FRAME_WAKE_STACK))) != 0)
         {
             CAN_REPORT_FAULT(ctx, status);
             return status;
         }
-        HAL_Delay(15 + 12 * N_STACKDEVS); // wtf  -- microseconds dumbass
+        HAL_Delay(15 + 12 * N_STACKDEVS);
     }
     return status;
 }
@@ -73,8 +72,8 @@ int StackWake(DbmsCtx* ctx)
  */
 int StackShutdown(DbmsCtx* ctx)
 {
-    // static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
-    static uint8_t FRAME_SHUTDOWN_STACK = MAKE_TX_FRAME_STACK(REQ_BROADCAST_WRITE, 0x0390, DATA(1 << 3));
+    static uint8_t FRAME_SHUTDOWN_STACK[] = MAKE_BROADCAST_W(0x0390, (1 << 3));
+    
     int status = 0;
     for (int i = 0; i < 2; i++)
     {
@@ -95,51 +94,48 @@ int StackShutdown(DbmsCtx* ctx)
 
 void SendOtpEccDatain(DbmsCtx* ctx)
 {
-    // uint8_t frame_otp_ecc_datain[] = {0xD0, 0x03, 0x43, 0x00, 0x00, 0x00};
-    uint8_t frame_otp_ecc_datain[] = MAKE_TX_FRAME_STACK(REQ_BROADCAST_WRITE, 0x0343, DATA(0x00));
-    // uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x4C, 0x00, 0x00, 0x00 };
+    uint8_t frame_otp_ecc_datain[] = MAKE_BROADCAST_W(0x0343, 0x00);
+
     for (int i = 0; i < 8; i++)
     {
         SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
-        frame_otp_ecc_datain[2]++;
+        frame_otp_ecc_datain[2]++; // incrementing register address
     }
 }
 
 void SendAutoAddr(DbmsCtx* ctx)
 {
-    // uint8_t frame_addr_dev[] = {0xD0, 0x03, 0x06, 0x00, 0x00, 0x00};
-    uint8_t frame_addr_dev[] = MAKE_TX_FRAME_STACK(REQ_BROADCAST_WRITE, 0x0306, DATA(0x00));
+    uint8_t frame_addr_dev[] = MAKE_BROADCAST_W(0x0306, 0x00);
+    
     for (int i = 0; i <= N_STACKDEVS; i++)
     {
         SendStackFrameSetCrc(ctx, frame_addr_dev, sizeof(frame_addr_dev));
-        frame_addr_dev[3]++;
+        frame_addr_dev[3]++; // incrementing address for each device
     }
 }
 
 void SendSetStackTop(DbmsCtx* ctx)
 {
     // Sets all devices as stack devices
-    // uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08, 0x02, 0x00, 0x00};
-    uint8_t frame_set_stack_devices[] = MAKE_TX_FRAME_STACK(REQ_BROADCAST_WRITE, 0x0308, DATA(0x02));
+    uint8_t frame_set_stack_devices[] = MAKE_BROADCAST_W(0x0308, 0x02);
     SendStackFrameSetCrc(ctx, frame_set_stack_devices, sizeof(frame_set_stack_devices));
 
     // Sets bridge device as non-stack device and bottom of stack
-    uint8_t frame_set_stack_base[] = {0x90, 0x00, 0x03, 0x08, 0x00, 0x00, 0x00};
-    uint8_t frame_set_stack_base[] = MAKE_TX_FRAME_SINGLE_DEV(REQ_SINGLE_DEV_WRITE, 0, 0x0308, DATA(0x00));
+    uint8_t frame_set_stack_base[] = MAKE_SINGLE_W(0, 0x0308, 0x00);
     SendStackFrameSetCrc(ctx, frame_set_stack_base, sizeof(frame_set_stack_base));
 
     // Sets top of stack
-    uint8_t frame_set_stack_top[] = {0x90, N_STACKDEVS - 1, 0x03, 0x08, 0x03, 0x00, 0x00};
+    uint8_t frame_set_stack_top[] = MAKE_SINGLE_W(N_STACKDEVS-1, 0x0308, 0x03);
     SendStackFrameSetCrc(ctx, frame_set_stack_top, sizeof(frame_set_stack_top));
 }
 
 void ReadOtpEccDatain(DbmsCtx* ctx)
 {
-    uint8_t frame_otp_ecc_datain[] = {0xC0, 0x03, 0x4C, 0x00, 0x00, 0x00};
+    uint8_t frame_otp_ecc_datain[] = MAKE_BROADCAST_R(0x034C, 0x00);
     for (int i = 0; i < 8; i++)
     {
         SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
-        frame_otp_ecc_datain[2]++;
+        frame_otp_ecc_datain[2]++; // incrementing register address
     }
 }
 
@@ -153,12 +149,12 @@ void StackAutoAddr(DbmsCtx* ctx)
 {
     SendOtpEccDatain(ctx); // step 1
 
-    static uint8_t FRAME_ENABLE_AUTO_ADDR[] = {0xD0, 0x03, 0x09, 0x01, 0x0F, 0x74};
+    static uint8_t FRAME_ENABLE_AUTO_ADDR[] = MAKE_BROADCAST_W(0x0309, 0x01);
     SendStackFrameSetCrc(ctx, FRAME_ENABLE_AUTO_ADDR, sizeof(FRAME_ENABLE_AUTO_ADDR)); // step 2
 
     SendAutoAddr(ctx); // step 3
 
-    static uint8_t FRAME_SET_ALL_STACK[] = {0xD0, 0x03, 0x08, 0x02, 0x0, 0x0};
+    static uint8_t FRAME_SET_ALL_STACK[] = MAKE_BROADCAST_W(0x0308, 0x02);
     SendStackFrameSetCrc(ctx, FRAME_SET_ALL_STACK, sizeof(FRAME_SET_ALL_STACK)); // step 4
 
     SendSetStackTop(ctx); // step 5
@@ -174,8 +170,7 @@ void StackAutoAddr(DbmsCtx* ctx)
  */
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
-    uint8_t frame_set_active_cell[] = {0xD0, 0x00, 0x03, n_active_cells, 0x00, 0x00};
-
+    uint8_t frame_set_active_cell[] = MAKE_BROADCAST_W(0x0003, n_active_cells);
     SendStackFrameSetCrc(ctx, frame_set_active_cell, sizeof(frame_set_active_cell));
 }
 
@@ -191,7 +186,7 @@ void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
  */
 void StackSetupVoltReadings(DbmsCtx* ctx)
 {
-    static uint8_t FRAME_SET_ADC_CONT_RUN[] = {0xD0, 0x03, 0x0D, 0x06, 0x00, 0x00};
+    static uint8_t FRAME_SET_ADC_CONT_RUN[] = MAKE_BROADCAST_W(0x030D, 0x06);
     SendStackFrameSetCrc(ctx, FRAME_SET_ADC_CONT_RUN, sizeof(FRAME_SET_ADC_CONT_RUN));
 }
 
@@ -205,7 +200,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     int status = 0;
     static uint8_t rx_buffer_v[1024];
 
-    uint8_t frame[] = {0xA0, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1, 0x00, 0x00};
+    uint8_t frame[] = MAKE_STACK_R(0x0568 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1);
 
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
@@ -255,11 +250,11 @@ void StackSetupGpio(DbmsCtx* ctx)
     // Note 2: Also configures GPIO8 even though we dont need to, hence just setting GPIO8 to output low
     // 0x09 = 00001001
     // 0x21 = 00100001 => 00101101 = 0x2D
-    uint8_t frame_gpio_configs[] = {0xB2, 0x00, 0x0E, 0x09, 0x2D, 0x09, 0x00, 0x00};
+    uint8_t frame_gpio_configs[] = MAKE_STACK_W(0x000E, 0x09, 0x2D, 0x09);
     SendStackFrameSetCrc(ctx, frame_gpio_configs, sizeof(frame_gpio_configs));
 
     // Setting up TSREF to active
-    uint8_t frame_tsref_setup[] = {0xB0, 0x03, 0x0A, 0x01, 0x00, 0x00};
+    uint8_t frame_tsref_setup[] = MAKE_STACK_W(0x030A, 0x01);
     SendStackFrameSetCrc(ctx, frame_tsref_setup, sizeof(frame_tsref_setup));
     DelayUs(ctx, 10);
 }
@@ -271,9 +266,10 @@ void StackSetupGpio(DbmsCtx* ctx)
  */
 void StackConfigTimeout(DbmsCtx* ctx)
 {
-    uint8_t hbcfg_frame[] = {0xD0, 0x00, 0x19, 0x0A, 0xB3, 0x73};
-    SendStackFrame(ctx, hbcfg_frame, sizeof(hbcfg_frame));          // crc already encoded 
-    //SendStackFrameSetCrc(ctx, hbcfg_frame, sizeof(hbcfg_frame));
+    // uint8_t hbcfg_frame[] = {0xD0, 0x00, 0x19, 0x0A, 0xB3, 0x73};
+    uint8_t hbcfg_frame[] = MAKE_BROADCAST_W(0x0019, 0x0A);
+    // SendStackFrame(ctx, hbcfg_frame, sizeof(hbcfg_frame));          // crc already encoded 
+    SendStackFrameSetCrc(ctx, hbcfg_frame, sizeof(hbcfg_frame));
 
     DelayUs(ctx, 10);
 }
@@ -284,7 +280,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     int status = 0;
     static uint8_t rx_buffer_t[1024];
 
-    uint8_t frame2[] = {0xA0, 0x05, 0x8E, ((N_TEMPS_PER_MONITOR / 3) + 2) * 2 - 1, 0x00, 0x00};
+    uint8_t frame2[] = MAKE_STACK_R(0x058E, ((N_TEMPS_PER_MONITOR / 3) + 2) * 2 - 1);
 
     size_t data_size = ((N_TEMPS_PER_MONITOR / 3) + 2) * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
@@ -422,8 +418,7 @@ int ToggleMonitorLeds(DbmsCtx* ctx, bool on)
     int status = 0;
     uint8_t on_off_value = 0x5;
     if (on) on_off_value = 0x4;
-    uint8_t leds_change_write_com[] = {0xB0, 0x00, 0x11, on_off_value, 0x00, 0x00};
-
+    uint8_t leds_change_write_com[] = MAKE_STACK_W(0x0011, on_off_value);
     // Send stack device write command frame
     if ((status = SendStackFrameSetCrc(ctx, leds_change_write_com, sizeof(leds_change_write_com))) != 0)
     {
@@ -466,7 +461,7 @@ void StackBalancingConfig(DbmsCtx* ctx)
 {
     // Setting balancing method to auto balancing and to stop at fault
     // BAL_CTRL2_CONFIG = 0x31
-    uint8_t frame_cb_config[] = {0xB0, 0x03, 0x2F, 0x31, 0x00, 0x00};
+    uint8_t frame_cb_config[] = MAKE_STACK_W(0x032F, 0x31);
     SendStackFrameSetCrc(ctx, frame_cb_config, sizeof(frame_cb_config));
 }
 
@@ -483,14 +478,7 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, Stac
         uint16_t reg_addr = base_reg - i; // registers decrement
         uint8_t timer_val = i % 2 == odds && cells_to_bal[i] ? bal_time : 0x00;
         
-        uint8_t frame[7];
-        frame[0] = 0x90;                        // single device write, 1 byte
-        frame[1] = dev_addr;                 // which monitor chip
-        frame[2] = reg_addr >> 8;               // register MSB
-        frame[3] = reg_addr & 0xFF;             // register LSB  
-        frame[4] = timer_val;                   // timer value
-        frame[5] = 0x00;                        // crc placeholder
-        frame[6] = 0x00;                        // crc placeholder
+        uint8_t frame[] = MAKE_SINGLE_W(dev_addr, reg_addr, timer_val);
         
         SendStackFrameSetCrc(ctx, frame, sizeof(frame));
         HAL_Delay(2);  // small delay between writes
@@ -500,18 +488,8 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, Stac
 void StackStartDeviceBalancing(DbmsCtx* ctx, uint8_t dev_addr)
 {
     // this is the final trigger - balancing doesn't start until bal_ctrl2 is set
-    //#define BAL_CTRL2_BAL_GO_MASK 0x02
-    //uint8_t bal_ctrl2_frame[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_BAL_GO_MASK, 0x00, 0x00};
-    
-    uint8_t frame[7];
-
-    frame[0] = 0x90; // single stack write
-    frame[1] = dev_addr;
-    frame[2] = 0x03; // bal_ctrl2 reg
-    frame[3] = 0x2F; // bal_ctrl2 reg 
-    frame[4] = 0x02; // bal_go bit
-    frame[5] = 0x00; // crc
-    frame[6] = 0x00; // crc
+    //#define BAL_CTRL2_BAL_GO_MASK 0x02    
+    uint8_t frame[7] = MAKE_SINGLE_W(dev_addr, 0x032F, 0x02);
     SendStackFrameSetCrc(ctx, frame, sizeof(frame));
     HAL_Delay(8);
 }
@@ -639,7 +617,7 @@ int SetMuxChannels(DbmsCtx* ctx, uint8_t channel)
             return -1;
     }
     
-    uint8_t mux_select_cmd[] = {0xB0, 0x00, 0x0F, gpio_value, 0x00, 0x00};
+    uint8_t mux_select_cmd[] = MAKE_STACK_W(0x000F, gpio_value);
     ctx->mux_selector = channel;
     return SendStackFrameSetCrc(ctx, mux_select_cmd, sizeof(mux_select_cmd));
 }
