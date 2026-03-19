@@ -41,7 +41,8 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
  */
 int StackWake(DbmsCtx* ctx)
 {
-    static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
+    // static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
+    static uint8_t FRAME_WAKE_STACK[] = MAKE_TX_FRAME_SINGLE_DEV(REQ_SINGLE_DEV_WRITE, 0, 0x0390, DATA(0x20, 0x13, 0x95));
 
     int status = 0;
     for (int i = 0; i < 2; i++)
@@ -72,8 +73,8 @@ int StackWake(DbmsCtx* ctx)
  */
 int StackShutdown(DbmsCtx* ctx)
 {
-    static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
-    static uint8_t FRAME_SHUTDOWN_STACK = MAKE_TX_FRAME(REQ_BROADCAST_WRITE, )
+    // static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
+    static uint8_t FRAME_SHUTDOWN_STACK = MAKE_TX_FRAME_STACK(REQ_BROADCAST_WRITE, 0x0390, DATA(1 << 3));
     int status = 0;
     for (int i = 0; i < 2; i++)
     {
@@ -94,7 +95,8 @@ int StackShutdown(DbmsCtx* ctx)
 
 void SendOtpEccDatain(DbmsCtx* ctx)
 {
-    uint8_t frame_otp_ecc_datain[] = {0xD0, 0x03, 0x43, 0x00, 0x00, 0x00};
+    // uint8_t frame_otp_ecc_datain[] = {0xD0, 0x03, 0x43, 0x00, 0x00, 0x00};
+    uint8_t frame_otp_ecc_datain[] = MAKE_TX_FRAME_STACK(REQ_BROADCAST_WRITE, 0x0343, DATA(0x00));
     // uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x4C, 0x00, 0x00, 0x00 };
     for (int i = 0; i < 8; i++)
     {
@@ -105,7 +107,8 @@ void SendOtpEccDatain(DbmsCtx* ctx)
 
 void SendAutoAddr(DbmsCtx* ctx)
 {
-    uint8_t frame_addr_dev[] = {0xD0, 0x03, 0x06, 0x00, 0x00, 0x00};
+    // uint8_t frame_addr_dev[] = {0xD0, 0x03, 0x06, 0x00, 0x00, 0x00};
+    uint8_t frame_addr_dev[] = MAKE_TX_FRAME_STACK(REQ_BROADCAST_WRITE, 0x0306, DATA(0x00));
     for (int i = 0; i <= N_STACKDEVS; i++)
     {
         SendStackFrameSetCrc(ctx, frame_addr_dev, sizeof(frame_addr_dev));
@@ -116,11 +119,13 @@ void SendAutoAddr(DbmsCtx* ctx)
 void SendSetStackTop(DbmsCtx* ctx)
 {
     // Sets all devices as stack devices
-    uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08, 0x02, 0x00, 0x00};
+    // uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08, 0x02, 0x00, 0x00};
+    uint8_t frame_set_stack_devices[] = MAKE_TX_FRAME_STACK(REQ_BROADCAST_WRITE, 0x0308, DATA(0x02));
     SendStackFrameSetCrc(ctx, frame_set_stack_devices, sizeof(frame_set_stack_devices));
 
     // Sets bridge device as non-stack device and bottom of stack
     uint8_t frame_set_stack_base[] = {0x90, 0x00, 0x03, 0x08, 0x00, 0x00, 0x00};
+    uint8_t frame_set_stack_base[] = MAKE_TX_FRAME_SINGLE_DEV(REQ_SINGLE_DEV_WRITE, 0, 0x0308, DATA(0x00));
     SendStackFrameSetCrc(ctx, frame_set_stack_base, sizeof(frame_set_stack_base));
 
     // Sets top of stack

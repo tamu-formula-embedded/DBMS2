@@ -68,32 +68,34 @@ typedef struct PACKED _TxStackFrame
                                                 is at f->data + f->len */
 } TxStackFrameSTACK;
 
-#define CRC(F)          *((uint16_t*)((F).data + (F).len))
+#define CRC(F)          *((uint16_t*)((F).data + (F).len + 1))
 
-#define CALC_CRC(F)     CalcCrc((uint8_t*)(&F), (4 + (F).len))
+#define CALC_CRC(F)     CalcCrc((uint8_t*)(&F), (4 + (F).len + 1))
 
-#define FRAME_LEN(F)    ((F).len + 6)
+#define FRAME_LEN(F)    ((F).len + 6 + 1)
 
 #define DATA(...) __VA_ARGS__
 
+// TX frame for single device commands, devaddr needed
 #define MAKE_TX_FRAME_SINGLE_DEV(REQTYPE, DEVADDR, REGADDR, ...)   \
 ((TxStackFrameDEV){                                         \
     .__cmd   = 1,                                           \
     .reqtype = (REQTYPE),                                   \
     .__res   = 0,                                           \
-    .len     = sizeof((uint8_t[]){ __VA_ARGS__ }),          \
+    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,          \
     .devaddr = (DEVADDR),                                   \
     .regaddr = ESWAP16(REGADDR),                            \
     .data    = { __VA_ARGS__ },                             \
     .__crc   = 0                                            \
 })
 
+// TX frame for stack commands, no devaddr needed
 #define MAKE_TX_FRAME_STACK(REQTYPE, REGADDR, ...)          \
 ((TxStackFrameSTACK){                                       \
     .__cmd   = 1,                                           \
     .reqtype = (REQTYPE),                                   \
     .__res   = 0,                                           \
-    .len     = sizeof((uint8_t[]){ __VA_ARGS__ }),          \
+    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,          \
     .regaddr = ESWAP16(REGADDR),                            \
     .data    = { __VA_ARGS__ },                             \
     .__crc   = 0                                            \
