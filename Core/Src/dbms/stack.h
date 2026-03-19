@@ -25,6 +25,81 @@
 #define STACK_V_UV_PER_BIT 190.73
 #define STACK_T_UV_PER_BIT 152.59
 
+#define PACKED __attribute__((packed))
+
+#define ESWAP16(x) __builtin_bswap16((uint16_t)(x))
+#define ESWAP32(x) __builtin_bswap32((uint32_t)(x))
+
+#define MAX_TX_DATA 8
+#define MAX_RX_DATA 128
+
+#define REQ_SINGLE_DEV_READ         0   // 0x08
+#define REQ_SINGLE_DEV_WRITE        1   // 0x09
+#define REQ_STACK_READ              2   // 0x0A
+#define REQ_STACK_WRITE             3   // 0x0B
+#define REQ_BROADCAST_READ          4   // 0x0C
+#define REQ_BROADCAST_WRITE         5   // 0x0D
+#define REQ_BROADCAST_WRITE_REV     6   // 0x0E
+
+typedef struct PACKED _TxStackFrame 
+{
+    uint8_t     __cmd   : 1;                /* must be set to 1 */
+    uint8_t     reqtype : 3;                /* one of REQ_* */
+    uint8_t     __res   : 1;                /* reserved bit */
+    uint8_t     len     : 3;                
+    uint8_t     devaddr;
+    uint16_t    regaddr;
+    uint8_t     data[MAX_TX_DATA];
+    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
+                                                are used. So the real location of CRC
+                                                is at f->data + f->len */
+} TxStackFrameDEV;
+
+typedef struct PACKED _TxStackFrame 
+{
+    uint8_t     __cmd   : 1;                /* must be set to 1 */
+    uint8_t     reqtype : 3;                /* one of REQ_* */
+    uint8_t     __res   : 1;                /* reserved bit */
+    uint8_t     len     : 3;                
+    uint16_t    regaddr;
+    uint8_t     data[MAX_TX_DATA];
+    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
+                                                are used. So the real location of CRC
+                                                is at f->data + f->len */
+} TxStackFrameSTACK;
+
+#define CRC(F)          *((uint16_t*)((F).data + (F).len))
+
+#define CALC_CRC(F)     CalcCrc((uint8_t*)(&F), (4 + (F).len))
+
+#define FRAME_LEN(F)    ((F).len + 6)
+
+#define DATA(...) __VA_ARGS__
+
+#define MAKE_TX_FRAME_SINGLE_DEV(REQTYPE, DEVADDR, REGADDR, ...)   \
+((TxStackFrameDEV){                                         \
+    .__cmd   = 1,                                           \
+    .reqtype = (REQTYPE),                                   \
+    .__res   = 0,                                           \
+    .len     = sizeof((uint8_t[]){ __VA_ARGS__ }),          \
+    .devaddr = (DEVADDR),                                   \
+    .regaddr = ESWAP16(REGADDR),                            \
+    .data    = { __VA_ARGS__ },                             \
+    .__crc   = 0                                            \
+})
+
+#define MAKE_TX_FRAME_STACK(REQTYPE, REGADDR, ...)          \
+((TxStackFrameSTACK){                                       \
+    .__cmd   = 1,                                           \
+    .reqtype = (REQTYPE),                                   \
+    .__res   = 0,                                           \
+    .len     = sizeof((uint8_t[]){ __VA_ARGS__ }),          \
+    .regaddr = ESWAP16(REGADDR),                            \
+    .data    = { __VA_ARGS__ },                             \
+    .__crc   = 0                                            \
+})
+
+
 /**
  * @brief Wake the battery stack
  * 

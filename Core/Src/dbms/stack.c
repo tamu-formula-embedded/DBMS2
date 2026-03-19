@@ -73,7 +73,7 @@ int StackWake(DbmsCtx* ctx)
 int StackShutdown(DbmsCtx* ctx)
 {
     static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
-
+    static uint8_t FRAME_SHUTDOWN_STACK = MAKE_TX_FRAME(REQ_BROADCAST_WRITE, )
     int status = 0;
     for (int i = 0; i < 2; i++)
     {
