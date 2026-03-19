@@ -709,6 +709,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
+    uint64_t t_start = GetUs(&dbms_ctx);
+    dbms_ctx.stats.CAN_RX_cnt_loop++;
+
     CAN_RxHeaderTypeDef rxHeader;
     uint8_t rxData[8] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
@@ -726,13 +729,17 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         //     rxHeader.StdId = (rir & CAN_RI0R_STID) >> CAN_TI0R_STID_Pos;
         // else
         //     rxHeader.ExtId = (rir & (CAN_RI0R_EXID | CAN_RI0R_STID)) >> CAN_RI0R_EXID_Pos;
-
+        dbms_ctx.stats.CAN_RX_cnt_ps++;
         DbmsCanRx(&dbms_ctx, CAN_RX_0, rxHeader, rxData);
     }
+    dbms_ctx.timing.time_spent_CAN_RX_in += GetUs(&dbms_ctx) - t_start;
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
+    uint64_t t_start = GetUs(&dbms_ctx);
+    dbms_ctx.stats.CAN_RX_cnt_loop++;
+    
     CAN_RxHeaderTypeDef rxHeader;
     uint8_t rxData[8] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
@@ -748,9 +755,10 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
         //     rxHeader.StdId = (rir & CAN_RI0R_STID) >> CAN_TI0R_STID_Pos;
         // else
         //     rxHeader.ExtId = (rir & (CAN_RI0R_EXID | CAN_RI0R_STID)) >> CAN_RI0R_EXID_Pos;
-
+        dbms_ctx.stats.CAN_RX_cnt_ps++;
         DbmsCanRx(&dbms_ctx, CAN_RX_1, rxHeader, rxData);
     }
+    dbms_ctx.timing.time_spent_CAN_RX_in += GetUs(&dbms_ctx) - t_start;
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)

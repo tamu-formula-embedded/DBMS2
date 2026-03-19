@@ -136,6 +136,11 @@ typedef struct _Stats
     uint64_t n_logging_frames;
     bool fault_line_faulted;
 
+    uint32_t CAN_TX_cnt_loop;
+    uint32_t CAN_RX_cnt_loop;
+
+    uint32_t CAN_TX_cnt_ps;
+    uint32_t CAN_RX_cnt_ps;
 } Stats;
 
 typedef struct _Model   // Outputs from the ECM model
@@ -246,6 +251,15 @@ typedef struct _Timing {
     uint64_t pl_last_ok_ts;
     uint64_t pl_pulse_t;
     uint64_t overtemp_last_ok_ts;
+    uint64_t v_poll_time_spent_rx;
+    uint64_t v_poll_time_spent_tx;
+    uint64_t t_poll_time_spent_rx;
+    uint64_t t_poll_time_spent_tx;
+    uint64_t time_spent_plex_metrics;
+    uint64_t time_spent_metrics;
+    uint64_t time_spent_CAN_RX_in;
+    uint64_t time_spent_CAN_TX_in;
+    uint64_t last_ps_CAN_RXTX_send;
 } Timing;
 
 typedef struct _Flags {

@@ -204,11 +204,13 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
-
+    uint64_t t_start = GetUs(ctx);
     if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
-    
+    ctx->timing.v_poll_time_spent_tx = GetUs(ctx) - t_start;
+    t_start = GetUs(ctx);
     // TODO: abstract away the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } //TODO: fix +1?
+    ctx->timing.v_poll_time_spent_rx = GetUs(ctx) - t_start;
 
     for (int i = 0; i < N_MONITORS; i++)
     {
@@ -283,11 +285,13 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
 
     size_t data_size = ((N_TEMPS_PER_MONITOR / 3) + 2) * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
-
+    uint64_t t_start = GetUs(ctx);
     if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
-    
+    ctx->timing.t_poll_time_spent_tx = GetUs(ctx) - t_start;
+    t_start = GetUs(ctx);
     // TODO: redo the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } 
+    ctx->timing.v_poll_time_spent_rx = GetUs(ctx) - t_start;
     for (int i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;
