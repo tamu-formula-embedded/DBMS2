@@ -199,43 +199,32 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
     int status = 0;
     static uint8_t rx_buffer_v[1024];
-
-    uint8_t frame[] = MAKE_STACK_R(0x0568 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1);
-
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
+    uint8_t frame[] = MAKE_STACK_R(STACK_V_REG_START, data_size - 1);
     if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
-    
     // TODO: abstract away the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } //TODO: fix +1?
 
     for (int i = 0; i < N_MONITORS; i++)
     {
-        ctx->stats.n_rx_stack_frames++;
-        ctx->stats.n_rx_stack_frames_itvl++;
-        ctx->faults.monitor_total_frames[i]++;
+        IncStackCrcStats(ctx, true, i);
+        
+        // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
-        for (int j = 0; data[0] != frame[2] && j < 1024; j++)
+        for (int j = 0; data[0] != frame[2] && j < 1024; j++) { data++; }
+        
+        RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);        
+        if (clean_frame->__crc != CALC_CRC(clean_frame))
         {
-            data++;
-        }
-        data++;
-        uint8_t addr = *(data-3);
-        uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-        uint16_t c_crc = CalcCrc16(data - 4, data_size+4);
-        if (f_crc != c_crc)
-        {
-            ctx->stats.n_rx_stack_bad_crcs++;
-            ctx->stats.n_rx_stack_bad_crcs_itvl++;
-            ctx->faults.monitor_bad_crcs[i]++;
+            IncStackCrcStats(ctx, false, i);
             continue;
         }
-        
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
-            uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-            ctx->cell_states[addr-1].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+            uint16_t raw = ESWAP16(clean_frame->data + (j * sizeof(int16_t)));
+            ctx->cell_states[clean_frame->devaddr-1].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
         }
     }
 }
@@ -280,7 +269,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     int status = 0;
     static uint8_t rx_buffer_t[1024];
 
-    uint8_t frame2[] = MAKE_STACK_R(0x058E, ((N_TEMPS_PER_MONITOR / 3) + 2) * 2 - 1);
+    uint8_t frame2[] = MAKE_STACK_R(STACK_T_REG_START, ((N_TEMPS_PER_MONITOR / 3) + 2) * 2 - 1);
 
     size_t data_size = ((N_TEMPS_PER_MONITOR / 3) + 2) * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
@@ -403,6 +392,22 @@ void StackCalcStats(DbmsCtx* ctx)
     ctx->stats.min_t = t_min;
     ctx->stats.max_t = t_max;
     ctx->stats.avg_t = t_sum / (N_SIDES * N_TEMPS_PER_SIDE);
+}
+
+void IncStackCrcStats(DbmsCtx* ctx, bool good, int monitor_id)
+{
+    if (good)
+    {
+        ctx->stats.n_rx_stack_frames++;
+        ctx->stats.n_rx_stack_frames_itvl++;
+        ctx->faults.monitor_total_frames[monitor_id]++;
+    }
+    else
+    {
+        ctx->stats.n_rx_stack_bad_crcs++;
+        ctx->stats.n_rx_stack_bad_crcs_itvl++;
+        ctx->faults.monitor_bad_crcs[monitor_id]++;
+    }
 }
 
 /*****************************

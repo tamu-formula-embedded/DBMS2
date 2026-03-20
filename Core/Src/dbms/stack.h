@@ -22,15 +22,16 @@
 #include "can.h"
 #include "vinterface.h"
 
-#define STACK_V_UV_PER_BIT 190.73
-#define STACK_T_UV_PER_BIT 152.59
+#define STACK_V_UV_PER_BIT      190.73
+#define STACK_T_UV_PER_BIT      152.59
+
+#define STACK_V_REG_START       0x0568 + 2 * (16 - N_GROUPS_PER_SIDE)
+#define STACK_T_REG_START       0x058E
 
 #define PACKED __attribute__((packed))
 
-#define ESWAP16(x) __builtin_bswap16((uint16_t)(x))
+#define ESWAP16(x) __builtin_bswap16(*((uint16_t*)(x)))
 #define ESWAP32(x) __builtin_bswap32((uint32_t)(x))
-
-#define MAX_RX_DATA 128
 
 #define SINGLE_DEV_READ         0x80
 #define SINGLE_DEV_WRITE        0x90
@@ -55,13 +56,35 @@
 #define MAKE_BROADCAST_W(REG, ...) {BROADCAST_WRITE + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
 #define MAKE_BROADCAST_WR(REG, ...) {BROADCAST_WRITE_REV + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
 
-#define CRC_VALUE(F)          *((uint16_t*)(sizeof(F) - 2)
+#define FRAME_CRC(F)          *((uint16_t*)(sizeof(F) - 2))
 
-#define CALC_CRC(F)     CalcCrc((uint8_t*)(&F), ((F).reqtype < 2 ? 4 + (F).len + 1 : 3 + (F).len + 1))
+#define CALC_CRC(F)     CalcCrc16((uint8_t*)(F), ((F)->len + 6 + 1))
 
 #define FRAME_LEN(F)    ((F).len + 6)
 
-#define DATA(...) __VA_ARGS__
+typedef struct PACKED _RxStackFrameVoltages
+{
+    uint8_t     __cmd   : 1;                /* must be set to 0 */
+    uint8_t     len     : 7;                
+    uint8_t     devaddr;
+    uint16_t    regaddr;
+    uint8_t     data[N_GROUPS_PER_SIDE * 2];
+    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
+                                                are used. So the real location of CRC
+                                                is at f->data + f->len */
+} RxStackFrameVoltages;
+
+typedef struct PACKED _RxStackFrameTemps
+{
+    uint8_t     __cmd   : 1;                /* must be set to 0 */
+    uint8_t     len     : 7;                
+    uint8_t     devaddr;
+    uint16_t    regaddr;
+    uint8_t     data[(N_TEMPS_PER_MONITOR / 4 + 1) * 2];
+    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
+                                                are used. So the real location of CRC
+                                                is at f->data + f->len */
+} RxStackFrameTemps;
 
 /**
  * @brief Wake the battery stack
@@ -142,6 +165,8 @@ void FillMissingTempReadings(DbmsCtx* ctx);
  * @param ctx Context pointer 
  */
 void StackCalcStats(DbmsCtx* ctx);
+
+void IncStackCrcStats(DbmsCtx* ctx, bool good, int monitor_id);
 
 /*****************************
  *   LED CONTROL
