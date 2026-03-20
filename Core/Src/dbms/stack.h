@@ -26,7 +26,7 @@
 #define STACK_T_UV_PER_BIT      152.59
 
 #define STACK_V_REG_START       0x0568 + 2 * (16 - N_GROUPS_PER_SIDE)
-#define STACK_T_REG_START       0x058E
+#define STACK_T_REG_START       0x058E // GPIO start reg
 
 #define PACKED __attribute__((packed))
 
@@ -56,11 +56,7 @@
 #define MAKE_BROADCAST_W(REG, ...) {BROADCAST_WRITE + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
 #define MAKE_BROADCAST_WR(REG, ...) {BROADCAST_WRITE_REV + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
 
-#define FRAME_CRC(F)          *((uint16_t*)(sizeof(F) - 2))
-
 #define CALC_CRC(F)     CalcCrc16((uint8_t*)(F), ((F)->len + 6 + 1))
-
-#define FRAME_LEN(F)    ((F).len + 6)
 
 typedef struct PACKED _RxStackFrameVoltages
 {
@@ -68,10 +64,8 @@ typedef struct PACKED _RxStackFrameVoltages
     uint8_t     len     : 7;                
     uint8_t     devaddr;
     uint16_t    regaddr;
-    uint8_t     data[N_GROUPS_PER_SIDE * 2];
-    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
-                                                are used. So the real location of CRC
-                                                is at f->data + f->len */
+    uint8_t     data[N_GROUPS_PER_SIDE * sizeof(uint16_t)];
+    uint16_t    __crc;
 } RxStackFrameVoltages;
 
 typedef struct PACKED _RxStackFrameTemps
@@ -80,10 +74,8 @@ typedef struct PACKED _RxStackFrameTemps
     uint8_t     len     : 7;                
     uint8_t     devaddr;
     uint16_t    regaddr;
-    uint8_t     data[(N_TEMPS_PER_MONITOR / 4 + 1) * 2];
-    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
-                                                are used. So the real location of CRC
-                                                is at f->data + f->len */
+    uint8_t     data[(N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(uint16_t)]; // +2 GPIO  mismatch
+    uint16_t    __crc;
 } RxStackFrameTemps;
 
 /**

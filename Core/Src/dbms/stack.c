@@ -207,7 +207,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     // TODO: abstract away the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } //TODO: fix +1?
 
-    for (int i = 0; i < N_MONITORS; i++)
+    for (size_t i = 0; i < N_MONITORS; i++)
     {
         IncStackCrcStats(ctx, true, i);
         
@@ -224,7 +224,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
             uint16_t raw = ESWAP16(clean_frame->data + (j * sizeof(int16_t)));
-            ctx->cell_states[clean_frame->devaddr-1].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+            ctx->cell_states[ADDR_BCAST_TO_STACK(clean_frame->devaddr)].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
         }
     }
 }
@@ -267,49 +267,40 @@ void StackConfigTimeout(DbmsCtx* ctx)
 void StackUpdateAllTempReadings(DbmsCtx* ctx)
 {
     int status = 0;
+    uint8_t offset, temps;
+    uint8_t* moved_data;
     static uint8_t rx_buffer_t[1024];
 
-    uint8_t frame2[] = MAKE_STACK_R(STACK_T_REG_START, ((N_TEMPS_PER_MONITOR / 3) + 2) * 2 - 1);
-
-    size_t data_size = ((N_TEMPS_PER_MONITOR / 3) + 2) * sizeof(int16_t);
+    size_t data_size = (N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(int16_t); // +2 for GPIO mismatch
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
-    if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
-    
+    uint8_t frame[] = MAKE_STACK_R(STACK_T_REG_START, data_size - 1);
+    if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
     // TODO: redo the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } 
-    for (int i = 0; i < N_MONITORS; i++)
+    
+    for (size_t i = 0; i < N_MONITORS; i++)
     {
-        ctx->stats.n_rx_stack_frames++;
-        ctx->stats.n_rx_stack_frames_itvl++;
-        ctx->faults.monitor_total_frames[i]++;
-
+        IncStackCrcStats(ctx, true, i);
+        // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
-        for (int j = 0; data[0] != frame2[2] && j < 1024; j++)
+        for (int j = 0; data[0] != frame[2] && j < 1024; j++) { data++; }
+
+        RxStackFrameTemps* clean_frame = (RxStackFrameTemps*)(data - 3); 
+        if (clean_frame->__crc != CALC_CRC(clean_frame))
         {
-            data++;
-        }
-        data++;
-        uint8_t addr = *(data-3);
-        uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-        uint16_t c_crc = CalcCrc16(data-4, data_size+4);
-        if (f_crc != c_crc)
-        {
-            ctx->stats.n_rx_stack_bad_crcs++;
-            ctx->stats.n_rx_stack_bad_crcs_itvl++;
-            ctx->faults.monitor_bad_crcs[i]++;
+            IncStackCrcStats(ctx, false, i);
             continue;
         }
-        for (int j = 0; j < 4; j++){ // GPIO1 = GPIO3, GPIO2 = GPIO4
-            data[j + 4] = data[j];
-        }
-        data += 4;
-        uint8_t offset = ctx->mux_selector;
-        uint8_t temps = (offset == 0 ? 4 : 3);
+        moved_data = &clean_frame->data[4];
+        memmove(moved_data, &clean_frame->data, 4); // GPIO1 = GPIO3, GPIO2 = GPIO4
+        offset = ctx->mux_selector;
+        temps = (offset == 0 ? N_TEMPS_POLL_PER_MONITOR : N_TEMPS_POLL_PER_MONITOR-1);
         for (size_t j = 0; j < temps; j++)
         {
-            uint16_t raw = (data[j * sizeof(uint16_t)] << 8) + (data[j * sizeof(uint16_t) + 1]);
-            ctx->cell_states[addr-1].temps[4 * j + offset] = ThermVoltToTemp(ctx, MAX(0, raw * STACK_T_UV_PER_BIT / 1000000.0));
+            uint16_t raw = ESWAP16(moved_data + (j * sizeof(int16_t)));
+            ctx->cell_states[ADDR_BCAST_TO_STACK(clean_frame->devaddr)].temps[N_TEMPS_POLL_PER_MONITOR*j + offset] = 
+                ThermVoltToTemp(ctx, MAX(0, raw * STACK_T_UV_PER_BIT / 1000000.0));
         }
     }
 }
