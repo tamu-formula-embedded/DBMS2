@@ -256,10 +256,9 @@ void StackSetupGpio(DbmsCtx* ctx)
 void StackConfigTimeout(DbmsCtx* ctx)
 {
     // uint8_t hbcfg_frame[] = {0xD0, 0x00, 0x19, 0x0A, 0xB3, 0x73};
-    uint8_t hbcfg_frame[] = MAKE_BROADCAST_W(0x0019, 0x0A);
     // SendStackFrame(ctx, hbcfg_frame, sizeof(hbcfg_frame));          // crc already encoded 
+    uint8_t hbcfg_frame[] = MAKE_BROADCAST_W(0x0019, 0x0A);
     SendStackFrameSetCrc(ctx, hbcfg_frame, sizeof(hbcfg_frame));
-
     DelayUs(ctx, 10);
 }
 
@@ -282,6 +281,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     for (size_t i = 0; i < N_MONITORS; i++)
     {
         IncStackCrcStats(ctx, true, i);
+
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
         for (int j = 0; data[0] != frame[2] && j < 1024; j++) { data++; }
