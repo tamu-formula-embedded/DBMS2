@@ -20,6 +20,7 @@
 
 #include "can.h"
 #include "vinterface.h"
+#include "stack.h"
 
 // TODO: optimize the shit out of this
 #define STACK_SEND_TIMEOUT 50
@@ -28,6 +29,9 @@
 #define APBxCLK 42000000    // TODO: fix legacy name
 
 #define RX_FRAME_SIZE(SIZE) (SIZE+6)
+
+typedef struct _TxStackFrameDEV TxStackFrameDEV;
+typedef struct _TxStackFrameSTK TxStackFrameSTK;
 
 /**
  * @brief Sends a raw data frame to the battery stack via UART
@@ -48,7 +52,8 @@ int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len);
  * @param len The length of the frame data
  * @return Error code
  */
-int SendStackFrameSetCrc(DbmsCtx* ctx, uint8_t* buf, size_t len);
+int SendStackFrameSetCrc(DbmsCtx* ctx, void* frame, size_t len);
+// int SendStackFrameSetCrc(DbmsCtx* ctx, TxStackFrameSTK* frame);
 
 /**
  * @brief Utility function to set the baud rate of the UART

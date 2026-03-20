@@ -30,33 +30,76 @@
 
 #define PACKED __attribute__((packed))
 
-#define ESWAP16(x) __builtin_bswap16(*((uint16_t*)(x)))
-#define ESWAP32(x) __builtin_bswap32((uint32_t)(x))
+#define ESWAP16(x) __builtin_bswap16(((uint16_t)(x)))
+#define ESWAP32(x) __builtin_bswap32((uint32_t)(x))  
 
-#define SINGLE_DEV_READ         0x80
-#define SINGLE_DEV_WRITE        0x90
-#define STACK_READ              0xA0  
-#define STACK_WRITE             0xB0 
-#define BROADCAST_READ          0xC0  
-#define BROADCAST_WRITE         0xD0   
-#define BROADCAST_WRITE_REV     0xE0   
+#define REQ_SINGLE_DEV_READ         0   // 0x08
+#define REQ_SINGLE_DEV_WRITE        1   // 0x09
+#define REQ_STACK_READ              2   // 0x0A
+#define REQ_STACK_WRITE             3   // 0x0B
+#define REQ_BROADCAST_READ          4   // 0x0C
+#define REQ_BROADCAST_WRITE         5   // 0x0D
+#define REQ_BROADCAST_WRITE_REV     6   // 0x0E
+
+#define MAX_TX_DATA 8
 
 #define PACKED __attribute__((packed))
 
-#define DATASIZE(...) (sizeof((uint8_t[]) {__VA_ARGS__}) - 1)
-#define BYTES16(x) (x) >> 8, (x) & 0xFF
+#define CALC_CRC_Rx(F)     CalcCrc16((uint8_t*)(&F), ((F).len + 6 + 1))
+#define FRAME_LEN_SD(F)    ((F).len + 6 + 1)
+#define FRAME_LEN_STK(F)    ((F).len + 5 + 1)
 
-#define MAKE_SINGLE_R(DEV, REG, LEN) {SINGLE_DEV_READ, DEV, BYTES16(REG), LEN, 0x00, 0x00}
-#define MAKE_SINGLE_W(DEV, REG, ...) {SINGLE_DEV_WRITE + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+typedef struct PACKED _TxStackFrameDEV 
+{
+    uint8_t     __cmd   : 1;                /* must be set to 1 */
+    uint8_t     reqtype : 3;                /* one of REQ_* */
+    uint8_t     __res   : 1;                /* reserved bit */
+    uint8_t     len     : 3;                
+    uint8_t     devaddr;
+    uint16_t    regaddr;
+    uint8_t     data[MAX_TX_DATA];
+    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
+                                                are used. So the real location of CRC
+                                                is at f->data + f->len */
+} TxStackFrameDEV;
 
-#define MAKE_STACK_R(REG, LEN) {STACK_READ, BYTES16(REG), LEN, 0x00, 0x00}
-#define MAKE_STACK_W(REG, ...) {STACK_WRITE + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+typedef struct PACKED _TxStackFrameSTK 
+{
+    uint8_t     __cmd   : 1;                /* must be set to 1 */
+    uint8_t     reqtype : 3;                /* one of REQ_* */
+    uint8_t     __res   : 1;                /* reserved bit */
+    uint8_t     len     : 3;                
+    uint16_t    regaddr;
+    uint8_t     data[MAX_TX_DATA];
+    uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
+                                                are used. So the real location of CRC
+                                                is at f->data + f->len */
+} TxStackFrameSTK;
 
-#define MAKE_BROADCAST_R(REG, LEN) {BROADCAST_READ, BYTES16(REG), LEN, 0x00, 0x00}
-#define MAKE_BROADCAST_W(REG, ...) {BROADCAST_WRITE + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
-#define MAKE_BROADCAST_WR(REG, ...) {BROADCAST_WRITE_REV + DATASIZE(__VA_ARGS__), BYTES16(REG), __VA_ARGS__, 0x00, 0x00}
+#define MAKE_TX_FRAME_SINGLE_DEV(REQTYPE, DEVADDR, REGADDR, ...)   \
+((TxStackFrameDEV){                                         \
+    .__cmd   = 1,                                           \
+    .reqtype = (REQTYPE),                                   \
+    .__res   = 0,                                           \
+    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,          \
+    .devaddr = (DEVADDR),                                   \
+    .regaddr = ESWAP16(REGADDR),                            \
+    .data    = { __VA_ARGS__ },                             \
+    .__crc   = 0                                            \
+})
 
-#define CALC_CRC(F)     CalcCrc16((uint8_t*)(F), ((F)->len + 6 + 1))
+#define MAKE_TX_FRAME_STACK(REQTYPE, REGADDR, ...)          \
+((TxStackFrameSTK){                                       \
+    .__cmd   = 1,                                           \
+    .reqtype = (REQTYPE),                                   \
+    .__res   = 0,                                           \
+    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,          \
+    .regaddr = ESWAP16(REGADDR),                            \
+    .data    = { __VA_ARGS__ },                             \
+    .__crc   = 0                                            \
+})
+
+#define DATA(...) __VA_ARGS__
 
 typedef struct PACKED _RxStackFrameVoltages
 {
@@ -65,7 +108,7 @@ typedef struct PACKED _RxStackFrameVoltages
     uint8_t     devaddr;
     uint16_t    regaddr;
     uint8_t     data[N_GROUPS_PER_SIDE * sizeof(uint16_t)];
-    uint16_t    __crc;
+    uint16_t    crc;
 } RxStackFrameVoltages;
 
 typedef struct PACKED _RxStackFrameTemps
@@ -75,7 +118,7 @@ typedef struct PACKED _RxStackFrameTemps
     uint8_t     devaddr;
     uint16_t    regaddr;
     uint8_t     data[(N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(uint16_t)]; // +2 GPIO  mismatch
-    uint16_t    __crc;
+    uint16_t    crc;
 } RxStackFrameTemps;
 
 /**
