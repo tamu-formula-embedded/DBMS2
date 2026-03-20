@@ -187,6 +187,11 @@ void StackSetupGpio(DbmsCtx* ctx);
 
 void StackUpdateAllTempReadings(DbmsCtx* ctx);
 
+void UpdateTemps(DbmsCtx* ctx, RxStackFrameTemps* frame);
+
+void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame);
+int StackRead(DbmsCtx* ctx, TxStackFrameSTK* frame, uint8_t* raw, int expected_size);
+
 /**
  * @brief Replace missing thermistor readings with the average of the valid cells
  * 

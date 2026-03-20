@@ -195,15 +195,12 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
  */
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
-    int status = 0;
-    static uint8_t rx_buffer_v[1024];
+    uint8_t rx_buffer_v[1024];
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     TxStackFrameSTK frame = MAKE_TX_FRAME_STACK(REQ_STACK_READ, STACK_V_REG_START, DATA(data_size-1));
-    if ((status = SendStackFrameSetCrc(ctx, &frame, FRAME_LEN_STK(frame))) != 0) { }
-    // TODO: abstract away the RX path for stack
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } //TODO: fix +1?
+    StackRead(ctx, &frame, rx_buffer_v, expected_rx_size);
 
     for (size_t i = 0; i < N_MONITORS; i++)
     {
@@ -214,16 +211,11 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         for (int j = 0; data[0] != ((uint8_t*)&frame)[2] && j < 1024; j++) { data++; }
         
         RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);        
-        // if (clean_frame->crc != CALC_CRC(clean_frame))
-        {
+        if (clean_frame->crc != CALC_CRC_Rx(*clean_frame))
+            UpdateVoltages(ctx, clean_frame);
+        else
             IncStackCrcStats(ctx, false, i);
-            continue;
-        }
-        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
-        {
-            uint16_t raw = ESWAP16(clean_frame->data[j * sizeof(int16_t)]);
-            ctx->cell_states[ADDR_BCAST_TO_STACK(clean_frame->devaddr)].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
-        }
+
     }
 }
 
@@ -263,18 +255,13 @@ void StackConfigTimeout(DbmsCtx* ctx)
 
 void StackUpdateAllTempReadings(DbmsCtx* ctx)
 {
-    int status = 0;
-    uint8_t offset, temps;
-    uint8_t* moved_data;
-    static uint8_t rx_buffer_t[1024];
+    uint8_t rx_buffer_t[1024];
 
     size_t data_size = (N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(int16_t); // +2 for GPIO mismatch
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
     TxStackFrameSTK frame = MAKE_TX_FRAME_STACK(REQ_STACK_READ, STACK_T_REG_START, DATA(data_size-1));
-    if ((status = SendStackFrameSetCrc(ctx, &frame, FRAME_LEN_STK(frame))) != 0) { }
-    // TODO: redo the RX path for stack
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } 
+    StackRead(ctx, &frame, rx_buffer_t, expected_rx_size);
     
     for (size_t i = 0; i < N_MONITORS; i++)
     {
@@ -285,23 +272,52 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         for (int j = 0; data[0] != ((uint8_t*)&frame)[2] && j < 1024; j++) { data++; }
 
         RxStackFrameTemps* clean_frame = (RxStackFrameTemps*)(data - 3); 
-        // if (clean_frame->crc != CALC_CRC(clean_frame))
-        {
+        if (clean_frame->crc == CALC_CRC_Rx(*clean_frame))
+            UpdateTemps(ctx, clean_frame);
+        else
             IncStackCrcStats(ctx, false, i);
-            continue;
-        }
-        moved_data = &clean_frame->data[4];
-        memmove(moved_data, &clean_frame->data, 4); // GPIO1 = GPIO3, GPIO2 = GPIO4
-        offset = ctx->mux_selector;
-        temps = (offset == 0 ? N_TEMPS_POLL_PER_MONITOR : N_TEMPS_POLL_PER_MONITOR-1);
-        for (size_t j = 0; j < temps; j++)
-        {
-            uint16_t raw = ESWAP16(moved_data[j * sizeof(int16_t)]);
-            ctx->cell_states[ADDR_BCAST_TO_STACK(clean_frame->devaddr)].temps[N_TEMPS_POLL_PER_MONITOR*j + offset] = 
-                ThermVoltToTemp(ctx, MAX(0, raw * STACK_T_UV_PER_BIT / 1000000.0));
-        }
     }
 }
+
+void UpdateTemps(DbmsCtx* ctx, RxStackFrameTemps* frame)
+{
+    uint8_t* moved_data = &(frame->data[4]);
+    memmove(moved_data, frame->data, 4); // GPIO1 = GPIO3, GPIO2 = GPIO4
+    uint8_t offset = ctx->mux_selector;
+    uint8_t temps = (offset == 0 ? N_TEMPS_POLL_PER_MONITOR : N_TEMPS_POLL_PER_MONITOR-1);
+    for (size_t j = 0; j < temps; j++)
+    {
+        uint16_t raw = (moved_data[j * sizeof(int16_t)] << 8) + moved_data[j * sizeof(int16_t) + 1];
+        ctx->cell_states[ADDR_BCAST_TO_STACK(frame->devaddr)].temps[N_TEMPS_POLL_PER_MONITOR*j + offset] = 
+            ThermVoltToTemp(ctx, MAX(0, raw * STACK_T_UV_PER_BIT / 1000000.0));
+    }
+}
+
+void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame)
+{
+    for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+    {
+        uint16_t raw = (frame->data[j * sizeof(int16_t)] << 8) + frame->data[j * sizeof(int16_t) + 1];
+        ctx->cell_states[ADDR_BCAST_TO_STACK(frame->devaddr)].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+    }
+}
+
+int StackRead(DbmsCtx* ctx, TxStackFrameSTK* frame, uint8_t* raw, int expected_size)
+{
+    int status = 0;
+    if ((status = SendStackFrameSetCrc(ctx, frame, FRAME_LEN_STK(*frame))) != 0) 
+    {
+        return status;
+    }
+    // TODO: redo the RX path for stack
+    if ((status = HAL_UART_Receive(ctx->hw.uart, raw, expected_size+1, STACK_RECV_TIMEOUT)) != 0) 
+    {
+        return status;
+    } 
+    return status;
+}
+
+void SearchValidByte(DbmsCtx* )
 
 /**
  * @brief Replace missing thermistor readings with the average of the valid cells
