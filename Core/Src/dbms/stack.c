@@ -41,7 +41,6 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
  */
 int StackWake(DbmsCtx* ctx)
 {
-    // static uint8_t FRAME_WAKE_STACK[] = MAKE_SINGLE_W(0, 0x0309, 0x20, 0x13, 0x95);
     TxStackFrameDEV FRAME_WAKE_STACK = MAKE_TX_FRAME_SINGLE_DEV(REQ_SINGLE_DEV_WRITE, 0, 0x0309, DATA(0x13, 0x95));
     int status = 0;
     for (int i = 0; i < 2; i++)
