@@ -50,24 +50,6 @@ int SendStackFrameSetCrc(DbmsCtx* ctx, void* frame, size_t len)
     return status;
 }
 
-// int SendStackFrameSetCrc(DbmsCtx* ctx, void* frame)
-// {
-//     int status = 0;
-//     uint8_t* buf = (uint8_t*)frame;
-//     size_t len = FRAME_LEN_STK(frame);
-//     // Calculate the CRC on the payload
-//     uint16_t crc = CalcCrc16(buf, len - 2);
-//     // Tape the CRC to the end of the frame
-//     buf[len - 2] = crc & 0xFF;
-//     buf[len - 1] = (crc >> 8) & 0xFF;
-//     // Send the frame
-//     status = HAL_UART_Transmit(ctx->hw.uart, buf, len, STACK_SEND_TIMEOUT);
-//     // Clear the CRC from the payload
-//     buf[len - 2] = 0;
-//     buf[len - 1] = 0;
-//     return status;
-// }
-
 /**
  * @brief Utility function to set the baud rate of the UART
  * Used for shutdown and wakeup

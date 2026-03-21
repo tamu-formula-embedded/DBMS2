@@ -53,7 +53,6 @@ int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len);
  * @return Error code
  */
 int SendStackFrameSetCrc(DbmsCtx* ctx, void* frame, size_t len);
-// int SendStackFrameSetCrc(DbmsCtx* ctx, TxStackFrameSTK* frame);
 
 /**
  * @brief Utility function to set the baud rate of the UART

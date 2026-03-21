@@ -205,7 +205,6 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
     for (size_t i = 0; i < N_MONITORS; i++)
     {
         IncStackCrcStats(ctx, true, i);
-        
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
         for (int j = 0; data[0] != ((uint8_t*)&frame)[2] && j < 1024; j++) { data++; }
@@ -266,7 +265,6 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     for (size_t i = 0; i < N_MONITORS; i++)
     {
         IncStackCrcStats(ctx, true, i);
-
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
         for (int j = 0; data[0] != ((uint8_t*)&frame)[2] && j < 1024; j++) { data++; }
