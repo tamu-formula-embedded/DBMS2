@@ -25,7 +25,7 @@
 #define STACK_V_UV_PER_BIT      190.73
 #define STACK_T_UV_PER_BIT      152.59
 
-#define STACK_V_REG_START       0x0568 + 2 * (16 - N_GROUPS_PER_SIDE)
+#define STACK_V_REG_START       (0x0568 + 2 * (16 - N_GROUPS_PER_SIDE))
 #define STACK_T_REG_START       0x058E // GPIO start reg
 
 #define PACKED __attribute__((packed))
@@ -42,6 +42,16 @@
 #define REQ_BROADCAST_WRITE_REV     6   // 0x0E
 
 #define MAX_TX_DATA 8
+
+#define SINGLE_REV_READ(CTX, DEV, REG, DATA) SendStackFrame1Dev(CTX, MAKE_TX_FRAME_1DEV(REQ_SINGLE_DEV_READ, DEV, REG, DATA))
+#define SINGLE_DEV_WRITE(CTX, DEV, REG, DATA) SendStackFrame1Dev(CTX, MAKE_TX_FRAME_1DEV(REQ_SINGLE_DEV_WRITE, DEV, REG, DATA))
+
+#define STACK_READ(CTX, REG, DATA) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_STACK_READ, REG, DATA))
+#define STACK_WRITE(CTX, REG, DATA) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_STACK_WRITE, REG, DATA))
+
+#define BROADCAST_READ(CTX, REG, DATA) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_BROADCAST_READ, REG, DATA))
+#define BROADCAST_WRITE(CTX, REG, DATA) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, REG, DATA))
+#define BROADCAST_REV_WRITE(CTX, REG, DATA) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE_REV, REG, DATA))
 
 #define PACKED __attribute__((packed))
 
@@ -190,7 +200,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx);
 void UpdateTemps(DbmsCtx* ctx, RxStackFrameTemps* frame);
 
 void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame);
-int StackRead(DbmsCtx* ctx, TxStackFrameNDev* frame, uint8_t* raw, int expected_size);
+int StackRead(DbmsCtx* ctx, uint8_t* raw, uint16_t start_reg, uint8_t data_size, int expected_size);
 
 /**
  * @brief Replace missing thermistor readings with the average of the valid cells

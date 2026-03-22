@@ -34,16 +34,6 @@ typedef struct _TxStackFrame1Dev TxStackFrame1Dev;
 typedef struct _TxStackFrameNDev TxStackFrameNDev;
 
 /**
- * @brief Sends a raw data frame to the battery stack via UART
- * 
- * @param ctx Context pointer
- * @param buf The data for the frame to send
- * @param len The length of the frame data
- * @return Error code
- */
-int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len);
-
-/**
  * @brief Sends a data frame to the stack via UART with
  * a CRC appended to the end for verification
  * 
@@ -52,7 +42,11 @@ int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len);
  * @param len The length of the frame data
  * @return Error code
  */
-int SendStackFrameSetCrc(DbmsCtx* ctx, void* frame, size_t len);
+int SendStackFrame(DbmsCtx* ctx, void* frame, size_t len);
+
+int SendStackFrame1Dev(DbmsCtx* ctx, TxStackFrame1Dev frame);
+int SendStackFrameNDev(DbmsCtx* ctx, TxStackFrameNDev frame);
+
 
 /**
  * @brief Utility function to set the baud rate of the UART
