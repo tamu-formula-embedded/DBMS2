@@ -41,7 +41,7 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
  */
 int StackWake(DbmsCtx* ctx)
 {
-    TxStackFrame1Dev FRAME_WAKE_STACK = MAKE_TX_FRAME_1DEV(REQ_SINGLE_DEV_WRITE, 0, 0x0309, DATA(0x13, 0x95));
+    TxStackFrame1Dev frame_wake = MAKE_TX_FRAME_1DEV(REQ_SINGLE_DEV_WRITE, 0, 0x0309, DATA(0x13, 0x95));
     int status = 0;
     for (int i = 0; i < 2; i++)
     {
@@ -50,7 +50,7 @@ int StackWake(DbmsCtx* ctx)
             CAN_REPORT_FAULT(ctx, status);
             return status;
         }
-        if ((status = SendStackFrameSetCrc(ctx, &FRAME_WAKE_STACK, FRAME_LEN_SD(FRAME_WAKE_STACK))) != 0)
+        if ((status = SendStackFrameSetCrc(ctx, &frame_wake, FRAME_LEN_SD(frame_wake))) != 0)
         {
             CAN_REPORT_FAULT(ctx, status);
             return status;
@@ -71,11 +71,11 @@ int StackWake(DbmsCtx* ctx)
  */
 int StackShutdown(DbmsCtx* ctx)
 {
-    TxStackFrameNDev FRAME_SHUTDOWN_STACK = MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, 0x0390, DATA((1 << 3)));
+    TxStackFrameNDev frame_shutdown = MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, 0x0390, DATA((1 << 3)));
     int status = 0;
     for (int i = 0; i < 2; i++)
     {
-        if ((status = SendStackFrameSetCrc(ctx, &FRAME_SHUTDOWN_STACK, FRAME_LEN_STK(FRAME_SHUTDOWN_STACK))) != 0)
+        if ((status = SendStackFrameSetCrc(ctx, &frame_shutdown, FRAME_LEN_STK(frame_shutdown))) != 0)
         {
             CAN_REPORT_FAULT(ctx, status);
             return status;
@@ -146,13 +146,13 @@ void StackAutoAddr(DbmsCtx* ctx)
 {
     SendOtpEccDatain(ctx); // step 1
 
-    TxStackFrameNDev FRAME_ENABLE_AUTO_ADDR = MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, 0x0309, DATA(0x01));
-    SendStackFrameSetCrc(ctx, &FRAME_ENABLE_AUTO_ADDR, FRAME_LEN_STK(FRAME_ENABLE_AUTO_ADDR)); // step 2
+    TxStackFrameNDev frame_auto_addr = MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, 0x0309, DATA(0x01));
+    SendStackFrameSetCrc(ctx, &frame_auto_addr, FRAME_LEN_STK(frame_auto_addr)); // step 2
 
     SendAutoAddr(ctx); // step 3
 
-    TxStackFrameNDev FRAME_SET_ALL_STACK = MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, 0x0308, DATA(0x02));
-    SendStackFrameSetCrc(ctx, &FRAME_SET_ALL_STACK, FRAME_LEN_STK(FRAME_SET_ALL_STACK)); // step 4
+    TxStackFrameNDev frame_set_stack = MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, 0x0308, DATA(0x02));
+    SendStackFrameSetCrc(ctx, &frame_set_stack, FRAME_LEN_STK(frame_set_stack)); // step 4
 
     SendSetStackTop(ctx); // step 5
 
@@ -183,8 +183,8 @@ void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
  */
 void StackSetupVoltReadings(DbmsCtx* ctx)
 {
-    TxStackFrameNDev FRAME_SET_ADC_CONT_RUN = MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, 0x030D, DATA(0x06));
-    SendStackFrameSetCrc(ctx, &FRAME_SET_ADC_CONT_RUN, FRAME_LEN_STK(FRAME_SET_ADC_CONT_RUN));
+    TxStackFrameNDev frame_set_adc = MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, 0x030D, DATA(0x06));
+    SendStackFrameSetCrc(ctx, &frame_set_adc, FRAME_LEN_STK(frame_set_adc));
 }
 
 /**
