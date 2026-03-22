@@ -49,7 +49,7 @@
 #define FRAME_LEN_SD(F)    ((F).len + 6 + 1)
 #define FRAME_LEN_STK(F)    ((F).len + 5 + 1)
 
-typedef struct PACKED _TxStackFrameDEV 
+typedef struct PACKED _TxStackFrame1Dev 
 {
     uint8_t     __cmd   : 1;                /* must be set to 1 */
     uint8_t     reqtype : 3;                /* one of REQ_* */
@@ -61,9 +61,9 @@ typedef struct PACKED _TxStackFrameDEV
     uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
                                                 are used. So the real location of CRC
                                                 is at f->data + f->len */
-} TxStackFrameDEV;
+} TxStackFrame1Dev;
 
-typedef struct PACKED _TxStackFrameSTK 
+typedef struct PACKED _TxStackFrameNDev 
 {
     uint8_t     __cmd   : 1;                /* must be set to 1 */
     uint8_t     reqtype : 3;                /* one of REQ_* */
@@ -74,10 +74,10 @@ typedef struct PACKED _TxStackFrameSTK
     uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
                                                 are used. So the real location of CRC
                                                 is at f->data + f->len */
-} TxStackFrameSTK;
+} TxStackFrameNDev;
 
-#define MAKE_TX_FRAME_SINGLE_DEV(REQTYPE, DEVADDR, REGADDR, ...)   \
-((TxStackFrameDEV){                                         \
+#define MAKE_TX_FRAME_1DEV(REQTYPE, DEVADDR, REGADDR, ...)   \
+((TxStackFrame1Dev){                                         \
     .__cmd   = 1,                                           \
     .reqtype = (REQTYPE),                                   \
     .__res   = 0,                                           \
@@ -88,8 +88,8 @@ typedef struct PACKED _TxStackFrameSTK
     .__crc   = 0                                            \
 })
 
-#define MAKE_TX_FRAME_STACK(REQTYPE, REGADDR, ...)          \
-((TxStackFrameSTK){                                       \
+#define MAKE_TX_FRAME_NDEV(REQTYPE, REGADDR, ...)          \
+((TxStackFrameNDev){                                       \
     .__cmd   = 1,                                           \
     .reqtype = (REQTYPE),                                   \
     .__res   = 0,                                           \
@@ -190,7 +190,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx);
 void UpdateTemps(DbmsCtx* ctx, RxStackFrameTemps* frame);
 
 void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame);
-int StackRead(DbmsCtx* ctx, TxStackFrameSTK* frame, uint8_t* raw, int expected_size);
+int StackRead(DbmsCtx* ctx, TxStackFrameNDev* frame, uint8_t* raw, int expected_size);
 
 /**
  * @brief Replace missing thermistor readings with the average of the valid cells

@@ -30,8 +30,8 @@
 
 #define RX_FRAME_SIZE(SIZE) (SIZE+6)
 
-typedef struct _TxStackFrameDEV TxStackFrameDEV;
-typedef struct _TxStackFrameSTK TxStackFrameSTK;
+typedef struct _TxStackFrame1Dev TxStackFrame1Dev;
+typedef struct _TxStackFrameNDev TxStackFrameNDev;
 
 /**
  * @brief Sends a raw data frame to the battery stack via UART
