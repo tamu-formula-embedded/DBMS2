@@ -180,6 +180,12 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 71, (ctx->stats.n_rx_stack_bad_crcs_itvl * 100) / ctx->stats.n_rx_stack_frames_itvl);
     SendMetric(ctx, 72, ctx->stats.n_int_shutdowns);
 
+    SendMetric(ctx, 73, ctx->stats.can_secondary.n_tx_frames);
+    SendMetric(ctx, 74, ctx->stats.can_secondary.n_rx_frames);
+    SendMetric(ctx, 75, ctx->stats.can_secondary.n_unmatched);
+    SendMetric(ctx, 76, ctx->stats.can_secondary.n_tx_fail);
+    SendMetric(ctx, 77, ctx->stats.can_secondary.n_tx_drop);
+
     for (int i = 0; i < N_MONITORS; i++)
     {
         SendMetric(ctx, 80 + i, ctx->faults.monitor_bad_crcs[i]);
