@@ -422,10 +422,13 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_HandleTypeDef* hcan, CAN_
     CanBus bus;
     CANStats* stats;
 
-    if (hcan->Instance == CAN_PRIMARY_INST) {
+    if (hcan->Instance == CAN_PRIMARY_INST) 
+    {
         bus = CAN_PRIMARY;
         stats = &ctx->stats.can_primary;
-    } else {
+    } 
+    else 
+    {
         bus = CAN_SECONDARY;
         stats = &ctx->stats.can_secondary;
     }

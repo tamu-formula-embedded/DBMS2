@@ -103,7 +103,7 @@ typedef struct _CANStats
     uint32_t n_unmatched;
     uint32_t n_tx_fail;
     uint32_t n_tx_queued;
-    uint32_t n_tx_queue_drop;
+    uint32_t n_tx_drop;
     uint32_t last_err;
     uint32_t tx_mailbox;
 } CANStats;

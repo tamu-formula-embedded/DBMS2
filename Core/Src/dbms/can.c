@@ -22,9 +22,8 @@ typedef struct
 } CanFilterMask;
 
 typedef struct {
-    CAN_TxHeaderTypeDef header;
+    uint32_t id;
     uint8_t data[8];
-    CanBus bus;
     //uint8_t prio ??
 } CanTxQueueItem;
 
@@ -163,6 +162,7 @@ int ConfigCan(DbmsCtx* ctx)
         return status;
     }
 
+    // Initialize headers
     ctx->hw.can_hdr_primary.StdId = 0x500;
     ctx->hw.can_hdr_primary.IDE = CAN_ID_STD;
     ctx->hw.can_hdr_primary.RTR = CAN_RTR_DATA;
@@ -180,34 +180,36 @@ int ConfigCan(DbmsCtx* ctx)
 
 static void SendFromQueue(CAN_HandleTypeDef *hcan)
 {
+    if (!g_can_ctx) return;
+    CAN_TxHeaderTypeDef* hdr = &g_can_ctx->hw.can_hdr_primary;
+    
     while (tx_queue.count > 0 && HAL_CAN_GetTxMailboxesFreeLevel(hcan) > 0)
     {
         CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail];
+        CanSetHdrID(hdr, entry->id);
         
         uint32_t mailbox;
-        int32_t result = HAL_CAN_AddTxMessage(hcan, &entry->header, entry->data, &mailbox);
+        int32_t result = HAL_CAN_AddTxMessage(hcan, hdr, entry->data, &mailbox);
 
         if (result == HAL_OK)
         {
             tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
             tx_queue.count--;
 
-            if (g_can_ctx)
-                g_can_ctx->stats.can_primary.n_tx_fail++;
+            g_can_ctx->stats.can_primary.n_tx_frames++;
         }
         else
         {
-            if (g_can_ctx)
-            {
-                g_can_ctx->stats.can_primary.n_tx_fail++;
-                g_can_ctx->stats.can_primary.last_err = HAL_CAN_GetError(hcan);
-            }
+            g_can_ctx->stats.can_primary.n_tx_fail++;
+            g_can_ctx->stats.can_primary.last_err = HAL_CAN_GetError(hcan);
             break;
         }
     }
 }
 
-void CanSetHdrID(CAN_TxHeaderTypeDef* hdr, uint32_t id) {
+static void CanSetHdrID(CAN_TxHeaderTypeDef* hdr, uint32_t id)
+{
+    if (!hdr) return;
     // Determine if extended or standard ID
     if (id > CAN_STD_ID_MASK)
     {
@@ -250,10 +252,10 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     {
         tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
         tx_queue.count--;
-        ctx->stats.can_primary.n_tx_queue_drop++;
+        ctx->stats.can_primary.n_tx_drop++;
     }
 
-    tx_queue.buffer[tx_queue.head].header = *hdr;
+    tx_queue.buffer[tx_queue.head].id = id;
     memcpy(tx_queue.buffer[tx_queue.head].data, data, 8);
     tx_queue.head = (tx_queue.head + 1) % CAN_TX_QUEUE_SIZE;
     tx_queue.count++;
@@ -279,7 +281,7 @@ int CanTransmit2(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     {
         if (waited >= CAN_TX_TIMEOUT_US)
         {
-            ctx->stats.can_secondary.n_tx_queue_drop++;
+            ctx->stats.can_secondary.n_tx_drop++;
             return HAL_TIMEOUT;
         }
         DelayUs(ctx, CAN_TX_WAIT_US);
