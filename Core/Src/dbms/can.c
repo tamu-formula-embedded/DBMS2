@@ -178,6 +178,22 @@ int ConfigCan(DbmsCtx* ctx)
     return status;
 }
 
+static void CanSetHdrID(CAN_TxHeaderTypeDef* hdr, uint32_t id)
+{
+    if (!hdr) return;
+    // Determine if extended or standard ID
+    if (id > CAN_STD_ID_MASK)
+    {
+        hdr->IDE = CAN_ID_EXT;
+        hdr->ExtId = id & CAN_EXT_ID_MASK;
+    }
+    else
+    {
+        hdr->IDE = CAN_ID_STD;
+        hdr->StdId = id & CAN_STD_ID_MASK;      
+    }
+}
+
 static void SendFromQueue(CAN_HandleTypeDef *hcan)
 {
     if (!g_can_ctx) return;
@@ -204,22 +220,6 @@ static void SendFromQueue(CAN_HandleTypeDef *hcan)
             g_can_ctx->stats.can_primary.last_err = HAL_CAN_GetError(hcan);
             break;
         }
-    }
-}
-
-static void CanSetHdrID(CAN_TxHeaderTypeDef* hdr, uint32_t id)
-{
-    if (!hdr) return;
-    // Determine if extended or standard ID
-    if (id > CAN_STD_ID_MASK)
-    {
-        hdr->IDE = CAN_ID_EXT;
-        hdr->ExtId = id & CAN_EXT_ID_MASK;
-    }
-    else
-    {
-        hdr->IDE = CAN_ID_STD;
-        hdr->StdId = id & CAN_STD_ID_MASK;      
     }
 }
 
@@ -271,7 +271,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 /**
  * Transmit on the secondary (elcon) bus. No CAN Queue.
  */
-int CanTransmit2(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
+int CanTransmitSecondary(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
     CAN_TxHeaderTypeDef* hdr = &ctx->hw.can_hdr_secondary;
 

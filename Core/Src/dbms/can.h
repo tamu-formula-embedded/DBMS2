@@ -94,12 +94,6 @@ typedef enum
     CFG_GET
 } CanConfigAction;
 
-typedef enum
-{
-    CAN_PRIMARY,
-    CAN_SECONDARY
-} CanBus;
-
 int ConfigCan(DbmsCtx* ctx);
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8]);

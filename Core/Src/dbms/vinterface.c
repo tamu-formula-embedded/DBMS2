@@ -104,7 +104,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 10, ctx->current_sensor.energy_wh);
 
     SendMetric(ctx, 11, ctx->stats.can_primary.n_tx_fail);
-    SendMetric(ctx, 12, ctx->stats.can_primary.n_tx_queue_drop);
+    SendMetric(ctx, 12, ctx->stats.can_primary.n_tx_drop);
 
     SendMetric(ctx, 13, ctx->stats.looptime);
     SendMetric(ctx, 14, ctx->stats.end_delay);
