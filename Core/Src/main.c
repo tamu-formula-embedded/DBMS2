@@ -119,7 +119,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   
   dbms_ctx.hw.adc = &hadc1;
-  dbms_ctx.hw.can = &hcan2;
+  dbms_ctx.hw.can_primary = &hcan2;
+  dbms_ctx.hw.can_secondary = &hcan1;
   dbms_ctx.hw.timer = &htim5;
   dbms_ctx.hw.timer_pwm_1 = &htim3;
   dbms_ctx.hw.uart = &huart4;
@@ -257,10 +258,10 @@ static void MX_CAN1_Init(void)
 
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 16;
+  hcan1.Init.Prescaler = 12;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_5TQ;
   hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
   hcan1.Init.TimeTriggeredMode = DISABLE;
   hcan1.Init.AutoBusOff = DISABLE;
@@ -727,7 +728,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         // else
         //     rxHeader.ExtId = (rir & (CAN_RI0R_EXID | CAN_RI0R_STID)) >> CAN_RI0R_EXID_Pos;
 
-        DbmsCanRx(&dbms_ctx, CAN_RX_0, rxHeader, rxData);
+        DbmsCanRx(&dbms_ctx, CAN_RX_0, hcan, rxHeader, rxData);
     }
 }
 
@@ -749,7 +750,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
         // else
         //     rxHeader.ExtId = (rir & (CAN_RI0R_EXID | CAN_RI0R_STID)) >> CAN_RI0R_EXID_Pos;
 
-        DbmsCanRx(&dbms_ctx, CAN_RX_1, rxHeader, rxData);
+        DbmsCanRx(&dbms_ctx, CAN_RX_1, hcan, rxHeader, rxData);
     }
 }
 

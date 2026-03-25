@@ -90,9 +90,9 @@ int SendMetrics(DbmsCtx* ctx)
 {
     SendMetric(ctx, 0, ctx->stats.iters);
 
-    SendMetric(ctx, 1, ctx->stats.n_tx_can_frames);
-    SendMetric(ctx, 2, ctx->stats.n_rx_can_frames);
-    SendMetric(ctx, 3, ctx->stats.n_unmatched_can_frames);
+    SendMetric(ctx, 1, ctx->stats.can_primary.n_tx_frames);
+    SendMetric(ctx, 2, ctx->stats.can_primary.n_rx_frames);
+    SendMetric(ctx, 3, ctx->stats.can_primary.n_unmatched);
 
     SendMetric(ctx, 4, ctx->current_sensor.current_ma);
     SendMetric(ctx, 5, ctx->current_sensor.voltage1_mv);
@@ -103,8 +103,8 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 9, ctx->current_sensor.charge_as);
     SendMetric(ctx, 10, ctx->current_sensor.energy_wh);
 
-    SendMetric(ctx, 11, ctx->stats.n_tx_can_fail);
-    SendMetric(ctx, 12, ctx->stats.n_tx_can_drop_queue_full);
+    SendMetric(ctx, 11, ctx->stats.can_primary.n_tx_fail);
+    SendMetric(ctx, 12, ctx->stats.can_primary.n_tx_queue_drop);
 
     SendMetric(ctx, 13, ctx->stats.looptime);
     SendMetric(ctx, 14, ctx->stats.end_delay);

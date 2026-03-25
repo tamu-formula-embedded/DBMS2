@@ -414,11 +414,23 @@ void DbmsIter(DbmsCtx* ctx)
     DelayUs(ctx, ctx->stats.end_delay % 1000);
 }
 
-void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
+void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_HandleTypeDef* hcan, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8])
 {
     int status = 0;
     uint32_t can_id = (rx_header.IDE == CAN_ID_EXT) ? rx_header.ExtId : rx_header.StdId;
-    ctx->stats.n_rx_can_frames++;
+    
+    CanBus bus;
+    CANStats* stats;
+
+    if (hcan->Instance == CAN_PRIMARY_INST) {
+        bus = CAN_PRIMARY;
+        stats = &ctx->stats.can_primary;
+    } else {
+        bus = CAN_SECONDARY;
+        stats = &ctx->stats.can_secondary;
+    }
+
+    stats->n_rx_frames++;
 
     switch (can_id)
     {
@@ -519,7 +531,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->charging.heartbeat = HAL_GetTick();
         break;
     default:
-        ctx->stats.n_unmatched_can_frames++;
+        stats->n_unmatched++;
         break;
     }
 }

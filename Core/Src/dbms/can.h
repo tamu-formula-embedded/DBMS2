@@ -79,6 +79,9 @@
 #define CANID_ELCON_TX                  0x1806E5F4
 #define CANID_ELCON_RX                  0x18FF50E5
 
+#define CAN_PRIMARY_INST     CAN2
+#define CAN_SECONDARY_INST   CAN1
+
 typedef enum 
 {
     CAN_RX_0, 
@@ -91,8 +94,16 @@ typedef enum
     CFG_GET
 } CanConfigAction;
 
+typedef enum
+{
+    CAN_PRIMARY,
+    CAN_SECONDARY
+} CanBus;
+
 int ConfigCan(DbmsCtx* ctx);
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8]);
+
+int CanTransmitSecondary(DbmsCtx* ctx, uint32_t id, uint8_t data[8]);
 
 #endif

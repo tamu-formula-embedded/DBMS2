@@ -75,9 +75,11 @@ typedef struct _HwCtx
     UART_HandleTypeDef* uart;
     I2C_HandleTypeDef* i2c;
 
-    CAN_HandleTypeDef* can;
-    CAN_TxHeaderTypeDef can_tx_header;
-    uint32_t can_tx_mailbox;
+    CAN_HandleTypeDef* can_primary;
+    CAN_HandleTypeDef* can_secondary;
+    
+    CAN_TxHeaderTypeDef can_hdr_primary;
+    CAN_TxHeaderTypeDef can_hdr_secondary;
 } HwCtx;
 
 typedef struct _CellMonitorState
@@ -94,6 +96,18 @@ typedef struct _DbmsSettings DbmsSettings;
 // fwd definition for enum -- led_controller.h
 typedef int32_t LedState;
 
+typedef struct _CANStats
+{
+    uint32_t n_tx_frames;
+    uint32_t n_rx_frames;
+    uint32_t n_unmatched;
+    uint32_t n_tx_fail;
+    uint32_t n_tx_queued;
+    uint32_t n_tx_queue_drop;
+    uint32_t last_err;
+    uint32_t tx_mailbox;
+} CANStats;
+
 typedef struct _Stats
 {
     uint64_t iters;
@@ -103,12 +117,8 @@ typedef struct _Stats
 
     uint32_t shutdown_start_us;
 
-    uint32_t n_tx_can_frames;
-    uint32_t n_rx_can_frames;
-    uint32_t n_unmatched_can_frames;
-    uint32_t n_tx_can_drop_queue_full;
-    uint32_t n_tx_can_fail;
-    uint32_t n_tx_queued;
+    CANStats can_primary;
+    CANStats can_secondary;
 
     uint32_t looptime;
     uint32_t end_delay;
@@ -340,7 +350,6 @@ typedef struct _DbmsCtx
     uint16_t faults_crc;
     Model model;
     uint16_t can_log_ordering_index;
-    uint32_t last_can_err;
     bool precharged;
     Blackbox blackbox;
     Elcon elcon;

@@ -53,6 +53,6 @@ void DbmsErr(DbmsCtx* ctx);
 void DbmsClose(DbmsCtx* ctx);
 
 // Called on CAN RX
-void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8]);
+void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_HandleTypeDef* hcan, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8]);
 
 #endif
