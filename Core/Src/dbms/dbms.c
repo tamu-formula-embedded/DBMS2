@@ -394,7 +394,7 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->flags.telem_enable = HAL_GetTick() - ctx->timing.last_rx_telembeat < 5000; // < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     if (ctx->flags.telem_enable)
     {
-        t_start = GetUs(ctx);
+        uint64_t t_start = GetUs(ctx);
         SendMetrics(ctx);               // TODO: resolve conflicting metrics
         ctx->timing.time_spent_metrics = GetUs(ctx) - t_start;
         // send a blackbox ready frame UNTIL the app requests. flag is set true when saved, false when app requests
