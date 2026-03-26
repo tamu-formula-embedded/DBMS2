@@ -109,7 +109,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     }
 
     HAL_Delay(5);
-    StackAutoAddr(ctx);
+    StackAutoAddr   (ctx);
     HAL_Delay(5);
     StackSetNumActiveCells(ctx, 0x0A);
     HAL_Delay(5);
