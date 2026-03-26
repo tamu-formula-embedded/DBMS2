@@ -180,9 +180,27 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 71, (ctx->stats.n_rx_stack_bad_crcs_itvl * 100) / ctx->stats.n_rx_stack_frames_itvl);
     SendMetric(ctx, 72, ctx->stats.n_int_shutdowns);
 
+    SendMetric(ctx, 73, ctx->timing.v_poll_time_spent_rx);
+    SendMetric(ctx, 74, ctx->timing.v_poll_time_spent_tx);
+    SendMetric(ctx, 75, ctx->timing.t_poll_time_spent_rx);
+    SendMetric(ctx, 76, ctx->timing.t_poll_time_spent_tx);
+    SendMetric(ctx, 77, ctx->timing.time_spent_plex_metrics);
+    SendMetric(ctx, 78, ctx->timing.time_spent_metrics);
+    SendMetric(ctx, 79, ctx->timing.time_spent_CAN_RX_in);
+    SendMetric(ctx, 80, ctx->timing.time_spent_CAN_TX_in);
+    SendMetric(ctx, 81, ctx->stats.CAN_RX_cnt_loop);
+    SendMetric(ctx, 82, ctx->stats.CAN_TX_cnt_loop);
+    if (GetUs(ctx) - ctx->timing.last_ps_CAN_RXTX_send >= 1000000){
+        SendMetric(ctx, 83, ctx->stats.CAN_RX_cnt_ps);
+        SendMetric(ctx, 84, ctx->stats.CAN_TX_cnt_ps);
+        ctx->stats.CAN_RX_cnt_ps = 0;
+        ctx->stats.CAN_TX_cnt_ps = 0;
+        ctx->timing.last_ps_CAN_RXTX_send = GetUs(ctx);
+    }
+    
     for (int i = 0; i < N_MONITORS; i++)
     {
-        SendMetric(ctx, 80 + i, ctx->faults.monitor_bad_crcs[i]);
+        SendMetric(ctx, 90 + i, ctx->faults.monitor_bad_crcs[i]);
     }
     return 0;
 }

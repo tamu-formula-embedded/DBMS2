@@ -178,6 +178,8 @@ static void SendFromQueue(CAN_HandleTypeDef *hcan)
 
 int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 {
+    ctx->stats.CAN_TX_cnt_loop++;
+    uint64_t t_start = GetUs(ctx);
     CAN_TxHeaderTypeDef* hdr = &ctx->hw.can_tx_header;
 
     // Determine if extended or standard ID
@@ -211,8 +213,10 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
         else
         {
             ctx->stats.n_tx_can_frames++;
+            ctx->stats.CAN_TX_cnt_ps++;
         }
         __enable_irq();
+        ctx->timing.time_spent_CAN_TX_in += GetUs(ctx) - t_start;
         return result;
     }
     
@@ -232,7 +236,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     __enable_irq();
 
     SendFromQueue(ctx->hw.can);
-    
+    ctx->timing.time_spent_CAN_TX_in += GetUs(ctx) - t_start;
     return HAL_OK;
 }
 

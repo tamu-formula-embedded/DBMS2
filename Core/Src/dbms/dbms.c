@@ -86,6 +86,7 @@ void DbmsInit(DbmsCtx* ctx)
 
     memset(&ctx->faults.monitor_total_frames, 0, sizeof(ctx->faults.monitor_total_frames));
     memset(&ctx->faults.monitor_bad_crcs, 0, sizeof(ctx->faults.monitor_bad_crcs));
+    memset(&ctx->timing, 0, sizeof(ctx->timing));
 
     //
     // Handle EEPROM and Shutdown Stats
@@ -252,6 +253,10 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->timing.iter_start_us = GetUs(ctx);
     // ctx->profiling.profiling.times.T0 = GetUs(ctx);
+    ctx->timing.time_spent_CAN_RX_in = 0;
+    ctx->timing.time_spent_CAN_TX_in = 0;
+    ctx->stats.CAN_RX_cnt_loop = 0;
+    ctx->stats.CAN_TX_cnt_loop = 0;
 
     /**
      * Handle blackbox data requested
@@ -384,12 +389,16 @@ void DbmsIter(DbmsCtx* ctx)
     /**
      * Transmit telemetry
      */
+    uint64_t t_start = GetUs(ctx);
     SendPlexMetrics(ctx);
+    ctx->timing.time_spent_plex_metrics = GetUs(ctx) - t_start;
+
     ctx->flags.telem_enable = HAL_GetTick() - ctx->timing.last_rx_telembeat < 5000; // < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     if (ctx->flags.telem_enable)
     {
+        t_start = GetUs(ctx);
         SendMetrics(ctx);               // TODO: resolve conflicting metrics
-
+        ctx->timing.time_spent_metrics = GetUs(ctx) - t_start;
         // send a blackbox ready frame UNTIL the app requests. flag is set true when saved, false when app requests
         if(ctx->blackbox.ready)
         {
