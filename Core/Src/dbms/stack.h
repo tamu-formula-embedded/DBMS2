@@ -90,7 +90,7 @@ typedef struct PACKED _TxStackFrameNDev
 
 #define MAKE_TX_FRAME_1DEV(REQTYPE, DEVADDR, REGADDR, ...)   \
 ((TxStackFrame1Dev){                                         \
-    .cmd = (REQTYPE << 4) + (sizeof((uint8_t[]){ __VA_ARGS__ })-1), \
+    .cmd = (1 << 7) + (REQTYPE << 4) + (sizeof((uint8_t[]){ __VA_ARGS__ })-1), \
     .devaddr = (DEVADDR),                                   \
     .regaddr = ESWAP16(REGADDR),                            \
     .data    = { __VA_ARGS__ },                             \
@@ -99,7 +99,7 @@ typedef struct PACKED _TxStackFrameNDev
 
 #define MAKE_TX_FRAME_NDEV(REQTYPE, REGADDR, ...)          \
 ((TxStackFrameNDev){                                       \
-    .cmd = (REQTYPE << 4) + (sizeof((uint8_t[]){ __VA_ARGS__ })-1), \
+    .cmd = (1 << 7) + (REQTYPE << 4) + (sizeof((uint8_t[]){ __VA_ARGS__ })-1), \
     .regaddr = ESWAP16(REGADDR),                            \
     .data    = { __VA_ARGS__ },                             \
     .__crc   = 0                                            \
