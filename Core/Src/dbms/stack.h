@@ -56,15 +56,16 @@
 #define PACKED __attribute__((packed))
 
 #define CALC_CRC_Rx(F)     CalcCrc16((uint8_t*)(&F), ((F).len + 6 + 1))
-#define FRAME_LEN_SD(F)    ((F).len + 6 + 1)
-#define FRAME_LEN_STK(F)    ((F).len + 5 + 1)
+#define FRAME_LEN_SD(F)    ((((F).cmd << 5) >> 5) + 6 + 1)
+#define FRAME_LEN_STK(F)    ((((F).cmd << 5) >> 5) + 5 + 1)
 
 typedef struct PACKED _TxStackFrame1Dev 
 {
-    uint8_t     __cmd   : 1;                /* must be set to 1 */
-    uint8_t     reqtype : 3;                /* one of REQ_* */
-    uint8_t     __res   : 1;                /* reserved bit */
-    uint8_t     len     : 3;                
+    // uint8_t     __cmd   : 1;                /* must be set to 1 */
+    // uint8_t     reqtype : 3;                /* one of REQ_* */
+    // uint8_t     __res   : 1;                /* reserved bit */
+    // uint8_t     len     : 3;   
+    uint8_t cmd;             
     uint8_t     devaddr;
     uint16_t    regaddr;
     uint8_t     data[MAX_TX_DATA];
@@ -75,10 +76,11 @@ typedef struct PACKED _TxStackFrame1Dev
 
 typedef struct PACKED _TxStackFrameNDev 
 {
-    uint8_t     __cmd   : 1;                /* must be set to 1 */
-    uint8_t     reqtype : 3;                /* one of REQ_* */
-    uint8_t     __res   : 1;                /* reserved bit */
-    uint8_t     len     : 3;                
+    // uint8_t     __cmd   : 1;                /* must be set to 1 */
+    // uint8_t     reqtype : 3;                /* one of REQ_* */
+    // uint8_t     __res   : 1;                /* reserved bit */
+    // uint8_t     len     : 3;       
+    uint8_t cmd;         
     uint16_t    regaddr;
     uint8_t     data[MAX_TX_DATA];
     uint16_t    __crc;                      /* extra buffer for CRC if all data bytes
@@ -88,10 +90,7 @@ typedef struct PACKED _TxStackFrameNDev
 
 #define MAKE_TX_FRAME_1DEV(REQTYPE, DEVADDR, REGADDR, ...)   \
 ((TxStackFrame1Dev){                                         \
-    .__cmd   = 1,                                           \
-    .reqtype = (REQTYPE),                                   \
-    .__res   = 0,                                           \
-    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,          \
+    .cmd = (REQTYPE << 4) + (sizeof((uint8_t[]){ __VA_ARGS__ })-1), \
     .devaddr = (DEVADDR),                                   \
     .regaddr = ESWAP16(REGADDR),                            \
     .data    = { __VA_ARGS__ },                             \
@@ -100,10 +99,7 @@ typedef struct PACKED _TxStackFrameNDev
 
 #define MAKE_TX_FRAME_NDEV(REQTYPE, REGADDR, ...)          \
 ((TxStackFrameNDev){                                       \
-    .__cmd   = 1,                                           \
-    .reqtype = (REQTYPE),                                   \
-    .__res   = 0,                                           \
-    .len     = sizeof((uint8_t[]){ __VA_ARGS__ })-1,          \
+    .cmd = (REQTYPE << 4) + (sizeof((uint8_t[]){ __VA_ARGS__ })-1), \
     .regaddr = ESWAP16(REGADDR),                            \
     .data    = { __VA_ARGS__ },                             \
     .__crc   = 0                                            \

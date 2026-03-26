@@ -109,18 +109,18 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     }
 
     HAL_Delay(5);
-    // StackAutoAddr(ctx);
+    StackAutoAddr(ctx);
     HAL_Delay(5);
-    // StackSetNumActiveCells(ctx, 0x0A);
+    StackSetNumActiveCells(ctx, 0x0A);
     HAL_Delay(5);
-    // StackSetupGpio(ctx);
+    StackSetupGpio(ctx);
     HAL_Delay(5);
-    // StackSetupVoltReadings(ctx); // todo: rn start
+    StackSetupVoltReadings(ctx); // todo: rn start
     HAL_Delay(5);
-    // StackConfigTimeout(ctx);
+    StackConfigTimeout(ctx);
 
     HAL_Delay(5);
-    // StackBalancingConfig(ctx);
+    StackBalancingConfig(ctx);
 
     HAL_Delay(5);
 
