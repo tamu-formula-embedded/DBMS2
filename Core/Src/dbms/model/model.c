@@ -182,7 +182,6 @@ int LoadQStats(DbmsCtx* ctx)
 int SaveQStats(DbmsCtx* ctx)
 {
     ctx->qstats.historic_accumulated_loss = ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss;
-    CanLog(ctx, "saving hist: %d\n", (int)(ctx->qstats.historic_accumulated_loss * 1000));
     return SaveStoredObject(
             ctx, EEPROM_INITIAL_CHARGE, &ctx->qstats, sizeof(ctx->qstats));
 }

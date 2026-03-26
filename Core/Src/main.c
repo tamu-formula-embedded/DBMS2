@@ -688,21 +688,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         
         if (pin_state == GPIO_PIN_SET)
         {
-            dbms_ctx.qstats.historic_accumulated_loss += dbms_ctx.qstats.accumulated_loss;
-            dbms_ctx.qstats.accumulated_loss = 0;
-            // CanLog(&dbms_ctx, "QD = %d\n", (uint32_t)(dbms_ctx.qstats.historic_accumulated_loss * 1000));
-            // CanLog(&dbms_ctx, "bye\n");
-            dbms_ctx.qstats.initial = 99;//test
-            dbms_ctx.stats.n_int_shutdowns++;
-            WriteEEPROM(&dbms_ctx, EEPROM_DEBUG, &dbms_ctx.stats.n_int_shutdowns, 1);
-            // SaveQStats(&dbms_ctx);
+            // The power will go out soon, you can't do too much here.
+            SaveQStats(&dbms_ctx);
 
-            //dbms_ctx.shutdown_requested = true;
-            //dbms_ctx.stats.shutdown_start_us = GetUs(&dbms_ctx);
-        }
-        else
-        {
-            dbms_ctx.flags.shutdown_requested = false;
+            dbms_ctx.stats.eeprom.n_int_shutdowns++;
+            WriteEEPROM(&dbms_ctx, EEPROM_NVRAM_STATS, &dbms_ctx.stats.eeprom, sizeof(dbms_ctx.stats.eeprom));
         }
     }
 }
