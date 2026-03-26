@@ -56,8 +56,8 @@
 #define PACKED __attribute__((packed))
 
 #define CALC_CRC_Rx(F)     CalcCrc16((uint8_t*)(&F), ((F).len + 6 + 1))
-#define FRAME_LEN_SD(F)    ((((F).cmd << 5) >> 5) + 6 + 1)
-#define FRAME_LEN_STK(F)    ((((F).cmd << 5) >> 5) + 5 + 1)
+#define FRAME_LEN_SD(F)    (((F).cmd & 0x07) + 6 + 1)
+#define FRAME_LEN_STK(F)    (((F).cmd & 0x07) + 5 + 1)
 
 typedef struct PACKED _TxStackFrame1Dev 
 {
