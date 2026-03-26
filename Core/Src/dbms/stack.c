@@ -211,7 +211,7 @@ void StackSetupGpio(DbmsCtx* ctx)
     // 0x09 = 00001001
     // 0x21 = 00100001 => 00101101 = 0x2D
     STACK_WRITE(ctx, 0x000E, DATA(0x09, 0x2D, 0x09));
-
+    HAL_Delay(10);
     // Setting up TSREF to active
     STACK_WRITE(ctx, 0x030A, DATA(0x01));
     DelayUs(ctx, 10);

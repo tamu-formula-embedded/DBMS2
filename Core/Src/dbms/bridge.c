@@ -27,13 +27,6 @@ int SendUARTFrame(DbmsCtx* ctx, uint8_t* buf, size_t len)
  */
 int SendStackFrame(DbmsCtx* ctx, void* frame, size_t len)
 {
-    __disable_irq();
-    CanLog(ctx, "SendStackFrame: ");
-    for(size_t i = 0; i < len; ++i) {
-        CanLog(ctx, "%x ", ((uint8_t*) frame)[i]);
-    }
-    CanLog(ctx, "\n");
-    __enable_irq();
     int status = 0;
     uint8_t* buf = (uint8_t*)frame;
     // Calculate the CRC on the payload
