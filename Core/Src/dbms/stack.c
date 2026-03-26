@@ -291,7 +291,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
     t_start = GetUs(ctx);
     // TODO: redo the RX path for stack
     if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } 
-    ctx->timing.v_poll_time_spent_rx = GetUs(ctx) - t_start;
+    ctx->timing.t_poll_time_spent_rx = GetUs(ctx) - t_start;
     for (int i = 0; i < N_MONITORS; i++)
     {
         ctx->stats.n_rx_stack_frames++;

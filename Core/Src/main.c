@@ -732,7 +732,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         dbms_ctx.stats.CAN_RX_cnt_ps++;
         DbmsCanRx(&dbms_ctx, CAN_RX_0, rxHeader, rxData);
     }
-    dbms_ctx.timing.time_spent_CAN_RX_in += GetUs(&dbms_ctx) - t_start;
+    dbms_ctx.timing.time_spent_CAN_RX_in = dbms_ctx.timing.time_spent_CAN_RX_in + (GetUs(&dbms_ctx) - t_start);
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
@@ -758,7 +758,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
         dbms_ctx.stats.CAN_RX_cnt_ps++;
         DbmsCanRx(&dbms_ctx, CAN_RX_1, rxHeader, rxData);
     }
-    dbms_ctx.timing.time_spent_CAN_RX_in += GetUs(&dbms_ctx) - t_start;
+    dbms_ctx.timing.time_spent_CAN_RX_in = dbms_ctx.timing.time_spent_CAN_RX_in + (GetUs(&dbms_ctx) - t_start);
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)

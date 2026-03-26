@@ -193,8 +193,8 @@ int SendMetrics(DbmsCtx* ctx)
     if (GetUs(ctx) - ctx->timing.last_ps_CAN_RXTX_send >= 1000000){
         SendMetric(ctx, 83, ctx->stats.CAN_RX_cnt_ps);
         SendMetric(ctx, 84, ctx->stats.CAN_TX_cnt_ps);
-        ctx->stats.CAN_RX_cnt_ps = 0;
-        ctx->stats.CAN_TX_cnt_ps = 0;
+        // ctx->stats.CAN_RX_cnt_ps = 0;
+        // ctx->stats.CAN_TX_cnt_ps = 0;
         ctx->timing.last_ps_CAN_RXTX_send = GetUs(ctx);
     }
     
