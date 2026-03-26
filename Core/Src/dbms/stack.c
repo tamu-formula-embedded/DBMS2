@@ -143,7 +143,6 @@ void StackAutoAddr(DbmsCtx* ctx)
     SendSetStackTop(ctx); // step 5
 
     ReadOtpEccDatain(ctx); // step 6
-    CanLog(ctx, "autoaddr\n");
 }
 
 /**
@@ -155,7 +154,6 @@ void StackAutoAddr(DbmsCtx* ctx)
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
     BROADCAST_WRITE(ctx, 0x0003, DATA(n_active_cells));
-    CanLog(ctx, "active cells\n");
 }
 
 
@@ -191,7 +189,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         IncStackCrcStats(ctx, true, i);
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
-        for (int j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
+        // for (int j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
         
         RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);        
         if (clean_frame->crc != CALC_CRC_Rx(*clean_frame))
@@ -217,8 +215,7 @@ void StackSetupGpio(DbmsCtx* ctx)
     // Setting up TSREF to active
     STACK_WRITE(ctx, 0x030A, DATA(0x01));
     DelayUs(ctx, 10);
-    CanLog(ctx, "GPIO\n");
-}
+ }
 
 /**
  * @brief Configure the heartbeat timeout
@@ -406,6 +403,7 @@ int ToggleMonitorLeds(DbmsCtx* ctx, bool on)
     uint8_t on_off_value = 0x5;
     if (on) on_off_value = 0x4;
     // Send stack device write command frame
+    CanLog(ctx, "led\n");
     if ((status = STACK_WRITE(ctx, 0x0011, DATA(on_off_value))) != 0)
     {
         return status;
