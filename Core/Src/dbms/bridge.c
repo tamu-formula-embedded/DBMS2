@@ -11,6 +11,11 @@
  */
 #include "bridge.h"
 
+int SendUARTFrame(DbmsCtx* ctx, uint8_t* buf, size_t len)
+{
+    return HAL_UART_Transmit(ctx->hw.uart, buf, len, STACK_SEND_TIMEOUT);
+}
+
 /**
  * @brief Sends a data frame to the stack via UART with
  * a CRC appended to the end for verification
@@ -82,7 +87,7 @@ int SendStackBlip(DbmsCtx* ctx, uint64_t brr)
 
     // Send a single byte at this slow speed
     uint8_t wake_frame[] = {0x00};
-    if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0)
+    if ((status = SendUARTFrame(ctx, wake_frame, sizeof(wake_frame))) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
         return status;

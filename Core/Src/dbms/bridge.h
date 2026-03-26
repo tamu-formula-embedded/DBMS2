@@ -33,6 +33,8 @@
 typedef struct _TxStackFrame1Dev TxStackFrame1Dev;
 typedef struct _TxStackFrameNDev TxStackFrameNDev;
 
+int SendUARTFrame(DbmsCtx* ctx, uint8_t* buf, size_t len);
+
 /**
  * @brief Sends a data frame to the stack via UART with
  * a CRC appended to the end for verification
