@@ -236,6 +236,7 @@ void SendPlex16x4(DbmsCtx* ctx, uint16_t id, uint16_t v1, uint16_t v2, uint16_t 
 
 void SendPlexMetrics(DbmsCtx* ctx)
 {
+    uint64_t t_start = GetUs(ctx);
     uint8_t data[8] = {0};
     uint8_t soc = CLAMP((uint8_t)(ctx->model.z_oc * 100), 0, 100);
     data[0] = soc;
@@ -260,6 +261,7 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
     SendPlex16x4(ctx, 0x012, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
                  F2I_K(pack_v, 10));
+    ctx->timing.time_spent_plex_metrics = GetUs(ctx) - t_start;
 }
 
 

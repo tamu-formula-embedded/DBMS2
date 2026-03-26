@@ -389,9 +389,7 @@ void DbmsIter(DbmsCtx* ctx)
     /**
      * Transmit telemetry
      */
-    uint64_t t_start = GetUs(ctx);
     SendPlexMetrics(ctx);
-    ctx->timing.time_spent_plex_metrics = GetUs(ctx) - t_start;
 
     ctx->flags.telem_enable = HAL_GetTick() - ctx->timing.last_rx_telembeat < 5000; // < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))
     if (ctx->flags.telem_enable)
