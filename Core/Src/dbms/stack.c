@@ -143,6 +143,7 @@ void StackAutoAddr(DbmsCtx* ctx)
     SendSetStackTop(ctx); // step 5
 
     ReadOtpEccDatain(ctx); // step 6
+    CanLog(ctx, "autoaddr\n");
 }
 
 /**
@@ -154,6 +155,7 @@ void StackAutoAddr(DbmsCtx* ctx)
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
     BROADCAST_WRITE(ctx, 0x0003, DATA(n_active_cells));
+    CanLog(ctx, "active cells\n");
 }
 
 
@@ -215,6 +217,7 @@ void StackSetupGpio(DbmsCtx* ctx)
     // Setting up TSREF to active
     STACK_WRITE(ctx, 0x030A, DATA(0x01));
     DelayUs(ctx, 10);
+    CanLog(ctx, "GPIO\n");
 }
 
 /**
