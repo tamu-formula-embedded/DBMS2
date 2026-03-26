@@ -91,14 +91,14 @@ void DbmsInit(DbmsCtx* ctx)
     //
     // Handle EEPROM and Shutdown Stats
     //
-    ReadEEPROM(ctx, EEPROM_NVRAM_STATS, &ctx->stats.eeprom, sizeof(ctx->stats.eeprom));
+    ReadEEPROM(ctx, EEPROM_NVRAM_STATS, (uint8_t *) &ctx->stats.eeprom, sizeof(ctx->stats.eeprom));
     if (ctx->stats.eeprom.n_shutdowns == ctx->stats.eeprom.prev_n_shutdowns) 
     {
         // Power good interrupt shutdown failed
         ctx->stats.eeprom.n_bad_shutdowns++;
     }
     ctx->stats.eeprom.prev_n_shutdowns = ctx->stats.eeprom.n_shutdowns;
-    WriteEEPROM(ctx, EEPROM_NVRAM_STATS, &ctx->stats.eeprom, sizeof(ctx->stats.eeprom));
+    WriteEEPROM(ctx, EEPROM_NVRAM_STATS, (uint8_t *) &ctx->stats.eeprom, sizeof(ctx->stats.eeprom));
 
     #ifdef HAS_FAN
     InitFan(ctx);
@@ -187,7 +187,7 @@ int DbmsPerformShutdown(DbmsCtx* ctx, bool shutdown_stack)
 void DbmsPowerOff(DbmsCtx* ctx)
 {
     // We don't have long to live, can't do too much here
-    *
+    
 }
 
 /**

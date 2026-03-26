@@ -689,10 +689,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         if (pin_state == GPIO_PIN_SET)
         {
             // The power will go out soon, you can't do too much here.
-            SaveQStats(&dbms_ctx);
+            // SaveQStats(&dbms_ctx);
 
-            dbms_ctx.stats.eeprom.n_int_shutdowns++;
-            WriteEEPROM(&dbms_ctx, EEPROM_NVRAM_STATS, &dbms_ctx.stats.eeprom, sizeof(dbms_ctx.stats.eeprom));
+            dbms_ctx.stats.eeprom.n_shutdowns++;
+            WriteEEPROM(&dbms_ctx, EEPROM_NVRAM_STATS, (uint8_t *) &dbms_ctx.stats.eeprom, sizeof(dbms_ctx.stats.eeprom));
         }
     }
 }
