@@ -88,7 +88,17 @@ void DbmsInit(DbmsCtx* ctx)
     memset(&ctx->faults.monitor_bad_crcs, 0, sizeof(ctx->faults.monitor_bad_crcs));
     memset(&ctx->timing, 0, sizeof(ctx->timing));
 
-    ReadEEPROM(ctx, EEPROM_DEBUG, &ctx->stats.n_int_shutdowns, 1);
+    //
+    // Handle EEPROM and Shutdown Stats
+    //
+    ReadEEPROM(ctx, EEPROM_NVRAM_STATS, (uint8_t *) &ctx->stats.eeprom, sizeof(ctx->stats.eeprom));
+    if (ctx->stats.eeprom.n_shutdowns == ctx->stats.eeprom.prev_n_shutdowns) 
+    {
+        // Power good interrupt shutdown failed
+        ctx->stats.eeprom.n_bad_shutdowns++;
+    }
+    ctx->stats.eeprom.prev_n_shutdowns = ctx->stats.eeprom.n_shutdowns;
+    WriteEEPROM(ctx, EEPROM_NVRAM_STATS, (uint8_t *) &ctx->stats.eeprom, sizeof(ctx->stats.eeprom));
 
     #ifdef HAS_FAN
     InitFan(ctx);
@@ -172,6 +182,12 @@ int DbmsPerformShutdown(DbmsCtx* ctx, bool shutdown_stack)
 
     HAL_Delay(200);
     return status;
+}
+
+void DbmsPowerOff(DbmsCtx* ctx)
+{
+    // We don't have long to live, can't do too much here
+    
 }
 
 /**
@@ -542,7 +558,7 @@ void DbmsErr(DbmsCtx* ctx)
     DbmsPerformShutdown(ctx, true);
 }
 
-void DbmsClose(DbmsCtx* ctx)
+void DbmsClose(DbmsCtx* ctx) // what is this
 {
     ctx->led_state = LED_IDLE;
 }

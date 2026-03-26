@@ -52,6 +52,9 @@ void DbmsErr(DbmsCtx* ctx);
 // Called on close
 void DbmsClose(DbmsCtx* ctx);
 
+// Called when power lost (capacitance or smth)
+void DbmsPowerOff(DbmsCtx* ctx);
+
 // Called on CAN RX
 void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header, uint8_t rx_data[8]);
 

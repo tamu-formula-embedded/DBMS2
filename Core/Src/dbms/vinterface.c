@@ -114,7 +114,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
     SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
 
-    SendMetric(ctx, 18, ctx->stats.n_eeprom_writes);
+    SendMetric(ctx, 18, ctx->stats.eeprom.n_writes);
     SendMetric(ctx, 19, ctx->faults_crc);
 
     SendMetric(ctx, 20, F2I_K(ctx->qstats.initial, 1e6));
@@ -178,7 +178,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 69, F2I_K(ctx->stats.pack_v, 1e4));
     SendMetric(ctx, 70, ctx->precharged);
     SendMetric(ctx, 71, (ctx->stats.n_rx_stack_bad_crcs_itvl * 100) / ctx->stats.n_rx_stack_frames_itvl);
-    SendMetric(ctx, 72, ctx->stats.n_int_shutdowns);
+    SendMetric(ctx, 72, ctx->stats.eeprom.n_shutdowns);
 
     SendMetric(ctx, 73, ctx->timing.v_poll_time_spent_rx);
     SendMetric(ctx, 74, ctx->timing.v_poll_time_spent_tx);

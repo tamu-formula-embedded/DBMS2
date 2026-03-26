@@ -94,6 +94,15 @@ typedef struct _DbmsSettings DbmsSettings;
 // fwd definition for enum -- led_controller.h
 typedef int32_t LedState;
 
+// Stats for tracking EEPROM writes and power good sensor
+typedef struct _EEPROMStats {
+    uint32_t n_shutdowns;
+    uint32_t prev_n_shutdowns;
+    uint32_t n_bad_shutdowns;
+    uint32_t n_writes;
+    uint32_t n_write_fails;
+} EEPROMStats;
+
 typedef struct _Stats
 {
     uint64_t iters;
@@ -119,8 +128,7 @@ typedef struct _Stats
     uint32_t n_rx_stack_bad_crcs_itvl;
     // uint32_t n_overruns;
 
-    uint32_t n_eeprom_writes;
-    uint8_t n_int_shutdowns;
+    EEPROMStats eeprom;
 
     float min_v;
     float max_v;
