@@ -283,7 +283,7 @@ void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame)
 int StackRead(DbmsCtx* ctx, uint8_t* raw, uint16_t start_reg, uint8_t data_size, int expected_size)
 {
     int status = 0;
-    if ((status = STACK_READ(ctx, start_reg, DATA(data_size-1))) != 0) 
+    if ((status = STACK_READ(ctx, start_reg, data_size)) != 0) 
     {
         return status;
     }
