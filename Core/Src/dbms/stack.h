@@ -43,13 +43,13 @@
 
 #define MAX_TX_DATA 8
 
-#define SINGLE_REV_READ(CTX, DEV, REG, ...) SendStackFrame1Dev(CTX, MAKE_TX_FRAME_1DEV(REQ_SINGLE_DEV_READ, DEV, REG, __VA_ARGS__))
+#define SINGLE_REV_READ(CTX, DEV, REG, LEN) SendStackFrame1Dev(CTX, MAKE_TX_FRAME_1DEV(REQ_SINGLE_DEV_READ, DEV, REG, LEN - 1))
 #define SINGLE_DEV_WRITE(CTX, DEV, REG, ...) SendStackFrame1Dev(CTX, MAKE_TX_FRAME_1DEV(REQ_SINGLE_DEV_WRITE, DEV, REG, __VA_ARGS__))
 
-#define STACK_READ(CTX, REG, ...) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_STACK_READ, REG, __VA_ARGS__))
+#define STACK_READ(CTX, REG, LEN) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_STACK_READ, REG, LEN - 1))
 #define STACK_WRITE(CTX, REG, ...) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_STACK_WRITE, REG, __VA_ARGS__))
 
-#define BROADCAST_READ(CTX, REG, ...) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_BROADCAST_READ, REG, __VA_ARGS__))
+#define BROADCAST_READ(CTX, REG, LEN) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_BROADCAST_READ, REG, LEN - 1))
 #define BROADCAST_WRITE(CTX, REG, ...) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE, REG, __VA_ARGS__))
 #define BROADCAST_REV_WRITE(CTX, REG, ...) SendStackFrameNDev(CTX, MAKE_TX_FRAME_NDEV(REQ_BROADCAST_WRITE_REV, REG, __VA_ARGS__))
 
@@ -58,6 +58,80 @@
 #define CALC_CRC_Rx(F)     CalcCrc16((uint8_t*)(&F), ((F).len + 6 + 1))
 #define FRAME_LEN_SD(F)    (((F).cmd & 0x07) + 6 + 1)
 #define FRAME_LEN_STK(F)    (((F).cmd & 0x07) + 5 + 1)
+
+// OTP Shadow Registers
+#define REG_ACTIVE_CELL         0x0003
+#define REG_GPIO_CONF1          0x000E // GPIO 1 and 2
+#define REG_GPIO_CONF2          0x000F // GPIO 3 and 4
+#define REG_GPIO_CONF3          0x0010 // GPIO 5 and 6
+#define REG_GPIO_CONF4          0x0011 // GPIO 7 and 8
+#define REG_COMM_TIMEOUT_CONF   0x0019
+
+// R/W Registers
+#define REG_DIR0_ADDR           0x0306
+#define REG_COMM_CTRL           0x0308
+#define REG_CONTROL1            0x0309
+#define REG_CONTROL2            0x030A
+#define REG_ADC_CTRL1           0x030D
+#define REG_CB_CELL1_CTRL       0x0318
+#define REG_CB_CELL16_CTRL      0x0327
+#define REG_BAL_CTRL1           0x032E
+#define REG_BAL_CTRL2           0x032F
+#define REG_BAL_CTRL3           0x0330
+#define REG_OTP_ECC_DATAIN1     0x0343
+#define REG_OTP_ECC_TEST        0x034C
+
+// GPIO Conf
+typedef enum _StackGPIOMode : uint8_t {
+    STACK_GPIO_DISABLED = 0,
+    STACK_GPIO_ADC_OTUT_IN,
+    STACK_GPIO_ADC_IN,
+    STACK_GPIO_DIGITAL_IN,
+    STACK_GPIO_OUT_HIGH,
+    STACK_GPIO_OUT_LOW,
+    STACK_GPIO_ADC_IN_WEAK_PU,
+    STACK_GPIO_ADC_IN_WEAK_PD
+} StackGPIOMode;
+
+#define STACK_GPIO_DATA(GPIO1, GPIO2, GPIO3, GPIO4, GPIO5, GPIO6, GPIO7, GPIO8) \
+DATA(                       \
+    (GPIO2) << 3 | (GPIO1), \
+    (GPIO4) << 3 | (GPIO3), \
+    (GPIO6) << 3 | (GPIO5), \
+    (GPIO8) << 3 | (GPIO7)  \
+)
+
+// REG_COMM_CTRL Bits
+#define COMM_TOP_STACK          0x01
+#define COMM_STACK_DEV          0x02
+
+// REG_CONTROL1 Bits
+#define CTRL1_ADDR_WR           0x01
+#define CTRL1_SOFT_RESET        0x02
+#define CTRL1_GOTO_SLEEP        0x04
+#define CTRL1_GOTO_SHUTDOWN     0x08
+#define CTRL1_SEND_SLPTOACT     0x10
+#define CTRL1_SEND_WAKE         0x20
+#define CTRL1_SEND_SHUTDOWN     0x40
+#define CTRL1_DIR_SEL           0x80
+
+// REG_CONTROL2 Bits
+#define CTRL2_TSREF_EN          0x01
+#define CTRL2_SEND_HW_RESET     0x02
+
+// REG_ADC_CTRL1 Bits
+#define ADC_SINGLE_RUN          0x01
+#define ADC_CONTINUOUS_RUN      0x02
+#define ADC_MAIN_GO             0x04
+#define ADC_VCELL_EN            0x08
+#define ADC_BB_EN               0x10
+
+// REG_BAL_CTRL2 Bits
+#define BAL2_AUTO_BAL           0x01
+#define BAL2_BAL_GO             0x02
+#define BAL2_OTCB_EN            0x10
+#define BAL2_FLTSTOP_EN         0x20
+#define BAL2_CB_PAUSE           0x40
 
 typedef struct PACKED _TxStackFrame1Dev 
 {
