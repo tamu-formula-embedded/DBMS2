@@ -49,7 +49,7 @@ int StackWake(DbmsCtx* ctx)
             CAN_REPORT_FAULT(ctx, status);
             return status;
         }
-        if ((status = SINGLE_DEV_WRITE(ctx, 0, 0x0309, DATA(0x13, 0x95))) != 0)
+        if ((status = SINGLE_DEV_WRITE(ctx, 0, REG_CONTROL1, DATA(CTRL1_SEND_WAKE))) != 0)
         {
             CAN_REPORT_FAULT(ctx, status);
             return status;
@@ -73,7 +73,7 @@ int StackShutdown(DbmsCtx* ctx)
     int status = 0;
     for (int i = 0; i < 2; i++)
     {
-        if ((status = BROADCAST_WRITE(ctx, 0x0390, DATA(1 << 3))) != 0)
+        if ((status = BROADCAST_WRITE(ctx, REG_CONTROL1, DATA(CTRL1_GOTO_SHUTDOWN))) != 0)
         {
             CAN_REPORT_FAULT(ctx, status);
             return status;
@@ -92,7 +92,7 @@ void SendOtpEccDatain(DbmsCtx* ctx)
 {
     for (int i = 0; i < 8; i++)
     {
-        BROADCAST_WRITE(ctx, 0x343 + i, DATA(0x00));
+        BROADCAST_WRITE(ctx, REG_OTP_ECC_DATAIN1 + i, DATA(0x00));
     }
 }
 
@@ -100,27 +100,27 @@ void SendAutoAddr(DbmsCtx* ctx)
 {    
     for (int i = 0; i <= N_STACKDEVS; i++)
     {
-        BROADCAST_WRITE(ctx, 0x0306, DATA(0x00 + i));
+        BROADCAST_WRITE(ctx, REG_DIR0_ADDR, DATA(0x00 + i));
     }
 }
 
 void SendSetStackTop(DbmsCtx* ctx)
 {
     // Sets all devices as stack devices
-    BROADCAST_WRITE(ctx, 0x0308, DATA(0x02));
+    BROADCAST_WRITE(ctx, REG_COMM_CTRL, DATA(COMM_STACK_DEV));
 
     // Sets bridge device as non-stack device and bottom of stack
-    SINGLE_DEV_WRITE(ctx, 0, 0x0308, DATA(0x00));
+    SINGLE_DEV_WRITE(ctx, 0, REG_COMM_CTRL, DATA(0x00));
 
     // Sets top of stack
-    SINGLE_DEV_WRITE(ctx, N_STACKDEVS-1, 0x0308, DATA(0x03));
+    SINGLE_DEV_WRITE(ctx, N_STACKDEVS-1, REG_COMM_CTRL, DATA(COMM_STACK_DEV | COMM_TOP_STACK));
 }
 
 void ReadOtpEccDatain(DbmsCtx* ctx)
 {
     for (int i = 0; i < 8; i++)
     {
-        BROADCAST_READ(ctx, 0x034C + i, DATA(0x00));
+        BROADCAST_READ(ctx, REG_OTP_ECC_TEST + i, 1);
     }
 }
 
@@ -134,11 +134,9 @@ void StackAutoAddr(DbmsCtx* ctx)
 {
     SendOtpEccDatain(ctx); // step 1
 
-    BROADCAST_WRITE(ctx, 0x0309, DATA(0x01));
+    BROADCAST_WRITE(ctx, REG_CONTROL1, DATA(CTRL1_ADDR_WR));
 
     SendAutoAddr(ctx); // step 3
-
-    // BROADCAST_WRITE(ctx, 0x0308, DATA(0x02));
 
     SendSetStackTop(ctx); // step 5
 
@@ -153,7 +151,7 @@ void StackAutoAddr(DbmsCtx* ctx)
  */
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
-    BROADCAST_WRITE(ctx, 0x0003, DATA(n_active_cells));
+    BROADCAST_WRITE(ctx, REG_ACTIVE_CELL, DATA(n_active_cells)); // Should this be a stack write?
 }
 
 
@@ -168,7 +166,7 @@ void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
  */
 void StackSetupVoltReadings(DbmsCtx* ctx)
 {
-    BROADCAST_WRITE(ctx, 0x030D, DATA(0x06));
+    BROADCAST_WRITE(ctx, REG_ADC_CTRL1, DATA(ADC_CONTINUOUS_RUN | ADC_MAIN_GO));
 }
 
 /**
@@ -201,19 +199,25 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 }
 
 /**
- * @brief Configure's for temp readings
+ * @brief Configure's stack GPIO for temp mux and LEDs
  * 
  * @param ctx Context pointer 
  */
 void StackSetupGpio(DbmsCtx* ctx)
 {
-    // Note 2: Also configures GPIO8 even though we dont need to, hence just setting GPIO8 to output low
-    // 0x09 = 00001001
-    // 0x21 = 00100001 => 00101101 = 0x2D
-    STACK_WRITE(ctx, 0x000E, DATA(0x09, 0x2D, 0x09));
+    STACK_WRITE(ctx, REG_GPIO_CONF1, STACK_GPIO_DATA(
+        STACK_GPIO_ADC_OTUT_IN,
+        STACK_GPIO_ADC_OTUT_IN,
+        STACK_GPIO_OUT_LOW,
+        STACK_GPIO_OUT_LOW,
+        STACK_GPIO_ADC_OTUT_IN,
+        STACK_GPIO_ADC_OTUT_IN,
+        STACK_GPIO_DISABLED,
+        STACK_GPIO_DISABLED
+    ));
     HAL_Delay(10);
     // Setting up TSREF to active
-    STACK_WRITE(ctx, 0x030A, DATA(0x01));
+    STACK_WRITE(ctx, REG_CONTROL2, DATA(CTRL2_TSREF_EN));
     DelayUs(ctx, 10);
  }
 
@@ -224,9 +228,7 @@ void StackSetupGpio(DbmsCtx* ctx)
  */
 void StackConfigTimeout(DbmsCtx* ctx)
 {
-    // uint8_t hbcfg_frame[] = {0xD0, 0x00, 0x19, 0x0A, 0xB3, 0x73};
-    // SendStackFrame(ctx, hbcfg_frame, sizeof(hbcfg_frame));          // crc already encoded 
-    BROADCAST_WRITE(ctx, 0x0019, DATA(0x0A));
+    BROADCAST_WRITE(ctx, REG_COMM_TIMEOUT_CONF, DATA(0x0A)); // Shutdown after 2 seconds of no comms
     DelayUs(ctx, 10);
 }
 
@@ -281,7 +283,7 @@ void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame)
 int StackRead(DbmsCtx* ctx, uint8_t* raw, uint16_t start_reg, uint8_t data_size, int expected_size)
 {
     int status = 0;
-    if ((status = STACK_READ(ctx, start_reg, DATA(data_size-1))) != 0) 
+    if ((status = STACK_READ(ctx, start_reg, data_size)) != 0) 
     {
         return status;
     }
@@ -400,10 +402,8 @@ int ToggleMonitorLeds(DbmsCtx* ctx, bool on)
     // Turns on or off LED connected to GPIO8 on all monitor chips
     // Note for future:
     int status = 0;
-    uint8_t on_off_value = 0x5;
-    if (on) on_off_value = 0x4;
-    // Send stack device write command frame
-    if ((status = STACK_WRITE(ctx, 0x0011, DATA(on_off_value))) != 0)
+    StackGPIOMode mode = on ? STACK_GPIO_OUT_HIGH : STACK_GPIO_OUT_LOW;
+    if ((status = STACK_WRITE(ctx, REG_GPIO_CONF4, DATA(mode))) != 0)
     {
         return status;
     }
@@ -443,15 +443,14 @@ void MonitorLedBlink(DbmsCtx* ctx)
 void StackBalancingConfig(DbmsCtx* ctx)
 {
     // Setting balancing method to auto balancing and to stop at fault
-    // BAL_CTRL2_CONFIG = 0x31
-    STACK_WRITE(ctx, 0x032F, DATA(0x31));
+    STACK_WRITE(ctx, REG_BAL_CTRL2, DATA(BAL2_FLTSTOP_EN | BAL2_OTCB_EN | BAL2_AUTO_BAL));
 }
 
 void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, StackBalanceTimes bal_time_idx)
 {
     bool* cells_to_bal = ctx->cell_states[dev_addr].cells_to_balance;
 
-    uint16_t base_reg = 0x0327;  // CB_CELL1_CTRL (starts at cell 1, goes down)
+    uint16_t base_reg = REG_CB_CELL16_CTRL;
     uint8_t bal_time = MIN((uint8_t)bal_time_idx, (uint8_t)__N_BAL_TIMES);
     // Write each cell timer individually
     for (size_t i = 0; i < N_GROUPS_PER_SIDE; ++i)
@@ -468,7 +467,7 @@ void StackStartDeviceBalancing(DbmsCtx* ctx, uint8_t dev_addr)
 {
     // this is the final trigger - balancing doesn't start until bal_ctrl2 is set
     //#define BAL_CTRL2_BAL_GO_MASK 0x02    
-    SINGLE_DEV_WRITE(ctx, dev_addr, 0x032F, DATA(0x02));
+    SINGLE_DEV_WRITE(ctx, dev_addr, REG_BAL_CTRL2, DATA(BAL2_BAL_GO));
     HAL_Delay(8);
 }
 
