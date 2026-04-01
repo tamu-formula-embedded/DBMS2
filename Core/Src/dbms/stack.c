@@ -450,7 +450,7 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, Stac
 {
     bool* cells_to_bal = ctx->cell_states[dev_addr].cells_to_balance;
 
-    uint16_t base_reg = REG_CB_CELL16_CTRL;
+    uint16_t base_reg = REG_CB_CELL1_CTRL;
     uint8_t bal_time = MIN((uint8_t)bal_time_idx, (uint8_t)__N_BAL_TIMES);
     // Write each cell timer individually
     for (size_t i = 0; i < N_GROUPS_PER_SIDE; ++i)
