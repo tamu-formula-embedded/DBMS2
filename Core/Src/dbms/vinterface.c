@@ -304,7 +304,7 @@ int SendCellVoltages(DbmsCtx* ctx)
     {
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
-            buffer[N_GROUPS_PER_SIDE - j - 1] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
+            buffer[j] = CLAMP_U16((long)lroundf(ctx->cell_states[i].voltages[j] * 10.0f));
         }
 
         SendCellDataBuffer(ctx, CANID_CELLSTATE_VOLTS, i, buffer, ARRAY_LEN(buffer));
