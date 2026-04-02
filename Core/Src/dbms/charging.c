@@ -123,7 +123,6 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
             break;
         case CH_BALANCING_ODDS:
             CanLog(ctx, "Enter BalO\n");
-            ctx->charging.pre_bal_min_v = ctx->stats.min_v;
             StackComputeCellsToBalance(ctx, true, GetSetting(ctx, CH_BAL_DELTA_END)); 
             // Sends balance timers and starts charging:
             StackStartBalancing(ctx, true, GetSetting(ctx, CH_BAL_T_IDX));
@@ -174,7 +173,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         ctx->elcon.v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600000) / 1000;
         ctx->elcon.i_req = MIN(MIN(GetSetting(ctx, CH_I), ctx->j1772.maxCurrentSupply), 25);
         SendElconRequest(ctx, ctx->elcon.v_req, ctx->elcon.i_req, 0);
-        CanLog(ctx, "Elcon V=%d I=%d\n", ctx->elcon.v_req, ctx->elcon.i_req);
+        // CanLog(ctx, "Elcon V=%d I=%d\n", ctx->elcon.v_req, ctx->elcon.i_req);
 
         if (TIME_IN_STATE_MS(ctx) > 1000)   // TODO:?
         {

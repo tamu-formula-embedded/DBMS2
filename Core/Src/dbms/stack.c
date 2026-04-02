@@ -284,7 +284,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         {
             if (addr % 2 == 0) break;
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-            ctx->cell_states[addr / 2].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+            ctx->cell_states[addr / 2].voltages[N_GROUPS_PER_SIDE - j - 1] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
             // if (ctx->cell_states[addr / 2].voltages[j]  > 4500)
             // {
             //     CanLog(ctx, "%d", i + 1);
