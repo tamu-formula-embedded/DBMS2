@@ -187,6 +187,9 @@ void DbmsHandleActive(DbmsCtx* ctx)
     
     StackUpdateAllTempReadings(ctx);
     HAL_Delay(10);
+    uint8_t raw[1024];
+    StackRead(ctx, raw, 0x52D, 1, 1);
+    CanLog(ctx, "fsum: %d", raw[4]);
     ctx->profiling.times.T2 = GetUs(ctx);
     ctx->profiling.times.T3 = GetUs(ctx);
 
@@ -236,7 +239,6 @@ void DbmsIter(DbmsCtx* ctx)
     ctx->stats.iters++;
     ctx->timing.iter_start_us = GetUs(ctx);
     // ctx->profiling.profiling.times.T0 = GetUs(ctx);
-
     /**
      * Handle blackbox data requested
      */
