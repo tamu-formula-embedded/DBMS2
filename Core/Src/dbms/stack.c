@@ -187,10 +187,10 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         IncStackCrcStats(ctx, true, i);
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
-        // for (int j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
+        for (int j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
         
-        RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);        
-        if (clean_frame->crc != CALC_CRC_Rx(*clean_frame))
+        RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);
+        if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateVoltages(ctx, clean_frame);
         else
             IncStackCrcStats(ctx, false, i);
@@ -250,7 +250,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         for (int j = 0; data[0] != (STACK_T_REG_START & 0xFF) && j < 1024; j++) { data++; }
 
         RxStackFrameTemps* clean_frame = (RxStackFrameTemps*)(data - 3); 
-        if (clean_frame->crc == CALC_CRC_Rx(*clean_frame))
+        if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateTemps(ctx, clean_frame);
         else
             IncStackCrcStats(ctx, false, i);
@@ -450,7 +450,7 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, Stac
 {
     bool* cells_to_bal = ctx->cell_states[dev_addr].cells_to_balance;
 
-    uint16_t base_reg = REG_CB_CELL16_CTRL;
+    uint16_t base_reg = REG_CB_CELL1_CTRL;
     uint8_t bal_time = MIN((uint8_t)bal_time_idx, (uint8_t)__N_BAL_TIMES);
     // Write each cell timer individually
     for (size_t i = 0; i < N_GROUPS_PER_SIDE; ++i)

@@ -55,7 +55,7 @@
 
 #define PACKED __attribute__((packed))
 
-#define CALC_CRC_Rx(F)     CalcCrc16((uint8_t*)(&F), ((F).len + 6 + 1))
+#define CALC_CRC_Rx(F)     CalcCrc16((uint8_t*)(F), (((F)->init & 0x7F) + 5))
 #define FRAME_LEN_SD(F)    (((F).cmd & 0x07) + 6 + 1)
 #define FRAME_LEN_STK(F)    (((F).cmd & 0x07) + 5 + 1)
 
@@ -73,8 +73,7 @@
 #define REG_CONTROL1            0x0309
 #define REG_CONTROL2            0x030A
 #define REG_ADC_CTRL1           0x030D
-#define REG_CB_CELL1_CTRL       0x0318
-#define REG_CB_CELL16_CTRL      0x0327
+#define REG_CB_CELL1_CTRL       0x0327
 #define REG_BAL_CTRL1           0x032E
 #define REG_BAL_CTRL2           0x032F
 #define REG_BAL_CTRL3           0x0330
@@ -82,7 +81,8 @@
 #define REG_OTP_ECC_TEST        0x034C
 
 // GPIO Conf
-typedef enum _StackGPIOMode : uint8_t {
+typedef enum _StackGPIOMode : uint8_t
+{
     STACK_GPIO_DISABLED = 0,
     STACK_GPIO_ADC_OTUT_IN,
     STACK_GPIO_ADC_IN,
@@ -94,7 +94,7 @@ typedef enum _StackGPIOMode : uint8_t {
 } StackGPIOMode;
 
 #define STACK_GPIO_DATA(GPIO1, GPIO2, GPIO3, GPIO4, GPIO5, GPIO6, GPIO7, GPIO8) \
-DATA(                       \
+DATA (                      \
     (GPIO2) << 3 | (GPIO1), \
     (GPIO4) << 3 | (GPIO3), \
     (GPIO6) << 3 | (GPIO5), \
@@ -135,6 +135,10 @@ DATA(                       \
 
 typedef struct PACKED _TxStackFrame1Dev 
 {
+    // uint8_t     __cmd   : 1;                /* must be set to 1 */
+    // uint8_t     reqtype : 3;                /* one of REQ_* */
+    // uint8_t     __res   : 1;                /* reserved bit */
+    // uint8_t     len     : 3;   
     uint8_t     cmd;             
     uint8_t     devaddr;
     uint16_t    regaddr;
@@ -145,7 +149,11 @@ typedef struct PACKED _TxStackFrame1Dev
 } TxStackFrame1Dev;
 
 typedef struct PACKED _TxStackFrameNDev 
-{     
+{
+    // uint8_t     __cmd   : 1;                /* must be set to 1 */
+    // uint8_t     reqtype : 3;                /* one of REQ_* */
+    // uint8_t     __res   : 1;                /* reserved bit */
+    // uint8_t     len     : 3;       
     uint8_t     cmd;         
     uint16_t    regaddr;
     uint8_t     data[MAX_TX_DATA];
@@ -175,7 +183,7 @@ typedef struct PACKED _TxStackFrameNDev
 
 typedef struct PACKED _RxStackFrameVoltages
 {
-    uint8_t     cmd;               
+    uint8_t     init    : 7;
     uint8_t     devaddr;
     uint16_t    regaddr;
     uint8_t     data[N_GROUPS_PER_SIDE * sizeof(uint16_t)];
@@ -184,7 +192,7 @@ typedef struct PACKED _RxStackFrameVoltages
 
 typedef struct PACKED _RxStackFrameTemps
 {
-    uint8_t     cmd;
+    uint8_t     init    : 7;                
     uint8_t     devaddr;
     uint16_t    regaddr;
     uint8_t     data[(N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(uint16_t)]; // +2 GPIO  mismatch
