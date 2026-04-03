@@ -599,9 +599,10 @@ void StackBalancingConfig(DbmsCtx* ctx)
     SendStackFrameSetCrc(ctx, frame_cb_config, sizeof(frame_cb_config));
 }
 
-void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, StackBalanceTimes bal_time_idx)
+void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t side, bool odds, StackBalanceTimes bal_time_idx)
 {
-    bool* cells_to_bal = ctx->cell_states[dev_addr].cells_to_balance;
+    uint8_t dev_addr = side * N_MONITORS_PER_SIDE + 1;
+    bool* cells_to_bal = ctx->cell_states[side].cells_to_balance;
 
     uint16_t base_reg = 0x0327;  // CB_CELL1_CTRL (starts at cell 1, goes down)
     uint8_t bal_time = MIN((uint8_t)bal_time_idx, (uint8_t)__N_BAL_TIMES);
@@ -614,7 +615,7 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, Stac
         
         uint8_t frame[7];
         frame[0] = 0x90;                        // single device write, 1 byte
-        frame[1] = dev_addr;                 // which monitor chip
+        frame[1] = dev_addr;                    // which monitor chip
         frame[2] = reg_addr >> 8;               // register MSB
         frame[3] = reg_addr & 0xFF;             // register LSB  
         frame[4] = timer_val;                   // timer value
@@ -626,21 +627,12 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, Stac
     }
 }
 
-void StackStartDeviceBalancing(DbmsCtx* ctx, uint8_t dev_addr)
-{
-    // this is the final trigger - balancing doesn't start until bal_ctrl2 is set
-    //#define BAL_CTRL2_BAL_GO_MASK 0x02
-    //uint8_t bal_ctrl2_frame[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_BAL_GO_MASK, 0x00, 0x00};
-    
-    uint8_t frame[7];
 
-    frame[0] = 0x90; // single stack write
-    frame[1] = dev_addr;
-    frame[2] = 0x03; // bal_ctrl2 reg
-    frame[3] = 0x2F; // bal_ctrl2 reg 
-    frame[4] = 0x02; // bal_go bit
-    frame[5] = 0x00; // crc
-    frame[6] = 0x00; // crc
+void StackSendBalGo(DbmsCtx* ctx)
+{
+    // Stack write to send BAL_GO in BAL_CTRL2 to begin balancing
+    uint8_t frame[] = {0xB0, 0x03, 0x2F, 0x02, 0x00, 0x00};
+
     SendStackFrameSetCrc(ctx, frame, sizeof(frame));
     HAL_Delay(8);
 }
@@ -649,10 +641,9 @@ void StackStartBalancing(DbmsCtx* ctx, bool odds, int32_t bal_time)
 {
     for(size_t side = 0; side < N_SIDES; ++side)
     {
-        uint8_t dev_addr = side * N_MONITORS_PER_SIDE + 1;
-        StackSetDeviceBalanceTimers(ctx, dev_addr, odds, bal_time);
-        StackStartDeviceBalancing(ctx, dev_addr);
+        StackSetDeviceBalanceTimers(ctx, side, odds, bal_time);
     }
+    StackSendBalGo(ctx);
 }
 
 void StackComputeCellsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv)
