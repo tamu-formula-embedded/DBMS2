@@ -55,7 +55,7 @@
 
 #define PACKED __attribute__((packed))
 
-#define CALC_CRC_Rx(F)     CalcCrc16((uint8_t*)(&F), ((F).len + 6 + 1))
+#define CALC_CRC_Rx(F)     CalcCrc16((uint8_t*)(F), (((F)->init & 0x7F) + 5))
 #define FRAME_LEN_SD(F)    (((F).cmd & 0x07) + 6 + 1)
 #define FRAME_LEN_STK(F)    (((F).cmd & 0x07) + 5 + 1)
 
@@ -183,8 +183,7 @@ typedef struct PACKED _TxStackFrameNDev
 
 typedef struct PACKED _RxStackFrameVoltages
 {
-    uint8_t     __cmd   : 1;                /* must be set to 0 */
-    uint8_t     len     : 7;                
+    uint8_t     init    : 7;
     uint8_t     devaddr;
     uint16_t    regaddr;
     uint8_t     data[N_GROUPS_PER_SIDE * sizeof(uint16_t)];
@@ -193,8 +192,7 @@ typedef struct PACKED _RxStackFrameVoltages
 
 typedef struct PACKED _RxStackFrameTemps
 {
-    uint8_t     __cmd   : 1;                /* must be set to 0 */
-    uint8_t     len     : 7;                
+    uint8_t     init    : 7;                
     uint8_t     devaddr;
     uint16_t    regaddr;
     uint8_t     data[(N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(uint16_t)]; // +2 GPIO  mismatch
