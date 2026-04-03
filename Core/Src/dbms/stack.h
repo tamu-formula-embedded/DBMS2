@@ -183,7 +183,7 @@ typedef struct PACKED _TxStackFrameNDev
 
 typedef struct PACKED _RxStackFrameVoltages
 {
-    uint8_t     init    : 7;
+    uint8_t     init;
     uint8_t     devaddr;
     uint16_t    regaddr;
     uint8_t     data[N_GROUPS_PER_SIDE * sizeof(uint16_t)];
@@ -192,7 +192,7 @@ typedef struct PACKED _RxStackFrameVoltages
 
 typedef struct PACKED _RxStackFrameTemps
 {
-    uint8_t     init    : 7;                
+    uint8_t     init; 
     uint8_t     devaddr;
     uint16_t    regaddr;
     uint8_t     data[(N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(uint16_t)]; // +2 GPIO  mismatch
