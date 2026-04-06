@@ -215,6 +215,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
         CheckTemperatureFaults(ctx);
         ctx->profiling.times.T8 = GetUs(ctx);
 
+        CheckStackFaults(ctx);
+
         SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
 
         // PollFaultSummary(ctx);

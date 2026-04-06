@@ -33,6 +33,7 @@ typedef enum
     CTRL_FAULT_MAX_DELTA_EXCEEDED = 8,
     CTRL_FAULT_STACK_FAULT = 9,
     CTRL_FAULT_CURRENT_PULSE = 10,
+    CTRL_FAULT_STACK_DISCONNECT = 11,
 
     CTRL_FAULT_TYPE_COUNT // Total number of fault types -- should be last
 } CtrlFault;
@@ -46,6 +47,7 @@ void CtrlClearAllFaults(DbmsCtx* ctx);
 void CheckVoltageFaults(DbmsCtx* ctx);
 void CheckTemperatureFaults(DbmsCtx* ctx);
 void CheckCurrentFaults(DbmsCtx* ctx);
+void CheckStackFaults(DbmsCtx* ctx);
 
 void SetFaultLine(DbmsCtx* ctx, bool faulted);
 void ThrowHardFault(DbmsCtx* ctx);

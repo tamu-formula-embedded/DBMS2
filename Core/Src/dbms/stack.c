@@ -259,6 +259,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
 
 void UpdateTemps(DbmsCtx* ctx, RxStackFrameTemps* frame)
 {
+    if (frame->devaddr > N_MONITORS + 1) return;
     uint8_t* moved_data = &(frame->data[4]);
     memmove(moved_data, frame->data, 4); // GPIO1 = GPIO3, GPIO2 = GPIO4
     uint8_t offset = ctx->mux_selector;
@@ -273,6 +274,9 @@ void UpdateTemps(DbmsCtx* ctx, RxStackFrameTemps* frame)
 
 void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame)
 {
+    if (frame->devaddr > N_MONITORS + 1) return;
+    ctx->stats.last_monitor_msg[frame->devaddr - 1] = ctx->stats.iters; // TODO: Update for reverse addressing
+
     for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
     {
         uint16_t raw = (frame->data[j * sizeof(int16_t)] << 8) + frame->data[j * sizeof(int16_t) + 1];

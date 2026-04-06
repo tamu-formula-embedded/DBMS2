@@ -137,6 +137,7 @@ typedef struct _Stats
     uint64_t n_logging_frames;
     bool fault_line_faulted;
 
+    uint64_t last_monitor_msg[N_MONITORS]; // Last tick that a message was received from each monitor
 } Stats;
 
 typedef struct _Model   // Outputs from the ECM model
