@@ -286,6 +286,10 @@ void DbmsIter(DbmsCtx* ctx)
         PeriodicSaveQStats(ctx);
     }
 
+    // StackReverseAutoAddr(ctx);
+    HAL_Delay(5);
+    StackReverseCommDir(ctx, true);
+
     // Let everybody know that we are alive
     CanTxHeartbeat(ctx, CalcCrc16((uint8_t*)ctx->settings, sizeof(DbmsSettings)));
     // ctx->profiling.profiling.times.T4 = GetUs(ctx);

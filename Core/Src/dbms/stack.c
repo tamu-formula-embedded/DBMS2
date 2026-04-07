@@ -143,6 +143,52 @@ void StackAutoAddr(DbmsCtx* ctx)
     ReadOtpEccDatain(ctx); // step 6
 }
 
+void StackReverseAutoAddr(DbmsCtx* ctx)
+{
+    // uint8_t frame_change_base_dev_dir[] = {0x90, 0x30, 0x09, 0x80, 0x00, 0x00};
+    // SendStackFrameSetCrc(ctx, frame_change_base_dev_dir, sizeof(frame_change_base_dev_dir));
+    CanLog(ctx, "sdc");
+    // uint8_t frame_reverse_broadcast_dir[] = {0xE0, 0x30, 0x09, 0x80, 0x00, 0x00};
+    BROADCAST_REV_WRITE(ctx, 0x309, DATA(0x80));
+    HAL_Delay(1);
+    CanLog(ctx, "br");
+    // static uint8_t FRAME_ENABLE_REVERSE_AUTO_ADDR[] = {0xD0, 0x03, 0x09, 0x81, 0x0F, 0x74};
+    BROADCAST_WRITE(ctx, 0x309, DATA(0x81));
+    CanLog(ctx, "ea");
+    SendReverseAutoAddr(ctx);
+    CanLog(ctx, "addresses");
+    SendSetStackTop(ctx);
+    CanLog(ctx, "tos");
+}
+
+void StackReverseCommDir(DbmsCtx* ctx, bool reverse_direction)
+{
+    uint8_t dir = reverse_direction ? 0x80 : 0x00;
+    // uint8_t frame_change_base_dev_dir[] = {0x90, 0x00, 0x03, 0x09, dir, 0x00, 0x00};
+    SINGLE_DEV_WRITE(ctx, 0x00, 0x309, DATA(dir));
+    HAL_Delay(1);
+    // uint8_t frame_reverse_broadcast_dir[] = {0xE0, 0x03, 0x09, dir, 0x00, 0x00};
+    BROADCAST_REV_WRITE(ctx, 0x308, DATA(0x00));
+    HAL_Delay(1);
+    BROADCAST_REV_WRITE(ctx, 0x309, DATA(dir));
+    HAL_Delay(1);
+    SendReverseAutoAddr(ctx);
+    HAL_Delay(1);
+    SendSetStackTop(ctx);
+    CanLog(ctx, "rev??");
+}
+
+void SendReverseAutoAddr(DbmsCtx* ctx)
+{
+    // uint8_t frame_addr_dev[] = {0xD0, 0x03, 0x07, 0x00, 0x00, 0x00};
+    for (int i = 0; i <= N_STACKDEVS; i++)
+    {
+        BROADCAST_WRITE(ctx, 0x307, DATA(i));
+        HAL_Delay(1);
+    }
+}
+
+
 /**
  * @brief Set the number of active cells in the stack
  * 
