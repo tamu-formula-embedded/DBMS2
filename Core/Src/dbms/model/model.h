@@ -7,6 +7,7 @@
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #ifndef _MODEL_H_
 #define _MODEL_H_
@@ -15,6 +16,7 @@
 #include "data.h"
 #include "../utils/lut.h"
 #include "../storage.h"
+#include "../vinterface.h"
 
 #define Q_BOUND_L_OC    4.3696    
 #define Q_BOUND_H_OC    4.3967
@@ -27,5 +29,6 @@ void UpdateModel(DbmsCtx* ctx);
 
 int LoadQStats(DbmsCtx* ctx);
 int SaveQStats(DbmsCtx* ctx);
+int PeriodicSaveQStats(DbmsCtx *ctx);
 
 #endif

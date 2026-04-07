@@ -1,3 +1,14 @@
+/**
+ *
+ * Distributed BMS      Charging State-Machine Controller
+ *
+ * Copyright (C) 2025   Texas A&M University
+ *
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
+ */
 #include "charging.h"
 #include "context.h"
 #include "ledctl.h"
@@ -6,7 +17,7 @@
 
 bool ElconConnected(DbmsCtx* ctx)
 {
-    return (HAL_GetTick() - ctx->elcon.heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN))&&!CtrlHasAnyFaults(ctx);
+    return (HAL_GetTick() - ctx->elcon.heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN)) && !CtrlHasAnyFaults(ctx);
 }
 
 bool ChargingTimeout(DbmsCtx* ctx)
@@ -16,34 +27,45 @@ bool ChargingTimeout(DbmsCtx* ctx)
 
 bool ChargingConnected(DbmsCtx* ctx)
 {
-    return ctx->active && /*ctx->charging.allowed &&*/ ElconConnected(ctx) && ctx->j1772.pp_connect;
+    return ctx->flags.active && /*ctx->charging.allowed &&*/ ElconConnected(ctx) && ctx->j1772.pp_connect;
 }
 
-bool NeedsToBalance(DbmsCtx* ctx)   // TODO: this is the start condition
+bool NeedsToBalance(DbmsCtx* ctx) // TODO: this is the start condition
 {
     // TODO: condition for BMS temperature < some threshold
     // TODO: if we have a cell at max V
-    return 1000 * (ctx->stats.max_v - ctx->stats.min_v) > GetSetting(ctx, CH_BAL_DELTA_BEGIN) 
-        || (1000 * ctx->stats.max_v > GetSetting(ctx, CH_TARGET_V) 
-           && 1000 * (ctx->stats.max_v - ctx->stats.min_v) > GetSetting(ctx, CH_BAL_DELTA_END));
+    return 1000 * (ctx->stats.max_v - ctx->stats.min_v) > GetSetting(ctx, CH_BAL_DELTA_BEGIN) ||
+           (1000 * ctx->stats.max_v > GetSetting(ctx, CH_TARGET_V) &&
+            1000 * (ctx->stats.max_v - ctx->stats.min_v) > GetSetting(ctx, CH_BAL_DELTA_END));
 }
 
 bool NeedsToBalanceMore(DbmsCtx* ctx)
 {
     return 1000 * (ctx->stats.max_v - ctx->charging.pre_bal_min_v) > GetSetting(ctx, CH_BAL_DELTA_END);
-            // && 1000 * ctx->stats.min_v > GetSetting(ctx, CH_BAL_MIN_V);
+    // && 1000 * ctx->stats.min_v > GetSetting(ctx, CH_BAL_MIN_V);
 }
 
 bool ChargingComplete(DbmsCtx* ctx)
 {
-    return ctx->stats.max_v > GetSetting(ctx, CH_TARGET_V) 
-        && 1000 * (ctx->stats.max_v - ctx->stats.min_v) < GetSetting(ctx, CH_BAL_DELTA_END);
+    return ctx->stats.max_v > GetSetting(ctx, CH_TARGET_V) &&
+           1000 * (ctx->stats.max_v - ctx->stats.min_v) < GetSetting(ctx, CH_BAL_DELTA_END);
+}
+
+void ChargingComputeElconReq(DbmsCtx* ctx)
+{
+    ctx->elcon.v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600000) / 1000;
+    uint32_t ac_current = MIN(ctx->j1772.maxCurrentSupply, GetSetting(ctx, CH_I));
+    uint32_t elcon_eff = CLAMP((int32_t)GetSetting(ctx, CH_ELCON_EFF), 0, 100) / 100.0;
+    uint32_t power_lim = ac_current * GetSetting(ctx, CH_AC_VOLTAGE) * elcon_eff;
+    ctx->elcon.i_req = power_lim / ctx->elcon.v_req;
 }
 
 void ChargingAccumulateVoltages(DbmsCtx* ctx)
 {
-    for (size_t side = 0; side < N_SIDES; side++) {
-        for (size_t group = 0; group < N_GROUPS_PER_SIDE; group++) {
+    for (size_t side = 0; side < N_SIDES; side++)
+    {
+        for (size_t group = 0; group < N_GROUPS_PER_SIDE; group++)
+        {
             ctx->charging.pre_bal_accumulator[side][group] += ctx->cell_states[side].voltages[group];
         }
     }
@@ -54,9 +76,12 @@ void ChargingComputePreBalanceAverages(DbmsCtx* ctx)
 {
     if (ctx->charging.pre_bal_sample_count == 0) return;
 
-    for (size_t side = 0; side < N_SIDES; side++) {
-        for (size_t group = 0; group < N_GROUPS_PER_SIDE; group++) {
-            ctx->charging.pre_bal_average_v[side][group] = ctx->charging.pre_bal_accumulator[side][group] / ctx->charging.pre_bal_sample_count;
+    for (size_t side = 0; side < N_SIDES; side++)
+    {
+        for (size_t group = 0; group < N_GROUPS_PER_SIDE; group++)
+        {
+            ctx->charging.pre_bal_average_v[side][group] =
+                    ctx->charging.pre_bal_accumulator[side][group] / ctx->charging.pre_bal_sample_count;
         }
     }
 
@@ -67,14 +92,16 @@ void ChargingComputePreBalanceAverages(DbmsCtx* ctx)
     {
         for (size_t group = 0; group < N_GROUPS_PER_SIDE; group++)
         {
-            ctx->charging.pre_bal_min_v = MIN(ctx->charging.pre_bal_min_v, ctx->charging.pre_bal_average_v[side][group]);
-            ctx->charging.pre_bal_max_v = MAX(ctx->charging.pre_bal_max_v, ctx->charging.pre_bal_average_v[side][group]);
+            ctx->charging.pre_bal_min_v =
+                    MIN(ctx->charging.pre_bal_min_v, ctx->charging.pre_bal_average_v[side][group]);
+            ctx->charging.pre_bal_max_v =
+                    MAX(ctx->charging.pre_bal_max_v, ctx->charging.pre_bal_average_v[side][group]);
         }
     }
 }
 
-static uint32_t bal_times[] = { 0, 10, 30, 60 };
-#define LOOKUP_BAL_TIMES(T) (bal_times[MIN((uint8_t)T, (uint8_t)__N_BAL_TIMES - 1)])
+static uint32_t bal_times[] = {0, 10, 30, 60};
+#define LOOKUP_BAL_TIMES(T)       (bal_times[MIN((uint8_t)T, (uint8_t)__N_BAL_TIMES - 1)])
 #define TIME_IN_STATE_MS(CTX_PTR) (HAL_GetTick() - CTX_PTR->charging.state_enter_ts)
 
 bool DoneBalancing(DbmsCtx* ctx)
@@ -95,46 +122,48 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
 
     switch (new_state)
     {
-        case CH_NO_CONN:
-            CanLog(ctx, "Enter NC\n");
-            for (int i = 0; i < N_SIDES; i++) {
-                memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
-            }
-            break;
-        case CH_CHARGING:
-            CanLog(ctx, "Enter Ch\n");
-            for (int i = 0; i < N_SIDES; i++) {
-                memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
-            }
-            break;
-        case CH_WAIT_1:
-        case CH_WAIT_2:
-            CanLog(ctx, "Enter W%d\n", new_state == CH_WAIT_1 ? 1 : 2);
-            for (int i = 0; i < N_SIDES; i++) {
-                memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
-                memset(ctx->charging.pre_bal_accumulator, 0, sizeof(ctx->charging.pre_bal_accumulator));
-            }
-            ctx->charging.pre_bal_sample_count = 0;
-            break;
-        case CH_BALANCING_EVENS:
-            CanLog(ctx, "Enter BalE\n");
-            StackComputeCellsToBalance(ctx, false, GetSetting(ctx, CH_BAL_DELTA_END));
-            StackStartBalancing(ctx, false, GetSetting(ctx, CH_BAL_T_IDX));
-            break;
-        case CH_BALANCING_ODDS:
-            CanLog(ctx, "Enter BalO\n");
-            ctx->charging.pre_bal_min_v = ctx->stats.min_v;
-            StackComputeCellsToBalance(ctx, true, GetSetting(ctx, CH_BAL_DELTA_END)); 
-            // Sends balance timers and starts charging:
-            StackStartBalancing(ctx, true, GetSetting(ctx, CH_BAL_T_IDX));
-            break;
-        case CH_COMPLETE:
-            CanLog(ctx, "Enter Cmpl\n");
-            for (int i = 0; i < N_SIDES; i++) {
-                memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
-            }
-            break;
-
+    case CH_NO_CONN:
+        CanLog(ctx, "Enter NC\n");
+        for (int i = 0; i < N_SIDES; i++)
+        {
+            memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
+        }
+        break;
+    case CH_CHARGING:
+        CanLog(ctx, "Enter Ch\n");
+        for (int i = 0; i < N_SIDES; i++)
+        {
+            memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
+        }
+        break;
+    case CH_WAIT_1:
+    case CH_WAIT_2:
+        CanLog(ctx, "Enter W%d\n", new_state == CH_WAIT_1 ? 1 : 2);
+        for (int i = 0; i < N_SIDES; i++)
+        {
+            memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
+            memset(ctx->charging.pre_bal_accumulator, 0, sizeof(ctx->charging.pre_bal_accumulator));
+        }
+        ctx->charging.pre_bal_sample_count = 0;
+        break;
+    case CH_BALANCING_EVENS:
+        CanLog(ctx, "Enter BalE\n");
+        StackComputeCellsToBalance(ctx, false, GetSetting(ctx, CH_BAL_DELTA_END));
+        StackStartBalancing(ctx, false, GetSetting(ctx, CH_BAL_T_IDX));
+        break;
+    case CH_BALANCING_ODDS:
+        CanLog(ctx, "Enter BalO\n");
+        StackComputeCellsToBalance(ctx, true, GetSetting(ctx, CH_BAL_DELTA_END));
+        // Sends balance timers and starts charging:
+        StackStartBalancing(ctx, true, GetSetting(ctx, CH_BAL_T_IDX));
+        break;
+    case CH_COMPLETE:
+        CanLog(ctx, "Enter Cmpl\n");
+        for (int i = 0; i < N_SIDES; i++)
+        {
+            memset(ctx->cell_states[i].cells_to_balance, 0, sizeof(ctx->cell_states[i].cells_to_balance));
+        }
+        break;
     }
     SendCellsToBalance(ctx);
 }
@@ -171,12 +200,11 @@ void ChargingUpdate(DbmsCtx* ctx)
     case CH_CHARGING:
         ctx->led_state = LED_CHARGING;
 
-        ctx->elcon.v_req = MIN(GetSetting(ctx, CH_TARGET_V) * N_GROUPS_PER_SIDE * N_SIDES, 600000) / 1000;
-        ctx->elcon.i_req = MIN(MIN(GetSetting(ctx, CH_I), ctx->j1772.maxCurrentSupply), 25);
+        ChargingComputeElconReq(ctx);
         SendElconRequest(ctx, ctx->elcon.v_req, ctx->elcon.i_req, 0);
         CanLog(ctx, "Elcon V=%d I=%d\n", ctx->elcon.v_req, ctx->elcon.i_req);
 
-        if (TIME_IN_STATE_MS(ctx) > 1000)   // TODO:?
+        if (TIME_IN_STATE_MS(ctx) > 1000) // TODO:?
         {
             if (NeedsToBalance(ctx)) ChargingEnterState(ctx, CH_WAIT_1);
         }
@@ -192,8 +220,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         }
         else
         {
-            if(TIME_IN_STATE_MS(ctx) > 1000)
-                ChargingAccumulateVoltages(ctx);
+            if (TIME_IN_STATE_MS(ctx) > 1000) ChargingAccumulateVoltages(ctx);
         }
         break;
     case CH_WAIT_2:
@@ -203,12 +230,11 @@ void ChargingUpdate(DbmsCtx* ctx)
         {
             ChargingComputePreBalanceAverages(ctx);
             // Check if we need more balancing
-            if (NeedsToBalanceMore(ctx))
-                ChargingEnterState(ctx, CH_BALANCING_EVENS);
-            else
-                ChargingEnterState(ctx, CH_CHARGING);
+            if (NeedsToBalanceMore(ctx)) ChargingEnterState(ctx, CH_BALANCING_EVENS);
+            else ChargingEnterState(ctx, CH_CHARGING);
         }
-        else {
+        else
+        {
             ChargingAccumulateVoltages(ctx);
         }
         break;
@@ -220,7 +246,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         // Check if we actually have cells to balance
         bool balance_evens = StackNeedsToBalance(ctx, false, GetSetting(ctx, CH_BAL_DELTA_END));
 
-        if (!balance_evens) 
+        if (!balance_evens)
         {
             // No cells to balance, skip to odds
             ChargingEnterState(ctx, CH_BALANCING_ODDS);
@@ -239,7 +265,8 @@ void ChargingUpdate(DbmsCtx* ctx)
         // Check if we actually have cells to balance
         bool balance_odds = StackNeedsToBalance(ctx, true, GetSetting(ctx, CH_BAL_DELTA_END));
 
-        if (!balance_odds) {
+        if (!balance_odds)
+        {
             // No cells to balance, skip to wait 2
             ChargingEnterState(ctx, CH_WAIT_2);
         }

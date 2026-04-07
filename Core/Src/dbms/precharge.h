@@ -1,6 +1,6 @@
 /** 
  * 
- * Distributed BMS      Fan Controller
+ * Distributed BMS      Precharge Control 
  *
  * Copyright (C) 2025   Texas A&M University
  * 
@@ -9,17 +9,15 @@
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
  *                      Eli Nicksic      <eli.n@tamu.edu>
  */
-#ifndef _FAN_H_
-#define _FAN_H_
+#ifndef _PRECHARGE_H_
+#define _PRECHARGE_H_
 
+#include "utils/common.h"
 #include "context.h"
 #include "settings.h"
-#include "utils/common.h"
-#include "vinterface.h"
+#include "faults/faults.h"
 
-// Q: Wtf is this used for?
-// A: Fan control
-int InitFan(DbmsCtx *ctx);
-int UpdateFan(DbmsCtx *ctx);
+void PrechargeSet(DbmsCtx *ctx);
+void PrechargeUpdate(DbmsCtx *ctx);
 
 #endif

@@ -7,6 +7,7 @@
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
  */
 #include "model.h"
 
@@ -144,11 +145,11 @@ void UpdateModel(DbmsCtx* ctx)
 {
   
 
-    float v_pack = (ctx->isense.voltage1_mv / 1e3f) / (N_SIDES * N_GROUPS_PER_SIDE);
-    float current = (ctx->isense.current_ma / 1000.0) / N_P_GROUP;
-    ctx->qstats.accumulated_loss = (ctx->isense.charge_as - ctx->isense.q_offset) / 3600.0;    // convert to Ah
+    float v_pack = (ctx->current_sensor.voltage1_mv / 1e3f) / (N_SIDES * N_GROUPS_PER_SIDE);
+    float current = (ctx->current_sensor.current_ma / 1000.0) / N_P_GROUP;
+    ctx->qstats.accumulated_loss = (ctx->current_sensor.charge_as - ctx->current_sensor.q_offset) / 3600.0;    // convert to Ah
 
-    float total_accumulated_loss = (ctx->qstats.historic_accumulated_loss + ctx->qstats.accumulated_loss) / 3.0;
+    float total_accumulated_loss = (ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss) / 3.0;
 
     // CanLog("DY %d\n", GetSetting(ctx, DYNAMIC_V_MIN));
     float V_dyn_min = GetSetting(ctx, DYNAMIC_V_MIN) / 1000.0f;
@@ -170,10 +171,30 @@ int LoadQStats(DbmsCtx* ctx)
     {
         // crc mismatch
     }
+    ctx->initial_historic_accumulated_loss = ctx->qstats.historic_accumulated_loss;
+    ctx->qstats.accumulated_loss = 0;
+
+    CanLog(ctx, "load hist: %d\n", (int)(ctx->qstats.historic_accumulated_loss * 1000));
+
     return status;
 }
 
 int SaveQStats(DbmsCtx* ctx)
 {
-    return SaveStoredObject(ctx, EEPROM_INITIAL_CHARGE, &ctx->qstats, sizeof(ctx->qstats));
+    ctx->qstats.historic_accumulated_loss = ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss;
+    CanLog(ctx, "saving hist: %d\n", (int)(ctx->qstats.historic_accumulated_loss * 1000));
+    return SaveStoredObject(
+            ctx, EEPROM_INITIAL_CHARGE, &ctx->qstats, sizeof(ctx->qstats));
+}
+
+int PeriodicSaveQStats(DbmsCtx* ctx) {
+    CanLog(ctx, "psave\n");
+    CanLog(ctx, "hist0: %d hist: %d acc: %d\n", 
+        (int) (ctx->initial_historic_accumulated_loss * 1000), 
+        (int) (ctx->qstats.historic_accumulated_loss * 1000), 
+        (int) (ctx->qstats.accumulated_loss * 1000));
+    if (ctx->initial_historic_accumulated_loss + ctx->qstats.accumulated_loss - ctx->qstats.historic_accumulated_loss > 0.1) {
+        return SaveQStats(ctx);
+    }
+    return 0;
 }

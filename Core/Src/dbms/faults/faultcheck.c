@@ -1,3 +1,14 @@
+/** 
+ * 
+ * Distributed BMS      Fault-Handling System
+ *
+ * Copyright (C) 2025   Texas A&M University
+ * 
+ *                      Justus Languell  <justus@tamu.edu>
+ *                      Cam Stone        <cameron28202@tamu.edu>
+ *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
+ *                      Eli Nicksic      <eli.n@tamu.edu>
+ */
 #include "faults.h"
 
 void CheckVoltageFaults(DbmsCtx* ctx)
@@ -21,17 +32,17 @@ void CheckTemperatureFaults(DbmsCtx* ctx)
 {
     if (ctx->stats.max_t < GetSetting(ctx, MAX_THERMISTOR_TEMP))    // temp is ok 
     {
-        ctx->overtemp_last_ok_ts = HAL_GetTick();
+        ctx->timing.overtemp_last_ok_ts = HAL_GetTick();
     }
     else {
-        if (HAL_GetTick() - ctx->overtemp_last_ok_ts > GetSetting(ctx, OVERTEMP_MS))
+        if (HAL_GetTick() - ctx->timing.overtemp_last_ok_ts > GetSetting(ctx, OVERTEMP_MS))
             CtrlSetFault(ctx, CTRL_FAULT_TEMP_OVER);
     }
 }
 
 void CheckCurrentFaults(DbmsCtx* ctx)
 {
-    int32_t current_ma = MAX(0, ctx->isense.current_ma);
+    int32_t current_ma = MAX(0, ctx->current_sensor.current_ma);
 
     int32_t at = GetSetting(ctx, TEMP_CURVE_A);
     int32_t bt = GetSetting(ctx, TEMP_CURVE_B);
@@ -52,16 +63,16 @@ void CheckCurrentFaults(DbmsCtx* ctx)
 
     if (current_ma > GetSetting(ctx, PULSE_LIMIT_CURRENT) * 1000)
     {
-        ctx->pl_pulse_t = HAL_GetTick() - ctx->pl_last_ok_ts;
-        if (ctx->pl_pulse_t > GetSetting(ctx, PULSE_LIMIT_TIME_MS))
+        ctx->timing.pl_pulse_t = HAL_GetTick() - ctx->timing.pl_last_ok_ts;
+        if (ctx->timing.pl_pulse_t > GetSetting(ctx, PULSE_LIMIT_TIME_MS))
             CtrlSetFault(ctx, CTRL_FAULT_CURRENT_PULSE);
     }
     else 
     {
-        ctx->pl_pulse_t = 0;
-        ctx->pl_last_ok_ts = HAL_GetTick();
+        ctx->timing.pl_pulse_t = 0;
+        ctx->timing.pl_last_ok_ts = HAL_GetTick();
     }
 
     // TODO: need to make ma constructor
-    // ctx->isense.ima.current_mavg_ma = ma_calc_i32(ctx->isense.ima.ma, ctx->isense.current_ma);
+    // ctx->current_sensor.ima.current_mavg_ma = ma_calc_i32(ctx->current_sensor.ima.ma, ctx->current_sensor.current_ma);
 }
