@@ -237,7 +237,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     }
 
     ThrowHardFault(ctx);                // this can override fault state
-    HAL_Delay(GROUP_MSG_DELAY);
+    // HAL_Delay(GROUP_MSG_DELAY);
     // if (ctx->stats.iters %  == 0)
     //     StackReverseCommDir(ctx, (ctx->stats.iters / 100) % 2);
     ctx->profiling.times.T9 = GetUs(ctx);
