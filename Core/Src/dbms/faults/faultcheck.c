@@ -81,7 +81,7 @@ void CheckStackFaults(DbmsCtx* ctx)
 {
     for (int i = 0; i < N_MONITORS; ++i)
     {
-        if (ctx->stats.iters - ctx->stats.last_monitor_msg[i] > GetSetting(ctx, QUITE_STACK_FAULT_TICKS))
+        if (ctx->stats.iters - ctx->stats.last_monitor_msg[i] > GetSetting(ctx, QUIET_STACK_FAULT_TICKS))
             CtrlSetFault(ctx, CTRL_FAULT_STACK_DISCONNECT);
     }
 }

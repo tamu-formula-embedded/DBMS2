@@ -137,6 +137,7 @@ typedef struct _Stats
     uint64_t n_logging_frames;
     bool fault_line_faulted;
 
+    bool attempted_stack_reset;
     uint64_t last_monitor_msg[N_MONITORS]; // Last tick that a message was received from each monitor
 } Stats;
 
