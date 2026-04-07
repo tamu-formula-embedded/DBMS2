@@ -177,6 +177,7 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
     uint8_t rx_buffer_v[1024];
+    int j;
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
@@ -187,10 +188,10 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         IncStackCrcStats(ctx, true, i);
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
-        for (int j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
-        
+        for (j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
+
         RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);
-        if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
+        if (j < 1024 && clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateVoltages(ctx, clean_frame);
         else
             IncStackCrcStats(ctx, false, i);
@@ -236,7 +237,7 @@ void StackConfigTimeout(DbmsCtx* ctx)
 void StackUpdateAllTempReadings(DbmsCtx* ctx)
 {
     uint8_t rx_buffer_t[1024];
-
+    int j;
     size_t data_size = (N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(int16_t); // +2 for GPIO mismatch
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
@@ -247,10 +248,10 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         IncStackCrcStats(ctx, true, i);
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
-        for (int j = 0; data[0] != (STACK_T_REG_START & 0xFF) && j < 1024; j++) { data++; }
+        for (j = 0; data[0] != (STACK_T_REG_START & 0xFF) && j < 1024; j++) { data++; }
 
         RxStackFrameTemps* clean_frame = (RxStackFrameTemps*)(data - 3); 
-        if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
+        if (j < 1024 && clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateTemps(ctx, clean_frame);
         else
             IncStackCrcStats(ctx, false, i);
