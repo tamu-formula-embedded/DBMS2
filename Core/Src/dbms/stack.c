@@ -176,7 +176,7 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
  */
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
-    uint8_t rx_buffer_v[1024];
+    static uint8_t rx_buffer_v[1024];
     int j;
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
@@ -193,8 +193,10 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);
         if (j < 1024 && clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateVoltages(ctx, clean_frame);
-        else
+        else{
             IncStackCrcStats(ctx, false, i);
+            CanLog(ctx, "V %x %x %x\n", clean_frame->init, clean_frame->devaddr, clean_frame->regaddr);
+        }
 
     }
 }
@@ -236,7 +238,7 @@ void StackConfigTimeout(DbmsCtx* ctx)
 
 void StackUpdateAllTempReadings(DbmsCtx* ctx)
 {
-    uint8_t rx_buffer_t[1024];
+    static uint8_t rx_buffer_t[1024];
     int j;
     size_t data_size = (N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(int16_t); // +2 for GPIO mismatch
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
@@ -253,8 +255,10 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         RxStackFrameTemps* clean_frame = (RxStackFrameTemps*)(data - 3); 
         if (j < 1024 && clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateTemps(ctx, clean_frame);
-        else
+        else{
             IncStackCrcStats(ctx, false, i);
+            CanLog(ctx, "T %x %x %x\n", clean_frame->init, clean_frame->devaddr, clean_frame->regaddr);
+        }
     }
 }
 
