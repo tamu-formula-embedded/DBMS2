@@ -178,6 +178,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         if (TIME_IN_STATE_MS(ctx) > 1000)   // TODO:?
         {
             if (NeedsToBalance(ctx)) ChargingEnterState(ctx, CH_WAIT_1);
+            else if (ChargingComplete(ctx)) ChargingEnterState(ctx, CH_COMPLETE);
         }
 
         break;
@@ -214,7 +215,7 @@ void ChargingUpdate(DbmsCtx* ctx)
     case CH_BALANCING_EVENS:
         ctx->led_state = LED_BALANCING_EVENS;
         SendElconRequest(ctx, 0, 0, 1);
-        SendCellsToBalance(ctx);
+        if (ctx->stats.iters % 5 == 2) SendCellsToBalance(ctx);
 
         // Check if we actually have cells to balance
         bool balance_evens = StackNeedsToBalance(ctx, false, GetSetting(ctx, CH_BAL_DELTA_END));

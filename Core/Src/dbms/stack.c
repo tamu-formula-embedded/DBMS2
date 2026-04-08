@@ -604,6 +604,8 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t side, bool odds, StackBal
     uint8_t dev_addr = side * N_MONITORS_PER_SIDE + 1;
     bool* cells_to_bal = ctx->cell_states[side].cells_to_balance;
 
+    CanLog(ctx, "TIM S%d D%d", side, dev_addr);
+
     uint16_t base_reg = 0x0327;  // CB_CELL1_CTRL (starts at cell 1, goes down)
     uint8_t bal_time = MIN((uint8_t)bal_time_idx, (uint8_t)__N_BAL_TIMES);
     
@@ -644,6 +646,7 @@ void StackStartBalancing(DbmsCtx* ctx, bool odds, int32_t bal_time)
         StackSetDeviceBalanceTimers(ctx, side, odds, bal_time);
     }
     StackSendBalGo(ctx);
+    HAL_Delay(8);
 }
 
 void StackComputeCellsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv)
