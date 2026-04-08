@@ -84,14 +84,6 @@ void DbmsInit(DbmsCtx* ctx)
 
     ctx->timing.last_rx_heartbeat = -GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
-    memset(&ctx->faults.monitor_total_frames, 0, sizeof(ctx->faults.monitor_total_frames));
-    memset(&ctx->faults.monitor_bad_crcs, 0, sizeof(ctx->faults.monitor_bad_crcs));
-
-    // for (int i = 0; i < N_MONITORS; i++){
-    //     ctx->faults.monitor_bad_crcs[i] = 0;
-    //     ctx->faults.monitor_total_frames[i] =0;
-    // }
-
     ReadEEPROM(ctx, EEPROM_DEBUG, &ctx->stats.n_int_shutdowns, 1);
 
     #ifdef HAS_FAN
@@ -234,8 +226,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ctx->profiling.times.T9 = GetUs(ctx);
 }
 
-
 void DbmsIter(DbmsCtx* ctx)
+
 {
     int status = 0;
     ctx->stats.iters++;

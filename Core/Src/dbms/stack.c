@@ -382,13 +382,13 @@ void IncStackCrcStats(DbmsCtx* ctx, bool good, int monitor_id)
     {
         ctx->stats.n_rx_stack_frames++;
         ctx->stats.n_rx_stack_frames_itvl++;
-        ctx->faults.monitor_total_frames[monitor_id]++;
+        ctx->stats.monitor_total_frames[monitor_id]++;
     }
     else
     {
         ctx->stats.n_rx_stack_bad_crcs++;
         ctx->stats.n_rx_stack_bad_crcs_itvl++;
-        ctx->faults.monitor_bad_crcs[monitor_id]++;
+        ctx->stats.monitor_bad_crcs[monitor_id]++;
     }
 }
 

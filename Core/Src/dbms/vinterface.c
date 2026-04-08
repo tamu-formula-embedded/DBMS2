@@ -183,7 +183,7 @@ int SendMetrics(DbmsCtx* ctx)
 
     for (int i = 0; i < N_MONITORS; i++)
     {
-        SendMetric(ctx, 90 + i, ctx->faults.monitor_bad_crcs[i]);
+        SendMetric(ctx, 90 + i, ctx->stats.monitor_bad_crcs[i]);
     }
     return 0;
 }
