@@ -189,9 +189,9 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
         for (j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
-
+        if (j >= 1024) continue;
         RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);
-        if (j < 1024 && clean_frame->crc == CALC_CRC_Rx(clean_frame))
+        if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateVoltages(ctx, clean_frame);
         else{
             IncStackCrcStats(ctx, false, i);
@@ -251,9 +251,9 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
         for (j = 0; data[0] != (STACK_T_REG_START & 0xFF) && j < 1024; j++) { data++; }
-
+        if (j >= 1024) continue;
         RxStackFrameTemps* clean_frame = (RxStackFrameTemps*)(data - 3); 
-        if (j < 1024 && clean_frame->crc == CALC_CRC_Rx(clean_frame))
+        if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateTemps(ctx, clean_frame);
         else{
             IncStackCrcStats(ctx, false, i);
