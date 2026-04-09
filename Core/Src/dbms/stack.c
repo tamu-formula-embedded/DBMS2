@@ -428,8 +428,8 @@ void FillMissingTempReadings(DbmsCtx* ctx)
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
             float t = ctx->cell_states[i].temps[j];
-            // TODO: remove (3, 7) blacklisted
-            if ((t >= 18 && t < 120.0f) || (i == 3 && j == 7))
+            // TODO: remove (3, 7) and (9, 5) blacklisted
+            if ((t >= 18 && t < 120.0f) || (i == 3 && j == 7) || (i == 9 && j == 5))
             {
                 n++;
                 sum += t;
