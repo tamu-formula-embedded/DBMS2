@@ -224,10 +224,7 @@ void SendPlex16x4(DbmsCtx* ctx, uint16_t id, uint16_t v1, uint16_t v2, uint16_t 
 
 void SendPlexMetrics(DbmsCtx* ctx)
 {
-    uint8_t data[8] = {0};
-    uint8_t soc = CLAMP((uint8_t)(ctx->model.z_oc * 100), 0, 100);
-    data[0] = soc;
-    CanTransmit(ctx, 0x10, data);
+    SendPlex32x2(ctx, 0.10, F2I_K(CLAMP(ctx->model.z_oc, 0.0, 1.0), 100000), 0);
 
     int32_t pack_v = ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE);
 
