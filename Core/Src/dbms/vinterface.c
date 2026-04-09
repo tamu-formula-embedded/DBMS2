@@ -240,9 +240,9 @@ void SendPlexMetrics(DbmsCtx* ctx)
 #define F2I_K(F, K) ((int)((F) * (K)))
 #endif
 
-    SendPlex16x4(ctx, 1, F2I_K(ctx->stats.max_t, 1), F2I_K(ctx->stats.min_t, 1), F2I_K(ctx->stats.avg_t, 1), 0);
+    SendPlex16x4(ctx, 0x14, F2I_K(ctx->stats.max_t, 1), F2I_K(ctx->stats.min_t, 1), 0, 0);
 
-    SendPlex16x4(ctx, 2, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
+    SendPlex16x4(ctx, 0x15, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
                  F2I_K(pack_v, 10));
 }
 
