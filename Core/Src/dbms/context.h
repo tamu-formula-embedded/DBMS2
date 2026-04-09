@@ -23,7 +23,7 @@
 #define N_SIDES_PER_SEG     2       // number of sides per segment
 #define N_MONITORS_PER_SIDE 1       // number of monitors per side
 #define N_GROUPS_PER_SIDE   13      // number of voltages per side
-#define N_TEMPS_PER_MONITOR 13       // number of temps per monitor chip 
+#define N_TEMPS_PER_MONITOR 13       // number of temps per monitor chip
 #define N_P_GROUP           3       // number of cells per parallel group
 
 // #define HAS_FAN
@@ -224,6 +224,16 @@ typedef struct _Profiling {
         uint64_t T9;
         uint64_t T10;
     } times;
+
+    // used for calculating one-way delay (bus latency from DCU)
+    struct
+    {
+        uint64_t T1;
+        uint64_t T2;
+        uint64_t T3;
+        uint64_t T4;
+    } delay;
+
 } Profiling;
 
 typedef struct _LutData {

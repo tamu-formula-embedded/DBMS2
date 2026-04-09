@@ -184,7 +184,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     StackUpdateAllVoltReadings(ctx);
     HAL_Delay(10);
     ctx->profiling.times.T1 = GetUs(ctx);
-    
+
     StackUpdateAllTempReadings(ctx);
     HAL_Delay(10);
     ctx->profiling.times.T2 = GetUs(ctx);
@@ -227,6 +227,13 @@ void DbmsHandleActive(DbmsCtx* ctx)
 
     ThrowHardFault(ctx);                // this can override fault state
     ctx->profiling.times.T9 = GetUs(ctx);
+
+    if (ctx->stats.iters % 100 == 0) {
+        // send T1 to init one way delay with DCU
+        // can transmit queue sets T1 for accurate send time
+        uint8_t init_frame[8] = {0};
+        CanTransmit(ctx, CANID_TX_DELAY, init_frame);
+    }
 }
 
 
@@ -497,6 +504,19 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_BLACKBOX_REQUEST:
         ctx->blackbox.requested = true;
         break;
+    case CANID_RX_DELAY:
+        uint32_t T1 = ctx->profiling.delay.T1;
+        uint32_t T2 = be32_to_u32(&rx_data[0]);
+        uint32_t T3 = be32_to_u32(&rx_data[4]);
+        uint32_t T4 = GetUs(ctx);
+
+        ctx->profiling.delay.T2 = T2;
+        ctx->profiling.delay.T3 = T3;
+        ctx->profiling.delay.T4 = T4;
+
+        uint64_t delay = ((T4 - T1)  - (T3 - T2)) / 2;
+
+        CanLog(ctx, "del: %d\n", delay);
 
 // TODO: remove this
 #ifdef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
