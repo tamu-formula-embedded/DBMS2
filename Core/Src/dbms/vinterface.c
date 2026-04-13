@@ -197,6 +197,23 @@ void SendPlex32(DbmsCtx* ctx, uint32_t id, uint32_t m)
     CanTransmit(ctx, id, data);
 }
 
+void SendPlex32x2(DbmsCtx* ctx, uint32_t id, uint32_t v1, uint32_t v2)
+{
+    uint8_t data[8] = {0};
+
+    data[0] = (v1 >> 3*8) & 0xff;
+    data[1] = (v1 >> 2*8) & 0xff;
+    data[2] = (v1 >> 1*8) & 0xff;
+    data[3] = (v1 >> 0*8) & 0xff;
+
+    data[4] = (v2 >> 3*8) & 0xff;
+    data[5] = (v2 >> 2*8) & 0xff;
+    data[6] = (v2 >> 1*8) & 0xff;
+    data[7] = (v2 >> 0*8) & 0xff;
+
+    CanTransmit(ctx, id, data);
+}
+
 void SendPlex16x4(DbmsCtx* ctx, uint16_t id, uint16_t v1, uint16_t v2, uint16_t v3, uint16_t v4)
 {
     uint8_t data[8] = {0};
@@ -218,29 +235,22 @@ void SendPlex16x4(DbmsCtx* ctx, uint16_t id, uint16_t v1, uint16_t v2, uint16_t 
 
 void SendPlexMetrics(DbmsCtx* ctx)
 {
-    uint8_t data[8] = {0};
-    uint8_t soc = CLAMP((uint8_t)(ctx->model.z_oc * 100), 0, 100);
-    data[0] = soc;
-    CanTransmit(ctx, 0x16, data);
+    SendPlex32x2(ctx, 0x10, F2I_K(CLAMP(ctx->model.z_oc, 0.0, 1.0), 100000), 0);
 
     int32_t pack_v = ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE);
 
-    SendPlex32(ctx, 0x17, ctx->faults.controller_mask);
-    SendPlex32(ctx, 0x18, ctx->current_sensor.current_ma / 1000);
-    SendPlex32(ctx, 0x19, ctx->current_sensor.ima.current_mavg_ma / 1000);
-    SendPlex32(ctx, 0x1a, ctx->timing.pl_pulse_t);
-    SendPlex32(ctx, 0x1b, pack_v);
-    SendPlex32(ctx, 0x1c, ctx->stats.iters);
-    SendPlex32(ctx, 0x1d, (ctx->stats.n_rx_stack_bad_crcs_itvl * 100) / ctx->stats.n_rx_stack_frames_itvl);
-    SendPlex32(ctx, 0x1e, ctx->current_sensor.charge_as);
+    SendPlex32x2(ctx, 0x11, ctx->faults.controller_mask, ctx->isense.current_ma / 1000);
+    // SendPlex32x2(ctx, 0x12, ctx->isense.ima.current_mavg_ma / 1000, ctx->pl_pulse_t);
+    SendPlex32x2(ctx, 0x12, pack_v, ctx->stats.iters);
+    SendPlex32x2(ctx, 0x13, ctx->stats.avg_t, ctx->isense.charge_as);
 
 #ifndef F2I_K
 #define F2I_K(F, K) ((int)((F) * (K)))
 #endif
 
-    SendPlex16x4(ctx, 0x011, F2I_K(ctx->stats.max_t, 1), F2I_K(ctx->stats.min_t, 1), F2I_K(ctx->stats.avg_t, 1), 0);
+    SendPlex16x4(ctx, 0x14, F2I_K(ctx->stats.max_t, 1), F2I_K(ctx->stats.min_t, 1), 0, 0);
 
-    SendPlex16x4(ctx, 0x012, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
+    SendPlex16x4(ctx, 0x15, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
                  F2I_K(pack_v, 10));
 }
 
