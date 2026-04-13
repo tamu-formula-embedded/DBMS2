@@ -518,6 +518,12 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         CanLog(ctx, "Charging HB\n");
         ctx->charging.heartbeat = HAL_GetTick();
         break;
+    // case 0x181:
+    //     CanLog(ctx, "got it\n");
+    //     break;
+    // case 0x061:
+    //     CanLog(ctx, "this too\n");
+    //     break;
     default:
         ctx->stats.n_unmatched_can_frames++;
         break;
