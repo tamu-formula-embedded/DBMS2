@@ -228,7 +228,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     ThrowHardFault(ctx);                // this can override fault state
     ctx->profiling.times.T9 = GetUs(ctx);
 
-    if (ctx->stats.iters % 100 == 0) {
+    if (ctx->stats.iters % 10 == 0) {
         // send T1 to init one way delay with DCU
         // can transmit queue sets T1 for accurate send time
         uint8_t init_frame[8] = {0};
@@ -508,6 +508,8 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->delay.T2 = be32_to_u32(&rx_data[0]);
         ctx->delay.T3 = be32_to_u32(&rx_data[4]);
         ctx->delay.T4 = GetUs(ctx);
+
+        CanLog(ctx, "%d %d %d %d\n", ctx->delay.T1, ctx->delay.T2, ctx->delay.T3, ctx->delay.T4);
 
         ctx->delay.one_way_delay = ((ctx->delay.T4 - ctx->delay.T1) - (ctx->delay.T3 - ctx->delay.T2)) / 2;
         ctx->delay.clock_offset = ((ctx->delay.T2 - ctx->delay.T1) + (ctx->delay.T3 - ctx->delay.T4)) / 2;
