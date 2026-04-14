@@ -76,3 +76,12 @@ void CheckCurrentFaults(DbmsCtx* ctx)
     // TODO: need to make ma constructor
     // ctx->current_sensor.ima.current_mavg_ma = ma_calc_i32(ctx->current_sensor.ima.ma, ctx->current_sensor.current_ma);
 }
+
+void CheckStackFaults(DbmsCtx* ctx) 
+{
+    for (int i = 0; i < N_MONITORS; ++i)
+    {
+        if (ctx->stats.iters - ctx->stats.last_monitor_msg[i] > GetSetting(ctx, QUITE_STACK_FAULT_TICKS))
+            CtrlSetFault(ctx, CTRL_FAULT_STACK_DISCONNECT);
+    }
+}

@@ -215,6 +215,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
         CheckTemperatureFaults(ctx);
         ctx->profiling.times.T8 = GetUs(ctx);
 
+        CheckStackFaults(ctx);
+
         SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
 
         // PollFaultSummary(ctx);
@@ -328,6 +330,12 @@ void DbmsIter(DbmsCtx* ctx)
         DbmsHandleActive(ctx);
     }
 
+    // TODO: unlatches CAN fail fault
+    // if (CtrlHasFault(ctx, CTRL_FAULT_CAN_FAIL) && (GetUs(ctx) - ctx->stats.last_can_tx_ts < GetSetting(ctx, MS_BEFORE_CAN_FAIL)))
+    // {
+    //     CtrlClearFault(ctx, CTRL_FAULT_CAN_FAIL);
+    // }
+
     // ctx->profiling.profiling.times.T5 = GetUs(ctx);
 
     ChargingUpdate(ctx);
@@ -385,7 +393,10 @@ void DbmsIter(DbmsCtx* ctx)
         SendCellTemps(ctx);
     }
     // ctx->profiling.profiling.times.T8 = GetUs(ctx);
-
+    if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= GetSetting(ctx, MS_BEFORE_CAN_FAIL))
+    {
+        CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL);
+    }
     /**
      * Handle LED states and such
      */
