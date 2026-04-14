@@ -231,7 +231,8 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
             ctx->faults.monitor_bad_crcs[i]++;
             continue;
         }
-        
+
+        ctx->stats.last_monitor_msg[addr-1] = ctx->stats.iters;
         for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
             uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
