@@ -33,7 +33,7 @@ typedef enum
     CTRL_FAULT_MAX_DELTA_EXCEEDED = 8,
     CTRL_FAULT_STACK_FAULT = 9,
     CTRL_FAULT_CURRENT_PULSE = 10,
-
+    CTRL_FAULT_CAN_FAIL = 11,
     CTRL_FAULT_TYPE_COUNT // Total number of fault types -- should be last
 } CtrlFault;
 

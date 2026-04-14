@@ -385,7 +385,11 @@ void DbmsIter(DbmsCtx* ctx)
         SendCellTemps(ctx);
     }
     // ctx->profiling.profiling.times.T8 = GetUs(ctx);
-
+    if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= 1000000)
+    {
+        ctx->led_state = LED_FIRMWARE_FAULT;
+        CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL);
+    }
     /**
      * Handle LED states and such
      */
