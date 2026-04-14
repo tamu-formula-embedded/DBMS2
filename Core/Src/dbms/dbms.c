@@ -332,7 +332,7 @@ void DbmsIter(DbmsCtx* ctx)
 
     if (CtrlHasFault(ctx, CTRL_FAULT_CAN_FAIL) && (GetUs(ctx) - ctx->stats.last_can_tx_ts < GetSetting(ctx, MS_BEFORE_CAN_FAIL)))
     {
-        CtrlClearFault(ctx, MS_BEFORE_CAN_FAIL);
+        CtrlClearFault(ctx, CTRL_FAULT_CAN_FAIL);
     }
 
     // ctx->profiling.profiling.times.T5 = GetUs(ctx);
