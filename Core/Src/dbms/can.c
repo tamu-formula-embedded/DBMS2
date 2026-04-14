@@ -152,12 +152,10 @@ static void SendFromQueue(CAN_HandleTypeDef *hcan)
     {
         CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail];
 
-        if (entry->header.StdId == CANID_TX_DELAY) {
+        if (entry->header.StdId == CANID_TX_DELAY) 
+        {
             if (g_can_ctx)
-            {
-                g_can_ctx->delay.T1 = GetUs(g_can_ctx);
-
-            }
+                g_can_ctx->delay.T1 = GET_US2();
         }
 
         uint32_t mailbox;
@@ -208,6 +206,10 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
 
     if (tx_queue.count == 0 && HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) > 0U)
     {
+        if (id == CANID_TX_DELAY) 
+        {
+            ctx->delay.T1 = GET_US2();
+        }
         int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, hdr, data, &ctx->hw.can_tx_mailbox);
 
         if (result != HAL_OK)
