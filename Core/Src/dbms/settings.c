@@ -79,4 +79,6 @@ void LoadFallbackSettings(DbmsCtx* ctx)
   
     ctx->settings->user_defined[PRECHARGE_ON_TH] = 90;
     ctx->settings->user_defined[PRECHARGE_OFF_TH] = 10;
+    
+    ctx->settings->user_defined[QUITE_STACK_FAULT_TICKS] = 20;
 }

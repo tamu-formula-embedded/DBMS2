@@ -138,6 +138,7 @@ typedef struct _Stats
 
     uint64_t last_can_tx_ts;
 
+    uint64_t last_monitor_msg[N_MONITORS]; // Last iter that a message was received from each monitor
 } Stats;
 
 typedef struct _Model   // Outputs from the ECM model
