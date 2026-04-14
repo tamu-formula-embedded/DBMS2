@@ -489,7 +489,6 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_CLEAR_FAULTS:
         ctx->flags.req_fault_clear = true;
         break;
-
     case CANID_RX_SET_INITIAL_CHARGE:
         ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;
         CanLog(ctx, "Q0: %d\n", be32_to_u32(rx_data));
