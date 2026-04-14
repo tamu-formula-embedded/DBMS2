@@ -239,10 +239,10 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
     int32_t pack_v = ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE);
 
-    SendPlex32x2(ctx, 0x11, ctx->faults.controller_mask, ctx->isense.current_ma / 1000);
+    SendPlex32x2(ctx, 0x11, ctx->faults.controller_mask, ctx->current_sensor.current_ma / 1000);
     // SendPlex32x2(ctx, 0x12, ctx->isense.ima.current_mavg_ma / 1000, ctx->pl_pulse_t);
     SendPlex32x2(ctx, 0x12, pack_v, ctx->stats.iters);
-    SendPlex32x2(ctx, 0x13, ctx->stats.avg_t, ctx->isense.charge_as);
+    SendPlex32x2(ctx, 0x13, ctx->stats.avg_t, ctx->current_sensor.charge_as);
 
 #ifndef F2I_K
 #define F2I_K(F, K) ((int)((F) * (K)))
