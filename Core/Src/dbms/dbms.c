@@ -323,17 +323,18 @@ void DbmsIter(DbmsCtx* ctx)
             DbmsPerformWakeup(ctx);
         }
         if (CtrlHasAnyFaults(ctx))
-            ctx->led_state = CtrlHasFault(ctx, CTRL_FAULT_CAN_FAIL) ? LED_CAN_FAIL : LED_ACTIVE_FAULT;
+            ctx->led_state = LED_ACTIVE_FAULT;
         else
             ctx->led_state = LED_ACTIVE;
         ctx->flags.active = true;
         DbmsHandleActive(ctx);
     }
 
-    if (CtrlHasFault(ctx, CTRL_FAULT_CAN_FAIL) && (GetUs(ctx) - ctx->stats.last_can_tx_ts < GetSetting(ctx, MS_BEFORE_CAN_FAIL)))
-    {
-        CtrlClearFault(ctx, CTRL_FAULT_CAN_FAIL);
-    }
+    // TODO: unlatches CAN fail fault
+    // if (CtrlHasFault(ctx, CTRL_FAULT_CAN_FAIL) && (GetUs(ctx) - ctx->stats.last_can_tx_ts < GetSetting(ctx, MS_BEFORE_CAN_FAIL)))
+    // {
+    //     CtrlClearFault(ctx, CTRL_FAULT_CAN_FAIL);
+    // }
 
     // ctx->profiling.profiling.times.T5 = GetUs(ctx);
 

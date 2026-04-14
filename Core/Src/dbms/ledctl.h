@@ -34,7 +34,6 @@ enum _LedState
     LED_BALANCING_EVENS,
     LED_CHARGING_COMPLETE,
     LED_CHARGING_WAIT,
-    LED_CAN_FAIL,
     // ...
     LED_STATE_COUNT
 };
