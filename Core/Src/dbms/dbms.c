@@ -387,7 +387,7 @@ void DbmsIter(DbmsCtx* ctx)
         SendCellTemps(ctx);
     }
     // ctx->profiling.profiling.times.T8 = GetUs(ctx);
-    if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= 1000000)
+    if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= GetSetting(ctx, MS_BEFORE_CAN_FAIL))
     {
         CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL);
     }
