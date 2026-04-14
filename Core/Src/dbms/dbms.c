@@ -426,6 +426,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     int status = 0;
     uint32_t can_id = (rx_header.IDE == CAN_ID_EXT) ? rx_header.ExtId : rx_header.StdId;
     ctx->stats.n_rx_can_frames++;
+    uint64_t rx_timestamp = GET_US2();
 
     switch (can_id)
     {
@@ -504,16 +505,17 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         ctx->blackbox.requested = true;
         break;
     case CANID_RX_DELAY:
-        ctx->delay.T1 = ctx->delay.T1;
-        ctx->delay.T2 = be32_to_u32(&rx_data[0]);
-        ctx->delay.T3 = be32_to_u32(&rx_data[4]);
-        ctx->delay.T4 = GetUs(ctx);
+        ctx->delay.T2 = be32_to_u32(rx_data + 0);
+        ctx->delay.T3 = be32_to_u32(rx_data + 4);
+        ctx->delay.T4 = rx_timestamp;
 
-        CanLog(ctx, "%d %d %d %d\n", ctx->delay.T1, ctx->delay.T2, ctx->delay.T3, ctx->delay.T4);
+        if (ctx->delay.T2 > ctx->delay.T3 || ctx->delay.T1 > ctx->delay.T4)
+        {
+            break;
+        }
 
         ctx->delay.one_way_delay = ((ctx->delay.T4 - ctx->delay.T1) - (ctx->delay.T3 - ctx->delay.T2)) / 2;
         ctx->delay.clock_offset = ((ctx->delay.T2 - ctx->delay.T1) + (ctx->delay.T3 - ctx->delay.T4)) / 2;
-
 
         int64_t sample = (int64_t) ctx->delay.one_way_delay;
         int64_t err = sample - (int64_t) ctx->delay.mu;
@@ -521,7 +523,6 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         int64_t abs_err = err < 0 ? -err : err;
         ctx->delay.st_dev = (uint64_t) ((1 - BETA) * ctx->delay.st_dev + BETA * abs_err);
 
-        CanLog(ctx, "owd: %d off: %d\n", (uint32_t)ctx->delay.one_way_delay, (uint32_t)ctx->delay.clock_offset);
         break;
 
 // TODO: remove this
