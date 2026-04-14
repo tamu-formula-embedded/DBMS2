@@ -155,7 +155,7 @@ static void SendFromQueue(CAN_HandleTypeDef *hcan)
         if (entry->header.StdId == CANID_TX_DELAY) {
             if (g_can_ctx)
             {
-                g_can_ctx->profiling.delay.T1 = GetUs(g_can_ctx);
+                g_can_ctx->delay.T1 = GetUs(g_can_ctx);
 
             }
         }
