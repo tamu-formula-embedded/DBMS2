@@ -171,6 +171,7 @@ void ChargingEnterState(DbmsCtx* ctx, ChargingState new_state)
 void ChargingUpdate(DbmsCtx* ctx)
 {
     J1772ReadState(ctx);
+    ctx->charging.only_balance = HAL_GetTick() - ctx->charging.bal_loop_hb < 3000;
 
     ctx->charging.conn = ChargingConnected(ctx);
     // if (charge_conn && !ctx->charging.conn)         ;       // can register an action here
@@ -183,7 +184,7 @@ void ChargingUpdate(DbmsCtx* ctx)
 
     // Seperate condition to detect no connection because it is a
     // global transition that would need to be implemented in every state
-    if (!ctx->charging.conn)
+    if (!ctx->charging.conn || !ctx->charging.only_balance)
     {
         ChargingEnterState(ctx, CH_NO_CONN);
     }
@@ -194,6 +195,7 @@ void ChargingUpdate(DbmsCtx* ctx)
         SendElconRequest(ctx, 0, 0, 1);
 
         if (ctx->charging.conn) ChargingEnterState(ctx, CH_CHARGING);
+        if (ctx->charging.only_balance) ChargingEnterState(ctx, CH_WAIT_1);
 
         break;
 
@@ -203,6 +205,8 @@ void ChargingUpdate(DbmsCtx* ctx)
         ChargingComputeElconReq(ctx);
         SendElconRequest(ctx, ctx->elcon.v_req, ctx->elcon.i_req, 0);
         CanLog(ctx, "Elcon V=%d I=%d\n", ctx->elcon.v_req, ctx->elcon.i_req);
+
+        if (ctx->charging.only_balance) ChargingEnterState(ctx, CH_WAIT_1);
 
         if (TIME_IN_STATE_MS(ctx) > 1000) // TODO:?
         {
@@ -230,8 +234,17 @@ void ChargingUpdate(DbmsCtx* ctx)
         {
             ChargingComputePreBalanceAverages(ctx);
             // Check if we need more balancing
-            if (NeedsToBalanceMore(ctx)) ChargingEnterState(ctx, CH_BALANCING_EVENS);
-            else ChargingEnterState(ctx, CH_CHARGING);
+            if (NeedsToBalanceMore(ctx)) 
+            {
+                ChargingEnterState(ctx, CH_BALANCING_EVENS);
+            }
+            else 
+            {
+                if (ctx->charging.only_balance)
+                    ChargingEnterState(ctx, CH_COMPLETE);
+                else
+                    ChargingEnterState(ctx, CH_CHARGING);
+            }
         }
         else
         {

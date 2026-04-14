@@ -306,21 +306,25 @@ typedef struct _J1772 {
     int64_t last_cp_pwm_read;
     int64_t pwm_ts;
     bool pwm_recieved;
-    uint32_t maxCurrentSupply;
+    uint32_t maxCurrentSupply;  
 } J1772;
 
 typedef struct _Charging {
     int64_t heartbeat;
+    int64_t bal_loop_hb;
     int64_t state_enter_ts;
     ChargingState prev_state;
     ChargingState state;
-    bool allowed;
-    bool conn;
+  
     float pre_bal_accumulator[N_SIDES][N_GROUPS_PER_SIDE];
     float pre_bal_average_v[N_SIDES][N_GROUPS_PER_SIDE];
     float pre_bal_min_v;
     float pre_bal_max_v;
     size_t pre_bal_sample_count;
+
+    bool allowed;
+    bool conn;
+    bool only_balance;
 } Charging;
 
 typedef struct _DbmsCtx
