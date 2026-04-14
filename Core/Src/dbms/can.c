@@ -152,8 +152,12 @@ static void SendFromQueue(CAN_HandleTypeDef *hcan)
     {
         CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail];
 
-        if (id == CANID_TX_DELAY) {
-            ctx->profiling.delay.T1 = GetUs(ctx);
+        if (entry->header.StdId == CANID_TX_DELAY) {
+            if (g_can_ctx)
+            {
+                g_can_ctx->profiling.delay.T1 = GetUs(g_can_ctx);
+
+            }
         }
 
         uint32_t mailbox;
