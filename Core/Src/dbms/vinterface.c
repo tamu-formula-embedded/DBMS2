@@ -184,6 +184,16 @@ int SendMetrics(DbmsCtx* ctx)
     {
         SendMetric(ctx, 80 + i, ctx->faults.monitor_bad_crcs[i]);
     }
+
+    SendMetric(ctx, 90, ctx->delay.T1);
+    SendMetric(ctx, 91, ctx->delay.T2);
+    SendMetric(ctx, 92, ctx->delay.T3);
+    SendMetric(ctx, 93, ctx->delay.T4);
+
+    SendMetric(ctx, 94, ctx->delay.one_way_delay);
+    SendMetric(ctx, 95, ctx->delay.mu);
+    SendMetric(ctx, 96, ctx->delay.st_dev);
+
     return 0;
 }
 
