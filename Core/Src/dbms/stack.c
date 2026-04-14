@@ -198,7 +198,10 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
     int status = 0;
+    int j = 0;
     static uint8_t rx_buffer_v[1024];
+
+    memset(rx_buffer_v, 0, sizeof(rx_buffer_v));
 
     uint8_t frame[] = {0xA0, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1, 0x00, 0x00};
 
@@ -216,10 +219,11 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         ctx->stats.n_rx_stack_frames_itvl++;
         ctx->faults.monitor_total_frames[i]++;
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
-        for (int j = 0; data[0] != frame[2] && j < 1024; j++)
+        for (; data[0] != frame[2] && j < 1024; j++)
         {
             data++;
         }
+        if (j >= 1024) continue;
         data++;
         uint8_t addr = *(data-3);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
@@ -278,6 +282,7 @@ void StackConfigTimeout(DbmsCtx* ctx)
 void StackUpdateAllTempReadings(DbmsCtx* ctx)
 {
     int status = 0;
+    int j = 0;
     static uint8_t rx_buffer_t[1024];
 
     uint8_t frame2[] = {0xA0, 0x05, 0x8E, ((N_TEMPS_PER_MONITOR / 3) + 2) * 2 - 1, 0x00, 0x00};
@@ -296,11 +301,12 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         ctx->faults.monitor_total_frames[i]++;
 
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
-        for (int j = 0; data[0] != frame2[2] && j < 1024; j++)
+        for (; data[0] != frame2[2] && j < 1024; j++)
         {
             data++;
         }
         data++;
+        if (j >= 1024) continue;
         uint8_t addr = *(data-3);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
         uint16_t c_crc = CalcCrc16(data-4, data_size+4);
