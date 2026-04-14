@@ -321,7 +321,7 @@ void DbmsIter(DbmsCtx* ctx)
             DbmsPerformWakeup(ctx);
         }
         if (CtrlHasAnyFaults(ctx))
-            ctx->led_state = LED_ACTIVE_FAULT;
+            ctx->led_state = CtrlHasFault(ctx, CTRL_FAULT_CAN_FAIL) ? LED_CAN_FAIL : LED_ACTIVE_FAULT;
         else
             ctx->led_state = LED_ACTIVE;
         ctx->flags.active = true;
@@ -387,7 +387,6 @@ void DbmsIter(DbmsCtx* ctx)
     // ctx->profiling.profiling.times.T8 = GetUs(ctx);
     if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= 1000000)
     {
-        ctx->led_state = LED_FIRMWARE_FAULT;
         CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL);
     }
     /**
