@@ -34,6 +34,7 @@ typedef enum
     CTRL_FAULT_STACK_FAULT = 9,
     CTRL_FAULT_CURRENT_PULSE = 10,
     CTRL_FAULT_CAN_FAIL = 11,
+    CTRL_FAULT_STACK_DISCONNECT = 12,
     CTRL_FAULT_TYPE_COUNT // Total number of fault types -- should be last
 } CtrlFault;
 
@@ -42,6 +43,7 @@ void CtrlClearFault(DbmsCtx* ctx, CtrlFault fault);
 bool CtrlHasFault(DbmsCtx* ctx, CtrlFault fault);
 bool CtrlHasAnyFaults(DbmsCtx* ctx);
 void CtrlClearAllFaults(DbmsCtx* ctx);
+void CheckStackFaults(DbmsCtx* ctx);
 
 void CheckVoltageFaults(DbmsCtx* ctx);
 void CheckTemperatureFaults(DbmsCtx* ctx);
