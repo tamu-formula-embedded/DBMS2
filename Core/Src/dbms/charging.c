@@ -184,7 +184,7 @@ void ChargingUpdate(DbmsCtx* ctx)
 
     // Seperate condition to detect no connection because it is a
     // global transition that would need to be implemented in every state
-    if (!ctx->charging.conn || !ctx->charging.only_balance)
+    if (!ctx->charging.conn && !ctx->charging.only_balance)
     {
         ChargingEnterState(ctx, CH_NO_CONN);
     }
@@ -194,8 +194,10 @@ void ChargingUpdate(DbmsCtx* ctx)
     case CH_NO_CONN:
         SendElconRequest(ctx, 0, 0, 1);
 
-        if (ctx->charging.conn) ChargingEnterState(ctx, CH_CHARGING);
-        if (ctx->charging.only_balance) ChargingEnterState(ctx, CH_WAIT_1);
+        if (ctx->charging.only_balance) 
+            ChargingEnterState(ctx, CH_WAIT_1);
+        else if (ctx->charging.conn) 
+            ChargingEnterState(ctx, CH_CHARGING);
 
         break;
 
