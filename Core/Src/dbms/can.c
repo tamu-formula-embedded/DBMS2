@@ -152,6 +152,10 @@ static void SendFromQueue(CAN_HandleTypeDef *hcan)
     {
         CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail];
 
+        if (id == CANID_TX_DELAY) {
+            ctx->profiling.delay.T1 = GetUs(ctx);
+        }
+
         uint32_t mailbox;
         int32_t result = HAL_CAN_AddTxMessage(hcan, &entry->header, entry->data, &mailbox);
 
@@ -230,10 +234,6 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     ctx->stats.n_tx_queued = tx_queue.count;
 
     __enable_irq();
-
-    if (id == CANID_TX_DELAY) {
-        ctx->profiling.delay.T1 = GetUs(ctx);
-    }
 
     SendFromQueue(ctx->hw.can);
 
