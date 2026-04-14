@@ -211,6 +211,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
         else
         {
             ctx->stats.n_tx_can_frames++;
+            ctx->stats.last_can_tx_ts = GetUs(ctx);
         }
         __enable_irq();
         return result;
