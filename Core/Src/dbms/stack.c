@@ -93,6 +93,7 @@ void SendOtpEccDatain(DbmsCtx* ctx)
     for (int i = 0; i < 8; i++)
     {
         BROADCAST_WRITE(ctx, REG_OTP_ECC_DATAIN1 + i, DATA(0x00));
+        HAL_Delay(1);
     }
 }
 
@@ -101,6 +102,7 @@ void SendAutoAddr(DbmsCtx* ctx)
     for (int i = 0; i <= N_STACKDEVS; i++)
     {
         BROADCAST_WRITE(ctx, REG_DIR0_ADDR, DATA(0x00 + i));
+        HAL_Delay(1);
     }
 }
 
@@ -108,12 +110,13 @@ void SendSetStackTop(DbmsCtx* ctx)
 {
     // Sets all devices as stack devices
     BROADCAST_WRITE(ctx, REG_COMM_CTRL, DATA(COMM_STACK_DEV));
-
+    HAL_Delay(1);
     // Sets bridge device as non-stack device and bottom of stack
     SINGLE_DEV_WRITE(ctx, 0, REG_COMM_CTRL, DATA(0x00));
-
+    HAL_Delay(1);
     // Sets top of stack
     SINGLE_DEV_WRITE(ctx, N_STACKDEVS-1, REG_COMM_CTRL, DATA(COMM_STACK_DEV | COMM_TOP_STACK));
+    HAL_Delay(1);
 }
 
 void ReadOtpEccDatain(DbmsCtx* ctx)
@@ -121,6 +124,7 @@ void ReadOtpEccDatain(DbmsCtx* ctx)
     for (int i = 0; i < 8; i++)
     {
         BROADCAST_READ(ctx, REG_OTP_ECC_TEST + i, 1);
+        HAL_Delay(1);
     }
 }
 
@@ -135,6 +139,7 @@ void StackAutoAddr(DbmsCtx* ctx)
     SendOtpEccDatain(ctx); // step 1
 
     BROADCAST_WRITE(ctx, REG_CONTROL1, DATA(CTRL1_ADDR_WR));
+    HAL_Delay(1);
 
     SendAutoAddr(ctx); // step 3
 
@@ -152,6 +157,7 @@ void StackAutoAddr(DbmsCtx* ctx)
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
     BROADCAST_WRITE(ctx, REG_ACTIVE_CELL, DATA(n_active_cells)); // Should this be a stack write?
+    HAL_Delay(1);
 }
 
 
@@ -167,6 +173,7 @@ void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 void StackSetupVoltReadings(DbmsCtx* ctx)
 {
     BROADCAST_WRITE(ctx, REG_ADC_CTRL1, DATA(ADC_CONTINUOUS_RUN | ADC_MAIN_GO));
+    HAL_Delay(1);
 }
 
 /**
