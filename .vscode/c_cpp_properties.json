@@ -9,14 +9,14 @@
                 "${workspaceFolder}/Drivers/**"
             ],
             "defines": [
-                "CAN1",
-                "SIM",
-                "__vscode__"
+                "__vscode__",
+                "DEBUG",
+                "USE_HAL_DRIVER",
+                "STM32F446xx"
             ],
-            "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "linux-gcc-arm"
         }
     ],
     "version": 4

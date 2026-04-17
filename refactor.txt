@@ -1,0 +1,33 @@
+1.  split stack_controller into more modules, grouped into stack directory,
+    - stackio           handles stack io
+    - stackctl          control operations like startup, shutdown, etc.
+    - stackvolt         voltage reading related 
+    - stacktemp         temp reading related
+    - stackfault        fault reading related
+    - stackbal          balancing related (charging directory)
+    - stackled          stack led related
+
+    todo: rework a lot of components (balancing, all readings, etc.)
+
+2.  group utility modules into util directory
+    - common
+    - crc
+    - eswap
+    - lut
+    - ma
+
+3.  remove current_meter
+
+4.  remove sim
+
+5.  rename led_controller to ledctl
+    todo: fix some of the bugs
+
+6.  create model folder for model related (model and data modules, etc.)
+
+7.  figure out a solution kinda breaking up monolithic context
+
+8.  break vehicle interface up into more modules
+    - can directory (contains canio, isense, telem)
+
+
