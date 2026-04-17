@@ -223,7 +223,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         {
             data++;
         }
-        if (j >= 1024) continue;
+        // if (j >= 1024) continue;
         data++;
         uint8_t addr = *(data-3);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
@@ -306,7 +306,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
             data++;
         }
         data++;
-        if (j >= 1024) continue;
+        // if (j >= 1024) continue;
         uint8_t addr = *(data-3);
         uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
         uint16_t c_crc = CalcCrc16(data-4, data_size+4);
