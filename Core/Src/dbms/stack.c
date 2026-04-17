@@ -176,8 +176,9 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
  */
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
-    static uint8_t rx_buffer_v[1024];
+    uint8_t rx_buffer_v[1024];
     int j;
+    memset(&rx_buffer_v, 0, sizeof(rx_buffer_v));
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
@@ -189,7 +190,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
         for (j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
-        if (j >= 1024) continue;
+        // if (j >= 1024) continue;
         RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);
         if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateVoltages(ctx, clean_frame);
@@ -251,7 +252,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
         for (j = 0; data[0] != (STACK_T_REG_START & 0xFF) && j < 1024; j++) { data++; }
-        if (j >= 1024) continue;
+        // if (j >= 1024) continue;
         RxStackFrameTemps* clean_frame = (RxStackFrameTemps*)(data - 3); 
         if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateTemps(ctx, clean_frame);
@@ -288,6 +289,13 @@ void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame)
 int StackRead(DbmsCtx* ctx, uint8_t* raw, uint16_t start_reg, uint8_t data_size, int expected_size)
 {
     int status = 0;
+    __HAL_UART_CLEAR_OREFLAG(ctx->hw.uart);
+    __HAL_UART_CLEAR_NEFLAG(ctx->hw.uart);
+    __HAL_UART_CLEAR_FEFLAG(ctx->hw.uart);
+    while (__HAL_UART_GET_FLAG(ctx->hw.uart, UART_FLAG_RXNE)) {
+        ctx->hw.uart->Instance->DR;  // STM32F-series
+        // huart->Instance->RDR;  // STM32L/G/H-series — use this instead
+    }
     if ((status = STACK_READ(ctx, start_reg, data_size)) != 0) 
     {
         return status;
