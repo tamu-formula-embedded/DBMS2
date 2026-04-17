@@ -182,7 +182,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     HAL_Delay(10);
     ctx->profiling.times.T1 = GetUs(ctx);
     
-    // StackUpdateAllTempReadings(ctx);
+    StackUpdateAllTempReadings(ctx);
     HAL_Delay(10);
     ctx->profiling.times.T2 = GetUs(ctx);
     ctx->profiling.times.T3 = GetUs(ctx);
