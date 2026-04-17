@@ -177,7 +177,8 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 69, F2I_K(ctx->stats.pack_v, 1e4));
     SendMetric(ctx, 70, ctx->precharged);
-    SendMetric(ctx, 71, (ctx->stats.n_rx_stack_bad_crcs_itvl * 100) / ctx->stats.n_rx_stack_frames_itvl);
+    if (ctx->stats.n_rx_stack_frames_itvl != 0)
+        SendMetric(ctx, 71, (ctx->stats.n_rx_stack_bad_crcs_itvl * 100) / ctx->stats.n_rx_stack_frames_itvl);
     SendMetric(ctx, 72, ctx->stats.n_int_shutdowns);
 
     for (int i = 0; i < N_MONITORS; i++)
