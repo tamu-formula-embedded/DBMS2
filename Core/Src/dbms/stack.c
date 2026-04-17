@@ -196,7 +196,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
             UpdateVoltages(ctx, clean_frame);
         else{
             IncStackCrcStats(ctx, false, i);
-            CanLog(ctx, "V %x %x %x\n", clean_frame->init, clean_frame->devaddr, clean_frame->regaddr);
+            // CanLog(ctx, "V %x %x %x\n", clean_frame->init, clean_frame->devaddr, clean_frame->regaddr);
         }
 
     }
@@ -289,13 +289,13 @@ void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame)
 int StackRead(DbmsCtx* ctx, uint8_t* raw, uint16_t start_reg, uint8_t data_size, int expected_size)
 {
     int status = 0;
-    __HAL_UART_CLEAR_OREFLAG(ctx->hw.uart);
-    __HAL_UART_CLEAR_NEFLAG(ctx->hw.uart);
-    __HAL_UART_CLEAR_FEFLAG(ctx->hw.uart);
-    while (__HAL_UART_GET_FLAG(ctx->hw.uart, UART_FLAG_RXNE)) {
-        ctx->hw.uart->Instance->DR;  // STM32F-series
-        // huart->Instance->RDR;  // STM32L/G/H-series — use this instead
-    }
+    // __HAL_UART_CLEAR_OREFLAG(ctx->hw.uart);
+    // __HAL_UART_CLEAR_NEFLAG(ctx->hw.uart);
+    // __HAL_UART_CLEAR_FEFLAG(ctx->hw.uart);
+    // while (__HAL_UART_GET_FLAG(ctx->hw.uart, UART_FLAG_RXNE)) {
+    //     ctx->hw.uart->Instance->DR;  // STM32F-series
+    //     // huart->Instance->RDR;  // STM32L/G/H-series — use this instead
+    // }
     if ((status = STACK_READ(ctx, start_reg, data_size)) != 0) 
     {
         return status;

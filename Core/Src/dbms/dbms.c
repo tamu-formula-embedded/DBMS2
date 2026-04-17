@@ -114,7 +114,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     HAL_Delay(5);
     StackSetupVoltReadings(ctx); // todo: rn start
     HAL_Delay(5);
-    StackConfigTimeout(ctx);
+    // StackConfigTimeout(ctx);
 
     HAL_Delay(5);
     StackBalancingConfig(ctx);
