@@ -132,6 +132,11 @@ typedef struct _Stats
     float max_t;
     float avg_t;
 
+    uint8_t min_v_cell;
+    uint8_t max_v_cell;
+    uint8_t min_t_cell;
+    uint8_t max_t_cell;
+
     float pack_v;
 
     uint32_t elcon_rx;
@@ -287,8 +292,23 @@ typedef struct _ChargeStats {
     uint32_t initial_set_ts;
 } ChargeStats;
 
+typedef struct _FaultData {
+    uint8_t cell;
+    uint8_t n_throws;
+    uint16_t value;
+} FaultData;
+
 typedef struct _FaultState {
-    uint32_t controller_mask;
+    uint32_t active_faults;
+    uint32_t latched_faults;
+    uint32_t historic_faults;
+
+    // Fault config
+    uint32_t warnings_config;
+    uint32_t nonlatching_config;
+
+    FaultData fault_data[32];
+
     uint8_t bridge_fault_summary;
     uint32_t bridge_faults;
     uint8_t monitor_fault_summary[N_MONITORS];

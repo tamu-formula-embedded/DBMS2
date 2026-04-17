@@ -38,19 +38,47 @@ typedef enum
     CTRL_FAULT_TYPE_COUNT // Total number of fault types -- should be last
 } CtrlFault;
 
-void CtrlSetFault(DbmsCtx* ctx, CtrlFault fault);
-void CtrlClearFault(DbmsCtx* ctx, CtrlFault fault);
+typedef enum
+{
+    CTRL_KEEP_MAX,
+    CTRL_KEEP_MIN,
+    CTRL_KEEP_FIRST,
+    CTRL_KEEP_LATEST
+} CtrlFaultSaveMode;
+
+#define BIT(fault) (1U << (fault))
+
+#define NONMASKABLE_FAULTS (                 \
+    BIT(CTRL_FAULT_VOLTAGE_OVER) |          \
+    BIT(CTRL_FAULT_VOLTAGE_UNDER) |         \
+    BIT(CTRL_FAULT_TEMP_OVER) |             \
+    BIT(CTRL_FAULT_CURRENT_OVER) |          \
+    BIT(CTRL_FAULT_PACK_VOLTAGE_OVER) |     \
+    BIT(CTRL_FAULT_PACK_VOLTAGE_UNDER) |    \
+    BIT(CTRL_FAULT_MAX_DELTA_EXCEEDED)      \
+)
+
+#define CTRL_CELL_NA 0xFF
+#define CTRL_CELL(side, cell) ((((side) & 0xF) << 4) | ((cell) & 0xF))
+
+#define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
+
+void CtrlUpdateFaults(DbmsCtx* ctx);
+
+void CtrlSetFault(DbmsCtx* ctx, CtrlFault fault, uint8_t cell, uint16_t value);
 bool CtrlHasFault(DbmsCtx* ctx, CtrlFault fault);
+
 bool CtrlHasAnyFaults(DbmsCtx* ctx);
+bool CtrlHasAnyHardFaults(DbmsCtx* ctx);
+bool CtrlHasAnyWarnings(DbmsCtx* ctx);
 void CtrlClearAllFaults(DbmsCtx* ctx);
-void CheckStackFaults(DbmsCtx* ctx);
 
 void CheckVoltageFaults(DbmsCtx* ctx);
 void CheckTemperatureFaults(DbmsCtx* ctx);
 void CheckCurrentFaults(DbmsCtx* ctx);
+void CheckStackFaults(DbmsCtx* ctx);
 
 void SetFaultLine(DbmsCtx* ctx, bool faulted);
-void ThrowHardFault(DbmsCtx* ctx);
 int LoadFaultState(DbmsCtx* ctx);
 int SaveFaultState(DbmsCtx* ctx);
 

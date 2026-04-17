@@ -109,7 +109,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 13, ctx->stats.looptime);
     SendMetric(ctx, 14, ctx->stats.end_delay);
 
-    SendMetric(ctx, 15, ctx->faults.controller_mask);
+    SendMetric(ctx, 15, ctx->faults.active_faults);
 
     SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
     SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
@@ -249,7 +249,7 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
     int32_t pack_v = ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE);
 
-    SendPlex32x2(ctx, 0x11, ctx->faults.controller_mask, ctx->current_sensor.current_ma / 1000);
+    SendPlex32x2(ctx, 0x11, ctx->faults.active_faults, ctx->current_sensor.current_ma / 1000);
     // SendPlex32x2(ctx, 0x12, ctx->isense.ima.current_mavg_ma / 1000, ctx->pl_pulse_t);
     SendPlex32x2(ctx, 0x12, pack_v, ctx->stats.iters);
     SendPlex32x2(ctx, 0x13, ctx->stats.avg_t, ctx->current_sensor.charge_as);
