@@ -1,9 +1,9 @@
-/** 
- * 
+/**
+ *
  * Distributed BMS      CAN I/O Interface
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
@@ -62,6 +62,9 @@
 #define CANID_TX_BLACKBOX_SIZE      0x0B008000
 #define CANID_TX_BLACKBOX_READY     0x0B009000
 
+#define CANID_RX_DELAY              0x0BC
+#define CANID_TX_DELAY              0x0BD
+
 /* Extended IDs */
 
 #define CANID_CELLSTATE_VOLTS       0x0B002000
@@ -72,20 +75,20 @@
 
 /* Undefined yet */
 
-#define CANID_FATAL_ERROR           0x50B 
+#define CANID_FATAL_ERROR           0x50B
 
 #define CANID_DEBUG_OVERWRITE_TEMPS     0x581
 
 #define CANID_ELCON_TX                  0x1806E5F4
 #define CANID_ELCON_RX                  0x18FF50E5
 
-typedef enum 
+typedef enum
 {
-    CAN_RX_0, 
+    CAN_RX_0,
     CAN_RX_1,
 } CanRxChannel;
 
-typedef enum 
+typedef enum
 {
     CFG_SET,
     CFG_GET

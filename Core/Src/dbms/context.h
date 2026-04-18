@@ -23,7 +23,7 @@
 #define N_SIDES_PER_SEG     2       // number of sides per segment
 #define N_MONITORS_PER_SIDE 1       // number of monitors per side
 #define N_GROUPS_PER_SIDE   13      // number of voltages per side
-#define N_TEMPS_PER_MONITOR 13       // number of temps per monitor chip 
+#define N_TEMPS_PER_MONITOR 13       // number of temps per monitor chip
 #define N_P_GROUP           3       // number of cells per parallel group
 
 // #define HAS_FAN
@@ -43,6 +43,9 @@
 #define N_RC_ENTRIES                101
 #define N_C_ENTRIES                 101
 #define N_I_MA_MEMORIZED            100
+
+#define ALPHA                       0.25
+#define BETA                        0.125
 
 // DANGER:  THESE DEBUGS WILL PREVENT THE CONTROLLER FROM WORKING NORMALLY
 // #define DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
@@ -139,6 +142,9 @@ typedef struct _Stats
 
     uint16_t monitor_bad_crcs[N_MONITORS];
     uint16_t monitor_total_frames[N_MONITORS];
+    uint64_t last_can_tx_ts;
+
+    uint64_t last_monitor_msg[N_MONITORS]; // Last iter that a message was received from each monitor
 } Stats;
 
 typedef struct _Model   // Outputs from the ECM model
@@ -228,6 +234,18 @@ typedef struct _Profiling {
         uint64_t T10;
     } times;
 } Profiling;
+
+typedef struct _Delay {
+    // used for calculating one-way delay (bus latency from DCU)
+    uint64_t T1;
+    uint64_t T2;
+    uint64_t T3;
+    uint64_t T4;
+    uint64_t mu;
+    uint64_t st_dev;
+    uint64_t one_way_delay;
+    uint64_t clock_offset;
+} Delay;
 
 typedef struct _LutData {
     LTE lut_therm_v_to_t[N_THERM_V_TO_T_ENTRIES];
@@ -348,6 +366,7 @@ typedef struct _DbmsCtx
     J1772 j1772;
     Charging charging;
     Profiling profiling;
+    Delay delay;
 } DbmsCtx;
 
 
