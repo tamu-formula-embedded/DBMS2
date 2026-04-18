@@ -284,6 +284,10 @@ void UpdateTemps(DbmsCtx* ctx, RxStackFrameTemps* frame)
 
 void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame)
 {
+    if (ADDR_BCAST_TO_STACK(frame->devaddr) >= N_MONITORS) return;
+
+    ctx->stats.last_monitor_msg[ADDR_BCAST_TO_STACK(frame->devaddr)] = ctx->stats.iters;
+
     for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
     {
         uint16_t raw = (frame->data[j * sizeof(int16_t)] << 8) + frame->data[j * sizeof(int16_t) + 1];
