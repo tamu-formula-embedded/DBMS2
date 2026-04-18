@@ -1,10 +1,10 @@
 /* USER CODE BEGIN Header */
-/** 
- * 
+/**
+ *
  * Distributed BMS      STM32 Generated File
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
@@ -117,7 +117,7 @@ int main(void)
   MX_CAN1_Init();
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
-  
+
   dbms_ctx.hw.adc = &hadc1;
   dbms_ctx.hw.can = &hcan2;
   dbms_ctx.hw.timer = &htim5;
@@ -127,7 +127,7 @@ int main(void)
 
 
   DbmsAlloc(&dbms_ctx);
-  DbmsInit(&dbms_ctx);
+DbmsInit(&dbms_ctx);
 
   /* USER CODE END 2 */
 
@@ -685,7 +685,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if (GPIO_Pin == GPIO_PIN_12)
     {
         GPIO_PinState pin_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12);
-        
         if (pin_state == GPIO_PIN_SET)
         {
             dbms_ctx.qstats.historic_accumulated_loss += dbms_ctx.qstats.accumulated_loss;
@@ -714,7 +713,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK)
     {
-        // Manually correct IDE / RTR fields 
+        // Manually correct IDE / RTR fields
         // // Not sure if necessary. TODO: double check
         // uint32_t rir = hcan->Instance->sFIFOMailBox[0].RIR;
 
@@ -738,7 +737,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rxHeader, rxData) == HAL_OK)
     {
-        // // Manually correct IDE / RTR fields 
+        // // Manually correct IDE / RTR fields
         // uint32_t rir = hcan->Instance->sFIFOMailBox[1].RIR;
 
         // rxHeader.IDE = (rir & CAN_RI0R_IDE) ? CAN_ID_EXT : CAN_ID_STD;
@@ -784,7 +783,6 @@ void Error_Handler(void)
 
   while (1)
   {
-    
   }
   /* USER CODE END Error_Handler_Debug */
 }

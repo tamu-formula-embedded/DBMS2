@@ -106,7 +106,7 @@ int DbmsPerformWakeup(DbmsCtx* ctx)
     }
 
     HAL_Delay(5);
-    StackAutoAddr   (ctx);
+    StackAutoAddr(ctx);
     HAL_Delay(5);
     StackSetNumActiveCells(ctx, 0x0A);
     HAL_Delay(5);
@@ -212,6 +212,8 @@ void DbmsHandleActive(DbmsCtx* ctx)
         CheckTemperatureFaults(ctx);
         ctx->profiling.times.T8 = GetUs(ctx);
 
+        CheckStackFaults(ctx);
+
         SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
 
         // PollFaultSummary(ctx);
@@ -224,10 +226,17 @@ void DbmsHandleActive(DbmsCtx* ctx)
 
     ThrowHardFault(ctx);                // this can override fault state
     ctx->profiling.times.T9 = GetUs(ctx);
+
+    if (ctx->stats.iters % 10 == 0) {
+        // send T1 to init one way delay with DCU
+        // can transmit queue sets T1 for accurate send time
+        uint8_t init_frame[8] = {0};
+        CanTransmit(ctx, CANID_TX_DELAY, init_frame);
+    }
 }
 
-void DbmsIter(DbmsCtx* ctx)
 
+void DbmsIter(DbmsCtx* ctx)
 {
     int status = 0;
     ctx->stats.iters++;
@@ -325,6 +334,12 @@ void DbmsIter(DbmsCtx* ctx)
         DbmsHandleActive(ctx);
     }
 
+    // TODO: unlatches CAN fail fault
+    // if (CtrlHasFault(ctx, CTRL_FAULT_CAN_FAIL) && (GetUs(ctx) - ctx->stats.last_can_tx_ts < GetSetting(ctx, MS_BEFORE_CAN_FAIL)))
+    // {
+    //     CtrlClearFault(ctx, CTRL_FAULT_CAN_FAIL);
+    // }
+
     // ctx->profiling.profiling.times.T5 = GetUs(ctx);
 
     ChargingUpdate(ctx);
@@ -382,7 +397,10 @@ void DbmsIter(DbmsCtx* ctx)
         SendCellTemps(ctx);
     }
     // ctx->profiling.profiling.times.T8 = GetUs(ctx);
-
+    if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= GetSetting(ctx, MS_BEFORE_CAN_FAIL))
+    {
+        CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL);
+    }
     /**
      * Handle LED states and such
      */
@@ -416,6 +434,7 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     int status = 0;
     uint32_t can_id = (rx_header.IDE == CAN_ID_EXT) ? rx_header.ExtId : rx_header.StdId;
     ctx->stats.n_rx_can_frames++;
+    uint64_t rx_timestamp = GET_US2();
 
     switch (can_id)
     {
@@ -479,7 +498,6 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
     case CANID_RX_CLEAR_FAULTS:
         ctx->flags.req_fault_clear = true;
         break;
-
     case CANID_RX_SET_INITIAL_CHARGE:
         ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;
         CanLog(ctx, "Q0: %d\n", be32_to_u32(rx_data));
@@ -493,6 +511,26 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 
     case CANID_RX_BLACKBOX_REQUEST:
         ctx->blackbox.requested = true;
+        break;
+    case CANID_RX_DELAY:
+        ctx->delay.T2 = be32_to_u32(rx_data + 0);
+        ctx->delay.T3 = be32_to_u32(rx_data + 4);
+        ctx->delay.T4 = rx_timestamp;
+
+        if (ctx->delay.T2 > ctx->delay.T3 || ctx->delay.T1 > ctx->delay.T4)
+        {
+            break;
+        }
+
+        ctx->delay.one_way_delay = ((ctx->delay.T4 - ctx->delay.T1) - (ctx->delay.T3 - ctx->delay.T2)) / 2;
+        ctx->delay.clock_offset = ((ctx->delay.T2 - ctx->delay.T1) + (ctx->delay.T3 - ctx->delay.T4)) / 2;
+
+        int64_t sample = (int64_t) ctx->delay.one_way_delay;
+        int64_t err = sample - (int64_t) ctx->delay.mu;
+        ctx->delay.mu = (uint64_t) ((int64_t) ctx->delay.mu + (int64_t) (ALPHA * err));
+        int64_t abs_err = err < 0 ? -err : err;
+        ctx->delay.st_dev = (uint64_t) ((1 - BETA) * ctx->delay.st_dev + BETA * abs_err);
+
         break;
 
 // TODO: remove this
@@ -515,6 +553,12 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         CanLog(ctx, "Charging HB\n");
         ctx->charging.heartbeat = HAL_GetTick();
         break;
+    // case 0x181:
+    //     CanLog(ctx, "got it\n");
+    //     break;
+    // case 0x061:
+    //     CanLog(ctx, "this too\n");
+    //     break;
     default:
         ctx->stats.n_unmatched_can_frames++;
         break;

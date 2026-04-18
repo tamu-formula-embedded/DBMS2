@@ -1,9 +1,9 @@
-/** 
- * 
+/**
+ *
  * Distributed BMS      CAN I/O Interface
  *
  * Copyright (C) 2025   Texas A&M University
- * 
+ *
  *                      Justus Languell  <justus@tamu.edu>
  *                      Cam Stone        <cameron28202@tamu.edu>
  *                      Abhinav Akavaram <abhinav.akavaram@tamu.edu>
@@ -14,7 +14,7 @@
 
 #define CAN_TX_QUEUE_SIZE 512
 
-typedef struct 
+typedef struct
 {
     uint32_t id;        // up to 29-bit CAN ID
     uint32_t mask;      // 29-bit or 11-bit mask
@@ -62,12 +62,12 @@ int ConfigCanFilters(CAN_HandleTypeDef *hcan, const CanFilterMask *filters, size
         {
             f.FilterScale = CAN_FILTERSCALE_32BIT;
             f.FilterIdHigh     = (filters[i].id   << 3) >> 16;
-            f.FilterIdLow      = ((filters[i].id  << 3) & 0xFFFF) | (1 << 2); 
+            f.FilterIdLow      = ((filters[i].id  << 3) & 0xFFFF) | (1 << 2);
             f.FilterMaskIdHigh = (filters[i].mask << 3) >> 16;
             f.FilterMaskIdLow  = ((filters[i].mask << 3) & 0xFFFF) | (1 << 2);
 
             status = HAL_CAN_ConfigFilter(hcan, &f);
-            if (status != HAL_OK) 
+            if (status != HAL_OK)
                 return status;
             bank++;
             i++;
@@ -91,7 +91,7 @@ int ConfigCanFilters(CAN_HandleTypeDef *hcan, const CanFilterMask *filters, size
             }
 
             status = HAL_CAN_ConfigFilter(hcan, &f);
-            if (status != HAL_OK) 
+            if (status != HAL_OK)
                 return status;
             bank++;
         }
@@ -105,7 +105,7 @@ int ConfigCan(DbmsCtx* ctx)
 {
     g_can_ctx = ctx;
     int status = 0;
-    CanFilterMask masks[] = 
+    CanFilterMask masks[] =
     {
         { 0x0B0, 0x7F0, false },
         { 0x500, 0x700, false },
@@ -151,7 +151,13 @@ static void SendFromQueue(CAN_HandleTypeDef *hcan)
     while (tx_queue.count > 0 && HAL_CAN_GetTxMailboxesFreeLevel(hcan) > 0)
     {
         CanTxQueueItem* entry = &tx_queue.buffer[tx_queue.tail];
-        
+
+        if (entry->header.StdId == CANID_TX_DELAY) 
+        {
+            if (g_can_ctx)
+                g_can_ctx->delay.T1 = GET_US2();
+        }
+
         uint32_t mailbox;
         int32_t result = HAL_CAN_AddTxMessage(hcan, &entry->header, entry->data, &mailbox);
 
@@ -189,7 +195,7 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     else
     {
         hdr->IDE = CAN_ID_STD;
-        hdr->StdId = id & CAN_STD_ID_MASK;      
+        hdr->StdId = id & CAN_STD_ID_MASK;
     }
 
     hdr->RTR = CAN_RTR_DATA;
@@ -197,9 +203,13 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     hdr->TransmitGlobalTime = DISABLE;
 
     __disable_irq();
-    
+
     if (tx_queue.count == 0 && HAL_CAN_GetTxMailboxesFreeLevel(ctx->hw.can) > 0U)
     {
+        if (id == CANID_TX_DELAY) 
+        {
+            ctx->delay.T1 = GET_US2();
+        }
         int32_t result = HAL_CAN_AddTxMessage(ctx->hw.can, hdr, data, &ctx->hw.can_tx_mailbox);
 
         if (result != HAL_OK)
@@ -211,11 +221,11 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
         else
         {
             ctx->stats.n_tx_can_frames++;
+            ctx->stats.last_can_tx_ts = GetUs(ctx);
         }
         __enable_irq();
         return result;
     }
-    
     if (tx_queue.count >= CAN_TX_QUEUE_SIZE)
     {
         tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;
@@ -228,11 +238,11 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
     tx_queue.head = (tx_queue.head + 1) % CAN_TX_QUEUE_SIZE;
     tx_queue.count++;
     ctx->stats.n_tx_queued = tx_queue.count;
-    
+
     __enable_irq();
 
     SendFromQueue(ctx->hw.can);
-    
+
     return HAL_OK;
 }
 
