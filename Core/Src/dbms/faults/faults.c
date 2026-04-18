@@ -13,7 +13,7 @@
 #include "../blackbox.h"
 #include "../settings.h"
 
-CtrlFaultSaveMode fault_save_modes[] = {
+CtrlFaultSaveMode fault_save_modes[CTRL_FAULT_TYPE_COUNT] = {
     [CTRL_FAULT_VOLTAGE_OVER] = CTRL_KEEP_MAX,
     [CTRL_FAULT_VOLTAGE_UNDER] = CTRL_KEEP_MIN,
     [CTRL_FAULT_TEMP_OVER] = CTRL_KEEP_MAX,

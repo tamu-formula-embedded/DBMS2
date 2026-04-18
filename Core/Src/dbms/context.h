@@ -299,13 +299,13 @@ typedef struct _FaultData {
 } FaultData;
 
 typedef struct _FaultState {
-    uint32_t active_faults;
-    uint32_t latched_faults;
-    uint32_t historic_faults;
+    uint32_t active_faults;         // Currently active fault/warning conditions - Resets when condition is clear
+    uint32_t latched_faults;        // Currently latched fault/warning conditions - Resets with app clear
+    uint32_t historic_faults;       // Historic faults/warnings even if non-latching - Resets with app clear
 
     // Fault config
-    uint32_t warnings_config;
-    uint32_t nonlatching_config;
+    uint32_t warnings_config;       // Which faults are considered warnings
+    uint32_t nonlatching_config;    // Which faults are non-latching
 
     FaultData fault_data[32];
 
