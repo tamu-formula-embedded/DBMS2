@@ -73,6 +73,8 @@ bool CtrlHasAnyHardFaults(DbmsCtx* ctx);
 bool CtrlHasAnyWarnings(DbmsCtx* ctx);
 void CtrlClearAllFaults(DbmsCtx* ctx);
 
+void CtrlSetFaultConfig(DbmsCtx* ctx, uint32_t warnings, uint32_t nonlatching);
+
 void CheckVoltageFaults(DbmsCtx* ctx);
 void CheckTemperatureFaults(DbmsCtx* ctx);
 void CheckCurrentFaults(DbmsCtx* ctx);
@@ -81,7 +83,5 @@ void CheckStackFaults(DbmsCtx* ctx);
 void SetFaultLine(DbmsCtx* ctx, bool faulted);
 int LoadFaultState(DbmsCtx* ctx);
 int SaveFaultState(DbmsCtx* ctx);
-
-
 
 #endif

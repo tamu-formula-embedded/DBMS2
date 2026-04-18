@@ -380,6 +380,7 @@ void DbmsIter(DbmsCtx* ctx)
 
         SendCellVoltages(ctx);
         SendCellTemps(ctx);
+        SendFaultData(ctx);
     }
     // ctx->profiling.profiling.times.T8 = GetUs(ctx);
     /**
@@ -478,6 +479,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
     case CANID_RX_CLEAR_FAULTS:
         ctx->flags.req_fault_clear = true;
+        break;
+    case CANID_RX_FAULTS_CONFIG:
+        CtrlSetFaultConfig(ctx, be32_to_u32(rx_data + 0), be32_to_u32(rx_data + 4));
         break;
     case CANID_RX_SET_INITIAL_CHARGE:
         ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;

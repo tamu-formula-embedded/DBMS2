@@ -142,6 +142,12 @@ void CtrlClearAllFaults(DbmsCtx* ctx)
     ctx->flags.need_to_save_faults = true;
 }
 
+void CtrlSetFaultConfig(DbmsCtx* ctx, uint32_t warnings, uint32_t nonlatching)
+{
+    ctx->faults.warnings_config = (warnings & ~NONMASKABLE_FAULTS);
+    ctx->faults.nonlatching_config = (nonlatching & ~NONMASKABLE_FAULTS);
+}
+
 void SetFaultLine(DbmsCtx* ctx, bool faulted)
 {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, !((bool)faulted));

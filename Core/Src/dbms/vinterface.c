@@ -361,3 +361,16 @@ int SendCellsToBalance(DbmsCtx* ctx)
     }
     return 0;
 }
+
+void SendFaultData(DbmsCtx* ctx)
+{
+    SendPlex32x2(ctx, CANID_TX_FAULTS_MASKS1, ctx->faults.active_faults, ctx->faults.latched_faults);
+    SendPlex32x2(ctx, CANID_TX_FAULTS_MASKS2, ctx->faults.historic_faults, NONMASKABLE_FAULTS);
+    SendPlex32x2(ctx, CANID_TX_FAULTS_MASKS3, ctx->faults.warnings_config, ctx->faults.nonlatching_config);
+
+    for (int i = 0; i < CTRL_FAULT_TYPE_COUNT; i += 2) {
+        SendPlex32x2(ctx, CANID_TX_FAULTS_DATA + (i / 2), 
+            *(uint32_t*) (ctx->faults.fault_data + i), 
+            *(uint32_t*) (ctx->faults.fault_data + i + 1));
+    }
+}
