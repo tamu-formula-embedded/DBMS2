@@ -298,8 +298,13 @@ int StackRead(DbmsCtx* ctx, uint8_t* raw, uint16_t start_reg, uint8_t data_size,
     {
         return status;
     }
+    __HAL_UART_CLEAR_FEFLAG(ctx->hw.uart);
+    __HAL_UART_CLEAR_OREFLAG(ctx->hw.uart);
+    __HAL_UART_CLEAR_NEFLAG(ctx->hw.uart);
+    volatile uint8_t dummy = ctx->hw.uart->Instance->DR;
+    (void) dummy;
     // TODO: redo the RX path for stack
-    if ((status = HAL_UART_Receive(ctx->hw.uart, raw, expected_size+1, STACK_RECV_TIMEOUT)) != 0)
+    if ((status = HAL_UART_Receive(ctx->hw.uart, raw, expected_size+2, STACK_RECV_TIMEOUT)) != 0)
     {
     }
     return status;
