@@ -292,7 +292,7 @@ typedef struct _ChargeStats {
     uint32_t initial_set_ts;
 } ChargeStats;
 
-typedef struct _FaultData {
+typedef struct __attribute__((packed)) _FaultData {
     uint8_t cell;
     uint8_t n_throws;
     uint16_t value;

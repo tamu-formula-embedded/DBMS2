@@ -311,8 +311,10 @@ void DbmsIter(DbmsCtx* ctx)
             ProcessLedAction(ctx);
             DbmsPerformWakeup(ctx);
         }
-        if (CtrlHasAnyFaults(ctx))
+        if (CtrlHasAnyHardFaults(ctx))
             ctx->led_state = LED_ACTIVE_FAULT;
+        else if (CtrlHasAnyWarnings(ctx))
+            ctx->led_state = LED_ACTIVE_WARNING;
         else
             ctx->led_state = LED_ACTIVE;
         ctx->flags.active = true;

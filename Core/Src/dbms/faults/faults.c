@@ -78,21 +78,21 @@ void CtrlSetFault(DbmsCtx* ctx, CtrlFault fault, uint8_t cell, uint16_t value)
     bool save_value = false;
     switch (fault_save_modes[fault]) {
         case CTRL_KEEP_FIRST:
-            save_value = !CtrlHasFault(ctx, fault);
+            save_value = !CtrlHasStickyFault(ctx, fault);
             break;
         case CTRL_KEEP_LATEST:
             save_value = true;
             break;
         case CTRL_KEEP_MAX:
-            save_value = (value > data->value) || !CtrlHasFault(ctx, fault);
+            save_value = (value > data->value) || !CtrlHasStickyFault(ctx, fault);
             break;
         case CTRL_KEEP_MIN:
-            save_value = (value < data->value) || !CtrlHasFault(ctx, fault);
+            save_value = (value < data->value) || !CtrlHasStickyFault(ctx, fault);
             break;
     }
 
 
-    if (!CtrlHasFault(ctx, fault) && data->n_throws < 255) data->n_throws++;
+    if (!CtrlHasStickyFault(ctx, fault) && data->n_throws < 255) data->n_throws++;
     if (save_value)
     {
         data->cell = cell;
@@ -108,6 +108,13 @@ bool CtrlHasFault(DbmsCtx* ctx, CtrlFault fault)
     return (ctx->faults.active_faults & BIT(fault));
 }
 
+bool CtrlHasStickyFault(DbmsCtx* ctx, CtrlFault fault)
+{
+    if (fault >= CTRL_FAULT_TYPE_COUNT) return false;
+    return (ctx->faults.historic_faults & BIT(fault));
+}
+
+
 /**
  * Whether the controller has any active or latched hardfaults or warnings
  */
@@ -122,7 +129,7 @@ bool CtrlHasAnyFaults(DbmsCtx* ctx)
 bool CtrlHasAnyHardFaults(DbmsCtx* ctx)
 {
     return ((ctx->faults.active_faults | ctx->faults.latched_faults) 
-        & (~ctx->faults.warnings_config | NONMASKABLE_FAULTS))!= 0;
+        & (~ctx->faults.warnings_config | NONMASKABLE_FAULTS)) != 0;
 }
 
 /**
@@ -139,6 +146,8 @@ void CtrlClearAllFaults(DbmsCtx* ctx)
     ctx->faults.active_faults = 0;
     ctx->faults.latched_faults = 0;
     ctx->faults.historic_faults = 0;
+    memset(ctx->faults.fault_data, 0, sizeof(ctx->faults.fault_data));
+
     ctx->flags.need_to_save_faults = true;
 }
 
@@ -146,6 +155,10 @@ void CtrlSetFaultConfig(DbmsCtx* ctx, uint32_t warnings, uint32_t nonlatching)
 {
     ctx->faults.warnings_config = (warnings & ~NONMASKABLE_FAULTS);
     ctx->faults.nonlatching_config = (nonlatching & ~NONMASKABLE_FAULTS);
+    ctx->faults.latched_faults &= ~ctx->faults.nonlatching_config;
+    ctx->flags.need_to_save_faults = true;
+
+    CanLog(ctx, "cf w=%x nl=%x\n", ctx->faults.warnings_config, ctx->faults.nonlatching_config);
 }
 
 void SetFaultLine(DbmsCtx* ctx, bool faulted)
@@ -161,6 +174,7 @@ int SaveFaultState(DbmsCtx* ctx)
     {
         ctx->faults_crc = faults_crc;
         SaveStoredObject(ctx, EEPROM_CTRL_FAULT_MASK_ADDR, &ctx->faults, sizeof(ctx->faults));
+        CanLog(ctx, "Saved Faults!\n");
     }
     return 0;
 }

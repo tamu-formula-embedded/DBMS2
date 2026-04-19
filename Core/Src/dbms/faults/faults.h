@@ -48,7 +48,7 @@ typedef enum
 
 #define BIT(fault) (1U << (fault))
 
-#define NONMASKABLE_FAULTS (                 \
+#define NONMASKABLE_FAULTS ((uint32_t) (    \
     BIT(CTRL_FAULT_VOLTAGE_OVER) |          \
     BIT(CTRL_FAULT_VOLTAGE_UNDER) |         \
     BIT(CTRL_FAULT_TEMP_OVER) |             \
@@ -56,7 +56,9 @@ typedef enum
     BIT(CTRL_FAULT_PACK_VOLTAGE_OVER) |     \
     BIT(CTRL_FAULT_PACK_VOLTAGE_UNDER) |    \
     BIT(CTRL_FAULT_MAX_DELTA_EXCEEDED)      \
-)
+))
+
+// #define NONMASKABLE_FAULTS 0
 
 #define CTRL_CELL_NA 0xFF
 #define CTRL_CELL(side, cell) ((((side) & 0xF) << 4) | ((cell) & 0xF))
@@ -67,6 +69,7 @@ void CtrlUpdateFaults(DbmsCtx* ctx);
 
 void CtrlSetFault(DbmsCtx* ctx, CtrlFault fault, uint8_t cell, uint16_t value);
 bool CtrlHasFault(DbmsCtx* ctx, CtrlFault fault);
+bool CtrlHasStickyFault(DbmsCtx* ctx, CtrlFault fault);
 
 bool CtrlHasAnyFaults(DbmsCtx* ctx);
 bool CtrlHasAnyHardFaults(DbmsCtx* ctx);
