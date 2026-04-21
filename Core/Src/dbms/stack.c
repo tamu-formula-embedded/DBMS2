@@ -183,7 +183,7 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
  */
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
-    uint8_t rx_buffer_v[1024];
+    static uint8_t rx_buffer_v[1024];
     int j;
     memset(rx_buffer_v, 0, sizeof(rx_buffer_v));
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
@@ -197,7 +197,7 @@ void StackUpdateAllVoltReadings(DbmsCtx* ctx)
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
         for (j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
-        if (j >= 1024) continue;
+        if (j >= 1024 || j < 3) continue;
         RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);
         if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateVoltages(ctx, clean_frame);
@@ -244,7 +244,7 @@ void StackConfigTimeout(DbmsCtx* ctx)
 
 void StackUpdateAllTempReadings(DbmsCtx* ctx)
 {
-    uint8_t rx_buffer_t[1024];
+    static uint8_t rx_buffer_t[1024];
     int j;
     memset(rx_buffer_t, 0, sizeof(rx_buffer_t));
     size_t data_size = (N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(int16_t); // +2 for GPIO mismatch
@@ -258,7 +258,7 @@ void StackUpdateAllTempReadings(DbmsCtx* ctx)
         // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
         for (j = 0; data[0] != (STACK_T_REG_START & 0xFF) && j < 1024; j++) { data++; }
-        if (j >= 1024) continue;
+        if (j >= 1024 || j < 3) continue;
         RxStackFrameTemps* clean_frame = (RxStackFrameTemps*)(data - 3); 
         if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
             UpdateTemps(ctx, clean_frame);
