@@ -146,7 +146,13 @@ void CtrlClearAllFaults(DbmsCtx* ctx)
     ctx->faults.active_faults = 0;
     ctx->faults.latched_faults = 0;
     ctx->faults.historic_faults = 0;
-    memset(ctx->faults.fault_data, 0, sizeof(ctx->faults.fault_data));
+
+    for (size_t i = 0; i < sizeof(ctx->faults.fault_data) / sizeof(ctx->faults.fault_data[0]); ++i)
+    {
+        ctx->faults.fault_data[i].cell = 0xFF;
+        ctx->faults.fault_data[i].n_throws = 0;
+        ctx->faults.fault_data[i].value = 0;
+    }
 
     ctx->flags.need_to_save_faults = true;
 }
