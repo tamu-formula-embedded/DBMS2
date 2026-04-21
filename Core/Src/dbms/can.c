@@ -226,7 +226,6 @@ int CanTransmit(DbmsCtx* ctx, uint32_t id, uint8_t data[8])
         __enable_irq();
         return result;
     }
-
     if (tx_queue.count >= CAN_TX_QUEUE_SIZE)
     {
         tx_queue.tail = (tx_queue.tail + 1) % CAN_TX_QUEUE_SIZE;

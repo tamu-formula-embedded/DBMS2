@@ -84,9 +84,6 @@ void DbmsInit(DbmsCtx* ctx)
 
     ctx->timing.last_rx_heartbeat = -GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN);
 
-    memset(&ctx->faults.monitor_total_frames, 0, sizeof(ctx->faults.monitor_total_frames));
-    memset(&ctx->faults.monitor_bad_crcs, 0, sizeof(ctx->faults.monitor_bad_crcs));
-
     ReadEEPROM(ctx, EEPROM_DEBUG, &ctx->stats.n_int_shutdowns, 1);
 
     #ifdef HAS_FAN
@@ -184,7 +181,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
     StackUpdateAllVoltReadings(ctx);
     HAL_Delay(10);
     ctx->profiling.times.T1 = GetUs(ctx);
-
+    
     StackUpdateAllTempReadings(ctx);
     HAL_Delay(10);
     ctx->profiling.times.T2 = GetUs(ctx);
@@ -400,10 +397,10 @@ void DbmsIter(DbmsCtx* ctx)
         SendCellTemps(ctx);
     }
     // ctx->profiling.profiling.times.T8 = GetUs(ctx);
-    if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= GetSetting(ctx, MS_BEFORE_CAN_FAIL))
-    {
-        CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL);
-    }
+    // if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= GetSetting(ctx, MS_BEFORE_CAN_FAIL))
+    // {
+    //     CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL);
+    // }
     /**
      * Handle LED states and such
      */

@@ -41,8 +41,6 @@ int SendStackShutdownBlip(DbmsCtx* ctx)
  */
 int StackWake(DbmsCtx* ctx)
 {
-    static uint8_t FRAME_WAKE_STACK[] = {0x90, 0x0, 0x03, 0x9, 0x20, 0x13, 0x95};
-
     int status = 0;
     for (int i = 0; i < 2; i++)
     {
@@ -51,12 +49,12 @@ int StackWake(DbmsCtx* ctx)
             CAN_REPORT_FAULT(ctx, status);
             return status;
         }
-        if ((status = SendStackFrame(ctx, FRAME_WAKE_STACK, sizeof(FRAME_WAKE_STACK))) != 0)
+        if ((status = SINGLE_DEV_WRITE(ctx, 0, REG_CONTROL1, DATA(CTRL1_SEND_WAKE))) != 0)
         {
             CAN_REPORT_FAULT(ctx, status);
             return status;
         }
-        HAL_Delay(15 + 12 * N_STACKDEVS); // wtf  -- microseconds dumbass
+        HAL_Delay(15 + 12 * N_STACKDEVS);
     }
     return status;
 }
@@ -72,12 +70,10 @@ int StackWake(DbmsCtx* ctx)
  */
 int StackShutdown(DbmsCtx* ctx)
 {
-    static uint8_t FRAME_SHUTDOWN_STACK[] = {0xD0, 0x03, 0x9, (1 << 3), 0x00, 0x00};
-
     int status = 0;
     for (int i = 0; i < 2; i++)
     {
-        if ((status = SendStackFrameSetCrc(ctx, FRAME_SHUTDOWN_STACK, sizeof(FRAME_SHUTDOWN_STACK))) != 0)
+        if ((status = BROADCAST_WRITE(ctx, REG_CONTROL1, DATA(CTRL1_GOTO_SHUTDOWN))) != 0)
         {
             CAN_REPORT_FAULT(ctx, status);
             return status;
@@ -94,47 +90,41 @@ int StackShutdown(DbmsCtx* ctx)
 
 void SendOtpEccDatain(DbmsCtx* ctx)
 {
-    uint8_t frame_otp_ecc_datain[] = {0xD0, 0x03, 0x43, 0x00, 0x00, 0x00};
-    // uint8_t frame_otp_ecc_datain[] = { 0xD0, 0x03, 0x4C, 0x00, 0x00, 0x00 };
     for (int i = 0; i < 8; i++)
     {
-        SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
-        frame_otp_ecc_datain[2]++;
+        BROADCAST_WRITE(ctx, REG_OTP_ECC_DATAIN1 + i, DATA(0x00));
+        HAL_Delay(1);
     }
 }
 
 void SendAutoAddr(DbmsCtx* ctx)
-{
-    uint8_t frame_addr_dev[] = {0xD0, 0x03, 0x06, 0x00, 0x00, 0x00};
+{    
     for (int i = 0; i <= N_STACKDEVS; i++)
     {
-        SendStackFrameSetCrc(ctx, frame_addr_dev, sizeof(frame_addr_dev));
-        frame_addr_dev[3]++;
+        BROADCAST_WRITE(ctx, REG_DIR0_ADDR, DATA(0x00 + i));
+        HAL_Delay(1);
     }
 }
 
 void SendSetStackTop(DbmsCtx* ctx)
 {
     // Sets all devices as stack devices
-    uint8_t frame_set_stack_devices[] = {0xD0, 0x03, 0x08, 0x02, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, frame_set_stack_devices, sizeof(frame_set_stack_devices));
-
+    BROADCAST_WRITE(ctx, REG_COMM_CTRL, DATA(COMM_STACK_DEV));
+    HAL_Delay(1);
     // Sets bridge device as non-stack device and bottom of stack
-    uint8_t frame_set_stack_base[] = {0x90, 0x00, 0x03, 0x08, 0x00, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, frame_set_stack_base, sizeof(frame_set_stack_base));
-
+    SINGLE_DEV_WRITE(ctx, 0, REG_COMM_CTRL, DATA(0x00));
+    HAL_Delay(1);
     // Sets top of stack
-    uint8_t frame_set_stack_top[] = {0x90, N_STACKDEVS - 1, 0x03, 0x08, 0x03, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, frame_set_stack_top, sizeof(frame_set_stack_top));
+    SINGLE_DEV_WRITE(ctx, N_STACKDEVS-1, REG_COMM_CTRL, DATA(COMM_STACK_DEV | COMM_TOP_STACK));
+    HAL_Delay(1);
 }
 
 void ReadOtpEccDatain(DbmsCtx* ctx)
 {
-    uint8_t frame_otp_ecc_datain[] = {0xC0, 0x03, 0x4C, 0x00, 0x00, 0x00};
     for (int i = 0; i < 8; i++)
     {
-        SendStackFrameSetCrc(ctx, frame_otp_ecc_datain, sizeof(frame_otp_ecc_datain));
-        frame_otp_ecc_datain[2]++;
+        BROADCAST_READ(ctx, REG_OTP_ECC_TEST + i, 1);
+        HAL_Delay(1);
     }
 }
 
@@ -148,13 +138,10 @@ void StackAutoAddr(DbmsCtx* ctx)
 {
     SendOtpEccDatain(ctx); // step 1
 
-    static uint8_t FRAME_ENABLE_AUTO_ADDR[] = {0xD0, 0x03, 0x09, 0x01, 0x0F, 0x74};
-    SendStackFrameSetCrc(ctx, FRAME_ENABLE_AUTO_ADDR, sizeof(FRAME_ENABLE_AUTO_ADDR)); // step 2
+    BROADCAST_WRITE(ctx, REG_CONTROL1, DATA(CTRL1_ADDR_WR));
+    HAL_Delay(1);
 
     SendAutoAddr(ctx); // step 3
-
-    static uint8_t FRAME_SET_ALL_STACK[] = {0xD0, 0x03, 0x08, 0x02, 0x0, 0x0};
-    SendStackFrameSetCrc(ctx, FRAME_SET_ALL_STACK, sizeof(FRAME_SET_ALL_STACK)); // step 4
 
     SendSetStackTop(ctx); // step 5
 
@@ -169,9 +156,8 @@ void StackAutoAddr(DbmsCtx* ctx)
  */
 void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
 {
-    uint8_t frame_set_active_cell[] = {0xD0, 0x00, 0x03, n_active_cells, 0x00, 0x00};
-
-    SendStackFrameSetCrc(ctx, frame_set_active_cell, sizeof(frame_set_active_cell));
+    BROADCAST_WRITE(ctx, REG_ACTIVE_CELL, DATA(n_active_cells)); // Should this be a stack write?
+    HAL_Delay(1);
 }
 
 
@@ -186,8 +172,8 @@ void StackSetNumActiveCells(DbmsCtx* ctx, uint8_t n_active_cells)
  */
 void StackSetupVoltReadings(DbmsCtx* ctx)
 {
-    static uint8_t FRAME_SET_ADC_CONT_RUN[] = {0xD0, 0x03, 0x0D, 0x06, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, FRAME_SET_ADC_CONT_RUN, sizeof(FRAME_SET_ADC_CONT_RUN));
+    BROADCAST_WRITE(ctx, REG_ADC_CTRL1, DATA(ADC_CONTINUOUS_RUN | ADC_MAIN_GO));
+    HAL_Delay(1);
 }
 
 /**
@@ -197,72 +183,52 @@ void StackSetupVoltReadings(DbmsCtx* ctx)
  */
 void StackUpdateAllVoltReadings(DbmsCtx* ctx)
 {
-    int status = 0;
-    int j = 0;
     static uint8_t rx_buffer_v[1024];
-
+    int j;
     memset(rx_buffer_v, 0, sizeof(rx_buffer_v));
-
-    uint8_t frame[] = {0xA0, 0x05, 0x68 + 2 * (16 - N_GROUPS_PER_SIDE), N_GROUPS_PER_SIDE * 2 - 1, 0x00, 0x00};
-
     size_t data_size = N_GROUPS_PER_SIDE * sizeof(int16_t);
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
-    if ((status = SendStackFrameSetCrc(ctx, frame, sizeof(frame))) != 0) { }
-    
-    // TODO: abstract away the RX path for stack
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_v, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } //TODO: fix +1?
+    StackRead(ctx, rx_buffer_v, STACK_V_REG_START, data_size, expected_rx_size);
 
-    for (int i = 0; i < N_MONITORS; i++)
+    for (size_t i = 0; i < N_MONITORS; i++)
     {
-        ctx->stats.n_rx_stack_frames++;
-        ctx->stats.n_rx_stack_frames_itvl++;
-        ctx->faults.monitor_total_frames[i]++;
+        IncStackCrcStats(ctx, true, i);
+        // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_v + (i * RX_FRAME_SIZE(data_size));
-        for (; data[0] != frame[2] && j < 1024; j++)
-        {
-            data++;
-        }
-        // if (j >= 1024) continue;
-        data++;
-        uint8_t addr = *(data-3);
-        uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-        uint16_t c_crc = CalcCrc16(data - 4, data_size+4);
-        if (f_crc != c_crc)
-        {
-            ctx->stats.n_rx_stack_bad_crcs++;
-            ctx->stats.n_rx_stack_bad_crcs_itvl++;
-            ctx->faults.monitor_bad_crcs[i]++;
-            continue;
-        }
-
-        ctx->stats.last_monitor_msg[addr-1] = ctx->stats.iters;
-        for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
-        {
-            uint16_t raw = (data[j * sizeof(int16_t)] << 8) + (data[j * sizeof(int16_t) + 1]);
-            ctx->cell_states[addr-1].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+        for (j = 0; (data[0] != (STACK_V_REG_START & 0xFF)) && (j < 1024); j++) { data++; }
+        if (j >= 1024 || j < 3) continue;
+        RxStackFrameVoltages* clean_frame = (RxStackFrameVoltages*)(data - 3);
+        if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
+            UpdateVoltages(ctx, clean_frame);
+        else{
+            IncStackCrcStats(ctx, false, i);
         }
     }
 }
 
 /**
- * @brief Configure's for temp readings
+ * @brief Configure's stack GPIO for temp mux and LEDs
  * 
  * @param ctx Context pointer 
  */
 void StackSetupGpio(DbmsCtx* ctx)
 {
-    // Note 2: Also configures GPIO8 even though we dont need to, hence just setting GPIO8 to output low
-    // 0x09 = 00001001
-    // 0x21 = 00100001 => 00101101 = 0x2D
-    uint8_t frame_gpio_configs[] = {0xB2, 0x00, 0x0E, 0x09, 0x2D, 0x09, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, frame_gpio_configs, sizeof(frame_gpio_configs));
-
+    STACK_WRITE(ctx, REG_GPIO_CONF1, STACK_GPIO_DATA(
+        STACK_GPIO_ADC_OTUT_IN,
+        STACK_GPIO_ADC_OTUT_IN,
+        STACK_GPIO_OUT_LOW,
+        STACK_GPIO_OUT_LOW,
+        STACK_GPIO_ADC_OTUT_IN,
+        STACK_GPIO_ADC_OTUT_IN,
+        STACK_GPIO_DISABLED,
+        STACK_GPIO_DISABLED
+    ));
+    HAL_Delay(10);
     // Setting up TSREF to active
-    uint8_t frame_tsref_setup[] = {0xB0, 0x03, 0x0A, 0x01, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, frame_tsref_setup, sizeof(frame_tsref_setup));
+    STACK_WRITE(ctx, REG_CONTROL2, DATA(CTRL2_TSREF_EN));
     DelayUs(ctx, 10);
-}
+ }
 
 /**
  * @brief Configure the heartbeat timeout
@@ -271,64 +237,81 @@ void StackSetupGpio(DbmsCtx* ctx)
  */
 void StackConfigTimeout(DbmsCtx* ctx)
 {
-    uint8_t hbcfg_frame[] = {0xD0, 0x00, 0x19, 0x0A, 0xB3, 0x73};
-    SendStackFrame(ctx, hbcfg_frame, sizeof(hbcfg_frame));          // crc already encoded 
-    //SendStackFrameSetCrc(ctx, hbcfg_frame, sizeof(hbcfg_frame));
-
+    BROADCAST_WRITE(ctx, REG_COMM_TIMEOUT_CONF, DATA(0x0A)); // Shutdown after 2 seconds of no comms
     DelayUs(ctx, 10);
 }
 
 
 void StackUpdateAllTempReadings(DbmsCtx* ctx)
 {
-    int status = 0;
-    int j = 0;
     static uint8_t rx_buffer_t[1024];
-
-    uint8_t frame2[] = {0xA0, 0x05, 0x8E, ((N_TEMPS_PER_MONITOR / 3) + 2) * 2 - 1, 0x00, 0x00};
-
-    size_t data_size = ((N_TEMPS_PER_MONITOR / 3) + 2) * sizeof(int16_t);
+    int j;
+    memset(rx_buffer_t, 0, sizeof(rx_buffer_t));
+    size_t data_size = (N_TEMPS_POLL_PER_MONITOR + 2) * sizeof(int16_t); // +2 for GPIO mismatch
     size_t expected_rx_size = RX_FRAME_SIZE(data_size) * N_MONITORS;
 
-    if ((status = SendStackFrameSetCrc(ctx, frame2, sizeof(frame2))) != 0) { }
+    StackRead(ctx, rx_buffer_t, STACK_T_REG_START, data_size, expected_rx_size);
     
-    // TODO: redo the RX path for stack
-    if ((status = HAL_UART_Receive(ctx->hw.uart, rx_buffer_t, expected_rx_size+1, STACK_RECV_TIMEOUT)) != 0) { } 
-    for (int i = 0; i < N_MONITORS; i++)
+    for (size_t i = 0; i < N_MONITORS; i++)
     {
-        ctx->stats.n_rx_stack_frames++;
-        ctx->stats.n_rx_stack_frames_itvl++;
-        ctx->faults.monitor_total_frames[i]++;
-
+        IncStackCrcStats(ctx, true, i);
+        // TODO: test without on new battery to see if this is necessary
         uint8_t* data = rx_buffer_t + (i * RX_FRAME_SIZE(data_size));
-        for (; data[0] != frame2[2] && j < 1024; j++)
-        {
-            data++;
-        }
-        data++;
-        // if (j >= 1024) continue;
-        uint8_t addr = *(data-3);
-        uint16_t f_crc = (data[data_size]) + (data[data_size+1] << 8);
-        uint16_t c_crc = CalcCrc16(data-4, data_size+4);
-        if (f_crc != c_crc)
-        {
-            ctx->stats.n_rx_stack_bad_crcs++;
-            ctx->stats.n_rx_stack_bad_crcs_itvl++;
-            ctx->faults.monitor_bad_crcs[i]++;
-            continue;
-        }
-        for (int j = 0; j < 4; j++){ // GPIO1 = GPIO3, GPIO2 = GPIO4
-            data[j + 4] = data[j];
-        }
-        data += 4;
-        uint8_t offset = ctx->mux_selector;
-        uint8_t temps = (offset == 0 ? 4 : 3);
-        for (size_t j = 0; j < temps; j++)
-        {
-            uint16_t raw = (data[j * sizeof(uint16_t)] << 8) + (data[j * sizeof(uint16_t) + 1]);
-            ctx->cell_states[addr-1].temps[4 * j + offset] = ThermVoltToTemp(ctx, MAX(0, raw * STACK_T_UV_PER_BIT / 1000000.0));
+        for (j = 0; data[0] != (STACK_T_REG_START & 0xFF) && j < 1024; j++) { data++; }
+        if (j >= 1024 || j < 3) continue;
+        RxStackFrameTemps* clean_frame = (RxStackFrameTemps*)(data - 3); 
+        if (clean_frame->crc == CALC_CRC_Rx(clean_frame))
+            UpdateTemps(ctx, clean_frame);
+        else{
+            IncStackCrcStats(ctx, false, i);
         }
     }
+}
+
+void UpdateTemps(DbmsCtx* ctx, RxStackFrameTemps* frame)
+{
+    uint8_t* moved_data = &(frame->data[4]);
+    memmove(moved_data, frame->data, 4); // GPIO1 = GPIO3, GPIO2 = GPIO4
+    uint8_t offset = ctx->mux_selector;
+    uint8_t temps = (offset == 0 ? N_TEMPS_POLL_PER_MONITOR : N_TEMPS_POLL_PER_MONITOR-1);
+    for (size_t j = 0; j < temps; j++)
+    {
+        uint16_t raw = (moved_data[j * sizeof(int16_t)] << 8) + moved_data[j * sizeof(int16_t) + 1];
+        ctx->cell_states[ADDR_BCAST_TO_STACK(frame->devaddr)].temps[N_TEMPS_POLL_PER_MONITOR*j + offset] = 
+            ThermVoltToTemp(ctx, MAX(0, raw * STACK_T_UV_PER_BIT / 1000000.0));
+    }
+}
+
+void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame)
+{
+    if (ADDR_BCAST_TO_STACK(frame->devaddr) >= N_MONITORS) return;
+
+    ctx->stats.last_monitor_msg[ADDR_BCAST_TO_STACK(frame->devaddr)] = ctx->stats.iters;
+
+    for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
+    {
+        uint16_t raw = (frame->data[j * sizeof(int16_t)] << 8) + frame->data[j * sizeof(int16_t) + 1];
+        ctx->cell_states[ADDR_BCAST_TO_STACK(frame->devaddr)].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+    }
+}
+
+int StackRead(DbmsCtx* ctx, uint8_t* raw, uint16_t start_reg, uint8_t data_size, int expected_size)
+{
+    int status = 0;
+    if ((status = STACK_READ(ctx, start_reg, data_size)) != 0) 
+    {
+        return status;
+    }
+    __HAL_UART_CLEAR_FEFLAG(ctx->hw.uart);
+    __HAL_UART_CLEAR_OREFLAG(ctx->hw.uart);
+    __HAL_UART_CLEAR_NEFLAG(ctx->hw.uart);
+    volatile uint8_t dummy = ctx->hw.uart->Instance->DR;
+    (void) dummy;
+    // TODO: redo the RX path for stack
+    if ((status = HAL_UART_Receive(ctx->hw.uart, raw, expected_size+2, STACK_RECV_TIMEOUT)) != 0)
+    {
+    }
+    return status;
 }
 
 /**
@@ -411,6 +394,22 @@ void StackCalcStats(DbmsCtx* ctx)
     ctx->stats.avg_t = t_sum / (N_SIDES * N_TEMPS_PER_SIDE);
 }
 
+void IncStackCrcStats(DbmsCtx* ctx, bool good, int monitor_id)
+{
+    if (good)
+    {
+        ctx->stats.n_rx_stack_frames++;
+        ctx->stats.n_rx_stack_frames_itvl++;
+        ctx->stats.monitor_total_frames[monitor_id]++;
+    }
+    else
+    {
+        ctx->stats.n_rx_stack_bad_crcs++;
+        ctx->stats.n_rx_stack_bad_crcs_itvl++;
+        ctx->stats.monitor_bad_crcs[monitor_id]++;
+    }
+}
+
 /*****************************
  *   LED CONTROL
  *****************************/
@@ -422,12 +421,8 @@ int ToggleMonitorLeds(DbmsCtx* ctx, bool on)
     // Turns on or off LED connected to GPIO8 on all monitor chips
     // Note for future:
     int status = 0;
-    uint8_t on_off_value = 0x5;
-    if (on) on_off_value = 0x4;
-    uint8_t leds_change_write_com[] = {0xB0, 0x00, 0x11, on_off_value, 0x00, 0x00};
-
-    // Send stack device write command frame
-    if ((status = SendStackFrameSetCrc(ctx, leds_change_write_com, sizeof(leds_change_write_com))) != 0)
+    StackGPIOMode mode = on ? STACK_GPIO_OUT_HIGH : STACK_GPIO_OUT_LOW;
+    if ((status = STACK_WRITE(ctx, REG_GPIO_CONF4, DATA(mode))) != 0)
     {
         return status;
     }
@@ -467,34 +462,22 @@ void MonitorLedBlink(DbmsCtx* ctx)
 void StackBalancingConfig(DbmsCtx* ctx)
 {
     // Setting balancing method to auto balancing and to stop at fault
-    // BAL_CTRL2_CONFIG = 0x31
-    uint8_t frame_cb_config[] = {0xB0, 0x03, 0x2F, 0x31, 0x00, 0x00};
-    SendStackFrameSetCrc(ctx, frame_cb_config, sizeof(frame_cb_config));
+    STACK_WRITE(ctx, REG_BAL_CTRL2, DATA(BAL2_FLTSTOP_EN | BAL2_OTCB_EN | BAL2_AUTO_BAL));
 }
 
 void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, StackBalanceTimes bal_time_idx)
 {
     bool* cells_to_bal = ctx->cell_states[dev_addr].cells_to_balance;
 
-    uint16_t base_reg = 0x0327;  // CB_CELL1_CTRL (starts at cell 1, goes down)
+    uint16_t base_reg = REG_CB_CELL1_CTRL;
     uint8_t bal_time = MIN((uint8_t)bal_time_idx, (uint8_t)__N_BAL_TIMES);
-    
     // Write each cell timer individually
     for (size_t i = 0; i < N_GROUPS_PER_SIDE; ++i)
     {
         uint16_t reg_addr = base_reg - i; // registers decrement
         uint8_t timer_val = i % 2 == odds && cells_to_bal[i] ? bal_time : 0x00;
         
-        uint8_t frame[7];
-        frame[0] = 0x90;                        // single device write, 1 byte
-        frame[1] = dev_addr;                 // which monitor chip
-        frame[2] = reg_addr >> 8;               // register MSB
-        frame[3] = reg_addr & 0xFF;             // register LSB  
-        frame[4] = timer_val;                   // timer value
-        frame[5] = 0x00;                        // crc placeholder
-        frame[6] = 0x00;                        // crc placeholder
-        
-        SendStackFrameSetCrc(ctx, frame, sizeof(frame));
+        SINGLE_DEV_WRITE(ctx, dev_addr, reg_addr, DATA(timer_val));
         HAL_Delay(2);  // small delay between writes
     }
 }
@@ -502,19 +485,8 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, Stac
 void StackStartDeviceBalancing(DbmsCtx* ctx, uint8_t dev_addr)
 {
     // this is the final trigger - balancing doesn't start until bal_ctrl2 is set
-    //#define BAL_CTRL2_BAL_GO_MASK 0x02
-    //uint8_t bal_ctrl2_frame[] = {0xB0, 0x03, 0x2F, BAL_CTRL2_BAL_GO_MASK, 0x00, 0x00};
-    
-    uint8_t frame[7];
-
-    frame[0] = 0x90; // single stack write
-    frame[1] = dev_addr;
-    frame[2] = 0x03; // bal_ctrl2 reg
-    frame[3] = 0x2F; // bal_ctrl2 reg 
-    frame[4] = 0x02; // bal_go bit
-    frame[5] = 0x00; // crc
-    frame[6] = 0x00; // crc
-    SendStackFrameSetCrc(ctx, frame, sizeof(frame));
+    //#define BAL_CTRL2_BAL_GO_MASK 0x02    
+    SINGLE_DEV_WRITE(ctx, dev_addr, REG_BAL_CTRL2, DATA(BAL2_BAL_GO));
     HAL_Delay(8);
 }
 
@@ -641,7 +613,6 @@ int SetMuxChannels(DbmsCtx* ctx, uint8_t channel)
             return -1;
     }
     
-    uint8_t mux_select_cmd[] = {0xB0, 0x00, 0x0F, gpio_value, 0x00, 0x00};
     ctx->mux_selector = channel;
-    return SendStackFrameSetCrc(ctx, mux_select_cmd, sizeof(mux_select_cmd));
+    return STACK_WRITE(ctx, 0x000F, DATA(gpio_value));
 }
