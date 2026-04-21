@@ -33,6 +33,7 @@
 #define N_SIDES (N_SEGMENTS * N_SIDES_PER_SEG)
 #define N_MONITORS (N_SEGMENTS * N_SIDES_PER_SEG * N_MONITORS_PER_SIDE)
 #define N_STACKDEVS (N_MONITORS + 1) // technically "bus devs"
+#define N_TEMPS_POLL_PER_MONITOR ((N_TEMPS_PER_MONITOR / 4) + 1) // Mux boards
 
 #define ADDR_BCAST_TO_STACK(BCAST_ADDR) (BCAST_ADDR - 1)
 #define ADDR_STACK_TO_BCAST(STACK_ADDR) (STACK_ADDR + 1)
@@ -144,6 +145,8 @@ typedef struct _Stats
     uint64_t n_logging_frames;
     bool fault_line_faulted;
 
+    uint16_t monitor_bad_crcs[N_MONITORS];
+    uint16_t monitor_total_frames[N_MONITORS];
     uint64_t last_can_tx_ts;
 
     uint64_t last_monitor_msg[N_MONITORS]; // Last iter that a message was received from each monitor
@@ -313,8 +316,6 @@ typedef struct _FaultState {
     uint32_t bridge_faults;
     uint8_t monitor_fault_summary[N_MONITORS];
     bool had_fault;
-    uint8_t monitor_bad_crcs[N_MONITORS];
-    uint8_t monitor_total_frames[N_MONITORS];
 } FaultState;
 
 typedef struct _Blackbox {

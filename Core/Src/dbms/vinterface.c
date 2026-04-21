@@ -177,12 +177,13 @@ int SendMetrics(DbmsCtx* ctx)
 
     SendMetric(ctx, 69, F2I_K(ctx->stats.pack_v, 1e4));
     SendMetric(ctx, 70, ctx->precharged);
-    SendMetric(ctx, 71, (ctx->stats.n_rx_stack_bad_crcs_itvl * 100) / ctx->stats.n_rx_stack_frames_itvl);
+    if (ctx->stats.n_rx_stack_frames_itvl != 0)
+        SendMetric(ctx, 71, (ctx->stats.n_rx_stack_bad_crcs_itvl * 100) / ctx->stats.n_rx_stack_frames_itvl);
     SendMetric(ctx, 72, ctx->stats.n_int_shutdowns);
 
     for (int i = 0; i < N_MONITORS; i++)
     {
-        SendMetric(ctx, 80 + i, ctx->faults.monitor_bad_crcs[i]);
+        SendMetric(ctx, 80 + i, ctx->stats.monitor_bad_crcs[i]);
     }
 
     SendMetric(ctx, 90, ctx->delay.T1);
@@ -262,6 +263,8 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
     SendPlex16x4(ctx, 0x15, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
                  F2I_K(pack_v, 10));
+
+    SendPlex16x4(ctx, 0x16, (uint16_t) (ctx->delay.one_way_delay & 0xFFFF), (uint16_t) (ctx->delay.mu & 0xFFFF), (uint16_t) (ctx->delay.st_dev & 0xFFFF), 0);
 }
 
 

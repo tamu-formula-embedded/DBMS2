@@ -11,15 +11,7 @@
  */
 #include "bridge.h"
 
-/**
- * @brief Sends a raw data frame to the battery stack via UART
- * 
- * @param ctx Context pointer
- * @param buf The data for the frame to send
- * @param len The length of the frame data
- * @return Error code
- */
-int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len)
+int SendUARTFrame(DbmsCtx* ctx, uint8_t* buf, size_t len)
 {
     return HAL_UART_Transmit(ctx->hw.uart, buf, len, STACK_SEND_TIMEOUT);
 }
@@ -33,9 +25,10 @@ int SendStackFrame(DbmsCtx* ctx, uint8_t* buf, size_t len)
  * @param len The length of the frame data
  * @return Error code
  */
-int SendStackFrameSetCrc(DbmsCtx* ctx, uint8_t* buf, size_t len)
+int SendStackFrame(DbmsCtx* ctx, void* frame, size_t len)
 {
     int status = 0;
+    uint8_t* buf = (uint8_t*)frame;
     // Calculate the CRC on the payload
     uint16_t crc = CalcCrc16(buf, len - 2);
     // Tape the CRC to the end of the frame
@@ -47,6 +40,16 @@ int SendStackFrameSetCrc(DbmsCtx* ctx, uint8_t* buf, size_t len)
     buf[len - 2] = 0;
     buf[len - 1] = 0;
     return status;
+}
+
+int SendStackFrame1Dev(DbmsCtx* ctx, TxStackFrame1Dev frame)
+{
+    return SendStackFrame(ctx, &frame, FRAME_LEN_SD(frame));
+}
+
+int SendStackFrameNDev(DbmsCtx* ctx, TxStackFrameNDev frame)
+{
+    return SendStackFrame(ctx, &frame, FRAME_LEN_STK(frame));
 }
 
 /**
@@ -84,7 +87,7 @@ int SendStackBlip(DbmsCtx* ctx, uint64_t brr)
 
     // Send a single byte at this slow speed
     uint8_t wake_frame[] = {0x00};
-    if ((status = SendStackFrame(ctx, wake_frame, sizeof(wake_frame))) != 0)
+    if ((status = SendUARTFrame(ctx, wake_frame, sizeof(wake_frame))) != 0)
     {
         CAN_REPORT_FAULT(ctx, status);
         return status;

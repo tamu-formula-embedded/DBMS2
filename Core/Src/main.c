@@ -685,7 +685,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if (GPIO_Pin == GPIO_PIN_12)
     {
         GPIO_PinState pin_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12);
-
         if (pin_state == GPIO_PIN_SET)
         {
             dbms_ctx.qstats.historic_accumulated_loss += dbms_ctx.qstats.accumulated_loss;
@@ -784,7 +783,6 @@ void Error_Handler(void)
 
   while (1)
   {
-
   }
   /* USER CODE END Error_Handler_Debug */
 }
