@@ -263,6 +263,9 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
     SendPlex16x4(ctx, 0x15, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
                  F2I_K(pack_v, 10));
+
+    SendPlex16x4(ctx, 0x16, (uint16_t) (ctx->delay.one_way_delay & 0xFFFF), (uint16_t) (ctx->delay.mu & 0xFFFF), (uint16_t) (ctx->delay.st_dev & 0xFFFF), 0);
+
 }
 
 
