@@ -291,7 +291,7 @@ void UpdateVoltages(DbmsCtx* ctx, RxStackFrameVoltages* frame)
     for (size_t j = 0; j < N_GROUPS_PER_SIDE; j++)
     {
         uint16_t raw = (frame->data[j * sizeof(int16_t)] << 8) + frame->data[j * sizeof(int16_t) + 1];
-        ctx->cell_states[ADDR_BCAST_TO_STACK(frame->devaddr)].voltages[j] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
+        ctx->cell_states[ADDR_BCAST_TO_STACK(frame->devaddr)].voltages[N_GROUPS_PER_SIDE - j - 1] = (raw * STACK_V_UV_PER_BIT) / 1000.0; // floating mV
     }
 }
 
