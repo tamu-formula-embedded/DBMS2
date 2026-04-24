@@ -198,24 +198,7 @@ void DbmsHandleActive(DbmsCtx* ctx)
 
     if (HAL_GetTick() - ctx->timing.wakeup_ts > GetSetting(ctx, MS_BEFORE_FAULT_CHECKS))
     {
-        if (ctx->flags.req_fault_clear) {
-            CtrlClearAllFaults(ctx);
-            ctx->flags.req_fault_clear = false;
-        }
-
-        CheckVoltageFaults(ctx);
-            ctx->profiling.times.T6 = GetUs(ctx);
-
-        CheckCurrentFaults(ctx);
-            ctx->profiling.times.T7 = GetUs(ctx);
-
-        CheckTemperatureFaults(ctx);
-        ctx->profiling.times.T8 = GetUs(ctx);
-
-        CheckStackFaults(ctx);
-
-        SetFaultLine(ctx, CtrlHasAnyFaults(ctx));
-
+        CtrlUpdateFaults(ctx);
         // PollFaultSummary(ctx);
     }
 
@@ -224,7 +207,6 @@ void DbmsHandleActive(DbmsCtx* ctx)
         ctx->stats.n_rx_stack_bad_crcs_itvl = 0;
     }
 
-    ThrowHardFault(ctx);                // this can override fault state
     ctx->profiling.times.T9 = GetUs(ctx);
 
     if (ctx->stats.iters % 10 == 0) {
@@ -326,8 +308,10 @@ void DbmsIter(DbmsCtx* ctx)
             ProcessLedAction(ctx);
             DbmsPerformWakeup(ctx);
         }
-        if (CtrlHasAnyFaults(ctx))
+        if (CtrlHasAnyHardFaults(ctx))
             ctx->led_state = LED_ACTIVE_FAULT;
+        else if (CtrlHasAnyWarnings(ctx))
+            ctx->led_state = LED_ACTIVE_WARNING;
         else
             ctx->led_state = LED_ACTIVE;
         ctx->flags.active = true;
@@ -395,12 +379,9 @@ void DbmsIter(DbmsCtx* ctx)
 
         SendCellVoltages(ctx);
         SendCellTemps(ctx);
+        SendFaultData(ctx);
     }
     // ctx->profiling.profiling.times.T8 = GetUs(ctx);
-    // if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= GetSetting(ctx, MS_BEFORE_CAN_FAIL))
-    // {
-    //     CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL);
-    // }
     /**
      * Handle LED states and such
      */
@@ -497,6 +478,9 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
         break;
     case CANID_RX_CLEAR_FAULTS:
         ctx->flags.req_fault_clear = true;
+        break;
+    case CANID_RX_FAULTS_CONFIG:
+        CtrlSetFaultConfig(ctx, be32_to_u32(rx_data + 0), be32_to_u32(rx_data + 4));
         break;
     case CANID_RX_SET_INITIAL_CHARGE:
         ctx->qstats.initial = be32_to_u32(rx_data) / 1e6f;

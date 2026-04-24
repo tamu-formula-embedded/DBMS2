@@ -109,7 +109,7 @@ int SendMetrics(DbmsCtx* ctx)
     SendMetric(ctx, 13, ctx->stats.looptime);
     SendMetric(ctx, 14, ctx->stats.end_delay);
 
-    SendMetric(ctx, 15, ctx->faults.controller_mask);
+    SendMetric(ctx, 15, ctx->faults.active_faults);
 
     SendMetric(ctx, 16, ctx->stats.n_rx_stack_frames);
     SendMetric(ctx, 17, ctx->stats.n_rx_stack_bad_crcs);
@@ -250,7 +250,7 @@ void SendPlexMetrics(DbmsCtx* ctx)
 
     int32_t pack_v = ctx->stats.avg_v * (N_SIDES * N_GROUPS_PER_SIDE);
 
-    SendPlex32x2(ctx, 0x11, ctx->faults.controller_mask, ctx->current_sensor.current_ma / 1000);
+    SendPlex32x2(ctx, 0x11, ctx->faults.active_faults | ctx->faults.latched_faults, ctx->current_sensor.current_ma / 1000);
     // SendPlex32x2(ctx, 0x12, ctx->isense.ima.current_mavg_ma / 1000, ctx->pl_pulse_t);
     SendPlex32x2(ctx, 0x12, pack_v, ctx->stats.iters);
     SendPlex32x2(ctx, 0x13, ctx->stats.avg_t, ctx->current_sensor.charge_as);
@@ -363,4 +363,26 @@ int SendCellsToBalance(DbmsCtx* ctx)
         SendCellDataBuffer(ctx, CANID_CELLSTATE_BALANCE, i, buffer, ARRAY_LEN(buffer));
     }
     return 0;
+}
+
+void SendFaultData(DbmsCtx* ctx)
+{
+    SendPlex32x2(ctx, CANID_TX_FAULTS_MASKS1, ctx->faults.active_faults, ctx->faults.latched_faults);
+    SendPlex32x2(ctx, CANID_TX_FAULTS_MASKS2, ctx->faults.historic_faults, NONMASKABLE_FAULTS);
+    SendPlex32x2(ctx, CANID_TX_FAULTS_MASKS3, ctx->faults.warnings_config, ctx->faults.nonlatching_config);
+
+    FaultData buf[2];
+
+    for (int i = 0; i < CTRL_FAULT_TYPE_COUNT; i += 2) {
+        buf[0] = ctx->faults.fault_data[i];
+        buf[1] = ctx->faults.fault_data[i + 1];
+
+        // endian swap
+        buf[0].value = __builtin_bswap16(buf[0].value);
+        buf[1].value = __builtin_bswap16(buf[1].value);
+
+        uint32_t id = CANID_TX_FAULTS_DATA + (i / 2);
+
+        CanTransmit(ctx, id, (uint8_t*) buf);
+    }
 }

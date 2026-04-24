@@ -11,6 +11,21 @@
  */
 #include "stack.h"
 
+static uint8_t bad_therms[] = {
+    CELL_BYTE(5, 12),
+    CELL_BYTE(8, 11)
+    // CELL_BYTE(3, 12),
+    // CELL_BYTE(6, 11)
+};
+
+bool IsThermBad(uint8_t side, uint8_t group)
+{
+    for (int i = 0; i < sizeof(bad_therms); ++i) 
+    {
+        if (CELL_BYTE(side, group) == bad_therms[i]) return false;
+    }
+    return false;
+}
 
 /**
  * Sends a wake blip to the battery stack
@@ -364,22 +379,50 @@ void StackCalcStats(DbmsCtx* ctx)
 {
     float v_min = 999999.0f, v_max = 0.0f, v_sum = 0.0f;
     float t_min = 999.0f,    t_max = 0.0f, t_sum = 0.0f;
+    uint8_t v_max_cell = CELL_BYTE_NA, 
+            v_min_cell = CELL_BYTE_NA, 
+            t_max_cell = CELL_BYTE_NA, 
+            t_min_cell = CELL_BYTE_NA;
 
     for (int i = 0; i < N_SIDES; i++)
     {
         for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
         {
             float v = ctx->cell_states[i].voltages[j];
-            v_min = MIN(v_min, v);
-            v_max = MAX(v_max, v);
+
+            if (v < v_min)
+            {
+                v_min = v;
+                v_min_cell = CELL_BYTE(i, j);
+            }
+
+            if (v > v_max)
+            {
+                v_max = v;
+                v_max_cell = CELL_BYTE(i, j);
+            }
+
             v_sum += v;
         }
 
         for (int j = 0; j < N_TEMPS_PER_SIDE; j++)
         {
+            if (IsThermBad(i, j)) continue;
+
             float t = ctx->cell_states[i].temps[j];
-            t_min = MIN(t_min, t);
-            t_max = MAX(t_max, t);
+
+            if (t < t_min)
+            {
+                t_min = t;
+                t_min_cell = CELL_BYTE(i, j);
+            }
+
+            if (t > t_max)
+            {
+                t_max = t;
+                t_max_cell = CELL_BYTE(i, j);
+            }
+
             t_sum += t;
         }
     }
@@ -391,7 +434,12 @@ void StackCalcStats(DbmsCtx* ctx)
 
     ctx->stats.min_t = t_min;
     ctx->stats.max_t = t_max;
-    ctx->stats.avg_t = t_sum / (N_SIDES * N_TEMPS_PER_SIDE);
+    ctx->stats.avg_t = t_sum / (N_SIDES * N_TEMPS_PER_SIDE - sizeof(bad_therms));
+
+    ctx->stats.min_v_cell = v_min_cell;
+    ctx->stats.max_v_cell = v_max_cell;
+    ctx->stats.min_t_cell = t_min_cell;
+    ctx->stats.max_t_cell = t_max_cell;
 }
 
 void IncStackCrcStats(DbmsCtx* ctx, bool good, int monitor_id)
