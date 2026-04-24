@@ -162,6 +162,7 @@ typedef struct _Model   // Outputs from the ECM model
 
     float R_cell;
     float I_lim;
+    float P_lim;
 } Model;
 
 typedef struct _Snapshot
