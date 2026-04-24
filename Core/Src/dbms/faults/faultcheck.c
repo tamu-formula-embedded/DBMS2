@@ -27,7 +27,7 @@ void CheckVoltageFaults(DbmsCtx* ctx)
         // Find cell voltage furthest from average
         uint16_t avg_mv = (uint16_t)(ctx->stats.avg_v * 1000.0f);
         uint16_t max_diff = 0;
-        uint8_t cell = CTRL_CELL_NA;
+        uint8_t cell = CELL_BYTE_NA;
 
         for (int i = 0; i < N_SIDES; i++)
         {
@@ -38,7 +38,7 @@ void CheckVoltageFaults(DbmsCtx* ctx)
                 if (diff > max_diff)
                 {
                     max_diff = diff;
-                    cell = CTRL_CELL(i, j);
+                    cell = CELL_BYTE(i, j);
                 }
             }
         }
@@ -77,14 +77,14 @@ void CheckCurrentFaults(DbmsCtx* ctx)
     // Do the comparison in ma
     if (current_ma > ctx->max_current_ma)
     {
-        CtrlSetFault(ctx, CTRL_FAULT_CURRENT_OVER, CTRL_CELL_NA, CLAMP(current_ma, 0, 650000) / 10);
+        CtrlSetFault(ctx, CTRL_FAULT_CURRENT_OVER, CELL_BYTE_NA, CLAMP(current_ma, 0, 650000) / 10);
     }   
 
     if (current_ma > GetSetting(ctx, PULSE_LIMIT_CURRENT) * 1000)
     {
         ctx->timing.pl_pulse_t = HAL_GetTick() - ctx->timing.pl_last_ok_ts;
         if (ctx->timing.pl_pulse_t > GetSetting(ctx, PULSE_LIMIT_TIME_MS))
-            CtrlSetFault(ctx, CTRL_FAULT_CURRENT_PULSE, CTRL_CELL_NA, CLAMP(current_ma, 0, 650000) / 10);
+            CtrlSetFault(ctx, CTRL_FAULT_CURRENT_PULSE, CELL_BYTE_NA, CLAMP(current_ma, 0, 650000) / 10);
     }
     else 
     {
@@ -107,12 +107,12 @@ void CheckStackFaults(DbmsCtx* ctx)
 
     if (disconnected_mask != 0)
     {
-        CtrlSetFault(ctx, CTRL_FAULT_STACK_DISCONNECT, CTRL_CELL_NA, disconnected_mask);
+        CtrlSetFault(ctx, CTRL_FAULT_STACK_DISCONNECT, CELL_BYTE_NA, disconnected_mask);
         CanLog(ctx, "dm=%x\n", disconnected_mask);
     }
 
     if (GetUs(ctx) - ctx->stats.last_can_tx_ts >= GetSetting(ctx, MS_BEFORE_CAN_FAIL) * 1000)
     {
-        CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL, CTRL_CELL_NA, 0);
+        CtrlSetFault(ctx, CTRL_FAULT_CAN_FAIL, CELL_BYTE_NA, 0);
     }
 }

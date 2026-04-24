@@ -60,9 +60,6 @@ typedef enum
 
 // #define NONMASKABLE_FAULTS 0
 
-#define CTRL_CELL_NA 0xFF
-#define CTRL_CELL(side, cell) ((((side) & 0xF) << 4) | ((cell) & 0xF))
-
 #define CLAMP_U16(x) ((uint16_t)((x) < 0 ? 0 : ((x) > 65535 ? 65535 : (x))))
 
 void CtrlUpdateFaults(DbmsCtx* ctx);
