@@ -264,7 +264,15 @@ void SendPlexMetrics(DbmsCtx* ctx)
     SendPlex16x4(ctx, 0x15, F2I_K(ctx->stats.max_v, 1000), F2I_K(ctx->stats.min_v, 1000), F2I_K(ctx->stats.avg_v, 1000),
                  F2I_K(pack_v, 10));
 
-    SendPlex16x4(ctx, 0x16, (uint16_t) (ctx->delay.one_way_delay & 0xFFFF), (uint16_t) (ctx->delay.mu & 0xFFFF), (uint16_t) (ctx->delay.st_dev & 0xFFFF), 0);
+    SendPlex32x2(ctx, 0x16, (uint32_t) ctx->delay.one_way_delay, (uint32_t) ctx->delay.mu);
+    SendPlex32x2(ctx, 0x17, (uint32_t) ctx->delay.st_dev, 0);
+
+    SendPlex32x2(ctx, 0x18, F2I_K(ctx->model.Q, 1e6), F2I_K(ctx->model.z_rc, 1e6));
+    SendPlex32x2(ctx, 0x19, F2I_K(ctx->model.V_oc, 1e6), F2I_K(ctx->model.R_oc, 1e6));
+    SendPlex32x2(ctx, 0x1A, F2I_K(ctx->model.R0, 1e6), F2I_K(ctx->model.R1, 1e6));
+    SendPlex32x2(ctx, 0x1B, F2I_K(ctx->model.R2, 1e6), F2I_K(ctx->model.R_rc, 1e6));
+    SendPlex32x2(ctx, 0x1C, F2I_K(ctx->model.R_cell, 1e6), F2I_K(ctx->model.I_lim, 1e6));
+    SendPlex32x2(ctx, 0x1D, F2I_K(ctx->model.P_lim, 1e3), ctx->current_sensor.current_ma / N_P_GROUP);
 }
 
 
