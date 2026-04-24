@@ -517,6 +517,10 @@ void DbmsCanRx(DbmsCtx* ctx, CanRxChannel channel, CAN_RxHeaderTypeDef rx_header
 
         break;
 
+    case CANID_RX_DO_BAL_LOOP:
+        ctx->charging.bal_loop_hb = HAL_GetTick();
+        break;
+
 // TODO: remove this
 #ifdef DEBUG_DO_OVERWRITE_TEMPS_OVER_CAN
     case CANID_DEBUG_OVERWRITE_TEMPS:

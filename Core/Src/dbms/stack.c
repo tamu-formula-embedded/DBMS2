@@ -496,9 +496,9 @@ void StackBalancingConfig(DbmsCtx* ctx)
     STACK_WRITE(ctx, REG_BAL_CTRL2, DATA(BAL2_FLTSTOP_EN | BAL2_OTCB_EN | BAL2_AUTO_BAL));
 }
 
-void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, StackBalanceTimes bal_time_idx)
+void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t side, bool odds, StackBalanceTimes bal_time_idx)
 {
-    bool* cells_to_bal = ctx->cell_states[dev_addr].cells_to_balance;
+    bool* cells_to_bal = ctx->cell_states[side].cells_to_balance;
 
     uint16_t base_reg = REG_CB_CELL1_CTRL;
     uint8_t bal_time = MIN((uint8_t)bal_time_idx, (uint8_t)__N_BAL_TIMES);
@@ -508,7 +508,7 @@ void StackSetDeviceBalanceTimers(DbmsCtx* ctx, uint8_t dev_addr, bool odds, Stac
         uint16_t reg_addr = base_reg - i; // registers decrement
         uint8_t timer_val = i % 2 == odds && cells_to_bal[i] ? bal_time : 0x00;
         
-        SINGLE_DEV_WRITE(ctx, dev_addr, reg_addr, DATA(timer_val));
+        SINGLE_DEV_WRITE(ctx, ADDR_STACK_TO_BCAST(side), reg_addr, DATA(timer_val));
         HAL_Delay(2);  // small delay between writes
     }
 }
@@ -525,8 +525,8 @@ void StackStartBalancing(DbmsCtx* ctx, bool odds, int32_t bal_time)
 {
     for(size_t side = 0; side < N_SIDES; ++side)
     {
-        uint8_t dev_addr = side * N_MONITORS_PER_SIDE + 1;
-        StackSetDeviceBalanceTimers(ctx, dev_addr, odds, bal_time);
+        uint8_t dev_addr = ADDR_STACK_TO_BCAST(side);
+        StackSetDeviceBalanceTimers(ctx, side, odds, bal_time);
         StackStartDeviceBalancing(ctx, dev_addr);
     }
 }
@@ -535,7 +535,11 @@ void StackComputeCellsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv)
 {
     // if any segment needs balancing - if this is false at the end we can skip balancing
     float balance_threshold = ctx->charging.pre_bal_min_v + threshold_mv;
-    CanLog(ctx, "minv = %d chbalth = %d\n", (int)ctx->charging.pre_bal_min_v, (int)balance_threshold);
+    CanLog(ctx, "minv = %d maxv = %d dv = %d chbalth = %d\n", 
+        (int)ctx->charging.pre_bal_min_v, 
+        (int)ctx->charging.pre_bal_max_v, 
+        (int)(ctx->charging.pre_bal_max_v-ctx->charging.pre_bal_min_v), 
+        (int)balance_threshold);
     // if (ctx->stats.max_v > balance_threshold) return false;
     for (size_t side = 0; side < N_SIDES; side++)
     {
