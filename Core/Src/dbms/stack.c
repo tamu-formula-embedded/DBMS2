@@ -504,7 +504,11 @@ void StackComputeCellsToBalance(DbmsCtx* ctx, bool odds, int32_t threshold_mv)
 {
     // if any segment needs balancing - if this is false at the end we can skip balancing
     float balance_threshold = ctx->charging.pre_bal_min_v + threshold_mv;
-    CanLog(ctx, "minv = %d chbalth = %d\n", (int)ctx->charging.pre_bal_min_v, (int)balance_threshold);
+    CanLog(ctx, "minv = %d maxv = %d dv = %d chbalth = %d\n", 
+        (int)ctx->charging.pre_bal_min_v, 
+        (int)ctx->charging.pre_bal_max_v, 
+        (int)(ctx->charging.pre_bal_max_v-ctx->charging.pre_bal_min_v), 
+        (int)balance_threshold);
     // if (ctx->stats.max_v > balance_threshold) return false;
     for (size_t side = 0; side < N_SIDES; side++)
     {
