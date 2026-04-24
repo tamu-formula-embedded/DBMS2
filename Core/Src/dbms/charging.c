@@ -17,7 +17,7 @@
 
 bool ElconConnected(DbmsCtx* ctx)
 {
-    return (HAL_GetTick() - ctx->elcon.heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN)) && !CtrlHasAnyFaults(ctx);
+    return (HAL_GetTick() - ctx->elcon.heartbeat < GetSetting(ctx, QUIET_MS_BEFORE_SHUTDOWN)) && !CtrlHasAnyHardFaults(ctx);
 }
 
 bool ChargingTimeout(DbmsCtx* ctx)
@@ -172,7 +172,7 @@ void ChargingUpdate(DbmsCtx* ctx)
 {
     J1772ReadState(ctx);
 
-    ctx->charging.only_balance = (HAL_GetTick() - ctx->charging.bal_loop_hb < 3000) && !CtrlHasAnyFaults(ctx);
+    ctx->charging.only_balance = (HAL_GetTick() - ctx->charging.bal_loop_hb < 3000) && !CtrlHasAnyHardFaults(ctx);
 
     ctx->charging.conn = ChargingConnected(ctx);
     // if (charge_conn && !ctx->charging.conn)         ;       // can register an action here
