@@ -33,7 +33,7 @@ void CheckVoltageFaults(DbmsCtx* ctx)
         {
             for (int j = 0; j < N_GROUPS_PER_SIDE; j++)
             {
-                uint16_t v = CLAMP_U16(ctx->cell_states[i].voltages[j] * 1000.0f);
+                uint16_t v = CLAMP_U16(ctx->cell_states[i].voltages[j]);
                 uint16_t diff = v > avg_mv ? v - avg_mv : avg_mv - v;
                 if (diff > max_diff)
                 {
